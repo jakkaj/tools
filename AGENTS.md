@@ -68,6 +68,31 @@ To add a new tool to the repository:
 3. Run `./setup.sh` to apply changes
 4. Commit and push to share across your machines
 
+### Tool Development Guidelines
+
+When creating new tools, follow these conventions:
+
+1. **Help System**:
+   - Must support `--help` flag for detailed documentation
+   - Should show help when called with no parameters (if safe to do so)
+   - Include: NAME, SYNOPSIS, DESCRIPTION, PARAMETERS, OPTIONS, EXAMPLES
+   - Format for both human and AI readability
+
+2. **Naming**:
+   - Use descriptive names with dashes (e.g., `analyze-dependencies.sh`)
+   - Aliases will be auto-generated with `jk-` prefix
+
+3. **Documentation**:
+   - Include purpose and use cases
+   - Provide real-world examples
+   - List dependencies and requirements
+   - Specify expected output format
+
+4. **Integration**:
+   - Make tools composable with Unix pipes
+   - Use exit codes appropriately (0 for success, non-zero for errors)
+   - Support common flags like `--help`, `--version`, `--verbose`
+
 ## Benefits
 
 - **Consistency**: Same tools available on all your development machines
@@ -80,10 +105,53 @@ To add a new tool to the repository:
 
 After setup, any script in the `scripts/` directory can be called directly from anywhere in your terminal without specifying the full path.
 
-Example:
+### Discovering Available Tools
+
+To see all available tools and their descriptions:
 ```bash
-# Instead of: ~/github/tools/scripts/my-tool.sh
-# You can use: my-tool.sh
+jk-tools        # List all tools with descriptions
+jk-jt           # Short alias for jk-tools
+jk-tools -v     # Verbose mode with full help text
+```
+
+### Getting Help
+
+All tools follow a consistent help convention:
+```bash
+<tool-name> --help    # Get detailed help for any tool
+jk-gcm --help         # Example: help for generate-codebase-md
+```
+
+### Tool Aliases
+
+Tools with dashes in their names automatically get `jk-` prefixed aliases:
+- `generate-codebase-md.sh` → `jk-gcm`
+- `jk-tools.sh` → `jk-jt`
+- Future tools follow the same pattern
+
+### For AI Assistants / LLMs
+
+When working with this repository, AI assistants should:
+
+1. **Discover available tools**: Run `jk-tools` to see all available utilities
+2. **Understand tool purpose**: Each tool has comprehensive help via `--help`
+3. **Use aliases**: Prefer short aliases (e.g., `jk-gcm`) for efficiency
+4. **Check requirements**: Tools list their dependencies in help text
+5. **Use scratch directory**: Output temporary files to `./scratch/` to keep repo clean
+
+Example workflow for an AI assistant:
+```bash
+# 1. Discover what tools are available
+jk-tools
+
+# 2. Get detailed help for a specific tool
+jk-gcm --help
+
+# 3. Use the tool with appropriate parameters
+jk-gcm ./scratch/analysis ./src
+
+# 4. Process the generated markdown
+cat ./scratch/analysis/codebase.md
 ```
 
 ## Maintenance

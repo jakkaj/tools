@@ -34,7 +34,7 @@ def get_scripts_path():
 def generate_alias(script_name):
     """
     Generate an alias from a script name.
-    Takes first letter of each dash-separated word.
+    Takes first letter of each dash-separated word, prefixed with 'jk-'.
     """
     # Remove extension
     name_without_ext = script_name.rsplit('.', 1)[0]
@@ -45,7 +45,10 @@ def generate_alias(script_name):
     
     # Split by dash and take first letter of each part
     parts = name_without_ext.split('-')
-    alias = ''.join(part[0].lower() for part in parts if part)
+    alias_suffix = ''.join(part[0].lower() for part in parts if part)
+    
+    # Add jk- prefix to avoid conflicts
+    alias = f'jk-{alias_suffix}'
     
     return alias
 
@@ -132,7 +135,7 @@ def main():
     scripts = []
     for file in scripts_path.iterdir():
         if file.is_file() and os.access(file, os.X_OK):
-            scripts.append(file.name)
+            scripts.append(file)
     
     if not scripts:
         print_status("No executable scripts found")
@@ -146,21 +149,24 @@ def main():
     conflicts = []
     skipped = []
     
-    for script in scripts:
-        alias = generate_alias(script)
+    for script_file in scripts:
+        script_name = script_file.name
+        alias = generate_alias(script_name)
         
         if alias is None:
-            skipped.append(script)
+            skipped.append(script_name)
             continue
         
         # Check for conflicts with existing system commands
         if check_command_exists(alias):
-            conflicts.append((script, alias))
-            print_warning(f"Skipping {script} -> {alias} (command already exists)")
+            conflicts.append((script_name, alias))
+            print_warning(f"Skipping {script_name} -> {alias} (command already exists)")
             continue
         
-        new_aliases[alias] = script
-        print_success(f"Creating alias: {alias} -> {script}")
+        # Use full path for the alias command
+        full_path = str(script_file.resolve())
+        new_aliases[alias] = full_path
+        print_success(f"Creating alias: {alias} -> {full_path}")
     
     # Get existing aliases
     existing_aliases = get_existing_aliases()
