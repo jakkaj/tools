@@ -1,122 +1,84 @@
 #!/usr/bin/env bash
 
-# Helper script to generate goodbar codebase markdown using code2prompt
-# Default behavior: include lib/, test/, and justfile
-# Optional: pass 1..N file paths as arguments to only include those files
+# Generate codebase markdown using code2prompt
+# Usage: generate-codebase-md.sh <output-dir> [paths...]
+#   output-dir: Required. Directory where codebase.md and changes.md will be created
+#   paths: Optional. Files/directories to include (defaults to current directory)
 
 set -Eeuo pipefail
 IFS=$'\n\t'
 
-# Get the script directory (scripts/) and project root
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-OUTPUT_FILE="$PROJECT_ROOT/scratch/goodbar-codebase.md"
-CHANGES_FILE="$PROJECT_ROOT/scratch/goodbar-changes.md"
+# Show usage if no arguments
+if [[ $# -eq 0 ]]; then
+  echo "Usage: $(basename "$0") <output-dir> [paths...]" >&2
+  echo "  output-dir: Directory for output files (required)" >&2
+  echo "  paths: Files/directories to include (optional, defaults to .)" >&2
+  exit 1
+fi
 
-cd "$PROJECT_ROOT"
+# First argument is the output directory
+OUTPUT_DIR="$1"
+shift
 
-# Determine include patterns
-FULL_CODEBASE=false
-if [[ $# -gt 0 ]]; then
-  # Build comma-separated include patterns relative to project root
-  INCLUDES_ARRAY=()
+# Create output directory if it doesn't exist
+mkdir -p "$OUTPUT_DIR"
+
+# Output files
+OUTPUT_FILE="$OUTPUT_DIR/codebase.md"
+CHANGES_FILE="$OUTPUT_DIR/changes.md"
+
+# Build include patterns from remaining arguments
+INCLUDES_ARRAY=()
+if [[ $# -eq 0 ]]; then
+  # No paths specified, use current directory recursively
+  INCLUDES_ARRAY=("**")
+else
+  # Process each path argument
   for arg in "$@"; do
-    # Special case: if argument is "." or "./" treat as full codebase generation
-    if [[ "$arg" == "." || "$arg" == "./" ]]; then
-      # Trigger full codebase generation
-      FULL_CODEBASE=true
-      break
-    fi
-    # Convert absolute paths under project root to relative
-    if [[ "$arg" = /* ]]; then
-      if [[ "$arg" == "$PROJECT_ROOT/"* ]]; then
-        rel="${arg#"$PROJECT_ROOT/"}"
-      else
-        echo "Warning: Skipping path outside project root: $arg" >&2
-        continue
-      fi
-    else
-      rel="$arg"
-    fi
-    # Normalize leading ./ and trailing /
-    rel="${rel#./}"
-    rel="${rel%/}"
+    # Normalize path (remove trailing slashes and leading ./)
+    path="${arg%/}"
+    path="${path#./}"
     
-    # Skip empty strings after normalization
-    if [[ -n "$rel" ]]; then
-      # Check if this is a directory that needs glob expansion
-      if [[ -d "$PROJECT_ROOT/$rel" && ! "$rel" == *"*"* ]]; then
-        # It's a directory and not already a glob pattern - add /** for recursion
-        INCLUDES_ARRAY+=("$rel/**")
-      else
-        # It's a file, glob pattern, or non-existent path - keep as-is
-        INCLUDES_ARRAY+=("$rel")
-      fi
+    # If it's a directory and not a glob pattern, add /** for recursion
+    if [[ -d "$path" && ! "$path" == *"*"* ]]; then
+      INCLUDES_ARRAY+=("$path/**")
+    else
+      # File or glob pattern - use as-is
+      INCLUDES_ARRAY+=("$path")
     fi
   done
-  
-  # If we have arguments but they were "." or "./", do full generation
-  if [[ "$FULL_CODEBASE" == true || ${#INCLUDES_ARRAY[@]} -eq 0 ]]; then
-    FULL_CODEBASE=true
-  fi
-else
-  FULL_CODEBASE=true
 fi
 
-# Generate based on mode
-if [[ "$FULL_CODEBASE" == false ]]; then
-  echo "Generating goodbar codebase markdown (partial) for specific files..."
-  echo "Project root: $PROJECT_ROOT"
-  echo "Output file: $OUTPUT_FILE"
-  echo "Changes file: $CHANGES_FILE"
-  # Join include patterns with commas
-  include_patterns="$(IFS=, ; echo "${INCLUDES_ARRAY[*]}")"
+# Join include patterns with commas
+include_patterns="$(IFS=, ; echo "${INCLUDES_ARRAY[*]}")"
 
-  # Generate markdown for specified files only
-  code2prompt . \
-    --include="$include_patterns" \
-    --exclude="**/build/**,**/.dart_tool/**,**/*.g.dart,**/*.freezed.dart,**/*.gen.dart" \
-    --output-file "$OUTPUT_FILE"
+echo "Generating codebase markdown..."
+echo "Working directory: $(pwd)"
+echo "Output directory: $OUTPUT_DIR"
+echo "Include patterns: $include_patterns"
 
-  echo "✅ Generated (partial) codebase markdown at: $OUTPUT_FILE"
-  echo "📄 Files included: ${INCLUDES_ARRAY[*]}"
+# Generate markdown using code2prompt
+# Exclude common build artifacts and system files
+code2prompt . \
+  --include="$include_patterns" \
+  --exclude="**/node_modules/**,**/build/**,**/.git/**,**/.DS_Store,**/*.pyc,**/__pycache__/**,**/dist/**,**/.next/**,**/.cache/**,**/target/**" \
+  --output-file "$OUTPUT_FILE"
 
-  # Generate git changes (always show all changes, not filtered)
+echo "✅ Generated codebase markdown: $OUTPUT_FILE"
+
+# Generate git changes if in a git repository
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   {
     echo '# Changes since HEAD'
     echo
     echo '```diff'
-    git --no-pager diff HEAD
+    git --no-pager diff HEAD 2>/dev/null || echo "No changes"
     echo '```'
   } > "$CHANGES_FILE"
-
-  echo "✅ Generated git changes markdown at: $CHANGES_FILE"
+  echo "✅ Generated git changes: $CHANGES_FILE"
 else
-  echo "Generating goodbar codebase markdown (full)..."
-  echo "Project root: $PROJECT_ROOT"
-  echo "Output file: $OUTPUT_FILE"
-  echo "Changes file: $CHANGES_FILE"
-
-  # Use code2prompt to generate markdown with lib, test, and justfile
-  # Include Dart files from lib/ and test/ directories, plus justfile
-  # Exclude generated/build artifacts
-  code2prompt . \
-    --include="lib/**/*.dart,test/**/*.dart,justfile" \
-    --exclude="**/build/**,**/.dart_tool/**,**/*.g.dart,**/*.freezed.dart,**/*.gen.dart" \
-    --output-file "$OUTPUT_FILE"
-
-  echo "✅ Generated codebase markdown at: $OUTPUT_FILE"
-  echo "📁 Included directories/files: lib/, test/, justfile"
-  echo "🚫 Excluded: build artifacts, generated files"
-
-  # Generate combined staged + unstaged changes since HEAD into a markdown file
-  {
-    echo '# Changes since HEAD'
-    echo
-    echo '```diff'
-    git --no-pager diff HEAD
-    echo '```'
-  } > "$CHANGES_FILE"
-
-  echo "✅ Generated git changes markdown at: $CHANGES_FILE"
+  echo "ℹ️  Not in a git repository, skipping changes file"
 fi
+
+echo
+echo "Done! Files created in: $OUTPUT_DIR"

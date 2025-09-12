@@ -81,23 +81,75 @@ make_scripts_executable() {
     fi
 }
 
-setup_claude_commands() {
-    echo ""
-    print_status "Setting up Claude commands..."
+
+install_tools() {
+    local INSTALL_PATH="${SCRIPT_DIR}/install"
     
-    # Check if setup_claude.sh exists
-    if [ -f "${SCRIPTS_PATH}/setup_claude.sh" ]; then
-        # Make sure it's executable
-        chmod +x "${SCRIPTS_PATH}/setup_claude.sh"
-        
-        # Run the setup_claude.sh script
-        if "${SCRIPTS_PATH}/setup_claude.sh"; then
-            print_success "Claude commands setup completed"
-        else
-            print_error "Failed to setup Claude commands"
+    echo ""
+    print_status "Checking and installing required tools..."
+    
+    # Source cargo environment if it exists (for tools installed via cargo)
+    if [ -f "$HOME/.cargo/env" ]; then
+        source "$HOME/.cargo/env"
+    fi
+    
+    # Check if install directory exists
+    if [ ! -d "${INSTALL_PATH}" ]; then
+        print_status "No install directory found, skipping tool installation"
+        return
+    fi
+    
+    # Make all install scripts executable
+    chmod +x "${INSTALL_PATH}"/*.sh 2>/dev/null || true
+    chmod +x "${INSTALL_PATH}"/*.py 2>/dev/null || true
+    
+    # Install tools in specific order (dependencies first)
+    local install_order=("rust.sh" "code2prompt.sh" "claude.sh" "aliases.py")
+    local installed_count=0
+    local skipped_count=0
+    
+    for installer in "${install_order[@]}"; do
+        if [ -f "${INSTALL_PATH}/${installer}" ]; then
+            # Remove extension to get tool name
+            local tool_name="${installer%.*}"
+            echo ""
+            print_status "Checking ${tool_name}..."
+            
+            # Run the installer - it will check if already installed
+            if "${INSTALL_PATH}/${installer}"; then
+                ((installed_count++))
+            else
+                print_error "Failed to install ${tool_name}"
+            fi
         fi
-    else
-        print_status "No Claude command setup script found, skipping"
+    done
+    
+    # Install any other tools not in the specific order
+    for installer in "${INSTALL_PATH}"/*.sh "${INSTALL_PATH}"/*.py; do
+        if [ -f "${installer}" ]; then
+            local basename=$(basename "${installer}")
+            
+            # Skip if already processed in order
+            if [[ " ${install_order[@]} " =~ " ${basename} " ]]; then
+                continue
+            fi
+            
+            # Remove extension to get tool name
+            local tool_name="${basename%.*}"
+            echo ""
+            print_status "Checking ${tool_name}..."
+            
+            if "${installer}"; then
+                ((installed_count++))
+            else
+                print_error "Failed to install ${tool_name}"
+            fi
+        fi
+    done
+    
+    echo ""
+    if [ ${installed_count} -gt 0 ] || [ ${skipped_count} -gt 0 ]; then
+        print_success "Tool installation check complete"
     fi
 }
 
@@ -119,7 +171,7 @@ main() {
     
     make_scripts_executable
     
-    setup_claude_commands
+    install_tools
     
     echo ""
     echo "======================================"

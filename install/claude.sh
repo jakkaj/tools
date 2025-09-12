@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Install Claude commands by copying them to ~/.claude/commands
+
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
