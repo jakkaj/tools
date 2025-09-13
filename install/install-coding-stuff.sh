@@ -259,10 +259,15 @@ install_serena() {
     # Prefer pipx if available
     if check_command pipx; then
         print_status "Installing Serena via pipx..."
-        if pipx install serena-cli; then
-            print_success "Serena CLI installed via pipx"
+        # pipx returns non-zero if already installed, so handle that case
+        pipx install serena-cli 2>&1 | tee /tmp/pipx-output.txt
+        if grep -q "already seems to be installed" /tmp/pipx-output.txt; then
+            print_success "Serena CLI already installed via pipx"
+        elif grep -q "installed package serena-cli" /tmp/pipx-output.txt; then
+            print_success "Serena CLI newly installed via pipx"
         else
-            print_warning "pipx installation failed, trying pip..."
+            print_warning "pipx installation may have failed, trying pip..."
+            python3 -m pip install --user --break-system-packages serena-cli 2>/dev/null || \
             python3 -m pip install --user serena-cli
         fi
     else
@@ -286,9 +291,14 @@ install_serena() {
 }
 
 check_opencode() {
+    # Check in standard PATH and also in ~/.opencode/bin
     if check_command opencode; then
         local version=$(opencode --version 2>/dev/null || echo "unknown")
         print_success "OpenCode is already installed (version: $version)"
+        return 0
+    elif [ -x "$HOME/.opencode/bin/opencode" ]; then
+        local version=$("$HOME/.opencode/bin/opencode" --version 2>/dev/null || echo "unknown")
+        print_success "OpenCode is already installed at ~/.opencode/bin (version: $version)"
         return 0
     fi
     return 1
@@ -321,8 +331,13 @@ install_opencode() {
         return 1
     fi
 
+    # Source .zshrc to get updated PATH if opencode was installed
+    if [ -f "$HOME/.zshrc" ]; then
+        source "$HOME/.zshrc" 2>/dev/null || true
+    fi
+
     # Verify installation
-    if check_command opencode; then
+    if check_command opencode || [ -x "$HOME/.opencode/bin/opencode" ]; then
         print_success "OpenCode installation verified"
         print_status "Run 'opencode auth login' to authenticate"
     else
@@ -332,9 +347,14 @@ install_opencode() {
 }
 
 check_claude_code() {
+    # Check in standard PATH and also common installation locations
     if check_command claude; then
         local version=$(claude --version 2>/dev/null || echo "unknown")
         print_success "Claude Code CLI is already installed (version: $version)"
+        return 0
+    elif [ -x "$HOME/.claude/bin/claude" ]; then
+        local version=$("$HOME/.claude/bin/claude" --version 2>/dev/null || echo "unknown")
+        print_success "Claude Code CLI is already installed at ~/.claude/bin (version: $version)"
         return 0
     fi
     return 1
@@ -391,11 +411,27 @@ check_codex() {
 install_codex() {
     print_status "Installing OpenAI Codex CLI..."
 
-    # Try npm first
+    # Check Node.js version for Codex (requires Node 20+)
+    local node_version=$(get_node_version)
+    if ! version_gte "$node_version" "20.0.0"; then
+        print_warning "Codex requires Node.js >= 20, but found $node_version"
+        print_status "Attempting installation anyway..."
+    fi
+
+    # Try npm first with local prefix to avoid permission issues
     if check_command npm; then
-        print_status "Installing Codex via npm..."
-        if npm install -g @openai/codex; then
-            print_success "Codex CLI installed via npm"
+        print_status "Installing Codex via npm (locally)..."
+        # Install to user's home directory to avoid permission issues
+        npm config set prefix "$HOME/.npm-global"
+        export PATH="$HOME/.npm-global/bin:$PATH"
+
+        if npm install -g @openai/codex 2>/dev/null; then
+            print_success "Codex CLI installed via npm to ~/.npm-global"
+            # Add to shell config if not already there
+            if ! grep -q ".npm-global/bin" "$HOME/.zshrc" 2>/dev/null; then
+                echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.zshrc"
+                print_status "Added ~/.npm-global/bin to PATH in .zshrc"
+            fi
         else
             print_warning "npm installation failed"
             if [[ "$PKG_MANAGER" == "brew" ]]; then
@@ -404,10 +440,12 @@ install_codex() {
                     print_success "Codex CLI installed via Homebrew"
                 else
                     print_error "Codex CLI installation failed"
+                    print_warning "Note: Codex requires Node.js >= 20. Consider upgrading Node.js."
                     return 1
                 fi
             else
                 print_error "Codex CLI installation failed"
+                print_warning "Note: Codex requires Node.js >= 20. Consider upgrading Node.js."
                 return 1
             fi
         fi
@@ -470,16 +508,18 @@ main() {
     echo "======================================"
     echo ""
 
-    # Serena
-    print_status "Checking Serena CLI..."
-    if ! check_serena; then
-        if install_serena; then
-            ((tools_installed++))
-        else
-            ((tools_failed++))
-        fi
-    fi
-    echo ""
+    # Serena - TEMPORARILY COMMENTED OUT DUE TO INSTALLATION ISSUES
+    # print_status "Checking Serena CLI..."
+    # if ! check_serena; then
+    #     if install_serena; then
+    #         ((tools_installed++))
+    #     else
+    #         ((tools_failed++))
+    #     fi
+    # fi
+    # echo ""
+
+    # Continue with other tools even if there were issues
 
     # OpenCode
     print_status "Checking OpenCode..."
@@ -557,4 +597,7 @@ main() {
     fi
 }
 
-main "$@"
+# Only run main if script is executed directly, not sourced
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi
