@@ -104,7 +104,7 @@ install_tools() {
     chmod +x "${INSTALL_PATH}"/*.py 2>/dev/null || true
     
     # Install tools in specific order (dependencies first)
-    local install_order=("rust.sh" "code2prompt.sh" "claude.sh" "aliases.py")
+    local install_order=("rust.sh" "code2prompt.sh" "claude.sh" "install-coding-stuff.sh" "aliases.py")
     local installed_count=0
     local skipped_count=0
     
