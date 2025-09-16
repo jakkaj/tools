@@ -39,8 +39,8 @@ tools/
 ├── install/           # Tool installation scripts (one per tool)
 │   ├── rust.sh        # Installs Rust and Cargo via rustup
 │   ├── code2prompt.sh # Installs code2prompt via cargo
-│   └── claude.sh      # Copies Claude commands to ~/.claude/commands
-├── .claude/           # Claude AI command configurations
+│   └── agents.sh      # Copies agent commands to ~/.claude/commands and ~/.config/opencode/command
+├── agents/            # AI agent command configurations
 ├── scratch/           # Temporary workspace (gitignored)
 ├── AGENTS.md          # This file - documentation
 └── LICENSE            # Repository license

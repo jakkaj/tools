@@ -144,7 +144,7 @@ class SetupManager:
             "rust.sh",
             "just.sh",
             "code2prompt.sh",
-            "claude.sh",
+            "agents.sh",
             "opencode.sh",
             "claude-code.sh",
             "codex.sh",
