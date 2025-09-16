@@ -1,3 +1,7 @@
+---
+description: A command for crafting structured research prompts to leverage deep research agents for solving coding challenges, including problem definition, context, and practical examples.
+---
+
 # Request to LLM Coding Agent
 
 We need your assistance in clearly outlining the current coding challenge we're encountering. We have access to a deep research agent that can provide comprehensive insights, but we first need you to craft a detailed prompt based on our existing problems. The goal is to leverage this prompt to gather the best practices, recommended approaches, and idiomatic solutions specific to our issue.
