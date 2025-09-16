@@ -39,8 +39,8 @@ tools/
 ├── install/           # Tool installation scripts (one per tool)
 │   ├── rust.sh        # Installs Rust and Cargo via rustup
 │   ├── code2prompt.sh # Installs code2prompt via cargo
-│   └── agents.sh      # Copies agent commands to ~/.claude/commands and ~/.config/opencode/command
-├── agents/            # AI agent command configurations
+│   └── agents.sh      # Copies agent commands to ~/.claude/commands, ~/.config/opencode/command, and ~/.codex/prompts
+├── agents/            # AI agent command configurations (Claude, OpenCode, Codex)
 ├── scratch/           # Temporary workspace (gitignored)
 ├── AGENTS.md          # This file - documentation
 └── LICENSE            # Repository license
@@ -54,7 +54,7 @@ The setup script automatically checks for and installs required tools. Each tool
 
 - **Rust & Cargo**: The Rust programming language and package manager
 - **code2prompt**: CLI tool to convert codebases into LLM prompts
-- **Claude Commands**: Custom Claude AI commands for enhanced productivity
+- **Agent Commands**: Custom commands for Claude, OpenCode, and Codex AI assistants
 
 ### Adding New Tools
 

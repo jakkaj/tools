@@ -1,4 +1,3 @@
-
 ---
 description: A planning mode command that positions the AI as a technical leader to gather codebase context, clarify requirements, and create numbered phase-based plans with checklists and success criteria.
 ---

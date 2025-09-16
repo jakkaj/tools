@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Install agent commands by copying them to ~/.claude/commands and ~/.config/opencode/command
+# Install agent commands by copying them to ~/.claude/commands, ~/.config/opencode/command, and ~/.codex/prompts
 
 set -e
 
@@ -9,6 +9,7 @@ REPO_ROOT="$(dirname "${SCRIPT_DIR}")"
 SOURCE_DIR="${REPO_ROOT}/agents/commands"
 TARGET_DIR="${HOME}/.claude/commands"
 OPENCODE_DIR="${HOME}/.config/opencode/command"
+CODEX_DIR="${HOME}/.codex/prompts"
 
 print_status() {
     echo "[*] $1"
@@ -48,6 +49,13 @@ main() {
     else
         print_status "OpenCode directory already exists: ${OPENCODE_DIR}"
     fi
+
+    if [ ! -d "${CODEX_DIR}" ]; then
+        mkdir -p "${CODEX_DIR}"
+        print_success "Created directory: ${CODEX_DIR}"
+    else
+        print_status "Codex directory already exists: ${CODEX_DIR}"
+    fi
     
     # Count files to copy
     file_count=$(find "${SOURCE_DIR}" -maxdepth 1 -name "*.md" -type f | wc -l | tr -d ' ')
@@ -65,11 +73,13 @@ main() {
             filename=$(basename "${file}")
             target_file="${TARGET_DIR}/${filename}"
             opencode_file="${OPENCODE_DIR}/${filename}"
+            codex_file="${CODEX_DIR}/${filename}"
 
-            # Copy to both directories
+            # Copy to all three directories
             cp "${file}" "${target_file}"
             cp "${file}" "${opencode_file}"
-            echo "  [↻] ${filename} (copied to both locations)"
+            cp "${file}" "${codex_file}"
+            echo "  [↻] ${filename} (copied to all locations)"
         fi
     done
     
@@ -80,6 +90,7 @@ main() {
     echo "Copied ${file_count} agent command file(s) to:"
     echo "  ${TARGET_DIR}"
     echo "  ${OPENCODE_DIR}"
+    echo "  ${CODEX_DIR}"
     echo "======================================"
 }
 
