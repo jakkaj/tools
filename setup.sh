@@ -1,20 +1,13 @@
 #!/usr/bin/env bash
 
+# Tools Repository Setup Script
+# This script now uses Python for better control and reporting
+
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SCRIPTS_PATH="${SCRIPT_DIR}/scripts"
-SHELL_CONFIG="${HOME}/.zshrc"
-PATH_MARKER="# Added by tools repository setup"
-
-detect_os() {
-    case "$(uname -s)" in
-        Linux*)     OS="Linux";;
-        Darwin*)    OS="macOS";;
-        CYGWIN*|MINGW*|MSYS*) OS="Windows";;
-        *)          OS="Unknown";;
-    esac
-}
+PYTHON_SCRIPT="${SCRIPT_DIR}/setup_manager.py"
+REQUIREMENTS_FILE="${SCRIPT_DIR}/requirements.txt"
 
 print_status() {
     echo "[*] $1"
@@ -28,129 +21,84 @@ print_error() {
     echo "[✗] $1" >&2
 }
 
-check_prerequisites() {
-    if [ ! -d "${SCRIPTS_PATH}" ]; then
-        print_error "Scripts directory not found at ${SCRIPTS_PATH}"
+check_python() {
+    if command -v python3 >/dev/null 2>&1; then
+        PYTHON_CMD="python3"
+    elif command -v python >/dev/null 2>&1; then
+        # Check if it's Python 3
+        if python --version 2>&1 | grep -q "Python 3"; then
+            PYTHON_CMD="python"
+        else
+            print_error "Python 3 is required but not found"
+            exit 1
+        fi
+    else
+        print_error "Python 3 is required but not found"
+        print_status "Please install Python 3 and try again"
+        exit 1
+    fi
+
+    local python_version=$($PYTHON_CMD --version 2>&1 | cut -d' ' -f2)
+    print_success "Found Python: $python_version"
+}
+
+check_pip() {
+    if ! $PYTHON_CMD -m pip --version >/dev/null 2>&1; then
+        print_status "pip not found, attempting to install..."
+
+        # Try to install pip
+        if command -v apt-get >/dev/null 2>&1; then
+            sudo apt-get update && sudo apt-get install -y python3-pip
+        elif command -v yum >/dev/null 2>&1; then
+            sudo yum install -y python3-pip
+        elif command -v brew >/dev/null 2>&1; then
+            brew install python3
+        else
+            print_error "Could not install pip automatically"
+            print_status "Please install pip manually and try again"
+            exit 1
+        fi
+    fi
+
+    print_success "pip is available"
+}
+
+install_requirements() {
+    if [ -f "$REQUIREMENTS_FILE" ]; then
+        print_status "Installing Python requirements..."
+
+        # Check if rich is already installed
+        if $PYTHON_CMD -c "import rich" 2>/dev/null; then
+            print_success "Required Python packages already installed"
+        else
+            if $PYTHON_CMD -m pip install -r "$REQUIREMENTS_FILE" --user --quiet; then
+                print_success "Python requirements installed successfully"
+            else
+                print_error "Failed to install Python requirements"
+                print_status "Trying with elevated permissions..."
+                if $PYTHON_CMD -m pip install -r "$REQUIREMENTS_FILE" --quiet; then
+                    print_success "Python requirements installed successfully"
+                else
+                    print_error "Failed to install requirements. Please run: pip install rich"
+                    exit 1
+                fi
+            fi
+        fi
+    else
+        print_error "requirements.txt not found"
         exit 1
     fi
 }
 
-add_to_path() {
-    local path_export="export PATH=\"${SCRIPTS_PATH}:\$PATH\""
-    
-    if [ -f "${SHELL_CONFIG}" ]; then
-        if grep -q "${SCRIPTS_PATH}" "${SHELL_CONFIG}" 2>/dev/null; then
-            print_status "Scripts directory already in ${SHELL_CONFIG}"
-        else
-            echo "" >> "${SHELL_CONFIG}"
-            echo "${PATH_MARKER}" >> "${SHELL_CONFIG}"
-            echo "${path_export}" >> "${SHELL_CONFIG}"
-            print_success "Added scripts directory to ${SHELL_CONFIG}"
-        fi
-    else
-        echo "${PATH_MARKER}" > "${SHELL_CONFIG}"
-        echo "${path_export}" >> "${SHELL_CONFIG}"
-        print_success "Created ${SHELL_CONFIG} and added scripts directory"
-    fi
-    
-    # Only add to PATH if not already present
-    if [[ ":${PATH}:" != *":${SCRIPTS_PATH}:"* ]]; then
-        export PATH="${SCRIPTS_PATH}:${PATH}"
-        print_success "Scripts directory added to current shell PATH"
-    else
-        print_status "Scripts directory already in current shell PATH"
-    fi
-}
-
-make_scripts_executable() {
-    local script_count=0
-    
-    if [ -d "${SCRIPTS_PATH}" ]; then
-        for script in "${SCRIPTS_PATH}"/*; do
-            if [ -f "${script}" ]; then
-                chmod +x "${script}"
-                script_count=$((script_count + 1))
-            fi
-        done
-        
-        if [ ${script_count} -gt 0 ]; then
-            print_success "Made ${script_count} script(s) executable"
-        else
-            print_status "No scripts found to make executable"
-        fi
-    fi
-}
-
-
-install_tools() {
-    local INSTALL_PATH="${SCRIPT_DIR}/install"
-    
+run_setup_manager() {
+    print_status "Launching Python setup manager..."
     echo ""
-    print_status "Checking and installing required tools..."
-    
-    # Source cargo environment if it exists (for tools installed via cargo)
-    if [ -f "$HOME/.cargo/env" ]; then
-        source "$HOME/.cargo/env"
-    fi
-    
-    # Check if install directory exists
-    if [ ! -d "${INSTALL_PATH}" ]; then
-        print_status "No install directory found, skipping tool installation"
-        return
-    fi
-    
-    # Make all install scripts executable
-    chmod +x "${INSTALL_PATH}"/*.sh 2>/dev/null || true
-    chmod +x "${INSTALL_PATH}"/*.py 2>/dev/null || true
-    
-    # Install tools in specific order (dependencies first)
-    local install_order=("rust.sh" "just.sh" "code2prompt.sh" "claude.sh" "install-coding-stuff.sh" "aliases.py")
-    local installed_count=0
-    local skipped_count=0
-    
-    for installer in "${install_order[@]}"; do
-        if [ -f "${INSTALL_PATH}/${installer}" ]; then
-            # Remove extension to get tool name
-            local tool_name="${installer%.*}"
-            echo ""
-            print_status "Checking ${tool_name}..."
-            
-            # Run the installer - it will check if already installed
-            if "${INSTALL_PATH}/${installer}"; then
-                ((installed_count++))
-            else
-                print_error "Failed to install ${tool_name}"
-            fi
-        fi
-    done
-    
-    # Install any other tools not in the specific order
-    for installer in "${INSTALL_PATH}"/*.sh "${INSTALL_PATH}"/*.py; do
-        if [ -f "${installer}" ]; then
-            local basename=$(basename "${installer}")
-            
-            # Skip if already processed in order
-            if [[ " ${install_order[@]} " =~ " ${basename} " ]]; then
-                continue
-            fi
-            
-            # Remove extension to get tool name
-            local tool_name="${basename%.*}"
-            echo ""
-            print_status "Checking ${tool_name}..."
-            
-            if "${installer}"; then
-                ((installed_count++))
-            else
-                print_error "Failed to install ${tool_name}"
-            fi
-        fi
-    done
-    
-    echo ""
-    if [ ${installed_count} -gt 0 ] || [ ${skipped_count} -gt 0 ]; then
-        print_success "Tool installation check complete"
-    fi
+
+    # Make the Python script executable
+    chmod +x "$PYTHON_SCRIPT"
+
+    # Run the Python setup manager with any arguments passed to this script
+    $PYTHON_CMD "$PYTHON_SCRIPT" "$@"
 }
 
 main() {
@@ -158,30 +106,21 @@ main() {
     echo "     Tools Repository Setup Script    "
     echo "======================================"
     echo ""
-    
-    detect_os
-    print_status "Detected OS: ${OS}"
-    print_status "Repository path: ${SCRIPT_DIR}"
-    print_status "Scripts path: ${SCRIPTS_PATH}"
+
+    # Check for Python
+    check_python
+
+    # Check for pip
+    check_pip
+
+    # Install requirements
+    install_requirements
+
     echo ""
-    
-    check_prerequisites
-    
-    add_to_path
-    
-    make_scripts_executable
-    
-    install_tools
-    
-    echo ""
-    echo "======================================"
-    print_success "Setup complete!"
-    echo ""
-    echo "To use the changes in your current shell:"
-    echo "  source ~/.zshrc"
-    echo ""
-    echo "Or simply open a new terminal window."
-    echo "======================================"
+
+    # Run the Python setup manager
+    run_setup_manager "$@"
 }
 
+# Pass all arguments to main
 main "$@"

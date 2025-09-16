@@ -475,10 +475,36 @@ install_codex() {
 # ============== Main ==============
 
 main() {
+    # Parse command line arguments
+    UPDATE_MODE=false
+    for arg in "$@"; do
+        case $arg in
+            --update|-u)
+                UPDATE_MODE=true
+                shift
+                ;;
+            --help|-h)
+                echo "Usage: $0 [OPTIONS]"
+                echo ""
+                echo "Options:"
+                echo "  --update, -u    Update already installed tools to latest versions"
+                echo "  --help, -h      Show this help message"
+                echo ""
+                exit 0
+                ;;
+        esac
+    done
+
     echo ""
     echo "======================================"
     echo "   Coding Tools Installation Script   "
     echo "======================================"
+    echo ""
+    if [ "$UPDATE_MODE" = true ]; then
+        echo "Mode: UPDATE (will update existing tools)"
+    else
+        echo "Mode: INSTALL (will skip already installed tools)"
+    fi
     echo ""
     echo "This script will install/update:"
     echo "  • Serena CLI (coding-agent toolkit)"
@@ -523,33 +549,87 @@ main() {
 
     # OpenCode
     print_status "Checking OpenCode..."
-    if ! check_opencode; then
-        if install_opencode; then
-            ((tools_installed++))
+    if [ "$UPDATE_MODE" = true ]; then
+        if check_opencode; then
+            print_status "Updating OpenCode to latest version..."
+            if install_opencode; then
+                ((tools_installed++))
+                print_success "OpenCode updated successfully"
+            else
+                ((tools_failed++))
+            fi
         else
-            ((tools_failed++))
+            if install_opencode; then
+                ((tools_installed++))
+            else
+                ((tools_failed++))
+            fi
+        fi
+    else
+        if ! check_opencode; then
+            if install_opencode; then
+                ((tools_installed++))
+            else
+                ((tools_failed++))
+            fi
         fi
     fi
     echo ""
 
     # Claude Code
     print_status "Checking Claude Code CLI..."
-    if ! check_claude_code; then
-        if install_claude_code; then
-            ((tools_installed++))
+    if [ "$UPDATE_MODE" = true ]; then
+        if check_claude_code; then
+            print_status "Updating Claude Code CLI to latest version..."
+            if install_claude_code; then
+                ((tools_installed++))
+                print_success "Claude Code CLI updated successfully"
+            else
+                ((tools_failed++))
+            fi
         else
-            ((tools_failed++))
+            if install_claude_code; then
+                ((tools_installed++))
+            else
+                ((tools_failed++))
+            fi
+        fi
+    else
+        if ! check_claude_code; then
+            if install_claude_code; then
+                ((tools_installed++))
+            else
+                ((tools_failed++))
+            fi
         fi
     fi
     echo ""
 
     # Codex
     print_status "Checking OpenAI Codex CLI..."
-    if ! check_codex; then
-        if install_codex; then
-            ((tools_installed++))
+    if [ "$UPDATE_MODE" = true ]; then
+        if check_codex; then
+            print_status "Updating Codex CLI to latest version..."
+            if install_codex; then
+                ((tools_installed++))
+                print_success "Codex CLI updated successfully"
+            else
+                ((tools_failed++))
+            fi
         else
-            ((tools_failed++))
+            if install_codex; then
+                ((tools_installed++))
+            else
+                ((tools_failed++))
+            fi
+        fi
+    else
+        if ! check_codex; then
+            if install_codex; then
+                ((tools_installed++))
+            else
+                ((tools_failed++))
+            fi
         fi
     fi
     echo ""
