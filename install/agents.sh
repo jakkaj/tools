@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Install agent commands and MCP server configs for Claude CLI, OpenCode CLI, and Codex CLI
+# Install agent commands and MCP server configs for Claude CLI, OpenCode CLI, Codex CLI, and VS Code
 
 set -e
 
@@ -11,6 +11,16 @@ MCP_SOURCE="${REPO_ROOT}/agents/mcp/servers.json"
 TARGET_DIR="${HOME}/.claude/commands"
 OPENCODE_DIR="${HOME}/.config/opencode/command"
 CODEX_DIR="${HOME}/.codex/prompts"
+SYSTEM_NAME="$(uname -s)"
+
+if [[ "${SYSTEM_NAME}" == "Darwin" ]]; then
+    VSCODE_USER_DIR="${HOME}/Library/Application Support/Code/User"
+else
+    VSCODE_USER_DIR="${HOME}/.config/Code/User"
+fi
+VSCODE_USER_CONFIG="${VSCODE_USER_DIR}/mcp.json"
+VSCODE_PROJECT_DIR="${REPO_ROOT}/.vscode"
+VSCODE_PROJECT_CONFIG="${VSCODE_PROJECT_DIR}/mcp.json"
 
 print_status() {
     echo "[*] $1"
@@ -26,6 +36,8 @@ print_error() {
 
 generate_mcp_configs() {
     local mcp_source="$1"
+    local vscode_user_config="$2"
+    local vscode_project_config="$3"
 
     if [ ! -f "${mcp_source}" ]; then
         print_status "No MCP configuration source found at ${mcp_source}, skipping MCP setup"
@@ -39,10 +51,11 @@ generate_mcp_configs() {
 
     mkdir -p "${HOME}/.config/opencode"
     mkdir -p "${HOME}/.codex"
+    mkdir -p "$(dirname "${vscode_user_config}")"
+    mkdir -p "$(dirname "${vscode_project_config}")"
 
-    python3 - "$mcp_source" "$opencode_global" "$opencode_project" "$claude_project" "$codex_global" <<'PYTHON'
+    python3 - "$mcp_source" "$opencode_global" "$opencode_project" "$claude_project" "$codex_global" "$vscode_user_config" "$vscode_project_config" <<'PYTHON'
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -78,7 +91,7 @@ def dump_toml(data):
     return tomli_w.dumps(data)
 
 
-def load_json(path):
+def load_json(path: Path):
     if path.exists():
         try:
             with path.open("r", encoding="utf-8") as fh:
@@ -90,13 +103,13 @@ def load_json(path):
     return {}
 
 
-def write_json(path, data):
+def write_json(path: Path, data):
     with path.open("w", encoding="utf-8") as fh:
         json.dump(data, fh, indent=2)
         fh.write("\n")
 
 
-def load_toml_file(path):
+def load_toml_file(path: Path):
     if path.exists():
         text = path.read_text(encoding="utf-8")
         try:
@@ -108,7 +121,7 @@ def load_toml_file(path):
     return {}
 
 
-def write_toml_file(path, data):
+def write_toml_file(path: Path, data):
     text = dump_toml(data)
     path.write_text(text, encoding="utf-8")
 
@@ -118,6 +131,8 @@ opencode_global_path = Path(sys.argv[2])
 opencode_project_path = Path(sys.argv[3])
 claude_project_path = Path(sys.argv[4])
 codex_global_path = Path(sys.argv[5])
+vscode_user_path = Path(sys.argv[6])
+vscode_project_path = Path(sys.argv[7])
 
 servers = json.loads(source_path.read_text(encoding="utf-8"))
 
@@ -166,6 +181,21 @@ for name, config in servers.items():
     codex_servers[name] = codex_server
     write_toml_file(codex_global_path, codex_config)
 
+    # VS Code user
+    vscode_user_config = load_json(vscode_user_path)
+    vscode_user_servers = vscode_user_config.setdefault("mcpServers", {})
+    vscode_entry = {"command": command, "args": args, "enabled": bool(enabled)}
+    if env:
+        vscode_entry["env"] = env
+    vscode_user_servers[name] = dict(vscode_entry)
+    write_json(vscode_user_path, vscode_user_config)
+
+    # VS Code project
+    vscode_project_config = load_json(vscode_project_path)
+    vscode_project_servers = vscode_project_config.setdefault("mcpServers", {})
+    vscode_project_servers[name] = dict(vscode_entry)
+    write_json(vscode_project_path, vscode_project_config)
+
 PYTHON
     return $?
 }
@@ -203,6 +233,20 @@ main() {
     else
         print_status "Codex directory already exists: ${CODEX_DIR}"
     fi
+
+    if [ ! -d "${VSCODE_USER_DIR}" ]; then
+        mkdir -p "${VSCODE_USER_DIR}"
+        print_success "Created VS Code user directory: ${VSCODE_USER_DIR}"
+    else
+        print_status "VS Code user directory already exists: ${VSCODE_USER_DIR}"
+    fi
+
+    if [ ! -d "${VSCODE_PROJECT_DIR}" ]; then
+        mkdir -p "${VSCODE_PROJECT_DIR}"
+        print_success "Created VS Code project directory: ${VSCODE_PROJECT_DIR}"
+    else
+        print_status "VS Code project directory already exists: ${VSCODE_PROJECT_DIR}"
+    fi
     
     # Count files to copy
     file_count=$(find "${SOURCE_DIR}" -maxdepth 1 -name "*.md" -type f | wc -l | tr -d ' ')
@@ -221,18 +265,20 @@ main() {
             target_file="${TARGET_DIR}/${filename}"
             opencode_file="${OPENCODE_DIR}/${filename}"
             codex_file="${CODEX_DIR}/${filename}"
+            vscode_project_file="${VSCODE_PROJECT_DIR}/${filename}"
 
-            # Copy to all three directories
+            # Copy to destinations
             cp "${file}" "${target_file}"
             cp "${file}" "${opencode_file}"
             cp "${file}" "${codex_file}"
-            echo "  [↻] ${filename} (copied to all locations)"
+            cp "${file}" "${vscode_project_file}"
+            echo "  [↻] ${filename} (copied to all locations including VS Code project)"
         fi
     done
 
     echo ""
     print_status "Configuring MCP servers from ${MCP_SOURCE}"
-    if generate_mcp_configs "${MCP_SOURCE}"; then
+    if generate_mcp_configs "${MCP_SOURCE}" "${VSCODE_USER_CONFIG}" "${VSCODE_PROJECT_CONFIG}"; then
         print_success "MCP server configuration updated"
     else
         print_status "MCP configuration skipped"
@@ -246,6 +292,7 @@ main() {
     echo "  ${TARGET_DIR}"
     echo "  ${OPENCODE_DIR}"
     echo "  ${CODEX_DIR}"
+    echo "  ${VSCODE_PROJECT_DIR}"
     echo "======================================"
 }
 
