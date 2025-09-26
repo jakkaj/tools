@@ -71,15 +71,15 @@ install_requirements() {
         if $PYTHON_CMD -c "import rich" 2>/dev/null; then
             print_success "Required Python packages already installed"
         else
-            if $PYTHON_CMD -m pip install -r "$REQUIREMENTS_FILE" --user --quiet; then
+            if $PYTHON_CMD -m pip install -r "$REQUIREMENTS_FILE" --user --quiet --break-system-packages; then
                 print_success "Python requirements installed successfully"
             else
                 print_error "Failed to install Python requirements"
                 print_status "Trying with elevated permissions..."
-                if $PYTHON_CMD -m pip install -r "$REQUIREMENTS_FILE" --quiet; then
+                if $PYTHON_CMD -m pip install -r "$REQUIREMENTS_FILE" --quiet --break-system-packages; then
                     print_success "Python requirements installed successfully"
                 else
-                    print_error "Failed to install requirements. Please run: pip install rich"
+                    print_error "Failed to install requirements. Please run: pip install rich --break-system-packages"
                     exit 1
                 fi
             fi
