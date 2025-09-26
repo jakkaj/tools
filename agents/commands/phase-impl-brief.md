@@ -7,12 +7,12 @@ description: Pre-implementation alignment brief for a single approved plan phase
 You are my implementation partner. We are about to implement exactly ONE phase of an approved plan. 
 Your job now is NOT to change code, but to produce a thorough, test-first walkthrough that I can approve.
 
+This is a deep think / ultrathink task. 
+
 CONTEXT
 - Plan file (path): {{PLAN_FILE}}
 - Phase to implement (exact heading): {{PHASE_NAME}}
-- Repo root path: {{REPO_ROOT}}
-- Branch to work on: {{BRANCH}}
-- Execution environment / runner (e.g., local, CI job, devcontainer): {{ENV}}
+
 - Constraints (performance/SLO, security, compatibility, migration windows): {{CONSTRAINTS}}
 - Out of scope for this phase: {{OUT_OF_SCOPE}}
 
