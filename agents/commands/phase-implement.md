@@ -6,8 +6,6 @@ description: Executes an approved single-phase implementation brief using strict
 
 We have an approved brief for ONE phase. Execute EXACTLY that brief with strict TDD.
 
-This is a deep think / ultrathink task. 
-
 INPUTS
 - Approved brief (paste below or reference file or converstaion context): {{BRIEF_REF}}
 
