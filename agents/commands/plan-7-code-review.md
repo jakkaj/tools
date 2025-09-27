@@ -2,6 +2,8 @@
 description: Read-only per-phase code review that inspects diffs, verifies doctrine compliance against the `tasks.md` dossier, and produces structured findings without modifying code.
 ---
 
+Please deep think / ultrathink as this is a complex task. 
+
 # plan-7-code-review
 
 Per-phase diff audit & code review (read-only)

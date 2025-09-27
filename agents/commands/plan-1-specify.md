@@ -2,6 +2,8 @@
 description: Create or update the feature specification from a natural language feature description, focusing on user value (WHAT/WHY) without implementation details.
 ---
 
+Please deep think / ultrathink as this is a complex task. 
+
 # plan-1-specify
 
 Create or update the feature **spec** from a natural-language description (WHAT/WHY only; no tech choices). Mirrors your templates and script flow.

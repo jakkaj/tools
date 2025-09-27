@@ -2,6 +2,8 @@
 description: Create or update the project constitution and synchronize Rules & Idioms and Architecture docs up front, then propagate doctrine into templates and command prompts.
 ---
 
+Please deep think / ultrathink as this is a complex task. 
+
 # plan-0-constitution (alias: phase-0-constitution)
 
 ````md

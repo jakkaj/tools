@@ -2,6 +2,8 @@
 description: Resolve high-impact ambiguities (<=5 questions), capture answers in the spec, and update relevant sections immediately.
 ---
 
+Please deep think / ultrathink as this is a complex task. 
+
 # plan-2-clarify
 
 Ask **<=5** high-impact questions, write answers into the **spec**, and update affected sections immediately.

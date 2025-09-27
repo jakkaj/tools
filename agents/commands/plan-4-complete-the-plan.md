@@ -2,6 +2,8 @@
 description: Validate plan completeness and execution readiness (read-only) before generating phase tasks.
 ---
 
+Please deep think / ultrathink as this is a complex task. 
+
 # plan-4-complete-the-plan
 
 Verify the plan's **readiness**: TOC, TDD order, tests-as-docs, **no mocks**, real data, absolute paths, acceptance criteria & rollback, and safe [P] parallelism. Read-only.

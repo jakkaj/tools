@@ -2,6 +2,8 @@
 description: Perform planning and architecture, generating a phase-based plan with success criteria while enforcing clarification and constitution gates before implementation.
 ---
 
+Please deep think / ultrathink as this is a complex task. 
+
 # plan-3-architect
 
 Produce the **plan/design** (phases with acceptance criteria), run **Clarify Gate**, perform **Constitution Check**, lock project structure, and **STOP** before tasks or code.

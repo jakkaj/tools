@@ -2,6 +2,8 @@
 description: For one selected phase, generate a combined `tasks.md` dossier (tasks + alignment brief) under the plan tree; stop before making code changes.
 ---
 
+Please deep think / ultrathink as this is a complex task. 
+
 # plan-5-phase-tasks-and-brief
 
 **One phase at a time.** Generate an actionable **tasks + alignment brief dossier** (`tasks.md`) for the chosen phase, plus the supporting directory structure, and stop before implementation. This merges your previous "tasks" generation with the pre-implementation walkthrough, scoped strictly to **one** phase.
