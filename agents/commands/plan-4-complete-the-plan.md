@@ -7,10 +7,6 @@ description: Validate plan completeness and execution readiness (read-only) befo
 Verify the plan's **readiness**: TOC, TDD order, tests-as-docs, **no mocks**, real data, absolute paths, acceptance criteria & rollback, and safe [P] parallelism. Read-only.
 
 ```md
----
-description: Validate plan completeness & execution readiness (read-only). Do not write tasks or code here.
----
-
 Inputs: PLAN_PATH, SPEC_PATH, rules at `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}`, optional constitution.
 
 Checks:

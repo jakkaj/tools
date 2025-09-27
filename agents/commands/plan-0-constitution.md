@@ -6,7 +6,6 @@ description: Create or update the project constitution and synchronize Rules & I
 
 ````md
 ---
-description: Create or update the project constitution and synchronize Rules & Idioms and Architecture docs up front. Then validate and propagate changes into dependent templates/commands.
 scripts:
   sh: scripts/bash/check-prerequisites.sh --json --paths-only
   ps: scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
@@ -194,3 +193,5 @@ Canonical paths enforced by this command
 - Templates directory: `templates/`
 
 Run this command once per project (or whenever the guiding principles change) before executing planning or implementation phases.
+
+Next step (when happy): Run **/plan-1-specify** to capture the feature specification.

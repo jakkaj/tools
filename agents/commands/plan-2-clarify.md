@@ -8,7 +8,6 @@ Ask **<=5** high-impact questions, write answers into the **spec**, and update a
 
 ```md
 ---
-description: Resolve the smallest set (<=5) of ambiguities that materially affect architecture, data modeling, or test design; encode answers back into the spec.
 scripts:
   sh: scripts/bash/check-prerequisites.sh --json --paths-only
   ps: scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly

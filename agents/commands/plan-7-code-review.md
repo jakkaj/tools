@@ -1,5 +1,5 @@
 ---
-description: Read-only per-phase code review that inspects diffs, verifies doctrine compliance, and produces structured findings without modifying code.
+description: Read-only per-phase code review that inspects diffs, verifies doctrine compliance against the `tasks.md` dossier, and produces structured findings without modifying code.
 ---
 
 # plan-7-code-review
@@ -12,7 +12,6 @@ Why now: this runs after `plan-6-implement-phase`, leveraging its execution log,
 
 ```md
 ---
-description: Read-only code review for ONE implemented phase using the produced diffs and evidence; validate against rules, plan, and brief; propose focused fixes as tasks/patch hints.
 scripts:
   sh: scripts/bash/check-prerequisites.sh --json --include-diffs
   ps: scripts/powershell/check-prerequisites.ps1 -Json -IncludeDiffs
@@ -34,11 +33,11 @@ $ARGUMENTS
    - Run {SCRIPT} to resolve:
      PLAN        = provided --plan
      PLAN_DIR    = dirname(PLAN)
-     TASKS_PHASE = PLAN_DIR/tasks.${PHASE_SLUG}.md
-     BRIEF       = PLAN_DIR/phase.${PHASE_SLUG}.brief.md
-     EXEC_LOG    = PLAN_DIR/execution.${PHASE_SLUG}.log.md (required)
+     PHASE_DIR   = PLAN_DIR/tasks/${PHASE_SLUG}  # abort if missing; phase tasks not generated
+     PHASE_DOC   = PHASE_DIR/tasks.md            # abort if missing; plan-5 dossier not created
+     EXEC_LOG    = PHASE_DIR/execution.log.md (required)
    - **Plan Footnotes Evidence**:
-     Read the plan footer "Change Footnotes Ledger"; map footnote tags in task rows to detailed node-ID entries
+     Read the plan footer "Change Footnotes Ledger"; map footnote tags in `PHASE_DOC` to detailed node-ID entries
      (per `AGENTS.md`). Ensure numbering is sequential/unique and each changed file/method has a corresponding footnote entry.
    - Diffs source:
      a) If --diff-file provided -> use it as canonical unified diff
@@ -46,8 +45,8 @@ $ARGUMENTS
      c) Else -> compute last phase range from EXEC_LOG hints or `git log` for the branch (document range)
 
 2) Scope guard (PHASE ONLY)
-   - Parse TASKS_PHASE to list target files for this phase; ensure the diff touches only those or justified neighbors.
-   - If violations (files outside scope without justification in BRIEF/EXEC_LOG), flag as HIGH.
+   - Parse `PHASE_DOC` to list target files for this phase; ensure the diff touches only those or justified neighbors.
+   - If violations (files outside scope without justification in the alignment brief section of `PHASE_DOC` or EXEC_LOG), flag as HIGH.
 
 3) Rules & doctrine gates (hard checks)
    - Plan/Rules conformance: confirm changes uphold `docs/rules-idioms-architecture/{rules.md, idioms.md}`, including:
@@ -64,9 +63,11 @@ $ARGUMENTS
      Flag deviations with precise line refs and patch hints. :contentReference[oaicite:5]{index=5}
 
 4) TDD evidence & coverage alignment
-   - Cross-check BRIEF acceptance criteria <-> test changes (added/updated tests in `tests/` or stack-native locations).
+   - Cross-check the alignment brief acceptance criteria in `PHASE_DOC` <-> test changes (added/updated tests in `tests/` or stack-native locations).
    - Ensure negative/edge/concurrency cases are present, not just happy paths.
    - Map each criterion to at least one assertion that proves behavior (quote minimal assertion snippets).
+   - Confirm `PHASE_DIR/execution.log.md` captures the RED/GREEN/REFACTOR evidence for each task.
+   - Verify every item listed under `## Evidence Artifacts` in `PHASE_DOC` exists and is up to date inside `PHASE_DIR`.
    - If a criterion lacks test coverage, mark HIGH with a test-first fix suggestion. :contentReference[oaicite:6]{index=6}
 
 5) Quality and safety review (diff-level)
@@ -80,7 +81,7 @@ $ARGUMENTS
    Return precise comments with file:line and a one-paragraph rationale; attach patch hints when small. :contentReference[oaicite:7]{index=7} :contentReference[oaicite:8]{index=8}
 
 6) Static & type checks (project-native)
-   - Run project-native linters/type-checkers/formatters as specified by PLAN/BRIEF (e.g., `just test-extension`, `pytest -q`, `eslint --max-warnings=0`, `tsc --noEmit`).
+   - Run project-native linters/type-checkers/formatters as specified by PLAN and `PHASE_DOC` (e.g., `just test-extension`, `pytest -q`, `eslint --max-warnings=0`, `tsc --noEmit`).
    - Capture command lines and summarized output. If tools are not defined, note that and recommend adding to rules. :contentReference[oaicite:9]{index=9}
 
 7) Output files (write under PLAN_DIR/reviews/)
@@ -102,7 +103,7 @@ $ARGUMENTS
      F) **Coverage Map** (acceptance criteria <-> test files/assertions)
      G) **Commands Executed** (copy/paste)
      H) **Decision & Next Steps** (who approves; what to fix)
-     I) **Footnotes Audit**: summary table listing each diff-touched path, associated footnote tag(s), and node-ID link(s).
+     I) **Footnotes Audit**: summary table listing each diff-touched path, associated footnote tag(s) from `PHASE_DOC`, and node-ID link(s) recorded in the plan ledger.
    - `PLAN_DIR/reviews/fix-tasks.${PHASE_SLUG}.md` (only if REQUEST_CHANGES)
      - Micro-tasks with exact file paths + patch hints
      - Tests-first ordering for each fix (what to assert, then code)

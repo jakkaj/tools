@@ -1,14 +1,13 @@
 ---
-description: For one selected phase, generate a scoped tasks file and pre-implementation alignment brief; stop before making code changes.
+description: For one selected phase, generate a combined `tasks.md` dossier (tasks + alignment brief) under the plan tree; stop before making code changes.
 ---
 
 # plan-5-phase-tasks-and-brief
 
-**One phase at a time.** Generate an actionable **tasks file for the chosen phase** and a concise **alignment brief** (walkthrough + commands + risks/rollback) that you will approve before implementation. This merges your previous "tasks" generation with the pre-implementation walkthrough, scoped strictly to **one** phase.
+**One phase at a time.** Generate an actionable **tasks + alignment brief dossier** (`tasks.md`) for the chosen phase, plus the supporting directory structure, and stop before implementation. This merges your previous "tasks" generation with the pre-implementation walkthrough, scoped strictly to **one** phase.
 
 ```md
 ---
-description: For ONE selected phase, generate a phase-scoped tasks.md and a pre-implementation alignment brief; do not implement yet.
 scripts:
   sh: scripts/bash/check-prerequisites.sh --json
   ps: scripts/powershell/check-prerequisites.ps1 -Json
@@ -21,7 +20,7 @@ $ARGUMENTS
 # --phase "<Phase N: Title>"
 # --plan "<abs path to docs/plans/<ordinal>-<slug>/<slug>-plan.md>"
 
-1) Run {SCRIPT}; verify PLAN exists; set PLAN_DIR = dirname(PLAN).
+1) Run {SCRIPT}; verify PLAN exists; set PLAN_DIR = dirname(PLAN); define `PHASE_DIR = PLAN_DIR/tasks/${PHASE_SLUG}` and create it if missing (mkdir -p).
 2) Locate the exact phase heading = $PHASE in PLAN. Abort if not found.
 3) Derive **only** the tasks relevant to this phase using `templates/tasks-template.md` rules, but scope to:
    - Setup (only what this phase needs)
@@ -32,30 +31,37 @@ $ARGUMENTS
    - Every task includes **absolute paths**.
    (Template mapping & formatting from tasks-template.) :contentReference[oaicite:12]{index=12}
 
-4) Write `PLAN_DIR/tasks.${PHASE_SLUG}.md` with:
-   - Title and pointers (SPEC, PLAN)
-   - Numbered tasks (T001...)
-   - Dependencies + [P] guidance
-   - Validation checklist (coverage of this phase's acceptance criteria)
+4) Write a single combined artifact `PHASE_DIR/tasks.md` containing:
+   - Phase metadata (title, slug, links to SPEC and PLAN, today {{TODAY}}).
+   - `## Tasks` table with numbered items (T001...), dependencies, [P] guidance, validation checklist coverage.
+   - `## Alignment Brief` section with:
+     * Objective recap + behavior checklist (tie to PLAN acceptance criteria)
+     * Invariants & guardrails (perf/memory/security budgets if relevant)
+     * Inputs to read (exact file paths)
+     * **Test Plan (TDD, tests-as-docs, no mocks, real data)**: enumerate named tests with rationale, fixtures, expected outputs
+     * Step-by-step implementation outline mapped 1:1 to the tasks/tests
+     * Commands to run (copy/paste): env setup, test runner, linters, type checks
+     * Risks/unknowns & **rollback plan**
+     * **Ready Check** (checkboxes) -> await explicit GO/NO-GO
+   - `## Phase Footnote Stubs` table: for each task row that will change code, append a Notes entry ending with a footnote tag (e.g., `[^3]`) and list the tag with a short placeholder description. Phase 6 will replace these placeholders with node-ID details in the plan ledger per `AGENTS.md`.
+   - `## Evidence Artifacts` describing where implementation will write the execution log (`PHASE_DIR/execution.log.md`) and any supporting files.
 
-5) Create a **Phase Alignment Brief** `PLAN_DIR/phase.${PHASE_SLUG}.brief.md`:
-   Sections:
-   - Objective recap + behavior checklist (tie to PLAN acceptance criteria)
-   - Invariants & guardrails (perf/memory/security budgets if relevant)
-   - Inputs to read (exact file paths)
-   - **Test Plan (TDD, tests-as-docs, no mocks, real data)**: enumerate named tests with rationale, fixtures, expected outputs
-   - Step-by-step implementation outline mapped 1:1 to the tasks/tests
-   - Commands to run (copy/paste): env setup, test runner, linters, type checks
-   - Risks/unknowns & **rollback plan**
-   - **Ready Check** (checkboxes) -> await explicit GO/NO-GO
-   - **Plan Footnotes prep**: For each task, add a one-line note ending with a footnote tag (e.g., `[^3]`);
-     implementation will resolve tags to node-IDs and details (see `AGENTS.md`). [Do not populate details yet.]
+5) Capture a short directory layout at the end of `PHASE_DIR/tasks.md` so future phases know where to place logs and ancillary evidence inside `PHASE_DIR`.
+   - Note that Plan 6 writes `execution.log.md` and any other evidence directly into `PHASE_DIR`.
+   - Example (adjust as files accumulate):
+     ```
+     docs/plans/2-feature-x/
+       ├── feature-x-plan.md
+       └── tasks/phase-2/
+           ├── tasks.md
+           └── execution.log.md  # created by /plan-6
+     ```
 
 Rules & Stack Patterns:
 - Follow `docs/rules-idioms-architecture/{rules.md, idioms.md}` (TDD, tests-as-docs, no mocks, real data). :contentReference[oaicite:13]{index=13}
 - Apply BridgeContext patterns when relevant: bounded `vscode.RelativePattern`, remote-safe `vscode.Uri`, Python debugging via `module: 'pytest'` with `--no-cov`. :contentReference[oaicite:14]{index=14}
 
-STOP: Do **not** edit code. Output two files and wait for human **GO**.
+STOP: Do **not** edit code. Output the combined `PHASE_DIR/tasks.md` and wait for human **GO**.
 ```
 
 Why this shape: it leverages your existing **tasks** template mechanics but restricts scope firmly to **one phase**, and carries forward the alignment without the separate heavy analysis pass you asked to remove.

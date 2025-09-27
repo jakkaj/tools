@@ -26,7 +26,7 @@ Stage	Responsibility	Key Actions
 1. Information Gathering	LLM Coding Agent	• Explore codebase (README, docs, tests).• Leverage vector search for domain concepts.
 	- You can use find links to code files from content: files like README using relationships. 
 2. User Clarification	LLM Coding Agent ⇄ User	Pose targeted questions to eliminate ambiguity.
-3. Plan Drafting	LLM Coding Agent	Produce a numbered, phase‑based plan with:• Markdown tables and checklists.• Success criteria for every task.• Mermaid diagrams where helpful.• File path: docs/plans/<slug>/<slug>-plan.md.
+3. Plan Drafting	LLM Coding Agent	Produce a numbered, phase-based plan with:• Markdown tables and checklists.• Success criteria for every task.• Mermaid diagrams where helpful.• File path: docs/plans/<ordinal>-<slug>/<slug>-plan.md.
 4. Review Loop	User	Accept, refine, or reject the plan.
 5. Plan Finalization	LLM Coding Agent	Upon approval, offer to write the plan file and open it in the editor.
 
@@ -43,7 +43,7 @@ Notes on usage of the MCP server
 	1.	Phases → Tasks → Checklists (see sample below).
 	2.	Success Criteria for each task and for the overall project.
 	3.	No mocks—tests must use real pipeline data via tests/utils/pipeline_helpers.py.
-	4.	Follow @/docs/rules/rules-idioms.md. Apply strict TDD: write failing test → implement → pass.
+	4.	Follow @/docs/rules-idioms-architecture/{rules.md, idioms.md}. Apply strict TDD: write failing test → implement → pass.
 	5.	Prepend an overview section summarizing every phase and its benefits.
 	6.	Use meaningful filenames (<topic>-plan.md, not just “plan.md”).
 	7.	Make no assumptions about prior context—explain everything the implementer will need.

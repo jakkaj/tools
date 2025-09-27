@@ -7,10 +7,6 @@ description: Perform planning and architecture, generating a phase-based plan wi
 Produce the **plan/design** (phases with acceptance criteria), run **Clarify Gate**, perform **Constitution Check**, lock project structure, and **STOP** before tasks or code.
 
 ```md
----
-description: Planning & architecture. Create a single phase-based plan with success criteria; stop before tasks or implementation.
----
-
 Inputs: FEATURE_SPEC,
   PLAN_PATH (absolute; MUST match `docs/plans/<ordinal>-<slug>/<slug>-plan.md`),
   rules at `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}`,
