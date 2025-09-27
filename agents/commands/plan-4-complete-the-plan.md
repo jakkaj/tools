@@ -11,7 +11,7 @@ Verify the plan's **readiness**: TOC, TDD order, tests-as-docs, **no mocks**, re
 description: Validate plan completeness & execution readiness (read-only). Do not write tasks or code here.
 ---
 
-Inputs: PLAN_PATH, SPEC_PATH, rules at docs/rules/rules-idioms.md, optional constitution.
+Inputs: PLAN_PATH, SPEC_PATH, rules at `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}`, optional constitution.
 
 Checks:
 - **TOC present**; plan uses absolute paths; no assumed prior context.
@@ -22,7 +22,9 @@ Checks:
 Output:
 - Status = READY or NOT READY.
 - If NOT READY: list concrete remediations (do not apply automatically).
-- Next step: `/plan-5-phase-tasks-and-brief` for a chosen phase.
+- Next step (when happy): Run **/plan-5-phase-tasks-and-brief** for the chosen phase.
 ```
 
 This enforces your completion doctrine before any execution begins.
+
+Next step (when happy): Run **/plan-5-phase-tasks-and-brief** once the plan is READY.

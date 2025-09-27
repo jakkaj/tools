@@ -32,3 +32,5 @@ Output: SPEC_FILE ready for clarification.
 ```
 
 Reference template structure and flow come from your `templates/spec-template.md`.
+
+Next step (when happy): Run **/plan-2-clarify** for ≤5 high-impact questions.

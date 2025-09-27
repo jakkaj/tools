@@ -23,7 +23,7 @@ User input:
 $ARGUMENTS
 # Required flags (absolute paths):
 # --phase "<Phase N: Title>"
-# --feature-dir "<abs path to specs/<feature>>"
+# --plan "<abs path to docs/plans/<ordinal>-<slug>/<slug>-plan.md>"
 # Optional flags:
 # --diff-file "<abs path to unified.diff>"   # if omitted, compute from git
 # --base "<commit-ishA>" --head "<commit-ishB>"  # commit range; overrides --diff-file
@@ -32,10 +32,14 @@ $ARGUMENTS
 
 1) Resolve inputs & artifacts
    - Run {SCRIPT} to resolve:
-     FEATURE_DIR, PLAN = FEATURE_DIR/plan.md
-     TASKS_PHASE = FEATURE_DIR/tasks.${PHASE_SLUG}.md
-     BRIEF       = FEATURE_DIR/phase.${PHASE_SLUG}.brief.md
-     EXEC_LOG    = FEATURE_DIR/execution.${PHASE_SLUG}.log.md (if created by step 6)
+     PLAN        = provided --plan
+     PLAN_DIR    = dirname(PLAN)
+     TASKS_PHASE = PLAN_DIR/tasks.${PHASE_SLUG}.md
+     BRIEF       = PLAN_DIR/phase.${PHASE_SLUG}.brief.md
+     EXEC_LOG    = PLAN_DIR/execution.${PHASE_SLUG}.log.md (required)
+   - **Plan Footnotes Evidence**:
+     Read the plan footer "Change Footnotes Ledger"; map footnote tags in task rows to detailed node-ID entries
+     (per `AGENTS.md`). Ensure numbering is sequential/unique and each changed file/method has a corresponding footnote entry.
    - Diffs source:
      a) If --diff-file provided -> use it as canonical unified diff
      b) Else if --base/--head provided -> run `git diff --unified=3 --no-color {base}..{head}`
@@ -46,7 +50,7 @@ $ARGUMENTS
    - If violations (files outside scope without justification in BRIEF/EXEC_LOG), flag as HIGH.
 
 3) Rules & doctrine gates (hard checks)
-   - Plan/Rules conformance: confirm changes uphold docs/rules/rules-idioms.md, including:
+   - Plan/Rules conformance: confirm changes uphold `docs/rules-idioms-architecture/{rules.md, idioms.md}`, including:
      - **TDD order** (tests precede implementation in history/evidence)
      - **Tests as documentation** assertions (clear behavioral expectations)
      - **No mocks**; real repo data/fixtures
@@ -79,8 +83,8 @@ $ARGUMENTS
    - Run project-native linters/type-checkers/formatters as specified by PLAN/BRIEF (e.g., `just test-extension`, `pytest -q`, `eslint --max-warnings=0`, `tsc --noEmit`).
    - Capture command lines and summarized output. If tools are not defined, note that and recommend adding to rules. :contentReference[oaicite:9]{index=9}
 
-7) Output files (write under FEATURE_DIR/reviews/)
-   - `reviews/review.${PHASE_SLUG}.md` (the report)
+7) Output files (write under PLAN_DIR/reviews/)
+   - `PLAN_DIR/reviews/review.${PHASE_SLUG}.md` (the report)
      Sections:
      A) **Verdict**: APPROVE / REQUEST_CHANGES (STRICT mode: any HIGH -> REQUEST_CHANGES)
      B) **Summary** (<=10 lines)
@@ -98,7 +102,8 @@ $ARGUMENTS
      F) **Coverage Map** (acceptance criteria <-> test files/assertions)
      G) **Commands Executed** (copy/paste)
      H) **Decision & Next Steps** (who approves; what to fix)
-   - `reviews/fix-tasks.${PHASE_SLUG}.md` (only if REQUEST_CHANGES)
+     I) **Footnotes Audit**: summary table listing each diff-touched path, associated footnote tag(s), and node-ID link(s).
+   - `PLAN_DIR/reviews/fix-tasks.${PHASE_SLUG}.md` (only if REQUEST_CHANGES)
      - Micro-tasks with exact file paths + patch hints
      - Tests-first ordering for each fix (what to assert, then code)
      - Mark [P] only for disjoint files
@@ -127,6 +132,7 @@ Review rubric baked into this phase
 
 Flow update (ordered commands)
 
+0. **plan-0-constitution**
 1. **plan-1-specify**
 2. **plan-2-clarify**
 3. **plan-3-architect**
@@ -136,3 +142,5 @@ Flow update (ordered commands)
 7. **plan-7-code-review**: produce `reviews/review.<phase>.md` (and `fix-tasks.<phase>.md` when requesting changes)
 
 This ensures reviews inspect the work against the same standards enforced during planning and implementation.
+
+Next step (when happy): APPROVE -> merge and advance to the next phase (restart at **/plan-5**); REQUEST_CHANGES -> follow `PLAN_DIR/reviews/fix-tasks.<phase>.md` then rerun **/plan-6** for fixes.

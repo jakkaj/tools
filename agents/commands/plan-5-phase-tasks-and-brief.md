@@ -19,12 +19,11 @@ User input:
 $ARGUMENTS
 # Expected flags:
 # --phase "<Phase N: Title>"
-# --feature-dir "<abs path to specs/<feature>>"
-# --plan "<abs path to plan.md>"
+# --plan "<abs path to docs/plans/<ordinal>-<slug>/<slug>-plan.md>"
 
-1) Run {SCRIPT}; parse FEATURE_DIR and verify PLAN exists.
+1) Run {SCRIPT}; verify PLAN exists; set PLAN_DIR = dirname(PLAN).
 2) Locate the exact phase heading = $PHASE in PLAN. Abort if not found.
-3) Derive **only** the tasks relevant to this phase using `/templates/tasks-template.md` rules, but scope to:
+3) Derive **only** the tasks relevant to this phase using `templates/tasks-template.md` rules, but scope to:
    - Setup (only what this phase needs)
    - Tests-first (contract/integration/unit) -> MUST FAIL initially
    - Core changes for this phase only
@@ -33,13 +32,13 @@ $ARGUMENTS
    - Every task includes **absolute paths**.
    (Template mapping & formatting from tasks-template.) :contentReference[oaicite:12]{index=12}
 
-4) Write `FEATURE_DIR/tasks.${PHASE_SLUG}.md` with:
+4) Write `PLAN_DIR/tasks.${PHASE_SLUG}.md` with:
    - Title and pointers (SPEC, PLAN)
    - Numbered tasks (T001...)
    - Dependencies + [P] guidance
    - Validation checklist (coverage of this phase's acceptance criteria)
 
-5) Create a **Phase Alignment Brief** `FEATURE_DIR/phase.${PHASE_SLUG}.brief.md`:
+5) Create a **Phase Alignment Brief** `PLAN_DIR/phase.${PHASE_SLUG}.brief.md`:
    Sections:
    - Objective recap + behavior checklist (tie to PLAN acceptance criteria)
    - Invariants & guardrails (perf/memory/security budgets if relevant)
@@ -49,12 +48,16 @@ $ARGUMENTS
    - Commands to run (copy/paste): env setup, test runner, linters, type checks
    - Risks/unknowns & **rollback plan**
    - **Ready Check** (checkboxes) -> await explicit GO/NO-GO
+   - **Plan Footnotes prep**: For each task, add a one-line note ending with a footnote tag (e.g., `[^3]`);
+     implementation will resolve tags to node-IDs and details (see `AGENTS.md`). [Do not populate details yet.]
 
 Rules & Stack Patterns:
-- Follow docs/rules/rules-idioms.md (TDD, tests-as-docs, no mocks, real data). :contentReference[oaicite:13]{index=13}
+- Follow `docs/rules-idioms-architecture/{rules.md, idioms.md}` (TDD, tests-as-docs, no mocks, real data). :contentReference[oaicite:13]{index=13}
 - Apply BridgeContext patterns when relevant: bounded `vscode.RelativePattern`, remote-safe `vscode.Uri`, Python debugging via `module: 'pytest'` with `--no-cov`. :contentReference[oaicite:14]{index=14}
 
 STOP: Do **not** edit code. Output two files and wait for human **GO**.
 ```
 
 Why this shape: it leverages your existing **tasks** template mechanics but restricts scope firmly to **one phase**, and carries forward the alignment without the separate heavy analysis pass you asked to remove.
+
+Next step (when happy): Run **/plan-6-implement-phase --phase "<Phase N: Title>" --plan "<PLAN_PATH>"**.

@@ -19,12 +19,13 @@ User input:
 $ARGUMENTS
 # Expected flags:
 # --phase "<Phase N: Title>"
-# --feature-dir "<abs path to specs/<feature>>"
+# --plan "<abs path to docs/plans/<ordinal>-<slug>/<slug>-plan.md>"
 
 1) Run {SCRIPT}; resolve:
-   TASKS_PHASE = FEATURE_DIR/tasks.${PHASE_SLUG}.md
-   BRIEF       = FEATURE_DIR/phase.${PHASE_SLUG}.brief.md
-   PLAN        = FEATURE_DIR/plan.md
+   PLAN        = provided --plan
+   PLAN_DIR    = dirname(PLAN)
+   TASKS_PHASE = PLAN_DIR/tasks.${PHASE_SLUG}.md
+   BRIEF       = PLAN_DIR/phase.${PHASE_SLUG}.brief.md
 
 2) **Contract**:
    - TDD loop per task: write/adjust test (RED) -> minimal code (GREEN) -> refactor (CLEAN) -> commit.
@@ -36,9 +37,14 @@ $ARGUMENTS
 3) Execution:
    - Follow task order and dependencies; [P] only for disjoint file sets.
    - After each cycle: record Test -> expected fail excerpt -> code change summary -> pass excerpt -> refactor note.
+   - **Update plan footnotes**:
+     * In `PLAN` (the plan markdown), for each edited file/method, append a footnote in the **Change Footnotes Ledger**
+       using the exact substrate node-ID format and clickable links from `AGENTS.md`.
+     * In the corresponding task Notes, end with a footnote tag (`[^N]`) pointing to that ledger entry.
+       Keep numbering sequential and unique; do not skip numbers.
 
 4) Output:
-   - **Execution Log** (concise per TDD cycle).
+   - **Execution Log** -> write `PLAN_DIR/execution.${PHASE_SLUG}.log.md` (concise per TDD cycle).
    - **Unified diffs** for all touched files.
    - **Commands & evidence** (runner output excerpts that prove acceptance criteria).
    - **Risk/Impact & rollback** confirmation.
@@ -52,3 +58,5 @@ Note:
 ```
 
 The execution semantics match your existing implementation command, adjusted to consume phase-scoped artifacts and BridgeContext practices.
+
+Next step (when happy): Run **/plan-7-code-review --phase "<Phase N: Title>" --plan "<PLAN_PATH>"**.

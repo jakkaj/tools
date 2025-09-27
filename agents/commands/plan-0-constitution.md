@@ -19,8 +19,9 @@ User input:
 $ARGUMENTS
 
 You are updating the project constitution at `/memory/constitution.md` **and** synchronizing:
-- `docs/rules/rules-idioms.md` (canonical Rules & Idioms)
-- `docs/rules/architecture.md` (Architecture)
+- `docs/rules-idioms-architecture/rules.md`        (Rules - normative MUST/SHOULD)
+- `docs/rules-idioms-architecture/idioms.md`        (Idioms - common patterns & examples)
+- `docs/rules-idioms-architecture/architecture.md`  (Architecture - boundaries & layering)
 
 These files may be templates with placeholder tokens `[ALL_CAPS_IDENTIFIER]`. Your job is to (a) collect/derive concrete values, (b) fill templates precisely, and (c) propagate any amendments across `templates/` so downstream commands enforce the same rules.
 
@@ -30,8 +31,9 @@ These files may be templates with placeholder tokens `[ALL_CAPS_IDENTIFIER]`. Yo
    - Run `{SCRIPT}` once; parse JSON for repository root and any pre-existing docs.
    - Set:
      CONST = `/memory/constitution.md`
-     RULES = `docs/rules/rules-idioms.md`      # canonical path
-     ARCH  = `docs/rules/architecture.md`
+     RULES = `docs/rules-idioms-architecture/rules.md`
+     IDIOMS = `docs/rules-idioms-architecture/idioms.md`
+     ARCH  = `docs/rules-idioms-architecture/architecture.md`
      TMPL  = `templates/`                      # all templates & command prompts
    - If any path is missing, create parent directories atomically.
 
@@ -65,7 +67,9 @@ These files may be templates with placeholder tokens `[ALL_CAPS_IDENTIFIER]`. Yo
      - templates touched ([check] updated / [warn] pending)
      - deferred TODO placeholders
 
-5) Synchronize **Rules & Idioms** (`docs/rules/rules-idioms.md`)
+5) Synchronize **Rules & Idioms** (split)
+   - **Rules** → `docs/rules-idioms-architecture/rules.md`
+   - **Idioms** → `docs/rules-idioms-architecture/idioms.md`
    - Ensure (create/merge/update) these sections and rules verbatim-style where applicable:
      A) Test Configuration via `pytest.ini`; register markers; centralize pytest config
      B) Test Structure & Locations (`tests/`, `tests/howto/`, `tests/test-repos/`)
@@ -77,10 +81,10 @@ These files may be templates with placeholder tokens `[ALL_CAPS_IDENTIFIER]`. Yo
         - `Acceptance Criteria:` measurable behaviors/assertions
      F) Multi-language test repositories guidance
      G) CLI/Tooling, Logging, DI, ConfigRegistry patterns
-     - Normalize path references to *canonical* `docs/rules/rules-idioms.md`.
+     - Normalize path references to *canonical* `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}`.
    - If pre-existing RULES conflict with the constitution, update RULES to comply and flag differences in the Impact Report.
 
-6) Synchronize **Architecture** (`docs/rules/architecture.md`)
+6) Synchronize **Architecture** (`docs/rules-idioms-architecture/architecture.md`)
    - Materialize (or update) architecture with these non-negotiable boundaries:
      * **Layering (LFL -> Embedding -> LSL -> Condense -> Graph -> Query)** with strict separation of concerns
      * **GraphBuilder language-agnostic rule** - absolutely **no** language-specific resolution logic in GraphBuilder; all such logic lives in LSL enrichers
@@ -89,12 +93,14 @@ These files may be templates with placeholder tokens `[ALL_CAPS_IDENTIFIER]`. Yo
      * **Anti-patterns** and enforcement checklist for reviewers
    - Keep the mermaid diagrams and rule tables readable and stable.
 
-7) Propagate into `templates/` (alignment)
+7) Propagate into `templates/` (alignment and path rewrite)
    - Update these to reference canonical paths and doctrine:
-     * `templates/plan-template.md` -> Constitution Check gates reference the constitution and Rules path; STOP before tasks
+     * `templates/plan-template.md` -> Constitution Check gates reference `/memory/constitution.md`
+       and `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}`; STOP before tasks
      * `templates/spec-template.md` -> requires testable acceptance criteria and marks ambiguities clearly
      * `templates/tasks-template.md` -> TDD ordering; `[P]` only when tasks touch different files; absolute paths
-     * `templates/commands/*.md` -> fix any stale paths; ensure every planning/validation command **gates** on:
+     * `templates/commands/*.md` -> rewrite any `docs/rules...` paths to
+       `docs/rules-idioms-architecture/...`; ensure every planning/validation command **gates** on:
        - TOC present
        - TDD with **tests as documentation**
        - **No mocks**; use real repo data/fixtures
@@ -114,7 +120,7 @@ These files may be templates with placeholder tokens `[ALL_CAPS_IDENTIFIER]`. Yo
      * GraphBuilder rule present; LSL vs LFL separation explicit
      * Data-flow and naming conventions explicit
    - Templates/commands:
-     * All refer to `docs/rules/rules-idioms.md`
+     * All refer to `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}`
      * All planning commands have TDD/no-mocks/real-data gates
      * Plan STOP rule intact (no tasks/code during plan)
 
@@ -167,9 +173,9 @@ The following **must** be enforced across Constitution -> Rules & Idioms -> Plan
 --------------------------------
 ## Acceptance Criteria (for this command)
 - `/memory/constitution.md` contains no stray placeholders; version bumped with rationale; Governance section present.
-- `docs/rules/rules-idioms.md` includes Testing sections A-G and **explicit test documentation blocks** and **quality contribution** guidance.
-- `docs/rules/architecture.md` encodes layer boundaries, anti-patterns, GraphBuilder rule, and naming contracts.
-- All `templates/` plan/spec/tasks/command prompts refer to **canonical** `docs/rules/rules-idioms.md` and gate on TDD, tests-as-docs, **no mocks**, real data.
+- `docs/rules-idioms-architecture/rules.md` includes Testing sections A-G and **explicit test documentation blocks** and **quality contribution** guidance.
+- `docs/rules-idioms-architecture/architecture.md` encodes layer boundaries, anti-patterns, GraphBuilder rule, and naming contracts.
+- All `templates/` plan/spec/tasks/command prompts refer to **canonical** `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}` and gate on TDD, tests-as-docs, **no mocks**, real data.
 - Final summary lists changes and suggested commit message.
 
 --------------------------------
@@ -182,8 +188,9 @@ The following **must** be enforced across Constitution -> Rules & Idioms -> Plan
 Canonical paths enforced by this command
 
 - Constitution: `/memory/constitution.md`
-- Rules & Idioms: `docs/rules/rules-idioms.md`
-- Architecture: `docs/rules/architecture.md`
+- Rules: `docs/rules-idioms-architecture/rules.md`
+- Idioms: `docs/rules-idioms-architecture/idioms.md`
+- Architecture: `docs/rules-idioms-architecture/architecture.md`
 - Templates directory: `templates/`
 
 Run this command once per project (or whenever the guiding principles change) before executing planning or implementation phases.

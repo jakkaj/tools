@@ -4,3 +4,5 @@ opencode.json
 .mcp.json
 # Ignore VS Code workspace artifacts
 .vscode/
+codebase.md
+changes.md

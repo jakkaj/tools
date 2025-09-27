@@ -31,3 +31,5 @@ Rules:
 
 Output: Updated SPEC with `## Clarifications` for today + summary table; next = /architect.
 ```
+
+Next step (when happy): Run **/plan-3-architect** to generate the phase-based plan.
