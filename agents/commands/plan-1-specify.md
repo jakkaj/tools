@@ -19,10 +19,13 @@ User input:
 
 $ARGUMENTS
 
-1) Run {SCRIPT} once from repo root; parse JSON for BRANCH_NAME and SPEC_FILE (absolute paths only).
-2) Load `templates/spec-template.md`; fill sections from the user description; **leave implementation details out**.
-3) For unknowns, embed `[NEEDS CLARIFICATION: ...]` markers.
-4) Write spec to SPEC_FILE and report branch + path.
+1) Run {SCRIPT} once from repo root; parse JSON for BRANCH_NAME and determine:
+   - PLAN_DIR = `docs/plans/<ordinal>-<slug>/` (from script output)
+   - SPEC_FILE = `${PLAN_DIR}/<slug>-spec.md` (spec co-located with plan)
+2) Ensure PLAN_DIR exists (create if needed).
+3) Load `templates/spec-template.md`; fill sections from the user description; **leave implementation details out**.
+4) For unknowns, embed `[NEEDS CLARIFICATION: ...]` markers.
+5) Write spec to SPEC_FILE and report branch + path.
 
 Gates:
 - Focus on user value; no stack/framework details.

@@ -9,7 +9,7 @@ Please deep think / ultrathink as this is a complex task.
 Verify the plan's **readiness**: TOC, TDD order, tests-as-docs, **no mocks**, real data, absolute paths, acceptance criteria & rollback, and safe [P] parallelism. Read-only.
 
 ```md
-Inputs: PLAN_PATH, SPEC_PATH, rules at `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}`, optional constitution.
+Inputs: PLAN_PATH, SPEC_PATH (co-located as `<plan-dir>/<slug>-spec.md`), rules at `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}`, optional constitution.
 
 Checks:
 - **TOC present**; plan uses absolute paths; no assumed prior context.
