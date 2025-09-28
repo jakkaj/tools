@@ -67,11 +67,10 @@ notes:
 - `shellcheck tests/install/test_vscode_settings_merge.sh`  
 - `git status --short`
 
-**Risks / Unknowns & Rollback Plan**  
+**Risks / Unknowns**  
 - *Risk*: Platform-specific VS Code paths differ (e.g., Codium) → test should abstract via env variables when feasible.  
 - *Risk*: Simulating missing Python may impact other tests; ensure environment reset per test case.  
-- *Unknown*: Handling Windows paths out of scope; document if coverage limited.  
-- *Rollback*: `git restore install/agents.sh tests/install/test_vscode_settings_merge.sh`; remove temp artifacts from `tasks/phase-3-vs-code-settings-merge/`.
+- *Unknown*: Handling Windows paths out of scope; document if coverage limited.
 
 **Ready Check (await GO/NO-GO)**  
 - [ ] Temp HOME/VS Code path strategy approved for tests.  

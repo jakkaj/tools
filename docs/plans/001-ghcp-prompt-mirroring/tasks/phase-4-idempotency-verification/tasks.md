@@ -63,10 +63,9 @@ notes:
 - `shellcheck tests/install/test_complete_flow.sh`  
 - `git status --short`
 
-**Risks / unknowns & rollback plan**  
+**Risks / unknowns**  
 - *Risk*: Counting logic may differ on systems without `.prompt.md` (workspace absent) → ensure tests allow optional workspace or mock.  
-- *Risk*: Additional logging could break prior tests; confirm other harnesses updated if needed.  
-- *Rollback*: `git restore install/agents.sh tests/install/test_complete_flow.sh`; delete generated logs.
+- *Risk*: Additional logging could break prior tests; confirm other harnesses updated if needed.
 
 **Ready Check (await GO/NO-GO)**  
 - [x] Temp HOME workflow approved for smoke test.  

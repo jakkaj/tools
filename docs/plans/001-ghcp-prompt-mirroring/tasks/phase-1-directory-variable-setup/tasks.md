@@ -65,11 +65,10 @@ notes:
 - `git status --short` (sanity before GO/NO-GO).  
 - Note: Attempted `scripts/bash/check-prerequisites.sh --json` failed (file missing).
 
-**Risks / Unknowns & Rollback Plan**  
+**Risks / Unknowns**  
 - *Risk*: Test harness may modify actual `$HOME`; **Mitigation**: always export temporary `HOME` within script.  
 - *Risk*: Permissions on real user config paths may differ; **Mitigation**: log warnings, allow continuation.  
-- *Unknown*: Absent prerequisite script indicates tooling drift; confirm with maintainer before depending on it.  
-- *Rollback*: Revert edits in `install/agents.sh` and remove newly added test assets via `git restore install/agents.sh tests/install`; delete temp directories if created manually.
+- *Unknown*: Absent prerequisite script indicates tooling drift; confirm with maintainer before depending on it.
 
 **Ready Check (await GO/NO-GO)**  
 - [x] Manual override approved for missing `scripts/bash/check-prerequisites.sh` (documented in execution log).  

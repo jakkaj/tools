@@ -6,7 +6,7 @@ Please deep think / ultrathink as this is a complex task.
 
 # plan-4-complete-the-plan
 
-Verify the plan's **readiness**: TOC, TDD order, tests-as-docs, mock usage consistent with the spec, real data expectations, absolute paths, acceptance criteria & rollback. This command stays read-only and provides a recommendation—teams may proceed once the plan is READY **or** after explicitly accepting any gaps.
+Verify the plan's **readiness**: TOC, TDD order, tests-as-docs, mock usage consistent with the spec, real data expectations, absolute paths, and acceptance criteria. This command stays read-only and provides a recommendation—teams may proceed once the plan is READY **or** after explicitly accepting any gaps.
 
 ```md
 Inputs: PLAN_PATH, SPEC_PATH (co-located as `<plan-dir>/<slug>-spec.md>`), rules at `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}`, optional constitution.

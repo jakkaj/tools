@@ -41,7 +41,7 @@ $ARGUMENTS
    - **Execution Log** -> write `PHASE_DIR/execution.log.md` (concise per TDD cycle).
    - **Unified diffs** for all touched files.
    - **Commands & evidence** (runner output excerpts that prove acceptance criteria).
-   - **Risk/Impact & rollback** confirmation.
+   - **Risk/Impact** confirmation.
    - **Final status** mapped to phase acceptance criteria + suggested commit message(s)/PR title.
    - Update the `## Evidence Artifacts` section in `PHASE_DOC` with links to the log and any newly produced evidence (store artifacts inside `PHASE_DIR`).
 

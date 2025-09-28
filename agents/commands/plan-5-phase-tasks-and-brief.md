@@ -47,7 +47,7 @@ $ARGUMENTS
      * **Test Plan (TDD vs lightweight per spec, honor mock usage preference)**: enumerate named tests with rationale, fixtures, expected outputs
      * Step-by-step implementation outline mapped 1:1 to the tasks/tests
      * Commands to run (copy/paste): env setup, test runner, linters, type checks
-     * Risks/unknowns & **rollback plan**
+     * Risks/unknowns (flag severity, mitigation steps)
      * **Ready Check** (checkboxes) -> await explicit GO/NO-GO
    - `## Phase Footnote Stubs` table: for each task row that will change code, append a Notes entry ending with a footnote tag (e.g., `[^3]`) and list the tag with a short placeholder description. Phase 6 will replace these placeholders with node-ID details in the plan ledger per `AGENTS.md`.
    - `## Evidence Artifacts` describing where implementation will write the execution log (`PHASE_DIR/execution.log.md`) and any supporting files.

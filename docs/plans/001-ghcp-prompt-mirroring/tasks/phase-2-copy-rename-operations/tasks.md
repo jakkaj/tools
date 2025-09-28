@@ -70,10 +70,9 @@ notes:
 - `git status --short` (sanity check before GO/NO-GO)  
 - Optional: `rg "prompt.md" -n /Users/jordanknight/github/tools/install/agents.sh` after edits to verify coverage.
 
-**Risks / Unknowns & Rollback Plan**  
+**Risks / Unknowns**  
 - *Risk*: Quoting errors could mis-handle filenames with spaces → cover via tests using sample filenames and double quotes.  
-- *Risk*: Temporary workspace cleanup failure could leave fixtures behind → ensure traps remove directories.  
-- *Rollback*: `git restore install/agents.sh tests/install/test_agents_copilot_dirs.sh`; remove temporary log captures.
+- *Risk*: Temporary workspace cleanup failure could leave fixtures behind → ensure traps remove directories.
 
 **Ready Check (await GO/NO-GO)**  
 - [x] Test harness extension plan acknowledged (real temporary HOME/workspace).  
