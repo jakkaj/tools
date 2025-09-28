@@ -27,9 +27,18 @@ $ARGUMENTS
    - Every task includes **absolute paths**.
    (Template mapping & formatting from tasks-template.) :contentReference[oaicite:12]{index=12}
 
+   **Canonical tasks table layout** (all dossiers MUST follow this column order):
+   | Status | ID | Task | Type | Dependencies | Absolute Path(s) | Validation | Notes |
+   - `Status` is a literal checkbox column; start each row with `[ ]` so later phases can update to `[~]` (in progress) or `[x]` (complete).
+   - `ID` uses the T001… dossier sequence and should link back to the matching plan task when applicable.
+   - `Task` summarizes the work item; `Type` classifies it (Setup/Test/Core/Integration/Doc/etc.).
+   - `Absolute Path(s)` must list every impacted file or directory using absolute paths.
+   - `Validation` captures how acceptance or readiness will be confirmed.
+   - `Notes` include [P] guidance plus phase-footnote placeholders (e.g., trailing `[^3]`).
+
 4) Write a single combined artifact `PHASE_DIR/tasks.md` containing:
    - Phase metadata (title, slug, links to SPEC and PLAN, today {{TODAY}}).
-   - `## Tasks` table with numbered items (T001...), dependencies, [P] guidance, validation checklist coverage.
+   - `## Tasks` section that renders the table exactly as defined above (Status checkbox first, then ID, Task, Type, Dependencies, Absolute Path(s), Validation, Notes) with numbered items (T001...), dependencies, [P] guidance, and validation checklist coverage.
    - `## Alignment Brief` section with:
      * Objective recap + behavior checklist (tie to PLAN acceptance criteria)
      * Invariants & guardrails (perf/memory/security budgets if relevant)
