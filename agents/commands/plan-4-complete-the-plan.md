@@ -14,7 +14,7 @@ Inputs: PLAN_PATH, SPEC_PATH (co-located as `<plan-dir>/<slug>-spec.md`), rules 
 Checks:
 - **TOC present**; plan uses absolute paths; no assumed prior context.
 - TDD order: tests before implementation, tests as documentation; **no mocks**; use real repo data/fixtures.
-- Acceptance criteria & rollback notes per phase.
+- Acceptance criteria per phase.
 - [P] only when tasks would touch **different files** (file-safety rule).
 
 Output:

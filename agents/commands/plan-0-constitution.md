@@ -1,5 +1,5 @@
 ---
-description: Create or update the project constitution and synchronize Rules & Idioms and Architecture docs up front, then propagate doctrine into templates and command prompts.
+description: Establish or refresh the project constitution and align the supporting norms documents before any planning phases begin.
 ---
 
 Please deep think / ultrathink as this is a complex task. 
@@ -13,165 +13,116 @@ User input:
 
 $ARGUMENTS
 
-You are updating the project constitution at `/memory/constitution.md` **and** synchronizing:
-- `docs/rules-idioms-architecture/rules.md`        (Rules - normative MUST/SHOULD)
-- `docs/rules-idioms-architecture/idioms.md`        (Idioms - common patterns & examples)
-- `docs/rules-idioms-architecture/architecture.md`  (Architecture - boundaries & layering)
+You are updating the project constitution at `/memory/constitution.md` **and** keeping the canonical doctrine files in sync:
+- `docs/rules-idioms-architecture/rules.md`        (Rules – normative MUST/SHOULD statements)
+- `docs/rules-idioms-architecture/idioms.md`        (Idioms – recurring patterns and examples)
+- `docs/rules-idioms-architecture/architecture.md`  (Architecture – structure, boundaries, interaction contracts)
 
-These files may be templates with placeholder tokens `[ALL_CAPS_IDENTIFIER]`. Your job is to (a) collect/derive concrete values, (b) fill templates precisely, and (c) propagate any amendments across `templates/` so downstream commands enforce the same rules.
+If any document uses placeholder tokens like `[ALL_CAPS_IDENTIFIER]`, your responsibility is to gather the values, fill or intentionally defer them, and keep all three files mutually consistent. Downstream templates or command prompts may reference these files; when they exist, update them last so they reflect the newly agreed doctrine.
 
 --------------------------------
 ## Execution Flow (deterministic)
 1) Resolve repository paths
-   - Run `{SCRIPT}` once; parse JSON for repository root and any pre-existing docs.
-   - Set:
+   - If your environment supplies a repository metadata helper (e.g., a prerequisites script defined in command front matter), run it once and parse the returned JSON. Otherwise derive values from the current working directory.
+   - Set constants:
      CONST = `/memory/constitution.md`
      RULES = `docs/rules-idioms-architecture/rules.md`
      IDIOMS = `docs/rules-idioms-architecture/idioms.md`
      ARCH  = `docs/rules-idioms-architecture/architecture.md`
-     TMPL  = `templates/`                      # all templates & command prompts
-   - If any path is missing, create parent directories atomically.
+     TMPL  = `templates/`  # Optional helper content if present
+   - Ensure parent directories exist; create them atomically when missing.
 
-2) Load current templates/documents
-   - Read CONST; collect all placeholder tokens `[ALL_CAPS]`.
-   - Read RULES; if absent, seed from the in-repo sample with the Testing sections listed under "Synchronized doctrine" below (do not invent content).
-   - Read ARCH; if absent, seed from the in-repo architecture sample with layer boundaries & GraphBuilder rules (see Synchronization Targets, below).
+2) Load (or seed) doctrine files
+   - If CONST is missing, create the parent directory and seed an empty constitution skeleton before proceeding.
+   - If RULES, IDIOMS, or ARCH are missing, create each file with a minimal section outline so subsequent runs remain deterministic.
+   - After seeding, read every document and record `[ALL_CAPS]` placeholders, existing version numbers, headings, and gaps.
 
-3) Collect/derive values for placeholders
-   - If `$ARGUMENTS` supplies values, prefer them.
-   - Otherwise, derive from README/docs or leave a `TODO(<FIELD>): explanation`.
-   - Dates:
-     * `RATIFICATION_DATE` = original adoption date (ask if unknown; else TODO)
-     * `LAST_AMENDED_DATE` = today if changes; else keep previous
-   - Version:
-     * Compute `CONSTITUTION_VERSION` bump via SemVer:
-       - MAJOR: breaking governance/principle redefinitions
-       - MINOR: new principle/section or materially expanded guidance
-       - PATCH: clarifications/typos/non-semantic edits
-     * If ambiguous, state your reasoning in the Sync Impact Report before finalizing.
+3) Gather project doctrine inputs
+   - Prefer explicit values supplied in `$ARGUMENTS` (e.g., principles, testing strategy, governance cadence).
+   - Augment from README, CONTRIBUTING, handbooks, or prior specs.
+   - When information is unknown, write `TODO(<FIELD>): reason it is pending` so future maintainers know what to resolve.
+   - Track current and new version numbers using semantic versioning:
+     * MAJOR – breaking changes to principles or governance
+     * MINOR – new principles/sections or materially expanded guidance
+     * PATCH – clarifications or formatting adjustments
 
-4) Draft **Constitution** (overwrite `/memory/constitution.md`)
-   - Replace every placeholder; leave no unexplained tokens.
-   - Structure:
-     * Title, Version, Dates
-     * **Principles** (non-negotiable MUST/SHOULD with rationale)
-     * **Testing Doctrine** (normative excerpt; see "Synchronized doctrine")
-     * Governance (amendment procedure, review cadence, compliance)
-   - Write the **Sync Impact Report** as an HTML comment at file top:
-     - old->new version, modified/added/removed sections
-     - templates touched ([check] updated / [warn] pending)
-     - deferred TODO placeholders
+4) Draft **/memory/constitution.md**
+   - Replace every placeholder. Standard sections:
+     * Header with Title, Version, Ratification date, Last amended date
+     * **Guiding Principles** – concise MUST/SHOULD statements with rationale
+     * **Quality & Verification Strategy** – document how the team proves changes safe (tests, analysis, reviews). Highlight preferred tools per language when known; keep wording inclusive (examples are optional callouts).
+     * **Delivery Practices** – planning cadence, documentation expectations, definition of done
+     * **Governance** – amendment procedure, review cadence, compliance tracking
+   - Prepend a **Sync Impact Report** HTML comment summarizing version bump, affected sections, outstanding TODOs, and whether supporting docs/templates were updated.
 
-5) Synchronize **Rules & Idioms** (split)
-   - **Rules** → `docs/rules-idioms-architecture/rules.md`
-   - **Idioms** → `docs/rules-idioms-architecture/idioms.md`
-   - Ensure (create/merge/update) these sections and rules verbatim-style where applicable:
-     A) Test Configuration via `pytest.ini`; register markers; centralize pytest config
-     B) Test Structure & Locations (`tests/`, `tests/howto/`, `tests/test-repos/`)
-     C) Test Data Strategy - **real repos**, not mocks; use `tests.utils.pipeline_helpers.TestWorkspace` for pipeline data
-     D) Test Quality Assertions - avoid happy-path; assert correctness/coverage with explicit expectations
-     E) **Test Documentation blocks** in each test:
-        - `Purpose:` what is proven
-        - `Quality Contribution:` why this test improves system quality
-        - `Acceptance Criteria:` measurable behaviors/assertions
-     F) Multi-language test repositories guidance
-     G) CLI/Tooling, Logging, DI, ConfigRegistry patterns
-     - Normalize path references to *canonical* `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}`.
-   - If pre-existing RULES conflict with the constitution, update RULES to comply and flag differences in the Impact Report.
+5) Align **Rules & Idioms**
+   - Write `rules.md` with enforceable statements ("MUST", "SHOULD") covering:
+     * Source control hygiene and branching
+     * Coding standards, naming, formatting
+     * Testing/verification expectations (unit, integration, acceptance, manual checks)
+     * Tooling or automation requirements (linters, CI, coverage, static analysis)
+   - Write `idioms.md` with illustrative patterns, directory conventions, and language-specific examples when relevant.
+   - Keep references to the constitution explicit (e.g., link sections or quote identifiers). If any area is not yet defined, leave a TODO entry mirroring the constitution.
 
-6) Synchronize **Architecture** (`docs/rules-idioms-architecture/architecture.md`)
-   - Materialize (or update) architecture with these non-negotiable boundaries:
-     * **Layering (LFL -> Embedding -> LSL -> Condense -> Graph -> Query)** with strict separation of concerns
-     * **GraphBuilder language-agnostic rule** - absolutely **no** language-specific resolution logic in GraphBuilder; all such logic lives in LSL enrichers
-     * **Abstraction boundary** rules (no upward leakage, interface segregation)
-     * **File/JSON naming contracts** (e.g., `calculator.py` -> `calculator.py.json`)
-     * **Anti-patterns** and enforcement checklist for reviewers
-   - Keep the mermaid diagrams and rule tables readable and stable.
+6) Maintain **architecture.md**
+   - Capture the system's high-level structure: modules, services, layers, data flows, integration points.
+   - Define boundaries and contracts (who may call whom, allowed dependencies, deployment targets).
+   - Document technology-agnostic rules first; add stack-specific notes in dedicated subsections (e.g., "Example: Node service" / "Example: C# backend").
+   - Track anti-patterns and reviewer checklists that should remain stable across implementations.
 
-7) Propagate into `templates/` (alignment and path rewrite)
-   - Update these to reference canonical paths and doctrine:
-     * `templates/plan-template.md` -> Constitution Check gates reference `/memory/constitution.md`
-       and `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}`; STOP before tasks
-     * `templates/spec-template.md` -> requires testable acceptance criteria and marks ambiguities clearly
-     * `templates/tasks-template.md` -> TDD ordering; `[P]` only when tasks touch different files; absolute paths
-     * `templates/commands/*.md` -> rewrite any `docs/rules...` paths to
-       `docs/rules-idioms-architecture/...`; ensure every planning/validation command **gates** on:
-       - TOC present
-       - TDD with **tests as documentation**
-       - **No mocks**; use real repo data/fixtures
-       - Absolute paths; no assumed prior context
-   - Do not change behavior semantics; only enforce doctrine and canonicalize paths.
+7) Propagate doctrine into helpers (if any)
+   - For each file under `templates/` or `agents/commands/` that references the constitution or rules, ensure links remain correct and language stays stack-neutral.
+   - Where downstream workflows expect gates (e.g., "confirm plan aligns with rules"), keep the gate but phrase it generically.
+   - Do not invent new templates; update only those already present.
 
-8) Validation (hard gates before finishing)
-   - Constitution:
-     * No unexplained `[TOKENS]`
-     * Version bump matches Impact Report
-     * ISO dates `YYYY-MM-DD`
-     * Principles declarative/testable; avoid vague "should" without rationale
-   - Rules:
-     * All Testing sections present (A-G above)
-     * Examples show **test documentation** blocks and assert quality contribution
-   - Architecture:
-     * GraphBuilder rule present; LSL vs LFL separation explicit
-     * Data-flow and naming conventions explicit
-   - Templates/commands:
-     * All refer to `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}`
-     * All planning commands have TDD/no-mocks/real-data gates
-     * Plan STOP rule intact (no tasks/code during plan)
+8) Validate before writing
+   - No document retains unresolved `[PLACEHOLDER]` tokens.
+   - Version bumps and dates follow ISO `YYYY-MM-DD`.
+   - Principles and rules are actionable, not vague aspirations.
+   - Architecture doc reflects the latest agreed structure without contradicting Rules or Constitution.
+   - Templates/commands (when touched) remain idempotent and reference the canonical paths exactly.
 
-9) Write files
-   - Overwrite: CONST, RULES, ARCH
-   - Apply minimal, surgical edits to templates/commands to correct paths/gates (idempotent).
-   - Preserve manual additions between known markers where present.
+9) Write files atomically
+   - Overwrite CONST, RULES, IDIOMS, and ARCH with the updated content.
+   - Apply the minimal set of edits needed for any templates or helper commands.
+   - Preserve contributor-authored content outside the edited blocks.
 
 10) Final summary (stdout)
-   - New version and bump rationale
-   - Paths updated
-   - Files requiring manual follow-up (if any)
-   - Suggested commit message:
-     `docs: establish/align constitution vX.Y.Z + rules/architecture; gate templates on tests-as-docs (no mocks)`
+   - Include new version, bump rationale, and list of updated paths.
+   - Mention outstanding TODOs or follow-up owners if doctrine remains incomplete.
+   - Provide a commit message suggestion such as `docs: refresh constitution and aligned doctrine files`.
 
 --------------------------------
 ## Synchronized doctrine (authoritative excerpts to enforce)
 
 The following **must** be enforced across Constitution -> Rules & Idioms -> Plan/Tasks/Implementation:
 
-1) **Tests as Documentation (Executable Docs)**
-   - Every test includes a docstring/comment block with:
-     ```
-     """
-     Purpose: <what truth this test proves>
-     Quality Contribution: <how this prevents a class of bugs or improves confidence>
-     Acceptance Criteria: <assertions that must hold; measurable>
-     """
-   - Tests read as documentation: assertions demonstrate behavior, not generic truths.
-   - Maintain compelling, end-to-end "howto" tests under `tests/howto/` for executable documentation.
+1) **Documented Quality Strategy**
+   - Capture how the team proves software is safe to release (automated tests, manual smoke tests, static analysis, runtime monitors).
+   - Encourage technology-specific examples, but keep the core policy portable across stacks.
 
-2) **TDD & No Mocks (real data/fixtures)**
-   - Write/adjust tests first (RED) -> implement minimal code (GREEN) -> refactor (CLEAN).
-   - Prefer **real** repository data and real pipeline fixtures; use `tests.utils.pipeline_helpers.TestWorkspace` for substrate pipeline tests.
-   - Only stub truly external/network dependencies.
+2) **Repeatable Tooling & Environments**
+   - Specify required automation (CI jobs, linters, formatters, build scripts) and how contributors run them locally.
+   - Note any cross-platform considerations (macOS, Linux, Windows/WSL).
 
-3) **Test Quality Assertions**
-   - Avoid "exists/len>0" patterns as proof; assert **specific** relationships/behaviors and minimum coverage thresholds where meaningful.
+3) **Coding & Review Standards**
+   - Define expectations for naming, style, documentation, and code review checklists.
+   - State how decisions trace back to the constitution (e.g., principle IDs or links).
 
-4) **Structure & Configuration**
-   - Centralize pytest config in `pytest.ini` with registered markers.
-   - Keep test directories structured and named consistently.
-   - Provide multi-language test repositories under `tests/test-repos/` for integration coverage.
+4) **Architecture Guardrails**
+   - Describe boundaries between major components, allowed dependencies, and integration hooks.
+   - Include anti-patterns reviewers should watch for and escalation paths when architecture evolves.
 
-5) **Architecture Boundaries**
-   - Enforce substrate layering (LFL/Embedding/LSL/Condense/Graph/Query).
-   - **CRITICAL**: GraphBuilder remains language-agnostic; all language-specific resolution belongs in LSL enrichers.
-   - Maintain naming contracts for LFL/condensed artifacts.
+5) **Change Governance**
+   - Clarify who approves doctrine updates, how often reviews occur, and what evidence is required for compliance.
 
 --------------------------------
 ## Acceptance Criteria (for this command)
-- `/memory/constitution.md` contains no stray placeholders; version bumped with rationale; Governance section present.
-- `docs/rules-idioms-architecture/rules.md` includes Testing sections A-G and **explicit test documentation blocks** and **quality contribution** guidance.
-- `docs/rules-idioms-architecture/architecture.md` encodes layer boundaries, anti-patterns, GraphBuilder rule, and naming contracts.
-- All `templates/` plan/spec/tasks/command prompts refer to **canonical** `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}` and gate on TDD, tests-as-docs, **no mocks**, real data.
-- Final summary lists changes and suggested commit message.
+- `/memory/constitution.md` is fully populated, versioned, and includes a Sync Impact Report.
+- `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}` exist (or are created) and reflect the same doctrine without contradictory guidance.
+- No document retains unresolved placeholders; dates and versions adhere to the rules above.
+- Any touched templates or command prompts reference the canonical doctrine paths and remain stack-neutral.
+- Final summary surfaces version bump, updated paths, and outstanding TODO follow-ups.
 
 --------------------------------
 ## Formatting & Style

@@ -18,7 +18,7 @@ $ARGUMENTS
 
 1) Verify PLAN exists; set PLAN_DIR = dirname(PLAN); define `PHASE_DIR = PLAN_DIR/tasks/${PHASE_SLUG}` and create it if missing (mkdir -p).
 2) Locate the exact phase heading = $PHASE in PLAN. Abort if not found.
-3) Derive **only** the tasks relevant to this phase using `templates/tasks-template.md` rules, but scope to:
+3) Derive **only** the tasks relevant to this phase using the canonical tasks format described below, but scope to:
    - Setup (only what this phase needs)
    - Tests-first (contract/integration/unit) -> MUST FAIL initially
    - Core changes for this phase only
