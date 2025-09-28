@@ -178,11 +178,6 @@ $ python -m mypy src/validators/input_validator.py
 Success: no issues found in 1 source file
 ```
 
-### Performance Metrics:
-- Average validation time: 0.02ms
-- Memory overhead: < 1KB per validation
-- Throughput: 50,000 validations/second
-
 ### Implementation Notes:
 - Follows RFC 5322 for email validation standards
 - Implements rate limiting (100 requests/minute per IP)

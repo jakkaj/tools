@@ -279,15 +279,9 @@ describe('[Component]', () => {
 - [ ] All tests passing (100% of phase tests)
 - [ ] Test coverage > 80% for new code
 - [ ] Mock usage conforms to spec preference (document deviations)
-- [ ] Performance benchmarks met
 - [ ] Documentation updated
 
 #### 8. Cross-Cutting Concerns
-
-### Performance Requirements
-- Response time: < Xms
-- Memory usage: < XMB
-- Concurrent users: X
 
 ### Security Considerations
 - Input validation strategy
