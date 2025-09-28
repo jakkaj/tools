@@ -18,6 +18,7 @@ Flow:
 2) Scan spec with taxonomy (Testing Strategy, FRs, NFRs, data model, integrations, UX, edge cases, terminology).
 3) Ask ONE question at a time (MC table 2-5 options or short answer <=5 words); cap at 5 total.
    - PRIORITIZE Testing Strategy question if not already defined (usually Q1 or Q2)
+   - Ask for mock/stub preference immediately after the testing strategy unless already documented
 4) After each answer: append under `## Clarifications` -> `### Session YYYY-MM-DD`, then update the matching section(s) (Testing Strategy/FRs/NFRs/data model/stories/edge cases). Save after each edit.
 5) Stop when critical ambiguities resolved or cap reached. Emit coverage summary (Resolved/Deferred/Outstanding).
 
@@ -36,12 +37,27 @@ Answer: [A/B/C/D]
 Rationale: [1-2 sentences from user]
 ```
 
+Mock Usage Question Format:
+```
+Q: How should mocks/stubs/fakes be used during implementation?
+
+| Option | Policy | Typical Use |
+|--------|--------|-------------|
+| A | Avoid mocks entirely | Real data/fixtures only |
+| B | Allow targeted mocks | Limited to external systems or slow dependencies |
+| C | Allow liberal mocking | Any component may be mocked when beneficial |
+
+Answer: [A/B/C]
+Rationale: [1-2 sentences from user]
+```
+
 Updates to Spec:
 - Add/Update `## Testing Strategy` section with:
   - **Approach**: [Full TDD | Lightweight | Manual | Hybrid]
   - **Rationale**: [User's reasoning]
   - **Focus Areas**: [What needs thorough testing]
   - **Excluded**: [What doesn't need extensive testing]
+  - **Mock Usage**: [Avoid mocks | Targeted mocks | Liberal mocks] + rationale
 
 Rules:
 - Only high-impact questions; no solutioning.

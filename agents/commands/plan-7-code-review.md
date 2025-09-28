@@ -48,7 +48,7 @@ $ARGUMENTS
    - Plan/Rules conformance: confirm changes uphold `docs/rules-idioms-architecture/{rules.md, idioms.md}`, including:
      - **TDD order** (tests precede implementation in history/evidence)
      - **Tests as documentation** assertions (clear behavioral expectations)
-     - **No mocks**; real repo data/fixtures
+     - **Mock usage matches spec preference** (avoid/targeted/liberal)
      - Absolute paths and explicitness (no hidden context assumptions)
      If any are missing, mark CRITICAL with concrete remediation steps. :contentReference[oaicite:4]{index=4}
    - BridgeContext patterns when applicable to VS Code/TS:
@@ -73,7 +73,6 @@ $ARGUMENTS
    - **Performance:** unbounded scans, N+1, sync I/O in async paths
    - **Security:** path traversal, injection, unsafe temp files, secrets
    - **Remote-safety:** avoid Node `fs/path` where VS Code FS/Uri APIs are required
-   - **Parallelism correctness:** if tasks marked [P], ensure touched files are disjoint; else require serialization
    Return precise comments with file:line and a one-paragraph rationale; attach patch hints when small. :contentReference[oaicite:7]{index=7} :contentReference[oaicite:8]{index=8}
 
 6) Static & type checks (project-native)
@@ -88,7 +87,7 @@ $ARGUMENTS
      C) **Checklist** (pass/fail)
         - Tests precede code (evidence ref)
         - Tests as docs (assertions show behavior)
-        - No mocks; real data/fixtures used
+        - Mock usage matches spec
         - BridgeContext patterns followed (Uri, RelativePattern, module: 'pytest')
         - Only in-scope files changed
         - Linters/type checks are clean
@@ -103,7 +102,6 @@ $ARGUMENTS
    - `PLAN_DIR/reviews/fix-tasks.${PHASE_SLUG}.md` (only if REQUEST_CHANGES)
      - Micro-tasks with exact file paths + patch hints
      - Tests-first ordering for each fix (what to assert, then code)
-     - Mark [P] only for disjoint files
 
 8) Style & constraints
    - Read-only: do not change source files.
@@ -122,9 +120,8 @@ Notes:
 
 Review rubric baked into this phase
 
-- **Doctrine**: TDD, tests-as-documentation, **no mocks**, real repo data/fixtures. Flag drift as CRITICAL/HIGH with test-first fix guidance.
+- **Doctrine**: TDD, tests-as-documentation, mock usage aligned with the spec, real repo data/fixtures whenever the policy requires it. Flag drift as CRITICAL/HIGH with test-first fix guidance.
 - **BridgeContext patterns** for VS Code/TypeScript work: bounded `vscode.RelativePattern`, remote-safe `vscode.Uri`, pytest debug via `module` not `program` with `--no-cov`.
-- **Task/file safety**: [P] only for disjoint files; require serialization otherwise.
 - **Plan authority**: Changes must map to the locked structure and explicit acceptance criteria from planning.
 
 Flow update (ordered commands)

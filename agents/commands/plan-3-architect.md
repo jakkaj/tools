@@ -100,7 +100,7 @@ Inputs:
 ## PHASE 4: Plan Document Generation
 
 ### Testing Strategy Adaptation
-Read the `## Testing Strategy` section from the spec and adapt plan generation accordingly:
+Read the `## Testing Strategy` section from the spec and adapt plan generation accordingly. Capture both the testing approach and the mock usage preference; reflect both throughout the plan.
 
 - **Full TDD**: Generate comprehensive test-first tasks for all phases (current template)
 - **Lightweight**:
@@ -177,10 +177,10 @@ Quality Contribution: [how this prevents bugs]
 Acceptance Criteria: [measurable assertions]
 """
 
-### No Mocks Policy (when applicable)
-- Use real data and fixtures
-- Use test databases/repos
-- Only stub external network calls
+### Mock Usage (align with spec)
+- If spec says "Avoid mocks": use real data/fixtures; only stub truly external calls (network/SaaS)
+- If spec says "Targeted mocks": permit mocks for explicitly slow/external dependencies; document rationale per phase
+- If spec says "Liberal mocks": allow mocks/stubs wherever they improve clarity or speed; ensure acceptance criteria still cover end-to-end behavior
 ```
 
 #### 7. Implementation Phases
@@ -278,7 +278,7 @@ describe('[Component]', () => {
 ### Acceptance Criteria
 - [ ] All tests passing (100% of phase tests)
 - [ ] Test coverage > 80% for new code
-- [ ] No mocks used (only real data/fixtures)
+- [ ] Mock usage conforms to spec preference (document deviations)
 - [ ] Performance benchmarks met
 - [ ] Documentation updated
 
@@ -343,7 +343,7 @@ During implementation, footnote tags from task Notes will be added here with det
 - [ ] Each task has clear success criteria
 - [ ] Test examples provided for each phase
 - [ ] TDD approach evident (tests before implementation)
-- [ ] No mocks policy stated
+- [ ] Mock usage policy mirrors spec
 - [ ] Absolute paths used throughout
 - [ ] Dependencies clearly stated
 - [ ] Risks identified with mitigations

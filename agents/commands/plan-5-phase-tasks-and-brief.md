@@ -39,12 +39,12 @@ $ARGUMENTS
 4) Write a single combined artifact `PHASE_DIR/tasks.md` containing:
    - Phase metadata (title, slug, links to SPEC and PLAN, today {{TODAY}}).
    - `## Tasks` section that renders the table exactly as defined above (Status checkbox first, then ID, Task, Type, Dependencies, Absolute Path(s), Validation, Notes) with numbered items (T001...), dependencies, [P] guidance, and validation checklist coverage.
-  - `## Alignment Brief` section with:
+   - `## Alignment Brief` section with:
      * Objective recap + behavior checklist (tie to PLAN acceptance criteria)
      * Invariants & guardrails (perf/memory/security budgets if relevant)
      * Inputs to read (exact file paths)
      * Visual alignment aids: capture both a Mermaid flow diagram (system states) and a Mermaid sequence diagram (actor/interaction order). Treat these as shared-understanding checkpoints so the human sponsor and coding agent agree on the flow before implementation begins.
-     * **Test Plan (TDD, tests-as-docs, no mocks, real data)**: enumerate named tests with rationale, fixtures, expected outputs
+     * **Test Plan (TDD vs lightweight per spec, honor mock usage preference)**: enumerate named tests with rationale, fixtures, expected outputs
      * Step-by-step implementation outline mapped 1:1 to the tasks/tests
      * Commands to run (copy/paste): env setup, test runner, linters, type checks
      * Risks/unknowns & **rollback plan**
@@ -64,7 +64,7 @@ $ARGUMENTS
      ```
 
 Rules & Stack Patterns:
-- Follow `docs/rules-idioms-architecture/{rules.md, idioms.md}` (TDD, tests-as-docs, no mocks, real data). :contentReference[oaicite:13]{index=13}
+- Follow `docs/rules-idioms-architecture/{rules.md, idioms.md}` (TDD, tests-as-docs; apply the mock usage preference captured in the spec; use real data when required). :contentReference[oaicite:13]{index=13}
 - Apply BridgeContext patterns when relevant: bounded `vscode.RelativePattern`, remote-safe `vscode.Uri`, Python debugging via `module: 'pytest'` with `--no-cov`. :contentReference[oaicite:14]{index=14}
 
 STOP: Do **not** edit code. Output the combined `PHASE_DIR/tasks.md` and wait for human **GO**.
