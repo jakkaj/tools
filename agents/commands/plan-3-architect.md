@@ -208,27 +208,27 @@ For EACH phase, generate:
 ### Tasks (Adapt based on Testing Strategy)
 
 For **Full TDD** approach:
-| #   | Status | Task | Success Criteria | Notes |
-|-----|--------|------|------------------|-------|
-| N.1 | [ ] | Write comprehensive tests for [component] | Tests cover: [scenarios], all fail initially | |
-| N.2 | [ ] | Implement [component] to pass tests | All tests from N.1 pass | |
-| N.3 | [ ] | Write integration tests for [feature] | Tests document expected behavior | |
-| N.4 | [ ] | Integrate [component] with [system] | Integration tests pass | |
-| N.5 | [ ] | Refactor for [quality aspect] | Code meets idioms, tests still pass | |
+| #   | Status | Task | Success Criteria | Log | Notes |
+|-----|--------|------|------------------|-----|-------|
+| N.1 | [ ] | Write comprehensive tests for [component] | Tests cover: [scenarios], all fail initially | - | |
+| N.2 | [ ] | Implement [component] to pass tests | All tests from N.1 pass | - | |
+| N.3 | [ ] | Write integration tests for [feature] | Tests document expected behavior | - | |
+| N.4 | [ ] | Integrate [component] with [system] | Integration tests pass | - | |
+| N.5 | [ ] | Refactor for [quality aspect] | Code meets idioms, tests still pass | - | |
 
 For **Lightweight** approach:
-| #   | Status | Task | Success Criteria | Notes |
-|-----|--------|------|------------------|-------|
-| N.1 | [ ] | Implement [component] | Basic functionality works | |
-| N.2 | [ ] | Write validation test | Core behavior verified | |
-| N.3 | [ ] | Run smoke test | End-to-end flow works | |
+| #   | Status | Task | Success Criteria | Log | Notes |
+|-----|--------|------|------------------|-----|-------|
+| N.1 | [ ] | Implement [component] | Basic functionality works | - | |
+| N.2 | [ ] | Write validation test | Core behavior verified | - | |
+| N.3 | [ ] | Run smoke test | End-to-end flow works | - | |
 
 For **Manual Only** approach:
-| #   | Status | Task | Success Criteria | Notes |
-|-----|--------|------|------------------|-------|
-| N.1 | [ ] | Implement [component] | Functionality complete | |
-| N.2 | [ ] | Document manual test steps | Clear verification process | |
-| N.3 | [ ] | Execute manual validation | All checks pass | |
+| #   | Status | Task | Success Criteria | Log | Notes |
+|-----|--------|------|------------------|-----|-------|
+| N.1 | [ ] | Implement [component] | Functionality complete | - | |
+| N.2 | [ ] | Document manual test steps | Clear verification process | - | |
+| N.3 | [ ] | Execute manual validation | All checks pass | - | |
 
 For **Hybrid** approach:
 [Mark each phase as Full TDD or Lightweight based on complexity]
@@ -391,16 +391,16 @@ Note: This example shows Full TDD approach. Adapt based on Testing Strategy from
 
 ### Tasks (TDD Approach)
 
-| #   | Status | Task | Success Criteria | Notes |
-|-----|--------|------|------------------|-------|
-| 1.1 | [ ] | Write comprehensive tests for BridgeContext | Tests cover: version check, getWorkspace, getConfiguration, error cases | Create BridgeContext.test.ts |
-| 1.2 | [ ] | Write tests for BridgeContext factory | Tests cover: singleton behavior, lifecycle, context injection | Create factory.test.ts |
-| 1.3 | [ ] | Create BridgeContext TypeScript interface | Interface compiles, exports properly | Define in types.ts |
-| 1.4 | [ ] | Implement BridgeContext to pass tests | All tests from 1.1 pass | Thin wrappers around VS Code APIs |
-| 1.5 | [ ] | Implement factory to pass tests | All tests from 1.2 pass | Singleton pattern |
-| 1.6 | [ ] | Write tests for logger service | Tests cover: log levels, output channel, formatting | Integrate with BridgeContext.test.ts |
-| 1.7 | [ ] | Implement logger service | Logger uses OutputChannel, all tests pass | Use VS Code OutputChannel API |
-| 1.8 | [ ] | Create index exports and validate | Can import from 'core/bridge-context' | Clean module exports |
+| #   | Status | Task | Success Criteria | Log | Notes |
+|-----|--------|------|------------------|-----|-------|
+| 1.1 | [ ] | Write comprehensive tests for BridgeContext | Tests cover: version check, getWorkspace, getConfiguration, error cases | - | Create BridgeContext.test.ts |
+| 1.2 | [ ] | Write tests for BridgeContext factory | Tests cover: singleton behavior, lifecycle, context injection | - | Create factory.test.ts |
+| 1.3 | [ ] | Create BridgeContext TypeScript interface | Interface compiles, exports properly | - | Define in types.ts |
+| 1.4 | [ ] | Implement BridgeContext to pass tests | All tests from 1.1 pass | - | Thin wrappers around VS Code APIs |
+| 1.5 | [ ] | Implement factory to pass tests | All tests from 1.2 pass | - | Singleton pattern |
+| 1.6 | [ ] | Write tests for logger service | Tests cover: log levels, output channel, formatting | - | Integrate with BridgeContext.test.ts |
+| 1.7 | [ ] | Implement logger service | Logger uses OutputChannel, all tests pass | - | Use VS Code OutputChannel API |
+| 1.8 | [ ] | Create index exports and validate | Can import from 'core/bridge-context' | - | Clean module exports |
 
 ### Test Examples (Write First!)
 

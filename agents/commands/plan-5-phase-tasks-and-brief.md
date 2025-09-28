@@ -9,12 +9,6 @@ Please deep think / ultrathink as this is a complex task.
 **One phase at a time.** Generate an actionable **tasks + alignment brief dossier** (`tasks.md`) for the chosen phase, plus the supporting directory structure, and stop before implementation. This merges your previous "tasks" generation with the pre-implementation walkthrough, scoped strictly to **one** phase.
 
 ```md
----
-scripts:
-  sh: scripts/bash/check-prerequisites.sh --json
-  ps: scripts/powershell/check-prerequisites.ps1 -Json
----
-
 User input:
 
 $ARGUMENTS
@@ -22,7 +16,7 @@ $ARGUMENTS
 # --phase "<Phase N: Title>"
 # --plan "<abs path to docs/plans/<ordinal>-<slug>/<slug>-plan.md>"
 
-1) Run {SCRIPT}; verify PLAN exists; set PLAN_DIR = dirname(PLAN); define `PHASE_DIR = PLAN_DIR/tasks/${PHASE_SLUG}` and create it if missing (mkdir -p).
+1) Verify PLAN exists; set PLAN_DIR = dirname(PLAN); define `PHASE_DIR = PLAN_DIR/tasks/${PHASE_SLUG}` and create it if missing (mkdir -p).
 2) Locate the exact phase heading = $PHASE in PLAN. Abort if not found.
 3) Derive **only** the tasks relevant to this phase using `templates/tasks-template.md` rules, but scope to:
    - Setup (only what this phase needs)

@@ -9,18 +9,12 @@ Please deep think / ultrathink as this is a complex task.
 Create or update the feature **spec** from a natural-language description (WHAT/WHY only; no tech choices). Mirrors your templates and script flow.
 
 ```md
----
-scripts:
-  sh: scripts/bash/create-new-feature.sh --json "{ARGS}"
-  ps: scripts/powershell/create-new-feature.ps1 -Json "{ARGS}"
----
-
 User input:
 
 $ARGUMENTS
 
-1) Run {SCRIPT} once from repo root; parse JSON for BRANCH_NAME and determine:
-   - PLAN_DIR = `docs/plans/<ordinal>-<slug>/` (from script output)
+1) Determine the feature slug from user input and create:
+   - PLAN_DIR = `docs/plans/<ordinal>-<slug>/` (use next available ordinal)
    - SPEC_FILE = `${PLAN_DIR}/<slug>-spec.md` (spec co-located with plan)
 2) Ensure PLAN_DIR exists (create if needed).
 3) Load `templates/spec-template.md`; fill sections from the user description; **leave implementation details out**.

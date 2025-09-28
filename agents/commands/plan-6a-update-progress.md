@@ -7,12 +7,6 @@ description: Update plan progress with task status, flowspace node ID footnotes,
 Update the plan's progress tracking, footnotes ledger with flowspace node IDs, and maintain detailed task execution log.
 
 ```md
----
-scripts:
-  sh: scripts/bash/check-prerequisites.sh --json --include-tasks
-  ps: scripts/powershell/check-prerequisites.ps1 -Json -IncludeTasks
----
-
 User input:
 
 $ARGUMENTS
@@ -25,7 +19,7 @@ $ARGUMENTS
 
 ## Phase 1: Resolve Paths & Load Current State
 
-1) Run {SCRIPT} to determine:
+1) Determine paths:
    - PLAN = provided --plan path
    - PLAN_DIR = dirname(PLAN)
    - PHASE_DIR = PLAN_DIR/tasks/${PHASE_SLUG}
@@ -33,6 +27,7 @@ $ARGUMENTS
 
 2) Load current state:
    - Read plan markdown to locate the phase and task table
+   - Identify testing approach from table header (TDD, Lightweight, Manual, Hybrid)
    - Parse existing Change Footnotes Ledger
    - Read current task log (create if missing with proper header)
    - Determine next footnote number
@@ -46,20 +41,26 @@ Locate the task row in the phase's task table and update:
 - `[ ]` → `[~]` for in_progress
 - `[ ]` → `[!]` for blocked
 
-### Notes Column Update:
-Add completion metadata and footnote reference:
+### Log Column Update:
+Add link to execution log for non-pending tasks:
+
+```bash
+# Generate anchor ID for the task
+TASK_ANCHOR=$(echo "task-${TASK_ID}-${TASK_NAME}" | tr ' ' '-' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g')
+# Example: "Task 2.3: Implement validation" → "task-23-implement-validation"
+```
 
 Before:
-| 2.3 | [ ] | Implement validation | Tests pass | |
+| 2.3 | [ ] | Implement validation | Tests pass | - | |
 
 After (completed):
-| 2.3 | [x] | Implement validation | Tests pass | Completed 2025-09-28 14:30 [^3] |
+| 2.3 | [x] | Implement validation | Tests pass | [📋](tasks/phase-2/execution.log.md#task-23-implement-validation) | Completed [^3] |
 
 After (in_progress):
-| 2.3 | [~] | Implement validation | Tests pass | In progress - 70% done [^3] |
+| 2.3 | [~] | Implement validation | Tests pass | [📋](tasks/phase-2/execution.log.md#task-23-implement-validation) | In progress [^3] |
 
 After (blocked):
-| 2.3 | [!] | Implement validation | Tests pass | Blocked: dependency issue [^3] |
+| 2.3 | [!] | Implement validation | Tests pass | [📋](tasks/phase-2/execution.log.md#task-23-implement-validation) | Blocked [^3] |
 
 ## Phase 3: Generate Flowspace Node ID Footnotes
 
@@ -116,10 +117,28 @@ Append to Change Footnotes Ledger section:
 
 ## Phase 4: Update Task Execution Log
 
+### Generate Anchor IDs:
+```bash
+# Phase anchor for plan deep link
+PHASE_ANCHOR=$(echo "phase-${PHASE_NUM}-${PHASE_NAME}" | tr ' ' '-' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g')
+# Example: "Phase 2: Input Validation" → "phase-2-input-validation"
+
+# Task table anchor based on testing approach
+# Detect from table header: "### Tasks (TDD Approach)" → "tasks-tdd-approach"
+# Or "### Tasks (Lightweight Approach)" → "tasks-lightweight-approach"
+TABLE_ANCHOR=$(grep -B5 "| ${TASK_ID} |" plan.md | grep "^### Tasks" | sed 's/### Tasks (//;s/ Approach)//;s/ /-/g' | tr '[:upper:]' '[:lower:]')
+TABLE_ANCHOR="tasks-${TABLE_ANCHOR}-approach"
+
+# Task anchor for this log entry
+TASK_ANCHOR=$(echo "task-${TASK_ID}-${TASK_NAME}" | tr ' ' '-' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g')
+```
+
 Append detailed entry to PHASE_DIR/execution.log.md:
 
 ```markdown
 ## Task 2.3: Implement validation
+**Plan Reference**: [Phase 2: Input Validation](../../${PLAN_NAME}#${PHASE_ANCHOR})
+**Task Table Entry**: [View Task 2.3 in Plan](../../${PLAN_NAME}#${TABLE_ANCHOR})
 **Status**: Completed
 **Started**: 2025-09-28 13:45:00
 **Completed**: 2025-09-28 14:30:00
@@ -251,6 +270,10 @@ Phase: Phase 2: Input Validation
 Task: 2.3 - Implement validation
 Status: completed
 
+Links Created:
+- Plan → Log: Added [📋] link in task table pointing to execution.log.md#task-23-implement-validation
+- Log → Plan: Added Plan Reference link pointing back to plan.md#phase-2-input-validation
+
 Footnotes Added:
 - [^3]: Task 2.3 - Added validation function (2 functions)
 - [^4]: Task 2.3 - Updated authentication flow (2 methods)
@@ -304,6 +327,8 @@ Next: Continue with Task 2.4 or run /plan-7-code-review if phase complete
 3. **Use correct node types** - method vs function matters
 4. **Add context in log** - Future you will thank you
 5. **Verify before commit** - Check footnote links work
+6. **Test deep links** - Ensure both directions navigate correctly
+7. **Use consistent anchors** - Follow the kebab-case convention
 
 ## Troubleshooting:
 

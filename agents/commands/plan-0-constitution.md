@@ -7,12 +7,6 @@ Please deep think / ultrathink as this is a complex task.
 # plan-0-constitution (alias: phase-0-constitution)
 
 ````md
----
-scripts:
-  sh: scripts/bash/check-prerequisites.sh --json --paths-only
-  ps: scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
----
-
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding (if not empty).
 
 User input:

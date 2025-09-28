@@ -263,10 +263,10 @@ Gate PASSED.
 
 | #   | Status | Task | Success Criteria | Notes |
 |-----|--------|------|------------------|-------|
-| 1.1 | [ ] | Add Copilot directory variables | Variables defined in agents.sh | COPILOT_GLOBAL_DIR, COPILOT_WORKSPACE_DIR |
-| 1.2 | [ ] | Implement directory creation | Directories created with mkdir -p | Handle existing gracefully |
-| 1.3 | [ ] | Add error handling for permissions | Log warning, continue on fail | Non-fatal errors |
-| 1.4 | [ ] | Write basic validation test | Verify directories exist after run | Simple existence check |
+| 1.1 | [x] | Add Copilot directory variables | Variables defined in agents.sh | [📋](tasks/phase-1-directory-variable-setup/execution.log.md#task-t004-define-copilot-directory-variables) Completed [^2] |
+| 1.2 | [x] | Implement directory creation | Directories created with mkdir -p | [📋](tasks/phase-1-directory-variable-setup/execution.log.md#task-t005-add-copilot-directory-creation-logic) Completed [^3] |
+| 1.3 | [x] | Add error handling for permissions | Log warning, continue on fail | [📋](tasks/phase-1-directory-variable-setup/execution.log.md#task-t006-add-non-fatal-permission-handling) Completed [^4] |
+| 1.4 | [x] | Write basic validation test | Verify directories exist after run | [📋](tasks/phase-1-directory-variable-setup/execution.log.md#task-t002-create-copilot-directory-integration-test) Completed [^1] |
 
 ### Validation Test Example
 
@@ -288,10 +288,12 @@ test_directories_exist() {
 ```
 
 ### Acceptance Criteria
-- [ ] Copilot directories created
-- [ ] Variables properly defined
-- [ ] Script continues on errors
-- [ ] Basic validation passes
+- [x] Copilot directories created
+- [x] Variables properly defined
+- [x] Script continues on errors
+- [x] Basic validation passes
+
+**Progress**: 4/4 tasks complete (100%)
 
 ---
 
@@ -598,11 +600,13 @@ This is a simple additive change to an existing script with no new abstractions 
 ## 11. Progress Checklist
 
 ### Phase Completion Checklist
-- [ ] Phase 1: Directory & Variable Setup - PENDING
+- [x] Phase 1: Directory & Variable Setup - COMPLETE (see Plan Footnotes [^1-^4])
 - [ ] Phase 2: Copy & Rename Operations - PENDING
 - [ ] Phase 3: VS Code Settings Merge - PENDING
 - [ ] Phase 4: Idempotency Verification - PENDING
 - [ ] Phase 5: Documentation Update - DEFERRED
+
+**Overall Progress**: 1/5 phases complete (20%)
 
 ### STOP Rule
 **IMPORTANT**: This plan must be validated before creating tasks. After this plan is complete:
@@ -615,13 +619,19 @@ Do NOT begin implementation without validation.
 
 ## 12. Change Footnotes Ledger
 
-**NOTE**: This section will be populated during implementation by plan-6-implement-phase.
+**NOTE**: This section is populated during implementation by plan-6-implement-phase.
 
-During implementation, footnote tags from task Notes will be added here with details per AGENTS.md:
-
-[^1]: [To be added during implementation]
-[^2]: [To be added during implementation]
-[^3]: [To be added during implementation]
+[^1]: Phase 1 T002 – Added Copilot directory integration test harness.
+  - `file:tests/install/test_agents_copilot_dirs.sh`
+[^2]: Phase 1 T004 – Introduced Copilot directory variables and status messaging.
+  - `file:install/agents.sh`
+  - `function:install/agents.sh:main`
+[^3]: Phase 1 T005 – Added Copilot directory creation logic with idempotent handling.
+  - `file:install/agents.sh`
+  - `function:install/agents.sh:main`
+[^4]: Phase 1 T006 – Added non-fatal permission handling for Copilot directories.
+  - `file:install/agents.sh`
+  - `function:install/agents.sh:main`
 
 ---
 

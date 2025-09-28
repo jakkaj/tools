@@ -9,18 +9,12 @@ Please deep think / ultrathink as this is a complex task.
 Ask **<=5** high-impact questions, write answers into the **spec**, and update affected sections immediately.
 
 ```md
----
-scripts:
-  sh: scripts/bash/check-prerequisites.sh --json --paths-only
-  ps: scripts/powershell/check-prerequisites.ps1 -Json -PathsOnly
----
-
 User input:
 
 $ARGUMENTS
 
 Flow:
-1) Run {SCRIPT}; determine PLAN_DIR from output, then set FEATURE_SPEC = `${PLAN_DIR}/<slug>-spec.md` (spec co-located with plan).
+1) Determine PLAN_DIR from the spec path provided, then set FEATURE_SPEC = `${PLAN_DIR}/<slug>-spec.md` (spec co-located with plan).
 2) Scan spec with taxonomy (Testing Strategy, FRs, NFRs, data model, integrations, UX, edge cases, terminology).
 3) Ask ONE question at a time (MC table 2-5 options or short answer <=5 words); cap at 5 total.
    - PRIORITIZE Testing Strategy question if not already defined (usually Q1 or Q2)

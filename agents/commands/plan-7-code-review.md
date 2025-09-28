@@ -13,12 +13,6 @@ Goal: read the diffs for **one implemented phase**, validate they match the appr
 Why now: this runs after `plan-6-implement-phase`, leveraging its execution log, diffs, and test evidence; it enforces your planning gates and rules before merge.
 
 ```md
----
-scripts:
-  sh: scripts/bash/check-prerequisites.sh --json --include-diffs
-  ps: scripts/powershell/check-prerequisites.ps1 -Json -IncludeDiffs
----
-
 User input:
 
 $ARGUMENTS

@@ -7,12 +7,6 @@ description: Implement exactly one approved phase via strict TDD using the combi
 Implement **exactly** the approved phase via strict **TDD** using the **phase tasks** and **brief** produced in step 5; emit diffs and evidence. (No global analyze step.)
 
 ```md
----
-scripts:
-  sh: scripts/bash/check-prerequisites.sh --json --include-tasks
-  ps: scripts/powershell/check-prerequisites.ps1 -Json -IncludeTasks
----
-
 User input:
 
 $ARGUMENTS
@@ -20,7 +14,7 @@ $ARGUMENTS
 # --phase "<Phase N: Title>"
 # --plan "<abs path to docs/plans/<ordinal>-<slug>/<slug>-plan.md>"
 
-1) Run {SCRIPT}; resolve:
+1) Resolve paths:
    PLAN        = provided --plan
    PLAN_DIR    = dirname(PLAN)
    PHASE_DIR   = PLAN_DIR/tasks/${PHASE_SLUG}

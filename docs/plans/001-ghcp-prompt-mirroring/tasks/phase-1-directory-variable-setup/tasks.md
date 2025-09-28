@@ -72,27 +72,35 @@ notes:
 - *Rollback*: Revert edits in `install/agents.sh` and remove newly added test assets via `git restore install/agents.sh tests/install`; delete temp directories if created manually.
 
 **Ready Check (await GO/NO-GO)**  
-- [ ] Prerequisite check script available or alternative validation agreed.  
-- [ ] Workspace parents for `/Users/jordanknight/github/tools/tests/install/` created.  
-- [ ] Temporary HOME strategy approved (avoids polluting real user dirs).  
-- [ ] Acceptance criteria + test plan acknowledged.
+- [x] Manual override approved for missing `scripts/bash/check-prerequisites.sh` (documented in execution log).  
+- [x] Workspace parents for `/Users/jordanknight/github/tools/tests/install/` created.  
+- [x] Temporary HOME strategy validated through integration harness.  
+- [x] Acceptance criteria + test plan executed (see `execution.log.md`).
 
 ## Phase Footnote Stubs
 | Task ID | Notes |
 |---------|-------|
-| T002 | Create integration test harness for Copilot directories at `/Users/jordanknight/github/tools/tests/install/test_agents_copilot_dirs.sh`; document placeholders pending ledger details. [^1] |
-| T004 | Introduce Copilot directory variables + status messaging inside `/Users/jordanknight/github/tools/install/agents.sh`. [^2] |
-| T005 | Extend directory creation logic for Copilot targets with idempotent handling in `/Users/jordanknight/github/tools/install/agents.sh`. [^3] |
-| T006 | Add non-fatal permission handling + warnings around Copilot directory creation in `/Users/jordanknight/github/tools/install/agents.sh`. [^4] |
+| T002 | Copilot directory integration test at `/Users/jordanknight/github/tools/tests/install/test_agents_copilot_dirs.sh` ensures installer provisions global/workspace prompts. [^1] |
+| T004 | Copilot directory variables and status messaging defined in `/Users/jordanknight/github/tools/install/agents.sh`. [^2] |
+| T005 | Copilot directory creation logic added with idempotent handling in `/Users/jordanknight/github/tools/install/agents.sh`. [^3] |
+| T006 | Copilot directory permission warning + continue-on-failure logic added in `/Users/jordanknight/github/tools/install/agents.sh`. [^4] |
 
-[^1]: Placeholder for Plan 6 ledger entry describing the new Copilot directory test asset.
-[^2]: Placeholder for Plan 6 ledger entry documenting new Copilot variables in `install/agents.sh`.
-[^3]: Placeholder for Plan 6 ledger entry covering Copilot directory creation logic changes.
-[^4]: Placeholder for Plan 6 ledger entry summarizing error-handling additions for Copilot directories.
+[^1]: T002 – Added integration harness for Copilot directories.
+  - `file:tests/install/test_agents_copilot_dirs.sh`
+[^2]: T004 – Introduced Copilot directory variables and logging targets.
+  - `file:install/agents.sh`
+  - `function:install/agents.sh:main`
+[^3]: T005 – Added Copilot directory creation logic with `mkdir -p` idempotency.
+  - `file:install/agents.sh`
+  - `function:install/agents.sh:main`
+[^4]: T006 – Added non-fatal permission handling for Copilot directories.
+  - `file:install/agents.sh`
+  - `function:install/agents.sh:main`
 
 ## Evidence Artifacts
-- Future execution log: `/Users/jordanknight/github/tools/docs/plans/001-ghcp-prompt-mirroring/tasks/phase-1-directory-variable-setup/execution.log.md` (created during Plan 6).  
-- Test artifacts: `/Users/jordanknight/github/tools/tests/install/test_agents_copilot_dirs.sh` (primary evidence), plus any temporary workspace notes stored under this phase directory if needed.
+- Phase execution log: `/Users/jordanknight/github/tools/docs/plans/001-ghcp-prompt-mirroring/tasks/phase-1-directory-variable-setup/execution.log.md`.
+- Integration test harness: `/Users/jordanknight/github/tools/tests/install/test_agents_copilot_dirs.sh`.
+- Test run outputs: captured within `execution.log.md` (T003 failure, T007 success).
 
 ```
 docs/plans/001-ghcp-prompt-mirroring/
