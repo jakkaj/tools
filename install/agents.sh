@@ -11,6 +11,7 @@ MCP_SOURCE="${REPO_ROOT}/agents/mcp/servers.json"
 TARGET_DIR="${HOME}/.claude/commands"
 OPENCODE_DIR="${HOME}/.config/opencode/command"
 CODEX_DIR="${HOME}/.codex/prompts"
+COPILOT_GLOBAL_DIR="${HOME}/.config/github-copilot/prompts"
 SYSTEM_NAME="$(uname -s)"
 
 if [[ "${SYSTEM_NAME}" == "Darwin" ]]; then
@@ -205,7 +206,9 @@ main() {
     echo "     Agent Commands Setup Script      "
     echo "======================================"
     echo ""
-    
+
+    print_status "Copilot global directory target: ${COPILOT_GLOBAL_DIR}"
+
     # Check if source directory exists
     if [ ! -d "${SOURCE_DIR}" ]; then
         print_error "Source directory not found: ${SOURCE_DIR}"
@@ -247,6 +250,17 @@ main() {
     else
         print_status "VS Code project directory already exists: ${VSCODE_PROJECT_DIR}"
     fi
+
+    if [ ! -d "${COPILOT_GLOBAL_DIR}" ]; then
+        if mkdir -p "${COPILOT_GLOBAL_DIR}"; then
+            print_success "Created Copilot global directory: ${COPILOT_GLOBAL_DIR}"
+        else
+            print_error "Could not create Copilot global directory: ${COPILOT_GLOBAL_DIR} (continuing)"
+        fi
+    else
+        print_status "Copilot global directory already exists: ${COPILOT_GLOBAL_DIR}"
+    fi
+
     
     # Count files to copy
     file_count=$(find "${SOURCE_DIR}" -maxdepth 1 -name "*.md" -type f | wc -l | tr -d ' ')
@@ -266,15 +280,27 @@ main() {
             opencode_file="${OPENCODE_DIR}/${filename}"
             codex_file="${CODEX_DIR}/${filename}"
             vscode_project_file="${VSCODE_PROJECT_DIR}/${filename}"
+            copilot_prompt_name="${filename%.md}.prompt.md"
+            copilot_global_file="${COPILOT_GLOBAL_DIR}/${copilot_prompt_name}"
 
             # Copy to destinations
             cp "${file}" "${target_file}"
             cp "${file}" "${opencode_file}"
             cp "${file}" "${codex_file}"
             cp "${file}" "${vscode_project_file}"
-            echo "  [↻] ${filename} (copied to all locations including VS Code project)"
+            cp "${file}" "${copilot_global_file}"
+            echo "  [↻] ${filename} (updated Claude/OpenCode/Codex/VS Code)"
+            echo "  [↻ Copilot] ${filename} -> ${copilot_prompt_name}"
         fi
     done
+
+    # Idempotency: installer overwrites prompt copies on each run (validated by tests/install/test_complete_flow.sh).
+    copilot_global_count=$(find "${COPILOT_GLOBAL_DIR}" -maxdepth 1 -type f -name "*.prompt.md" | wc -l | tr -d ' ')
+    if [ "${copilot_global_count}" -eq "${file_count}" ]; then
+        echo "[✓ Idempotent] Copilot prompts mirrored (${copilot_global_count} of ${file_count} sources)"
+    else
+        print_error "[Idempotent] Copilot prompt count mismatch (sources=${file_count}, global=${copilot_global_count})"
+    fi
 
     echo ""
     print_status "Configuring MCP servers from ${MCP_SOURCE}"

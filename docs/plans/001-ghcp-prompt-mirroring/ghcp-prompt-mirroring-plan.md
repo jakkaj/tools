@@ -303,11 +303,10 @@ test_directories_exist() {
 
 **Deliverables**:
 - All source files copied to global directory
-- All source files copied to workspace directory (when applicable)
 - Files renamed with `.prompt.md` extension
 - Existing destinations still receive original `.md` files
 
-**Dependencies**: Phase 1 (directories must exist)
+**Dependencies**: Phase 1 (global directory must exist)
 
 **Risks**:
 
@@ -317,16 +316,18 @@ test_directories_exist() {
 | Filename collision | Low | Low | Overwrite is desired behavior |
 | Special characters in filenames | Low | Medium | Quote all variables properly |
 | Source files missing | Low | High | Check source directory exists |
+| Workspace copy unexpectedly enabled | Low | Low | Keep workspace path creation behind optional flag |
+| Missing global directory | Low | High | Guard with mkdir -p |
 
 ### Tasks (Lightweight Approach)
 
 | #   | Status | Task | Success Criteria | Notes |
 |-----|--------|------|------------------|-------|
-| 2.1 | [ ] | Implement file copy loop | All .md files copied | Simple for loop |
-| 2.2 | [ ] | Add rename logic during copy | Files saved as .prompt.md | Basename manipulation |
-| 2.3 | [ ] | Add progress output | User sees activity | Echo statements |
-| 2.4 | [ ] | Write validation test | Verify files copied correctly | Check existence and naming |
-| 2.5 | [ ] | Test idempotency | Second run works cleanly | Manual verification |
+| 2.1 | [x] | Implement file copy loop | All .md files copied to global | [📋](tasks/phase-2-copy-rename-operations/execution.log.md#task-t004-add-copilot-copy-loop) Completed [^6] |
+| 2.2 | [x] | Add rename logic during copy | Files saved as `.prompt.md` | [📋](tasks/phase-2-copy-rename-operations/execution.log.md#task-t004-add-copilot-copy-loop) Completed [^6] |
+| 2.3 | [x] | Add progress output | User sees activity | [📋](tasks/phase-2-copy-rename-operations/execution.log.md#task-t005-improve-logging-idempotency) Completed [^7] |
+| 2.4 | [x] | Write validation test | Verify global copies | [📋](tasks/phase-2-copy-rename-operations/execution.log.md#task-t002-extend-copilot-tests) Completed [^5] |
+| 2.5 | [x] | Test idempotency | Second run works cleanly | [📋](tasks/phase-2-copy-rename-operations/execution.log.md#task-t006-run-tests-green) Completed |
 
 ### Validation Test Example
 
@@ -370,76 +371,25 @@ test_idempotency() {
 ```
 
 ### Acceptance Criteria
-- [ ] All files copied to destinations
-- [ ] Files have .prompt.md extension
-- [ ] Script runs without errors
-- [ ] Idempotent execution works
+- [x] All files copied to global destination
+- [x] Files have `.prompt.md` extension
+- [x] Script runs without errors
+- [x] Idempotent execution works
+
+**Progress**: 5/5 tasks complete (100%)
 
 ---
 
-### Phase 3: VS Code Settings Merge
+### Phase 3: VS Code Settings Merge _(Skipped)_
 
-**Objective**: Safely merge required Copilot settings into VS Code configuration.
+**Decision (2025-09-28)**: Skipped. VS Code automatically discovers `.prompt.md` prompt files, so the installer no longer manages `settings.json`. Users who require `chat.promptFiles` can enable it manually.
 
-**Deliverables**:
-- Updated settings.json with Copilot configuration
-- Preserved existing user settings
-- Graceful handling of invalid JSON
+**Rationale**:
+- Avoid mutating developer-specific VS Code preferences from the shared installer.
+- Eliminates risk of clobbering existing settings or introducing JSON merge bugs.
+- Copy/rename work from Phase 2 already satisfies Copilot discovery requirements.
 
-**Dependencies**: Phase 2 (paths must be configured)
-
-**Risks**:
-
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| Invalid existing JSON | Medium | Medium | Parse error recovery with new object |
-| Python not available | Low | Low | Log warning, skip settings update |
-| Settings file locked | Low | Medium | Retry with timeout |
-| Wrong settings path | Low | High | Detect VS Code variant (Code/Codium) |
-
-### Tasks (Lightweight Approach)
-
-| #   | Status | Task | Success Criteria | Notes |
-|-----|--------|------|------------------|-------|
-| 3.1 | [ ] | Implement Python JSON merge | Settings updated correctly | Inline Python script |
-| 3.2 | [ ] | Handle missing settings.json | Create new file if needed | Initialize with required keys |
-| 3.3 | [ ] | Add error handling | Graceful recovery from bad JSON | Try/except blocks |
-| 3.4 | [ ] | Write validation test | Verify settings updated | Check JSON contents |
-| 3.5 | [ ] | Test with existing settings | User settings preserved | Manual verification |
-
-### Validation Test Example
-
-```bash
-#!/bin/bash
-# test_phase3_validation.sh
-
-test_settings_updated() {
-    # Purpose: Verify VS Code settings contain Copilot config
-    # Expected Result: Required keys present in settings.json
-
-    ./install/agents.sh
-
-    # Check settings file
-    settings_file="$HOME/Library/Application Support/Code/User/settings.json"
-    if [[ -f "$settings_file" ]]; then
-        if grep -q "chat.promptFiles" "$settings_file"; then
-            echo "PASS: Settings updated"
-        else
-            echo "FAIL: Settings not updated"
-        fi
-    else
-        echo "Note: VS Code settings not found (may be using different path)"
-    fi
-
-    echo "Phase 3 validation complete"
-}
-```
-
-### Acceptance Criteria
-- [ ] Settings contain required keys
-- [ ] Existing settings preserved
-- [ ] Script handles missing Python gracefully
-- [ ] Basic validation passes
+**Outcome**: No implementation tasks or tests are planned for this phase. Revisit only if future requirements mandate automated VS Code configuration.
 
 ---
 
@@ -466,10 +416,10 @@ test_settings_updated() {
 
 | #   | Status | Task | Success Criteria | Notes |
 |-----|--------|------|------------------|-------|
-| 4.1 | [ ] | Run complete flow twice | No errors on second run | Full end-to-end test |
-| 4.2 | [ ] | Verify file overwrites | Files replaced, not duplicated | Check file counts |
-| 4.3 | [ ] | Document idempotent design | Comments in script | Explain overwrite behavior |
-| 4.4 | [ ] | Create smoke test | Complete validation suite | All phases tested |
+| 4.1 | [x] | Run complete flow twice | No errors on second run | [📋](tasks/phase-4-idempotency-verification/execution.log.md#task-t006-run-idempotency-test-green) Completed |
+| 4.2 | [x] | Verify file overwrites | Files replaced, not duplicated | [📋](tasks/phase-4-idempotency-verification/execution.log.md#task-t006-run-idempotency-test-green) Completed |
+| 4.3 | [x] | Document idempotent design | Comments in script | [📋](tasks/phase-4-idempotency-verification/execution.log.md#task-t005-document-idempotent-design) Completed [^10] |
+| 4.4 | [x] | Create smoke test | Complete validation suite | [📋](tasks/phase-4-idempotency-verification/execution.log.md#task-t002-create-idempotency-smoke-test) Completed [^8][^9] |
 
 ### Smoke Test Example
 
@@ -512,10 +462,12 @@ run_complete_test
 ```
 
 ### Acceptance Criteria
-- [ ] Script is idempotent
-- [ ] Second run succeeds
-- [ ] No duplicate files created
-- [ ] Smoke test passes
+- [x] Script is idempotent
+- [x] Second run succeeds
+- [x] No duplicate files created
+- [x] Smoke test passes
+
+**Progress**: 4/4 tasks complete (100%)
 
 ---
 
@@ -601,12 +553,12 @@ This is a simple additive change to an existing script with no new abstractions 
 
 ### Phase Completion Checklist
 - [x] Phase 1: Directory & Variable Setup - COMPLETE (see Plan Footnotes [^1-^4])
-- [ ] Phase 2: Copy & Rename Operations - PENDING
-- [ ] Phase 3: VS Code Settings Merge - PENDING
-- [ ] Phase 4: Idempotency Verification - PENDING
+- [x] Phase 2: Copy & Rename Operations - COMPLETE (see Plan Footnotes [^5-^7])
+- [–] Phase 3: VS Code Settings Merge - SKIPPED (user-managed)
+- [x] Phase 4: Idempotency Verification - COMPLETE (see Plan Footnotes [^8-^10])
 - [ ] Phase 5: Documentation Update - DEFERRED
 
-**Overall Progress**: 1/5 phases complete (20%)
+**Overall Progress**: 3/4 active phases complete (75%) — Phase 3 skipped per current scope
 
 ### STOP Rule
 **IMPORTANT**: This plan must be validated before creating tasks. After this plan is complete:
@@ -631,6 +583,20 @@ Do NOT begin implementation without validation.
   - `function:install/agents.sh:main`
 [^4]: Phase 1 T006 – Added non-fatal permission handling for Copilot directories.
   - `file:install/agents.sh`
+  - `function:install/agents.sh:main`
+[^5]: Phase 2 T002 – Extended Copilot copy/rename integration test coverage.
+  - `file:tests/install/test_agents_copilot_dirs.sh`
+[^6]: Phase 2 T004 – Implemented Copilot `.prompt.md` copy loop.
+  - `file:install/agents.sh`
+  - `function:install/agents.sh:main`
+[^7]: Phase 2 T005 – Added Copilot progress and idempotency logging.
+  - `file:install/agents.sh`
+  - `function:install/agents.sh:main`
+[^8]: Phase 4 T002 – Added idempotency smoke test harness.
+  - `file:tests/install/test_complete_flow.sh`
+[^9]: Phase 4 T004 – Implemented idempotency summary logging.
+  - `function:install/agents.sh:main`
+[^10]: Phase 4 T005 – Documented idempotent overwrite strategy.
   - `function:install/agents.sh:main`
 
 ---

@@ -6,15 +6,15 @@ Status: Clarified / Ready for Architecture
 Feature ID: ghcp-prompt-mirroring
 
 ## Executive Summary
-Currently agent command markdown files (`agents/commands/*.md`) are mirrored to multiple AI assistant homes (Claude, OpenCode, Codex, VS Code project). They are not discoverable by GitHub Copilot Chat because Copilot only loads prompt files ending in `.prompt.md` located under `.github/prompts` (workspace) and any additional directories whitelisted via `chat.promptFilesLocations` in VS Code settings. This feature adds automated mirroring of all agent command files into both a workspace prompt directory and a global per‑user prompt directory with correct file extension plus enabling VS Code settings. Simplicity and idempotence drive the design: no filtering, no rollback, overwrite existing.
+Currently agent command markdown files (`agents/commands/*.md`) are mirrored to multiple AI assistant homes (Claude, OpenCode, Codex, VS Code project). They are not discoverable by GitHub Copilot Chat because Copilot only loads prompt files ending in `.prompt.md` located in its configured prompt search paths. This feature adds automated mirroring of all agent command files into the Copilot per-user prompt directory with the correct file extension. Simplicity and idempotence drive the design: no filtering, no rollback, overwrite existing.
 
 ## Problem Statement
 Developers using GitHub Copilot cannot access the curated agent command prompts maintained for other assistants, leading to fractured experience and duplicated manual effort.
 
 ## Goals (WHAT)
-- Mirror every existing and future `agents/commands/*.md` file into Copilot-recognized locations with `.prompt.md` suffix.
-- Ensure visibility in any workspace (global) and in the active repository (workspace path) without additional manual steps.
-- Enable VS Code configuration automatically while preserving existing user settings.
+- Mirror every existing and future `agents/commands/*.md` file into the Copilot-recognized global directory with `.prompt.md` suffix.
+- Ensure visibility across repositories via the global prompt directory without additional manual steps.
+- Enable VS Code configuration automatically while preserving existing user settings. *(Deferred; users may configure manually.)*
 - Maintain backward compatibility with current destinations.
 
 ## Non-Goals (Explicitly Out of Scope)
@@ -38,20 +38,19 @@ Acceptance:
 ### Story 3: Onboarding Contributor
 As a new contributor cloning a project, I want repository prompts version-controlled and auto-discoverable so I get immediate productivity.
 Acceptance:
-- Workspace `.github/prompts/*.prompt.md` files exist after script run inside the target repo.
+- Copilot global prompt directory contains repository prompts after script run.
 
 ## Functional Requirements (FR)
 | ID | Requirement |
 |----|-------------|
 | FR1 | Define global directory: `~/.config/github-copilot/prompts/` (create if missing). |
-| FR2 | Define workspace directory: `<repo>/.github/prompts/` (create if missing; not committed in tools repo). |
-| FR3 | For each `agents/commands/<name>.md`, copy to both Copilot destinations as `<name>.prompt.md`. |
+| FR2 | (Retired 2025-09-28) Workspace copies are no longer created; installer must not write to `<repo>/.github/prompts/`. |
+| FR3 | For each `agents/commands/<name>.md`, copy to the Copilot global destination as `<name>.prompt.md`. |
 | FR4 | Preserve original copies to existing destinations (Claude, OpenCode, Codex, `.vscode`). |
 | FR5 | Overwrite existing prompt files on rerun (idempotent). |
-| FR6 | Update VS Code `settings.json`: set `chat.promptFiles = true` and merge `chat.promptFilesLocations` entries for workspace and global paths without removing others. |
-| FR7 | Handle invalid or unreadable existing `settings.json` by recreating a valid JSON settings file containing required keys. |
-| FR8 | Provide console summary including counts and both Copilot destinations. |
-| FR9 | Exit successfully even if VS Code settings directory absent (log warning, continue). |
+| FR6 | (Deferred) VS Code settings merge removed; users manage `chat.promptFiles` manually. |
+| FR7 | Provide console summary including Copilot prompt counts. |
+| FR8 | Exit successfully even if VS Code settings directory absent (log warning, continue). |
 
 ## Non-Functional Requirements (NFR)
 | ID | Requirement |
@@ -91,7 +90,7 @@ Acceptance:
 | 2 | Global path configurability | Hardcoded path | Reduces complexity (FR1) |
 | 3 | Rollback | None (idempotent) | No uninstall branch needed (NFR1) |
 | 4 | Settings merge strategy | Merge & add paths | Preserves user config (FR6) |
-| 5 | Repo `.github/prompts` presence | Not committed here | Workspace path created only in target repos (FR2) |
+| 5 | Repo `.github/prompts` presence | Skipped | Workspace copies removed; rely on global directory (FR2 retired) |
 | 6 | Testing approach | Lightweight | Simple operations don't need TDD (see Testing Strategy) |
 
 ## Edge Cases
@@ -108,7 +107,7 @@ Acceptance:
 | Permission issues in home config | Low | Medium | Log explicit error; user resolves permissions. |
 
 ## Success Metrics
-- 100% of source command files produce two `.prompt.md` outputs (global + workspace) when workspace path permitted.
+- 100% of source command files produce `.prompt.md` outputs in the Copilot global prompt directory.
 - Rerun diff on output directories is empty.
 - Verified presence of required keys in settings file.
 

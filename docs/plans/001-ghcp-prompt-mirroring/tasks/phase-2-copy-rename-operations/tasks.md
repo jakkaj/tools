@@ -12,18 +12,18 @@ notes:
 | ID   | Task | Dependencies | [P] Guidance | Validation Checklist Coverage |
 |------|------|--------------|--------------|-------------------------------|
 | T001 | Review existing copy loops and destination handling in `/Users/jordanknight/github/tools/install/agents.sh` plus Phase 2 acceptance notes before modifying logic. | – | Serial (shared `/Users/jordanknight/github/tools/install/agents.sh`) | Aligns with plan tasks 2.1–2.3; confirms success criteria and invariants before edits |
-| T002 | Extend `/Users/jordanknight/github/tools/tests/install/test_agents_copilot_dirs.sh` to assert `.prompt.md` files appear in Copilot global/workspace directories and original `.md` copies persist elsewhere (expected RED). | T001 | Serial (shared `/Users/jordanknight/github/tools/tests/install/test_agents_copilot_dirs.sh`) | Covers “All files copied”, “Files have .prompt.md extension”, “Existing destinations intact” |
+| T002 | Extend `/Users/jordanknight/github/tools/tests/install/test_agents_copilot_dirs.sh` to assert `.prompt.md` files appear in Copilot global directory and original `.md` copies persist elsewhere (expected RED). | T001 | Serial (shared `/Users/jordanknight/github/tools/tests/install/test_agents_copilot_dirs.sh`) | Covers “All files copied”, “Files have .prompt.md extension”, “Existing destinations intact” |
 | T003 | Execute updated test harness (`bash tests/install/test_agents_copilot_dirs.sh`) capturing failing output for evidence and verifying guardrails. | T002 | Serial (depends on new test expectations) | Confirms tests-first failure for copy/rename acceptance |
-| T004 | Update `/Users/jordanknight/github/tools/install/agents.sh` to copy each source command into Copilot global/workspace paths with `.prompt.md` renaming while preserving existing destinations. | T003 | Serial (shared `/Users/jordanknight/github/tools/install/agents.sh`) | Satisfies “All files copied”, “Files have .prompt.md extension”, retains FR4 destinations |
+| T004 | Update `/Users/jordanknight/github/tools/install/agents.sh` to copy each source command into Copilot global path with `.prompt.md` renaming while preserving existing destinations. | T003 | Serial (shared `/Users/jordanknight/github/tools/install/agents.sh`) | Satisfies “All files copied”, “Files have .prompt.md extension”, retains FR4 destinations |
 | T005 | Enhance progress logging and idempotent safeguards in `/Users/jordanknight/github/tools/install/agents.sh` for Copilot copies (per-plan task 2.3 & 2.5). | T004 | Serial (shared `/Users/jordanknight/github/tools/install/agents.sh`) | Addresses “User sees activity”, “Script runs without errors”, “Idempotent execution works” |
-| T006 | Re-run `tests/install/test_agents_copilot_dirs.sh` within temporary HOME/workspace to confirm GREEN results and capture logs for `execution.log.md`. | T005 | `[P]` eligible (execution-only; no file edits) | Verifies all acceptance criteria and idempotent rerun behavior |
+| T006 | Re-run `tests/install/test_agents_copilot_dirs.sh` within temporary HOME to confirm GREEN results and capture logs for `execution.log.md`. | T005 | `[P]` eligible (execution-only; no file edits) | Verifies all acceptance criteria and idempotent rerun behavior |
 
 ## Alignment Brief
 **Objective Recap & Behavior Checklist**  
-- Mirror all `agents/commands/*.md` files to Copilot global + workspace directories using `.prompt.md` suffix.  
+- Mirror all `agents/commands/*.md` files to the Copilot global directory using `.prompt.md` suffix.  
 - Maintain existing destinations (Claude/OpenCode/Codex/VS Code) and overwrite semantics.  
 - Provide progress output while ensuring loops remain idempotent and robust to special characters.  
-- Acceptance criteria: copies exist in both Copilot targets, renamed endings `.prompt.md`, script runs cleanly across reruns.
+- Acceptance criteria: global copies exist, renamed endings `.prompt.md`, script runs cleanly across reruns.
 
 **Invariants & Guardrails**  
 - No filtering or skipping of source files (FR3).  
@@ -42,10 +42,10 @@ notes:
 
 **Test Plan (TDD, tests-as-docs, no mocks, real data)**  
 1. `tests/install/test_agents_copilot_dirs.sh::test_copilot_prompts_copied_and_renamed`  
-   - **Purpose**: Assert each `agents/commands/*.md` source produces `.prompt.md` copies in global/workspace destinations.  
+   - **Purpose**: Assert each `agents/commands/*.md` source produces `.prompt.md` copies in the Copilot global destination.  
    - **Fixture Setup**: Temporary HOME + workspace (as in Phase 1); snapshot source filenames.  
    - **Execution**: `HOME="$TMP_HOME" bash ./install/agents.sh`.  
-   - **Expected Output**: Matching counts between source and `.prompt.md` files; sample file existence (e.g., `plan-1-specify.prompt.md`).  
+   - **Expected Output**: Matching counts between source `.md` files and Copilot global `.prompt.md` copies; sample file existence (e.g., `plan-1-specify.prompt.md`).  
 2. `tests/install/test_agents_copilot_dirs.sh::test_existing_destinations_preserved`  
    - **Purpose**: Ensure original `.md` copies for Claude/OpenCode/Codex/VS Code remain unchanged.  
    - **Fixture Setup**: Reuse temporary workspace; check `.md` counts in existing directories.  
@@ -66,37 +66,42 @@ notes:
 **Commands To Run**  
 - `bash tests/install/test_agents_copilot_dirs.sh`  
 - `bash tests/install/test_agents_copilot_dirs.sh | tee /tmp/phase2-phase.log` (capture reference logs).  
-- `shellcheck tests/install/test_agents_copilot_dirs.sh` (when available)  
+- `shellcheck tests/install/test_agents_copilot_dirs.sh`  
 - `git status --short` (sanity check before GO/NO-GO)  
 - Optional: `rg "prompt.md" -n /Users/jordanknight/github/tools/install/agents.sh` after edits to verify coverage.
 
 **Risks / Unknowns & Rollback Plan**  
 - *Risk*: Quoting errors could mis-handle filenames with spaces → cover via tests using sample filenames and double quotes.  
-- *Risk*: Workspace directory absent in repo under test → harness must tolerate optional absence (skip assertions).  
-- *Unknown*: `shellcheck` availability still pending; note in Ready Check if unavailable.  
+- *Risk*: Temporary workspace cleanup failure could leave fixtures behind → ensure traps remove directories.  
 - *Rollback*: `git restore install/agents.sh tests/install/test_agents_copilot_dirs.sh`; remove temporary log captures.
 
 **Ready Check (await GO/NO-GO)**  
-- [ ] Test harness extension plan acknowledged (real temporary HOME/workspace).  
-- [ ] Agreement on logging format updates before implementation.  
-- [ ] `shellcheck` availability clarified or alternative lint strategy accepted.  
-- [ ] Acceptance criteria + test plan reviewed with stakeholder.
+- [x] Test harness extension plan acknowledged (real temporary HOME/workspace).  
+- [x] Agreement on logging format updates before implementation.  
+- [x] `shellcheck` availability confirmed (installed via Homebrew).  
+- [x] Acceptance criteria + test plan executed (see `execution.log.md`).
 
 ## Phase Footnote Stubs
 | Task ID | Notes |
 |---------|-------|
-| T002 | Extend integration test for Copilot copy/rename assertions in `/Users/jordanknight/github/tools/tests/install/test_agents_copilot_dirs.sh`. [^1] |
-| T004 | Add Copilot `.prompt.md` copy loop to `/Users/jordanknight/github/tools/install/agents.sh`. [^2] |
-| T005 | Augment Copilot progress/idempotency messaging in `/Users/jordanknight/github/tools/install/agents.sh`. [^3] |
+| T002 | Copilot global copy/rename assertions added to `/Users/jordanknight/github/tools/tests/install/test_agents_copilot_dirs.sh`. [^5] |
+| T004 | Copilot `.prompt.md` copy loop introduced in `/Users/jordanknight/github/tools/install/agents.sh`. [^6] |
+| T005 | Copilot progress + idempotency logging updates in `/Users/jordanknight/github/tools/install/agents.sh`. [^7] |
 
-[^1]: Placeholder – Phase 6 will record Flowspace node IDs for the updated Copilot integration test.
-[^2]: Placeholder – Phase 6 will record Flowspace node IDs for the Copilot copy loop implementation.
-[^3]: Placeholder – Phase 6 will record Flowspace node IDs for progress/idempotency logging updates.
+[^5]: T002 – Extended integration harness for Copilot prompt verification.
+  - `file:tests/install/test_agents_copilot_dirs.sh`
+[^6]: T004 – Added Copilot copy loop and rename handling.
+  - `file:install/agents.sh`
+  - `function:install/agents.sh:main`
+[^7]: T005 – Enhanced Copilot progress messaging and idempotent logging.
+  - `file:install/agents.sh`
+  - `function:install/agents.sh:main`
 
 ## Evidence Artifacts
-- Planned execution log: `/Users/jordanknight/github/tools/docs/plans/001-ghcp-prompt-mirroring/tasks/phase-2-copy-rename-operations/execution.log.md` (created during Plan 6).  
-- Test harness evidence: `/Users/jordanknight/github/tools/tests/install/test_agents_copilot_dirs.sh` (extended in this phase).  
-- Temporary log captures: store under `/Users/jordanknight/github/tools/docs/plans/001-ghcp-prompt-mirroring/tasks/phase-2-copy-rename-operations/` during implementation.
+- Phase execution log: `/Users/jordanknight/github/tools/docs/plans/001-ghcp-prompt-mirroring/tasks/phase-2-copy-rename-operations/execution.log.md`.  
+- Extended integration test harness: `/Users/jordanknight/github/tools/tests/install/test_agents_copilot_dirs.sh`.  
+- Shell lint output: `shellcheck tests/install/test_agents_copilot_dirs.sh` (success noted in execution log).  
+- Optional run logs: place under `/Users/jordanknight/github/tools/docs/plans/001-ghcp-prompt-mirroring/tasks/phase-2-copy-rename-operations/` as needed.
 
 ```
 docs/plans/001-ghcp-prompt-mirroring/
@@ -108,5 +113,5 @@ docs/plans/001-ghcp-prompt-mirroring/
       │   └── execution.log.md
       └── phase-2-copy-rename-operations/
           ├── tasks.md
-          └── execution.log.md  # to be created by /plan-6
+          └── execution.log.md
 ```
