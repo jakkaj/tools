@@ -6,7 +6,7 @@ Please deep think / ultrathink as this is a complex task.
 
 # plan-5-phase-tasks-and-brief
 
-**One phase at a time.** Generate an actionable **tasks + alignment brief dossier** (`tasks.md`) for the chosen phase, plus the supporting directory structure, and stop before implementation. This merges your previous "tasks" generation with the pre-implementation walkthrough, scoped strictly to **one** phase.
+**One phase at a time.** Generate an actionable **tasks + alignment brief dossier** (`tasks.md`) for the chosen phase, plus the supporting directory structure, and stop before implementation. This merges your previous "tasks" generation with the pre-implementation walkthrough, scoped strictly to **one** phase. Treat the dossier as the shared contract between the human sponsor and the coding agent: lean on visual aids (e.g., Mermaid flow + sequence diagrams) to cement a cohesive understanding before touching code.
 
 ```md
 User input:
@@ -39,10 +39,11 @@ $ARGUMENTS
 4) Write a single combined artifact `PHASE_DIR/tasks.md` containing:
    - Phase metadata (title, slug, links to SPEC and PLAN, today {{TODAY}}).
    - `## Tasks` section that renders the table exactly as defined above (Status checkbox first, then ID, Task, Type, Dependencies, Absolute Path(s), Validation, Notes) with numbered items (T001...), dependencies, [P] guidance, and validation checklist coverage.
-   - `## Alignment Brief` section with:
+  - `## Alignment Brief` section with:
      * Objective recap + behavior checklist (tie to PLAN acceptance criteria)
      * Invariants & guardrails (perf/memory/security budgets if relevant)
      * Inputs to read (exact file paths)
+     * Visual alignment aids: capture both a Mermaid flow diagram (system states) and a Mermaid sequence diagram (actor/interaction order). Treat these as shared-understanding checkpoints so the human sponsor and coding agent agree on the flow before implementation begins.
      * **Test Plan (TDD, tests-as-docs, no mocks, real data)**: enumerate named tests with rationale, fixtures, expected outputs
      * Step-by-step implementation outline mapped 1:1 to the tasks/tests
      * Commands to run (copy/paste): env setup, test runner, linters, type checks
