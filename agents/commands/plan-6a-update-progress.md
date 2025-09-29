@@ -32,9 +32,9 @@ $ARGUMENTS
    - Read current task log (create if missing with proper header)
    - Determine next footnote number
 
-## Phase 2: Update Task Status in Plan
+## Phase 2: Update Task Status in Plan & Dossier
 
-Locate the task row in the phase's task table and update:
+Locate the task row in the plan's phase task table and update:
 
 ### Status Indicators:
 - `[ ]` → `[x]` for completed
@@ -61,6 +61,16 @@ After (in_progress):
 
 After (blocked):
 | 2.3 | [!] | Implement validation | Tests pass | [📋](tasks/phase-2/execution.log.md#task-23-implement-validation) | Blocked [^3] |
+
+Then reflect the same status in the phase dossier (`PHASE_DIR/tasks.md`): update the `Status` checkbox in the `## Tasks` table row whose `ID` matches the plan task (map 2.3 → T00X as defined in the dossier). Example:
+
+Before:
+| [ ] | T003 | Implement validation | Core | T001 | /abs/path | Tests pass | Notes |
+
+After (completed):
+| [x] | T003 | Implement validation | Core | T001 | /abs/path | Tests pass | Notes [^3] |
+
+Use `[~]` for in_progress and `[!]` for blocked. Preserve the remaining columns and footnote references.
 
 ## Phase 3: Generate Flowspace Node ID Footnotes
 
