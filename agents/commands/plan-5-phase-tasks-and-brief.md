@@ -19,11 +19,12 @@ $ARGUMENTS
 1) Verify PLAN exists; set PLAN_DIR = dirname(PLAN); define `PHASE_DIR = PLAN_DIR/tasks/${PHASE_SLUG}` and create it if missing (mkdir -p).
 2) **Read Critical Research Findings** from the PLAN document:
    - Locate section "## 3. Critical Research Findings" or similar heading in the plan
-   - Study each discovery marked with 🚨 or similar indicators
+   - Study each numbered discovery (🚨 Critical Discovery 01, 02, 03...)
    - Note the structure: Problem, Root Cause, Solution, Impact on architecture/design
    - Identify which findings affect the current phase's implementation
    - These findings MUST inform task design, implementation approach, and validation strategies
    - Critical findings often reveal API limitations, framework requirements, or implementation constraints that change how tasks should be structured
+   - Reference discoveries by number when applicable (e.g., "per Critical Discovery 02")
 3) Locate the exact phase heading = $PHASE in PLAN. Abort if not found.
 4) **Read plan-3's task table format** from the PLAN document:
    - plan-3 outputs tasks with columns: `#`, `Status`, `Task`, `Success Criteria`, `Log`, `Notes`
@@ -51,7 +52,7 @@ $ARGUMENTS
    **Example transformation (showing how Critical Findings affect task breakdown):**
    ```
    Critical Finding from plan.md § 3:
-   🚨 Copilot File Extension Requirement
+   🚨 Critical Discovery 01: Copilot File Extension Requirement
    Problem: GitHub Copilot ignores plain `.md` files in prompt directories
    Root Cause: Discovery logic explicitly filters on `*.prompt.md` pattern
    Solution: Always rename output files to include `.prompt.md` extension
@@ -64,7 +65,7 @@ $ARGUMENTS
    Plan-5 output (for tasks.md) - EXPANDED with Critical Finding applied:
    | [ ] | T001 | Review existing copy loop in agents.sh | Setup | – | /abs/path/to/install/agents.sh | Understand extension handling | Serial (shared file) |
    | [ ] | T002 | Implement copy loop for command files to Copilot global dir | Core | T001 | /abs/path/to/install/agents.sh | All .md files copied | Serial (shared file) |
-   | [ ] | T003 | Add .prompt.md extension during copy (per Critical Finding § 3.1) | Core | T002 | /abs/path/to/install/agents.sh | Files end with .prompt.md | Note: Addresses Copilot discovery requirement [^5] |
+   | [ ] | T003 | Add .prompt.md extension during copy (per Critical Discovery 01) | Core | T002 | /abs/path/to/install/agents.sh | Files end with .prompt.md | Note: Addresses Copilot discovery requirement [^5] |
    | [ ] | T004 | Write test verifying .prompt.md extension requirement | Test | T003 | /abs/path/to/tests/test_copilot_extensions.sh | Test confirms all files have .prompt.md | [P] eligible (new test file) |
    | [ ] | T005 | Add validation that source .md files exist before copy | Core | T002 | /abs/path/to/install/agents.sh | Error handling for missing sources | Serial (shared file) |
    ```

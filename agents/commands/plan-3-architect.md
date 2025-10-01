@@ -50,9 +50,9 @@ Inputs:
    - Document framework-specific requirements
 
 3. **Discovery Documentation**
-   Format discoveries as:
+   Format discoveries as numbered entries (01, 02, 03...) for easy reference:
    ```
-   ### 🚨 Critical Discovery: [Title]
+   ### 🚨 Critical Discovery 01: [Title]
    **Problem**: [What doesn't work as expected]
    **Root Cause**: [Why it happens]
    **Solution**: [How to work around it]
@@ -66,8 +66,11 @@ Inputs:
    ```
    ```
 
+   Number discoveries sequentially (01, 02, 03...) to enable precise references in phase tasks (e.g., "per Critical Discovery 02").
+
 ### Research Output Requirements
 - Document at least 3-5 critical findings that affect implementation
+- Number each discovery sequentially for traceability
 - Include code examples for each finding
 - Specify impact on architecture/design decisions
 
