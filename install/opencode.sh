@@ -5,6 +5,12 @@
 
 set -e
 
+OPENCODE_METHOD=""
+OPENCODE_INSTALLED="no"
+OPENCODE_UPDATE_REQUESTED="no"
+OPENCODE_VERSION="unknown"
+OPENCODE_BIN=""
+
 print_status() {
     echo "[*] $1"
 }
@@ -17,34 +23,83 @@ print_error() {
     echo "[✗] $1" >&2
 }
 
+detect_opencode_method() {
+    OPENCODE_METHOD="unknown"
+
+    if command -v npm >/dev/null 2>&1; then
+        if npm ls -g opencode-ai --depth=0 >/dev/null 2>&1; then
+            OPENCODE_METHOD="npm:opencode-ai"
+            return
+        fi
+    fi
+
+    if command -v brew >/dev/null 2>&1; then
+        if brew list opencode >/dev/null 2>&1; then
+            OPENCODE_METHOD="brew:opencode"
+            return
+        elif brew list sst/tap/opencode >/dev/null 2>&1; then
+            OPENCODE_METHOD="brew:sst/tap/opencode"
+            return
+        fi
+    fi
+
+    if [ -n "$OPENCODE_BIN" ]; then
+        case "$OPENCODE_BIN" in
+            "$HOME/.opencode"* ) OPENCODE_METHOD="installer:official" ;;
+        esac
+    fi
+}
+
 check_opencode() {
-    # Check in standard PATH
+    if [ "$1" = "--update" ] || [ "$1" = "-u" ]; then
+        OPENCODE_UPDATE_REQUESTED="yes"
+    fi
+
+    OPENCODE_INSTALLED="no"
+    OPENCODE_BIN=""
+    OPENCODE_VERSION="unknown"
+    OPENCODE_METHOD="unknown"
+
     if command -v opencode >/dev/null 2>&1; then
-        local version=$(opencode --version 2>/dev/null || echo "unknown")
-        print_success "OpenCode is already installed (version: $version)"
-
-        # Check for update flag
-        if [ "$1" = "--update" ] || [ "$1" = "-u" ]; then
-            print_status "Updating to latest version..."
-            return 1  # Force reinstall
-        fi
-        return 0
+        OPENCODE_BIN=$(command -v opencode)
+    elif [ -x "$HOME/.opencode/bin/opencode" ]; then
+        OPENCODE_BIN="$HOME/.opencode/bin/opencode"
     fi
 
-    # Check in home directory installation
-    if [ -x "$HOME/.opencode/bin/opencode" ]; then
-        local version=$("$HOME/.opencode/bin/opencode" --version 2>/dev/null || echo "unknown")
-        print_success "OpenCode is already installed at ~/.opencode/bin (version: $version)"
+    if [ -n "$OPENCODE_BIN" ]; then
+        OPENCODE_VERSION=$($OPENCODE_BIN --version 2>/dev/null || echo "unknown")
+        OPENCODE_INSTALLED="yes"
+        detect_opencode_method
 
-        # Check for update flag
-        if [ "$1" = "--update" ] || [ "$1" = "-u" ]; then
-            print_status "Updating to latest version..."
-            return 1  # Force reinstall
+        case "$OPENCODE_METHOD" in
+            npm:*)
+                print_success "OpenCode (npm) detected (version: $OPENCODE_VERSION)"
+                ;;
+            brew:*)
+                print_success "OpenCode (Homebrew) detected (version: $OPENCODE_VERSION)"
+                ;;
+            installer:*)
+                print_success "OpenCode detected at $OPENCODE_BIN (version: $OPENCODE_VERSION)"
+                ;;
+            *)
+                print_success "OpenCode detected (version: $OPENCODE_VERSION)"
+                ;;
+        esac
+
+        if [ "$OPENCODE_UPDATE_REQUESTED" = "no" ]; then
+            OPENCODE_UPDATE_REQUESTED="auto"
         fi
-        return 0
+    else
+        OPENCODE_INSTALLED="no"
     fi
 
-    return 1
+    if [ "$OPENCODE_UPDATE_REQUESTED" = "yes" ]; then
+        print_status "Update requested; preparing to update OpenCode..."
+    elif [ "$OPENCODE_UPDATE_REQUESTED" = "auto" ]; then
+        print_status "Refreshing OpenCode to ensure latest version..."
+    fi
+
+    return 0
 }
 
 install_opencode() {
@@ -90,12 +145,75 @@ install_opencode() {
     fi
 }
 
+update_opencode() {
+    if [ "$OPENCODE_INSTALLED" != "yes" ]; then
+        return 1
+    fi
+
+    if [ "$OPENCODE_UPDATE_REQUESTED" = "auto" ]; then
+        print_status "Refreshing OpenCode (method: $OPENCODE_METHOD)..."
+    else
+        print_status "Updating OpenCode (method: $OPENCODE_METHOD)..."
+    fi
+
+    case "$OPENCODE_METHOD" in
+        npm:*)
+            if ! command -v npm >/dev/null 2>&1; then
+                print_error "npm not found; cannot update OpenCode"
+                return 1
+            fi
+            if npm update -g opencode-ai; then
+                print_success "OpenCode updated via npm"
+                return 0
+            else
+                print_error "npm update for opencode-ai failed"
+                return 1
+            fi
+            ;;
+        brew:*)
+            if ! command -v brew >/dev/null 2>&1; then
+                print_error "Homebrew not found; cannot update OpenCode"
+                return 1
+            fi
+            local formula="opencode"
+            if [ "$OPENCODE_METHOD" = "brew:sst/tap/opencode" ]; then
+                formula="sst/tap/opencode"
+            fi
+            if brew upgrade "$formula" || brew reinstall "$formula"; then
+                print_success "OpenCode updated via Homebrew"
+                return 0
+            else
+                print_error "Homebrew update for OpenCode failed"
+                return 1
+            fi
+            ;;
+        installer:*)
+            print_status "Re-running official OpenCode installer..."
+            ;;
+        *)
+            print_status "Installation method unknown; attempting reinstall..."
+            ;;
+    esac
+
+    if install_opencode; then
+        print_success "OpenCode reinstalled"
+        return 0
+    fi
+
+    return 1
+}
+
 main() {
     print_status "OpenCode Installation Script"
 
-    # Check if already installed
-    if check_opencode "$@"; then
-        exit 0
+    # Detect current installation state (does not exit early)
+    check_opencode "$@"
+
+    if [ "$OPENCODE_INSTALLED" = "yes" ]; then
+        if update_opencode; then
+            exit 0
+        fi
+        print_status "Update failed; attempting fresh installation..."
     fi
 
     # Install OpenCode
