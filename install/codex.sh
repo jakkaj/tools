@@ -27,12 +27,10 @@ detect_codex_method() {
     CODEX_METHOD="unknown"
 
     if command -v npm >/dev/null 2>&1; then
-        for pkg in "@openai/codex-cli" "openai-codex" "codex-cli"; do
-            if npm ls -g "$pkg" --depth=0 >/dev/null 2>&1; then
-                CODEX_METHOD="npm:$pkg"
-                return
-            fi
-        done
+        if npm ls -g "@openai/codex" --depth=0 >/dev/null 2>&1; then
+            CODEX_METHOD="npm:@openai/codex"
+            return
+        fi
     fi
 
     if command -v brew >/dev/null 2>&1 && brew list codex >/dev/null 2>&1; then
@@ -113,12 +111,8 @@ install_codex() {
     # Try npm first
     if command -v npm >/dev/null 2>&1; then
         print_status "Installing Codex via npm..."
-        # Try the most common package names for Codex CLI
-        if npm install -g @openai/codex-cli 2>/dev/null; then
-            print_success "Codex CLI installed via npm"
-        elif npm install -g openai-codex 2>/dev/null; then
-            print_success "Codex CLI installed via npm"
-        elif npm install -g codex-cli 2>/dev/null; then
+        # Install Codex CLI
+        if npm install -g @openai/codex 2>/dev/null; then
             print_success "Codex CLI installed via npm"
         else
             print_status "npm installation failed, trying alternative methods..."
@@ -182,7 +176,7 @@ update_codex() {
                 print_error "npm not found; cannot update Codex npm package"
                 return 1
             fi
-            if npm update -g "$pkg"; then
+            if npm update -g "$pkg" 2>/dev/null; then
                 print_success "Codex CLI updated via npm ($pkg)"
                 return 0
             else

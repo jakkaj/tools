@@ -335,14 +335,7 @@ main() {
     echo "======================================"
     echo ""
 
-    # Check for .env file and run browser-use installer
-    print_status "Checking browser-use MCP server setup..."
-    if [ -f "${SCRIPT_DIR}/browser-use.sh" ]; then
-        if ! bash "${SCRIPT_DIR}/browser-use.sh"; then
-            print_warning "browser-use setup check failed - continuing with other setup"
-        fi
-    fi
-    echo ""
+
 
     print_status "Copilot global directory target: ${COPILOT_GLOBAL_DIR}"
 
