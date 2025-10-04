@@ -3,7 +3,7 @@
 # Install Claude Code CLI
 # Works on macOS and Linux
 
-set -e
+# set -e  # Disabled to allow proper error handling in main function
 
 # Track install method to pick the right upgrade path
 CLAUDE_INSTALL_METHOD=""
@@ -176,10 +176,13 @@ main() {
         fi
     done
 
-    if check_claude_code "$@"; then
+    # Check if already installed and up to date (don't exit on update request)
+    if check_claude_code "$@" 2>/dev/null; then
+        # check_claude_code returned 0, meaning no update needed
         exit 0
     fi
 
+    # Either not installed or update requested - proceed with installation
     if install_claude_code; then
         exit 0
     else

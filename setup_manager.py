@@ -41,6 +41,8 @@ class InstallResult:
     output: str
     error: str
     duration: float
+    version_before: Optional[str] = None
+    version_after: Optional[str] = None
 
 
 class SetupManager:
@@ -82,6 +84,33 @@ class SetupManager:
             return -1, "", "Command timed out"
         except Exception as e:
             return -1, "", str(e)
+
+    def _get_version(self, command: str) -> Optional[str]:
+        """Get version from a command, handling different output formats"""
+        try:
+            result = subprocess.run(
+                [command, "--version"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                env={**os.environ, "PATH": f"{os.environ.get('HOME', '')}/.cargo/bin:{os.environ.get('PATH', '')}"}
+            )
+            if result.returncode == 0:
+                # Clean up version output - remove extra whitespace and normalize
+                version = result.stdout.strip().split('\n')[0].strip()
+                # Handle different formats:
+                # "codex-cli 0.44.0" -> "0.44.0"
+                # "2.0.8 (Claude Code)" -> "2.0.8"
+                # "0.14.1" -> "0.14.1"
+                if command == "codex" and version.startswith("codex-cli "):
+                    return version.replace("codex-cli ", "")
+                elif command == "claude" and " (Claude Code)" in version:
+                    return version.replace(" (Claude Code)", "")
+                else:
+                    return version
+        except (subprocess.TimeoutExpired, subprocess.SubprocessError, FileNotFoundError):
+            pass
+        return None
 
     def check_prerequisites(self) -> bool:
         """Check if prerequisites are met"""
@@ -171,6 +200,16 @@ class SetupManager:
         name = installer.stem
         start_time = time.time()
 
+        # Get version before installation for version-tracked tools
+        version_before = None
+        if name in ["codex", "claude-code", "opencode"]:
+            if name == "codex":
+                version_before = self._get_version("codex")
+            elif name == "claude-code":
+                version_before = self._get_version("claude")
+            elif name == "opencode":
+                version_before = self._get_version("opencode")
+
         if progress and task_id is not None:
             action = "Updating" if update_mode else "Installing"
             progress.update(task_id, description=f"[cyan]{action} {name}...[/cyan]")
@@ -192,6 +231,16 @@ class SetupManager:
         duration = time.time() - start_time
         success = returncode == 0
 
+        # Get version after installation for version-tracked tools
+        version_after = None
+        if name in ["codex", "claude-code", "opencode"]:
+            if name == "codex":
+                version_after = self._get_version("codex")
+            elif name == "claude-code":
+                version_after = self._get_version("claude")
+            elif name == "opencode":
+                version_after = self._get_version("opencode")
+
         if success:
             message = f"Successfully installed {name}"
             if progress and task_id is not None:
@@ -207,7 +256,9 @@ class SetupManager:
             message=message,
             output=stdout,
             error=stderr,
-            duration=duration
+            duration=duration,
+            version_before=version_before,
+            version_after=version_after
         )
 
     def install_tools(self, update_mode: bool = False) -> None:
@@ -279,6 +330,34 @@ class SetupManager:
         console.print(f"  [green]✓[/green] Successful: {successful}")
         console.print(f"  [red]✗[/red] Failed: {failed}")
         console.print(f"  Total time: {sum(r.duration for r in self.results):.2f}s")
+
+        # Show version summary for tracked tools
+        version_tracked_tools = ["codex", "claude-code", "opencode"]
+        version_results = [r for r in self.results if r.name in version_tracked_tools and r.success]
+
+        if version_results:
+            console.print("\n[bold cyan]Version Summary:[/bold cyan]")
+            version_table = Table(box=box.ROUNDED)
+            version_table.add_column("Tool", style="cyan", no_wrap=True)
+            version_table.add_column("Before", justify="center")
+            version_table.add_column("After", justify="center")
+            version_table.add_column("Status", justify="center")
+
+            for result in version_results:
+                before = result.version_before or "N/A"
+                after = result.version_after or "N/A"
+                if result.version_before and result.version_after and result.version_before != result.version_after:
+                    status = "[green]Updated[/green]"
+                elif result.version_before and result.version_after and result.version_before == result.version_after:
+                    status = "[yellow]No change[/yellow]"
+                elif result.version_after:
+                    status = "[green]Installed[/green]"
+                else:
+                    status = "[dim]Unknown[/dim]"
+
+                version_table.add_row(result.name, before, after, status)
+
+            console.print(version_table)
 
         # Show failed installers details
         failed_results = [r for r in self.results if not r.success]
