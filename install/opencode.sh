@@ -150,50 +150,36 @@ update_opencode() {
         return 1
     fi
 
-    if [ "$OPENCODE_UPDATE_REQUESTED" = "auto" ]; then
-        print_status "Refreshing OpenCode (method: $OPENCODE_METHOD)..."
-    else
-        print_status "Updating OpenCode (method: $OPENCODE_METHOD)..."
+    local update_bin="$OPENCODE_BIN"
+    if [ -z "$update_bin" ] || [ ! -x "$update_bin" ]; then
+        if command -v opencode >/dev/null 2>&1; then
+            update_bin=$(command -v opencode)
+        fi
     fi
 
-    case "$OPENCODE_METHOD" in
-        npm:*)
-            if ! command -v npm >/dev/null 2>&1; then
-                print_error "npm not found; cannot update OpenCode"
-                return 1
-            fi
-            if npm update -g opencode-ai; then
-                print_success "OpenCode updated via npm"
-                return 0
-            else
-                print_error "npm update for opencode-ai failed"
-                return 1
-            fi
-            ;;
-        brew:*)
-            if ! command -v brew >/dev/null 2>&1; then
-                print_error "Homebrew not found; cannot update OpenCode"
-                return 1
-            fi
-            local formula="opencode"
-            if [ "$OPENCODE_METHOD" = "brew:sst/tap/opencode" ]; then
-                formula="sst/tap/opencode"
-            fi
-            if brew upgrade "$formula" || brew reinstall "$formula"; then
-                print_success "OpenCode updated via Homebrew"
-                return 0
-            else
-                print_error "Homebrew update for OpenCode failed"
-                return 1
-            fi
-            ;;
-        installer:*)
-            print_status "Re-running official OpenCode installer..."
-            ;;
-        *)
-            print_status "Installation method unknown; attempting reinstall..."
-            ;;
-    esac
+    if [ -z "$update_bin" ]; then
+        print_error "OpenCode binary not found for update"
+        print_status "Attempting reinstall via official installer..."
+        if install_opencode; then
+            print_success "OpenCode reinstalled"
+            return 0
+        fi
+        return 1
+    fi
+
+    if [ "$OPENCODE_UPDATE_REQUESTED" = "auto" ]; then
+        print_status "Refreshing OpenCode via 'opencode update'..."
+    else
+        print_status "Updating OpenCode via 'opencode update'..."
+    fi
+
+    if "$update_bin" update; then
+        print_success "OpenCode updated via CLI"
+        return 0
+    fi
+
+    print_error "OpenCode CLI update command failed"
+    print_status "Attempting reinstall via official installer..."
 
     if install_opencode; then
         print_success "OpenCode reinstalled"

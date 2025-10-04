@@ -346,6 +346,29 @@ install_opencode() {
     fi
 }
 
+update_opencode_cli() {
+    local update_bin=""
+
+    if check_command opencode; then
+        update_bin=$(command -v opencode)
+    elif [ -x "$HOME/.opencode/bin/opencode" ]; then
+        update_bin="$HOME/.opencode/bin/opencode"
+    fi
+
+    if [ -z "$update_bin" ]; then
+        print_error "OpenCode binary not found; cannot perform CLI update"
+        return 1
+    fi
+
+    if "$update_bin" update; then
+        print_success "OpenCode updated via CLI"
+        return 0
+    fi
+
+    print_error "OpenCode CLI update failed"
+    return 1
+}
+
 check_claude_code() {
     # Check in standard PATH and also common installation locations
     if check_command claude; then
@@ -551,12 +574,17 @@ main() {
     print_status "Checking OpenCode..."
     if [ "$UPDATE_MODE" = true ]; then
         if check_opencode; then
-            print_status "Updating OpenCode to latest version..."
-            if install_opencode; then
+            print_status "Updating OpenCode via CLI..."
+            if update_opencode_cli; then
                 ((tools_installed++))
-                print_success "OpenCode updated successfully"
             else
-                ((tools_failed++))
+                print_status "CLI update failed; attempting reinstall..."
+                if install_opencode; then
+                    ((tools_installed++))
+                    print_success "OpenCode reinstalled successfully"
+                else
+                    ((tools_failed++))
+                fi
             fi
         else
             if install_opencode; then
