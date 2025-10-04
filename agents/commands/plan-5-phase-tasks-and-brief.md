@@ -65,7 +65,7 @@ $ARGUMENTS
    Plan-5 output (for tasks.md) - EXPANDED with Critical Finding applied:
    | [ ] | T001 | Review existing copy loop in agents.sh | Setup | – | /abs/path/to/install/agents.sh | Understand extension handling | Serial (shared file) |
    | [ ] | T002 | Implement copy loop for command files to Copilot global dir | Core | T001 | /abs/path/to/install/agents.sh | All .md files copied | Serial (shared file) |
-   | [ ] | T003 | Add .prompt.md extension during copy (per Critical Discovery 01) | Core | T002 | /abs/path/to/install/agents.sh | Files end with .prompt.md | Note: Addresses Copilot discovery requirement [^5] |
+   | [ ] | T003 | Add .prompt.md extension during copy (per Critical Discovery 01) | Core | T002 | /abs/path/to/install/agents.sh | Files end with .prompt.md | Addresses Copilot discovery requirement (footnote captured during plan-6) |
    | [ ] | T004 | Write test verifying .prompt.md extension requirement | Test | T003 | /abs/path/to/tests/test_copilot_extensions.sh | Test confirms all files have .prompt.md | [P] eligible (new test file) |
    | [ ] | T005 | Add validation that source .md files exist before copy | Core | T002 | /abs/path/to/install/agents.sh | Error handling for missing sources | Serial (shared file) |
    ```
@@ -74,7 +74,7 @@ $ARGUMENTS
    - Changed task T003 to explicitly reference the finding
    - Added task T004 to validate the finding's requirement
    - Informed the validation criteria (must end with .prompt.md)
-   - Added footnote reference for traceability
+   - Ensured traceability without pre-emptive footnote tags
    ```
 
    **Canonical tasks table layout** (all dossiers MUST follow this column order):
@@ -86,7 +86,7 @@ $ARGUMENTS
    - `Dependencies` lists prerequisite task IDs (e.g., "T001, T002") or "–" for none.
    - `Absolute Path(s)` must list every impacted file or directory using absolute paths (REQUIRED - no relative paths).
    - `Validation` captures how acceptance or readiness will be confirmed.
-   - `Notes` include [P] guidance plus phase-footnote placeholders (e.g., trailing `[^3]`).
+   - `Notes` include [P] guidance and contextual references, but defer `[^N]` footnote tags until plan-6 updates the ledger.
 
 6) Write a single combined artifact `PHASE_DIR/tasks.md` containing:
    - Phase metadata (title, slug, links to SPEC and PLAN, today {{TODAY}}).
@@ -102,7 +102,7 @@ $ARGUMENTS
      * Commands to run (copy/paste): env setup, test runner, linters, type checks
      * Risks/unknowns (flag severity, mitigation steps)
      * **Ready Check** (checkboxes) -> await explicit GO/NO-GO
-   - `## Phase Footnote Stubs` table: for each task row that will change code, append a Notes entry ending with a footnote tag (e.g., `[^3]`) and list the tag with a short placeholder description. Phase 6 will replace these placeholders with node-ID details in the plan ledger per `AGENTS.md`.
+   - `## Phase Footnote Stubs` section: include the heading and an empty table shell (or explicit note) so plan-6 can add entries post-implementation; do **not** create footnote tags or stubs during planning.
    - `## Evidence Artifacts` describing where implementation will write the execution log (`PHASE_DIR/execution.log.md`) and any supporting files.
 
 7) Capture a short directory layout at the end of `PHASE_DIR/tasks.md` so future phases know where to place logs and ancillary evidence inside `PHASE_DIR`.

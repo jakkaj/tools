@@ -86,6 +86,9 @@ if toml is None and tomli_w is None:
     sys.exit(1)
 
 
+TYPE_MAP = {"stdio": "local", "sse": "remote"}
+
+
 def dump_toml(data):
     if toml is not None:
         return toml.dumps(data)
@@ -127,6 +130,97 @@ def write_toml_file(path: Path, data):
     path.write_text(text, encoding="utf-8")
 
 
+def normalize_type(value):
+    if isinstance(value, str):
+        return TYPE_MAP.get(value, value)
+    return value
+
+
+def to_list(value):
+    if isinstance(value, (list, tuple)):
+        return [str(item) for item in value]
+    if isinstance(value, str):
+        stripped = value.strip()
+        return [stripped] if stripped else []
+    return []
+
+
+def merge_command_and_args(command, args):
+    command_list = to_list(command)
+    if isinstance(args, (list, tuple)):
+        arg_list = [str(item) for item in args]
+    elif isinstance(args, str):
+        arg_list = [args]
+    else:
+        arg_list = []
+    if arg_list:
+        if command_list:
+            command_list = [*command_list, *arg_list]
+        else:
+            command_list = arg_list
+    return command_list
+
+
+def migrate_opencode_config(data):
+    if not isinstance(data, dict):
+        data = {}
+    data.setdefault("$schema", "https://opencode.ai/config.json")
+    mcp = data.setdefault("mcp", {})
+
+    legacy = data.pop("mcpServers", {})
+    if isinstance(legacy, dict):
+        for name, legacy_entry in legacy.items():
+            if not isinstance(legacy_entry, dict):
+                continue
+            server_type = normalize_type(legacy_entry.get("type")) or "local"
+            new_entry = {"type": server_type}
+            enabled = legacy_entry.get("enabled")
+            if enabled is not None:
+                new_entry["enabled"] = bool(enabled)
+            environment = legacy_entry.get("environment") or legacy_entry.get("env")
+            if environment:
+                new_entry["environment"] = environment
+            if server_type == "remote":
+                url = legacy_entry.get("url")
+                if url:
+                    new_entry["url"] = url
+                headers = legacy_entry.get("headers")
+                if headers:
+                    new_entry["headers"] = headers
+            else:
+                command_list = merge_command_and_args(
+                    legacy_entry.get("command"),
+                    legacy_entry.get("args"),
+                )
+                if command_list:
+                    new_entry["command"] = command_list
+            existing = mcp.setdefault(name, {})
+            existing.update(new_entry)
+
+    for name, entry in list(mcp.items()):
+        if not isinstance(entry, dict):
+            mcp[name] = {}
+            continue
+        entry["type"] = normalize_type(entry.get("type")) or "local"
+        args = entry.pop("args", None)
+        if entry["type"] == "local":
+            command_list = merge_command_and_args(entry.get("command"), args)
+            if command_list:
+                entry["command"] = command_list
+            elif "command" in entry:
+                entry.pop("command", None)
+        env_value = entry.pop("env", None)
+        if env_value and "environment" not in entry:
+            entry["environment"] = env_value
+        if entry.get("environment") in ({}, []):
+            entry.pop("environment", None)
+        if "enabled" in entry:
+            entry["enabled"] = bool(entry["enabled"])
+        mcp[name] = entry
+
+    return data
+
+
 source_path = Path(sys.argv[1])
 opencode_global_path = Path(sys.argv[2])
 opencode_project_path = Path(sys.argv[3])
@@ -137,65 +231,84 @@ vscode_project_path = Path(sys.argv[7])
 
 servers = json.loads(source_path.read_text(encoding="utf-8"))
 
+opencode_global = migrate_opencode_config(load_json(opencode_global_path))
+opencode_project = migrate_opencode_config(load_json(opencode_project_path))
+claude_config = load_json(claude_project_path)
+codex_config = load_toml_file(codex_global_path)
+vscode_user_config = load_json(vscode_user_path)
+vscode_project_config = load_json(vscode_project_path)
+
+opencode_global_mcp = opencode_global.setdefault("mcp", {})
+opencode_project_mcp = opencode_project.setdefault("mcp", {})
+claude_servers = claude_config.setdefault("mcpServers", {})
+codex_servers = codex_config.setdefault("mcp_servers", {})
+vscode_user_servers = vscode_user_config.setdefault("mcpServers", {})
+vscode_project_servers = vscode_project_config.setdefault("mcpServers", {})
+
 for name, config in servers.items():
-    command = config["command"]
-    args = config.get("args", [])
-    env = config.get("env", {})
-    enabled = config.get("enabled", True)
-    server_type = config.get("type", "local")
+    if not isinstance(config, dict):
+        continue
+    server_type = normalize_type(config.get("type")) or "local"
+    enabled = bool(config.get("enabled", True))
+    environment = config.get("environment") or config.get("env") or {}
+    command_list = merge_command_and_args(config.get("command"), config.get("args"))
+    url = config.get("url")
+    headers = config.get("headers")
 
-    # OpenCode global
-    opencode_global = load_json(opencode_global_path)
-    opencode_global.setdefault("$schema", "https://opencode.ai/config.json")
-    opencode_global.setdefault("mcp", {})[name] = {
-        "type": server_type,
-        "command": [command, *args],
-        "enabled": bool(enabled)
+    opencode_entry = {"type": server_type, "enabled": enabled}
+    if server_type == "remote":
+        if url:
+            opencode_entry["url"] = url
+        if headers:
+            opencode_entry["headers"] = headers
+    else:
+        if command_list:
+            opencode_entry["command"] = command_list
+    if environment:
+        opencode_entry["environment"] = environment
+
+    opencode_global_mcp[name] = dict(opencode_entry)
+    opencode_project_mcp[name] = dict(opencode_entry)
+
+    claude_servers[name] = {
+        "command": config.get("command"),
+        "args": config.get("args", []),
+        "env": environment if isinstance(environment, dict) else {},
     }
-    write_json(opencode_global_path, opencode_global)
 
-    # OpenCode project
-    opencode_project = load_json(opencode_project_path)
-    opencode_project.setdefault("$schema", "https://opencode.ai/config.json")
-    opencode_project.setdefault("mcp", {})[name] = {
-        "type": server_type,
-        "command": [command, *args],
-        "enabled": bool(enabled)
-    }
-    write_json(opencode_project_path, opencode_project)
-
-    # Claude project
-    claude_config = load_json(claude_project_path)
-    claude_config.setdefault("mcpServers", {})[name] = {
-        "command": command,
-        "args": args,
-        "env": env
-    }
-    write_json(claude_project_path, claude_config)
-
-    # Codex global
-    codex_config = load_toml_file(codex_global_path)
-    codex_servers = codex_config.setdefault("mcp_servers", {})
-    codex_server = {"command": command, "args": args}
-    if env:
-        codex_server["env"] = env
+    codex_server = {"command": config.get("command"), "args": config.get("args", [])}
+    if environment and isinstance(environment, dict):
+        codex_server["env"] = environment
+    if server_type == "remote":
+        if url:
+            codex_server["url"] = url
+        if headers:
+            codex_server["headers"] = headers
     codex_servers[name] = codex_server
-    write_toml_file(codex_global_path, codex_config)
 
-    # VS Code user
-    vscode_user_config = load_json(vscode_user_path)
-    vscode_user_servers = vscode_user_config.setdefault("mcpServers", {})
-    vscode_entry = {"command": command, "args": args, "enabled": bool(enabled)}
-    if env:
-        vscode_entry["env"] = env
+    vscode_entry = {
+        "command": config.get("command"),
+        "args": config.get("args", []),
+        "enabled": enabled,
+    }
+    if environment and isinstance(environment, dict):
+        vscode_entry["env"] = environment
+    elif environment:
+        vscode_entry["env"] = {}
+    if server_type == "remote":
+        if url:
+            vscode_entry["url"] = url
+        if headers:
+            vscode_entry["headers"] = headers
     vscode_user_servers[name] = dict(vscode_entry)
-    write_json(vscode_user_path, vscode_user_config)
-
-    # VS Code project
-    vscode_project_config = load_json(vscode_project_path)
-    vscode_project_servers = vscode_project_config.setdefault("mcpServers", {})
     vscode_project_servers[name] = dict(vscode_entry)
-    write_json(vscode_project_path, vscode_project_config)
+
+write_json(opencode_global_path, opencode_global)
+write_json(opencode_project_path, opencode_project)
+write_json(claude_project_path, claude_config)
+write_toml_file(codex_global_path, codex_config)
+write_json(vscode_user_path, vscode_user_config)
+write_json(vscode_project_path, vscode_project_config)
 
 PYTHON
     return $?

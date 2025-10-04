@@ -54,10 +54,10 @@ $ARGUMENTS
      * Parent Plan, Parent Phase, Parent Task(s) (T-IDs + plan table refs), Subtask Summary, Requested By (default "Human Sponsor"), Created {{NOW}}.
    - `## Tasks` table using canonical columns
      | Status | ID | Task | Type | Dependencies | Absolute Path(s) | Validation | Notes |
-     * Use IDs `ST001`, `ST002`, … (serial, reflect mapping to parent T-ID in Notes like "Supports T003 [^1]").
+     * Use IDs `ST001`, `ST002`, … (serial, reflect mapping to parent T-ID in Notes like "Supports T003 (footnote captured during plan-6)").
      * Dependencies reference other ST IDs (and optionally parent T-IDs in Notes).
      * Absolute paths remain mandatory (absolute); include parent dossier paths if reused.
-     * Notes end with footnote placeholders for every code-touching task.
+     * Notes capture context (e.g., parent T-ID, [P] guidance) without adding `[^N]` footnote tags; plan-6 will append ledger references after implementation.
    - `## Alignment Brief` tailored to the subtask:
      * Objective recap referencing parent phase goal + targeted parent tasks.
      * Checklist derived from parent acceptance criteria, highlighting deltas introduced by this subtask.
@@ -70,7 +70,7 @@ $ARGUMENTS
      * Commands to run, focused on this subtask (linters/tests/etc.).
      * Risks & unknowns with mitigations.
      * Ready Check (checkbox list) gating `/plan-6-implement-phase` or `/plan-6-implement-phase --subtask` usage.
-   - `## Phase Footnote Stubs` table listing placeholder descriptions keyed by footnote tags used in Tasks.
+   - `## Phase Footnote Stubs` section present as an empty table shell or note so plan-6 can add entries later; do not create footnote tags during planning.
    - `## Evidence Artifacts` describing:
      * `execution.log.md` path = `${ORD}-subtask-${SUBTASK_SLUG}.execution.log.md`.
      * Any directories/files for artifacts (tests, fixtures, diagrams exports, etc.).
