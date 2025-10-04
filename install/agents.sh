@@ -8,6 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "${SCRIPT_DIR}")"
 SOURCE_DIR="${REPO_ROOT}/agents/commands"
 MCP_SOURCE="${REPO_ROOT}/agents/mcp/servers.json"
+ENV_FILE="${REPO_ROOT}/.env"
 TARGET_DIR="${HOME}/.claude/commands"
 OPENCODE_DIR="${HOME}/.config/opencode/command"
 CODEX_DIR="${HOME}/.codex/prompts"
@@ -45,6 +46,13 @@ generate_mcp_configs() {
         return 1
     fi
 
+    # Load environment variables if .env exists
+    local openrouter_key=""
+    if [ -f "${ENV_FILE}" ]; then
+        source "${ENV_FILE}"
+        openrouter_key="${MCP_LLM_OPENROUTER_API_KEY}"
+    fi
+
     local opencode_global="${HOME}/.config/opencode/opencode.json"
     local opencode_project="${REPO_ROOT}/opencode.json"
     local claude_project="${REPO_ROOT}/.mcp.json"
@@ -55,7 +63,7 @@ generate_mcp_configs() {
     mkdir -p "$(dirname "${vscode_user_config}")"
     mkdir -p "$(dirname "${vscode_project_config}")"
 
-    python3 - "$mcp_source" "$opencode_global" "$opencode_project" "$claude_project" "$codex_global" "$vscode_user_config" "$vscode_project_config" <<'PYTHON'
+    python3 - "$mcp_source" "$opencode_global" "$opencode_project" "$claude_project" "$codex_global" "$vscode_user_config" "$vscode_project_config" "$openrouter_key" <<'PYTHON'
 import json
 import sys
 from pathlib import Path
@@ -228,8 +236,12 @@ claude_project_path = Path(sys.argv[4])
 codex_global_path = Path(sys.argv[5])
 vscode_user_path = Path(sys.argv[6])
 vscode_project_path = Path(sys.argv[7])
+openrouter_key = sys.argv[8] if len(sys.argv) > 8 else ""
 
-servers = json.loads(source_path.read_text(encoding="utf-8"))
+servers_text = source_path.read_text(encoding="utf-8")
+if openrouter_key:
+    servers_text = servers_text.replace("${OPENROUTER_API_KEY}", openrouter_key)
+servers = json.loads(servers_text)
 
 opencode_global = migrate_opencode_config(load_json(opencode_global_path))
 opencode_project = migrate_opencode_config(load_json(opencode_project_path))
@@ -247,6 +259,9 @@ vscode_project_servers = vscode_project_config.setdefault("mcpServers", {})
 
 for name, config in servers.items():
     if not isinstance(config, dict):
+        continue
+    # Skip disabled servers (either explicitly disabled or prefixed with underscore)
+    if name.startswith("_") or not config.get("enabled", True):
         continue
     server_type = normalize_type(config.get("type")) or "local"
     enabled = bool(config.get("enabled", True))
@@ -318,6 +333,15 @@ main() {
     echo "======================================"
     echo "     Agent Commands Setup Script      "
     echo "======================================"
+    echo ""
+
+    # Check for .env file and run browser-use installer
+    print_status "Checking browser-use MCP server setup..."
+    if [ -f "${SCRIPT_DIR}/browser-use.sh" ]; then
+        if ! bash "${SCRIPT_DIR}/browser-use.sh"; then
+            print_warning "browser-use setup check failed - continuing with other setup"
+        fi
+    fi
     echo ""
 
     print_status "Copilot global directory target: ${COPILOT_GLOBAL_DIR}"

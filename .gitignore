@@ -6,3 +6,7 @@ opencode.json
 .vscode/
 codebase.md
 changes.md
+# Ignore environment variables
+.env
+.env.test
+.env.chrome.test
