@@ -10,3 +10,4 @@ changes.md
 .env
 .env.test
 .env.chrome.test
+.vsc-bridge/host.json
