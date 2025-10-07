@@ -11,3 +11,4 @@ changes.md
 .env.test
 .env.chrome.test
 .vsc-bridge/host.json
+.vsc-bridge/host.lock

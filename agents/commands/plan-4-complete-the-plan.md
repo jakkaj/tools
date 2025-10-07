@@ -15,6 +15,7 @@ Checks:
 - **TOC present**; plan uses absolute paths; no assumed prior context.
 - TDD order: tests before implementation, tests as documentation; mock policy respected (avoid/targeted/liberal per spec); use real repo data/fixtures when required.
 - Acceptance criteria per phase.
+- Confidence the plan has the level of fidelity required to hand over to an agent that does not have the current context.
 
 Output:
 - Status = READY, NOT READY, or NOT READY (USER OVERRIDE).
