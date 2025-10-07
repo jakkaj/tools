@@ -262,16 +262,33 @@ After:
 | 2.3 | [x] | Implement validation | Tests pass | [📋](tasks/phase-2/execution.log.md#task-23-implement-validation) | Completed · log#task-23-implement-validation [^3] |
 
 ### Update Phase Status:
-1. Count completed tasks in phase.
+1. Count completed tasks in phase:
+   - **If tasks.md exists**: Check the dossier tasks table for all T### rows
+   - **If tasks are embedded in plan**: Count from the embedded task table under the phase heading
 2. Update phase checklist in plan:
+   - **If tasks.md exists**: Update as a simple checklist referencing dossier tasks
+   - **If tasks are embedded**: Update the full embedded task table with Status, Log, and Notes columns
+   
+   Example for embedded task table format:
    ```markdown
    ### Phase 2: Input Validation
-   - [x] Task 2.1: Design validation interface
-   - [x] Task 2.2: Write validation tests
-   - [x] Task 2.3: Implement validation
-   - [ ] Task 2.4: Integration tests
+
+   | #   | Status | Task | Success Criteria | Log | Notes |
+   |-----|--------|------|------------------|-----|-------|
+   | 2.1 | [x] | Completed interface design | Interface documented | [📋](tasks/phase-2/execution.log.md#task-21) | Design complete [^1] |
+   | 2.2 | [x] | Tests written and passing | All tests pass | [📋](tasks/phase-2/execution.log.md#task-22) | Tests passing [^2] |
+   | 2.3 | [x] | Implementation complete | Code reviewed | [📋](tasks/phase-2/execution.log.md#task-23) | Implementation done [^3] |
+   | 2.4 | [ ] | Pending integration tests | Tests pass | - | Pending |
+
    Progress: 3/4 tasks (75%)
    ```
+   
+   **CRITICAL**: When updating embedded task tables, you MUST update ALL columns for the task being worked on:
+   - Status: Change [ ] to [x] (completed), [~] (in progress), or [!] (blocked)
+   - Log: Add [📋](path/to/execution.log.md#task-anchor) link
+   - Notes: Add or update with footnote reference [^N]
+   
+   Do not leave any column unchanged when marking a task as complete.
 
 ### Update Overall Progress:
 In Progress Checklist section:
