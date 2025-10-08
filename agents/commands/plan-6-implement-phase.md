@@ -1,10 +1,10 @@
 ---
-description: Implement exactly one approved phase or subtask via strict TDD using the relevant dossier, recording diffs and evidence.
+description: Implement exactly one approved phase or subtask using the testing approach specified in the plan, recording diffs and evidence.
 ---
 
 # plan-6-implement-phase
 
-Implement **exactly** one approved phase or subtask via strict **TDD** using the relevant **tasks + alignment brief** dossier; emit diffs and evidence. (No global analyze step.)
+Implement **exactly** one approved phase or subtask using the **testing approach specified in the plan** (Full TDD, Lightweight, Manual, or Hybrid) with the relevant **tasks + alignment brief** dossier; emit diffs and evidence. (No global analyze step.)
 
 ```md
 User input:
@@ -33,26 +33,72 @@ $ARGUMENTS
      - Capture parent task linkage from the subtask metadata table before execution.
    Load task definitions and Alignment Brief sections from `PHASE_DOC`.
 
-2) **Contract**:
-   - TDD loop per task: write/adjust test (RED) -> minimal code (GREEN) -> refactor (CLEAN) -> commit.
-   - Assertions must **document behavior**; not generic truths.
-   - **No mocks**; use real repo data/fixtures.
-   - Respect stack patterns (e.g., Python test debug via `module: 'pytest'` + `--no-cov`; bounded searches; remote-safe URIs).
-   - Consult the Alignment Brief section inside `PHASE_DOC` before each task to reaffirm invariants, guardrails, and test expectations.
-   (Rules/idioms affirmed here.) :contentReference[oaicite:17]{index=17} :contentReference[oaicite:18]{index=18}
+2) **Contract** (Read Testing Strategy First):
+   a) Extract Testing Strategy from `PLAN`:
+      - Locate `## Testing Strategy` section
+      - Read **Approach**: Full TDD | Lightweight | Manual | Hybrid
+      - Read **Mock Usage**: Avoid mocks | Targeted mocks | Liberal mocks
+      - Read **Focus Areas** and **Excluded** to understand priorities
 
-3) Execution:
+   b) Apply approach-specific workflow:
+      **Full TDD**:
+        - RED-GREEN-REFACTOR loop per task: write/adjust test (RED) -> minimal code (GREEN) -> refactor (CLEAN) -> commit
+        - Assertions must **document behavior**; not generic truths
+        - Apply mock policy from spec (typically "avoid mocks"; use real repo data/fixtures)
+
+      **Lightweight**:
+        - Write minimal validation tests focused on core functionality
+        - Prioritize smoke tests and integration checks
+        - Skip extensive unit testing for simple operations
+        - Test critical paths only
+
+      **Manual**:
+        - Document manual verification steps with clear expected outcomes
+        - Create validation checklists in acceptance criteria
+        - No automated test writing required
+        - Record manual test execution results
+
+      **Hybrid**:
+        - Apply Full TDD to tasks marked complex/high-risk
+        - Apply Lightweight to tasks marked simple/low-risk
+        - Check phase task table for per-task testing annotations
+
+   c) Universal principles (all approaches):
+      - Consult the Alignment Brief section inside `PHASE_DOC` before each task to reaffirm invariants, guardrails, and test expectations
+      - Respect stack patterns (e.g., Python test debug via `module: 'pytest'` + `--no-cov`; bounded searches; remote-safe URIs)
+      - Honor mock usage preference from Testing Strategy
+      (Rules/idioms affirmed here.) :contentReference[oaicite:17]{index=17} :contentReference[oaicite:18]{index=18}
+
+3) Execution (adapt to Testing Strategy):
    - Follow task order and dependencies listed in `PHASE_DOC`; [P] only for disjoint file sets (respect ST/T scopes).
-   - After each cycle: record Test -> expected fail excerpt -> code change summary -> pass excerpt -> refactor note.
-   - **Update plan footnotes**:
+
+   **For Full TDD**:
+     - After each RED-GREEN-REFACTOR cycle: record Test -> expected fail excerpt -> code change summary -> pass excerpt -> refactor note
+
+   **For Lightweight**:
+     - After implementing functionality: write validation test -> run test -> record pass/fail -> document key verification points
+
+   **For Manual**:
+     - After implementing functionality: execute manual verification steps -> record observed behavior -> confirm acceptance criteria met
+
+   **For Hybrid**:
+     - Check task annotation; apply Full TDD or Lightweight workflow accordingly
+
+   - **Update plan footnotes** (all approaches):
      * In `PLAN` (the plan markdown), for each edited file/method, append a footnote in the **Change Footnotes Ledger**
        using the exact substrate node-ID format and clickable links from `AGENTS.md`.
      * In `PHASE_DOC`, ensure each task's Notes entry ends with the correct footnote tag (`[^N]`) mapped to that ledger entry—whether the IDs are `T###` or `ST###`. Maintain sequential, unique numbering across the dossier.
 
-4) Output:
-   - **Execution Log** -> write to `EXEC_LOG` (phase log or subtask-specific log) with concise per TDD cycle entries.
+4) Output (format adapts to Testing Strategy):
+   - **Execution Log** -> write to `EXEC_LOG` (phase log or subtask-specific log):
+     * Full TDD: Concise per RED-GREEN-REFACTOR cycle entries
+     * Lightweight: Per-task validation test results and key verification points
+     * Manual: Manual verification steps executed and observed outcomes
+     * Hybrid: Mix of TDD cycles and validation results per task annotation
    - **Unified diffs** for all touched files.
-   - **Commands & evidence** (runner output excerpts that prove acceptance criteria).
+   - **Commands & evidence** (runner output excerpts that prove acceptance criteria):
+     * Full TDD/Lightweight: Test runner output
+     * Manual: Screenshots, command output, or manual test logs
    - **Risk/Impact** confirmation.
    - **Final status** mapped to dossier acceptance criteria + suggested commit message(s)/PR title.
    - Update the `## Evidence Artifacts` section in `PHASE_DOC` with links to the log and any newly produced evidence (store artifacts inside `PHASE_DIR`).
