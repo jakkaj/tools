@@ -105,6 +105,32 @@ Inputs:
 ### Testing Strategy Adaptation
 Read the `## Testing Strategy` section from the spec and adapt plan generation accordingly. Capture both the testing approach and the mock usage preference; reflect both throughout the plan.
 
+### Documentation Strategy Adaptation
+Read the `## Documentation Strategy` section from the spec and generate appropriate documentation phases based on the location choice:
+
+- **README.md only**: Create single documentation phase updating root README.md with quick-start content
+- **docs/how/ only**: Create documentation phase(s) for detailed guides under docs/how/
+  - Structure: `docs/how/<feature-name>/N-topic.md` (numbered files within feature directory)
+  - **Intelligent file placement**:
+    1. Survey existing `docs/how/` directories to identify relevant feature areas
+    2. Decide: create new `docs/how/<new-feature>/` OR use existing `docs/how/<existing-feature>/`
+    3. Determine file strategy: create new numbered file OR append to existing file if content is small/related
+    4. Use sequential numbering (1-overview.md, 2-usage.md, 3-api.md, etc.)
+- **Hybrid**: Create multiple documentation phases:
+  - Phase for README.md updates (quick-start, overview, essential commands)
+  - Phase for docs/how/ content following structure above
+  - Ensure content split matches spec guidance
+- **None**: Skip documentation phases (note in plan why docs are not needed)
+
+Documentation phases should include:
+- **Discovery step**: List existing docs/how/ feature directories and their content
+- **Placement decision**: Document whether creating new feature dir or using existing, with rationale
+- **File strategy**: Specify whether creating new files or updating existing ones
+- Clear file paths (absolute: /path/to/repo/README.md or /path/to/repo/docs/how/<feature>/N-topic.md)
+- Content outlines (what sections/topics to cover)
+- Target audience considerations
+- Maintenance/update expectations
+
 - **Full TDD**: Generate comprehensive test-first tasks for all phases (current template)
 - **Lightweight**:
   - Reduce test tasks to core validation only
@@ -296,6 +322,12 @@ describe('[Component]', () => {
 - Metrics to capture
 - Error tracking approach
 
+### Documentation
+- Documentation location (per Documentation Strategy from spec)
+- Content structure and organization
+- Update/maintenance schedule
+- Target audience and accessibility
+
 #### 9. Complexity Tracking
 
 If Constitution/Architecture deviations exist:
@@ -464,6 +496,88 @@ suite('BridgeContext using VS Code APIs', () => {
 - [ ] Test coverage > 90%
 - [ ] Clean module exports
 - [ ] TypeScript strict mode passes
+
+## Example Documentation Phase (For Reference)
+
+Note: This example shows a Hybrid documentation approach (README + docs/how/). Adapt based on Documentation Strategy from spec.
+
+### Phase N: Documentation
+
+**Objective**: Document the BridgeContext feature for users and maintainers following hybrid approach (essentials in README, details in docs/how/bridge-context/).
+
+**Deliverables**:
+- Updated README.md with quick-start guide
+- Detailed guides in docs/how/bridge-context/ (numbered structure)
+
+**Dependencies**: All implementation phases complete, tests passing
+
+**Risks**:
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| Documentation drift | Medium | Medium | Include doc updates in phase acceptance criteria |
+| Unclear examples | Low | Medium | Use real code snippets from implementation |
+
+### Discovery & Placement Decision
+
+**Existing docs/how/ structure**:
+```
+docs/how/
+├── testing/
+│   ├── 1-overview.md
+│   └── 2-tdd-workflow.md
+└── architecture/
+    └── 1-overview.md
+```
+
+**Decision**: Create new `docs/how/bridge-context/` directory (no existing relevant feature area)
+
+**File strategy**: Create new numbered files (1-overview.md, 2-usage.md, 3-api.md)
+
+### Tasks (Lightweight Approach for Documentation)
+
+| #   | Status | Task | Success Criteria | Log | Notes |
+|-----|--------|------|------------------|-----|-------|
+| N.1 | [ ] | Survey existing docs/how/ directories | Documented existing structure, identified no conflicts | - | Discovery step |
+| N.2 | [ ] | Update README.md with BridgeContext quick-start | Installation, basic usage, link to docs/how/bridge-context/ | - | /path/to/repo/README.md |
+| N.3 | [ ] | Create docs/how/bridge-context/1-overview.md | Introduction, motivation, architecture diagram complete | - | /path/to/repo/docs/how/bridge-context/1-overview.md |
+| N.4 | [ ] | Create docs/how/bridge-context/2-usage.md | Step-by-step usage guide with code examples | - | /path/to/repo/docs/how/bridge-context/2-usage.md |
+| N.5 | [ ] | Create docs/how/bridge-context/3-api.md | All public APIs documented with examples | - | /path/to/repo/docs/how/bridge-context/3-api.md |
+| N.6 | [ ] | Review documentation for clarity and completeness | Peer review passed, no broken links | - | All docs reviewed |
+
+### Content Outlines
+
+**README.md section** (Hybrid: quick-start only):
+- What is BridgeContext (1-2 sentences)
+- Installation/setup (quick steps)
+- Basic usage example (minimal code snippet)
+- Link to detailed docs: `docs/how/bridge-context/`
+
+**docs/how/bridge-context/1-overview.md**:
+- Introduction and motivation
+- Architecture diagram
+- Key concepts
+- When to use BridgeContext
+
+**docs/how/bridge-context/2-usage.md**:
+- Installation and configuration
+- Common use cases with examples
+- Code snippets (tested)
+- Troubleshooting section
+
+**docs/how/bridge-context/3-api.md**:
+- API reference for all public interfaces
+- Parameter descriptions and types
+- Return types
+- Code examples for each method
+
+### Acceptance Criteria
+- [ ] README.md updated with quick-start section
+- [ ] All docs/how/bridge-context/ files created and complete
+- [ ] Code examples tested and working
+- [ ] No broken links (internal or external)
+- [ ] Peer review completed
+- [ ] Target audience can follow guides successfully
+- [ ] Numbered file structure follows convention
 
 ## Style & Formatting Rules
 
