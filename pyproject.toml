@@ -27,7 +27,9 @@ Repository = "https://github.com/yourusername/tools"
 [tool.hatchling.build.targets.wheel]
 packages = ["src/jk_tools"]
 
-[tool.hatchling.build.targets.wheel.shared-data]
-"install" = "share/jk-tools/install"
-"scripts" = "share/jk-tools/scripts"
-"agents" = "share/jk-tools/agents"
+[tool.hatchling.build]
+include = [
+    "src/jk_tools/install/**/*",
+    "src/jk_tools/scripts/**/*",
+    "src/jk_tools/agents/**/*",
+]

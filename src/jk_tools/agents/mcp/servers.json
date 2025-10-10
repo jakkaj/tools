@@ -1,0 +1,44 @@
+{
+  "serena": {
+    "type": "local",
+    "enabled": true,
+    "command": "uvx",
+    "args": [
+      "--from",
+      "git+https://github.com/oraios/serena",
+      "serena",
+      "start-mcp-server",
+      "--context",
+      "ide-assistant",
+      "--project",
+      ".",
+      "--enable-web-dashboard",
+      "False"
+    ],
+    "env": {}
+  },
+  "context7": {
+    "type": "local",
+    "enabled": true,
+    "command": "npx",
+    "args": [
+      "-y",
+      "@upstash/context7-mcp"
+    ]
+  },
+  "_browser-use-disabled": {
+    "type": "local",
+    "enabled": false,
+    "command": "uvx",
+    "args": [
+      "mcp-server-browser-use@latest"
+    ],
+    "env": {
+      "MCP_LLM_OPENROUTER_API_KEY": "${OPENROUTER_API_KEY}",
+      "MCP_LLM_PROVIDER": "openrouter",
+      "MCP_LLM_MODEL_NAME": "openai/gpt-5-mini",
+      "MCP_BROWSER_HEADLESS": "true",
+      "MCP_AGENT_TOOL_USE_VISION": "false"
+    }
+  }
+}

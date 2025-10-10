@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./setup.sh:*)",
+      "Bash(echo $PATH)",
+      "Read(//home/jak/**)",
+      "Bash(export:*)",
+      "Bash(jk-tools)",
+      "Bash(python3:*)",
+      "Bash(source:*)",
+      "Bash(jk-jt)",
+      "Bash(/home/jak/github/tools/install/install-coding-stuff.sh:*)",
+      "Bash(bash:*)",
+      "Bash(opencode:*)",
+      "Bash(tee:*)",
+      "Read(//tmp/**)",
+      "Bash(timeout:*)",
+      "Bash(chmod:*)",
+      "Bash(/home/jak/github/tools/install/just.sh:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

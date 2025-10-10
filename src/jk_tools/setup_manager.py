@@ -64,24 +64,13 @@ class SetupManager:
                           If provided, will use local filesystem paths (for development).
         """
         if resource_root is None:
-            # Running from installed package - use package data
+            # Running from installed package - use package resources
             try:
-                # Get package data location (site-packages/share/jk-tools/)
-                import site
-                import sysconfig
-                # Try to find the installed data directory
-                data_dir = Path(sysconfig.get_path("data")) / "share" / "jk-tools"
-                if not data_dir.exists():
-                    # Fallback: look in site-packages parent
-                    for site_dir in site.getsitepackages():
-                        potential_data = Path(site_dir).parent / "share" / "jk-tools"
-                        if potential_data.exists():
-                            data_dir = potential_data
-                            break
-
-                self.script_dir = data_dir
-                self.scripts_path = data_dir / "scripts"
-                self.install_path = data_dir / "install"
+                # Data files are packaged with the module
+                package_dir = Path(__file__).parent
+                self.script_dir = package_dir
+                self.scripts_path = package_dir / "scripts"
+                self.install_path = package_dir / "install"
             except Exception:
                 # Ultimate fallback - use current working directory
                 self.script_dir = Path.cwd()
