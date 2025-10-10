@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "jk-tools"
+version = "0.1.0"
+description = "Centralized setup and utility scripts for developer tooling"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+    { name = "Jordan Knight" }
+]
+dependencies = [
+    "rich>=13.7.0",
+    "toml>=0.10.2",
+]
+
+[project.scripts]
+jk-tools-setup = "jk_tools.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/tools"
+Repository = "https://github.com/yourusername/tools"
+
+[tool.hatchling.build.targets.wheel]
+packages = ["src/jk_tools"]
+
+[tool.hatchling.build.targets.wheel.shared-data]
+"install" = "share/jk-tools/install"
+"scripts" = "share/jk-tools/scripts"
+"agents" = "share/jk-tools/agents"

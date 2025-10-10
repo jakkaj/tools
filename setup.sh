@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
 
 # Tools Repository Setup Script
-# This script now uses Python for better control and reporting
+# Supports both traditional pip install and modern uvx execution
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PYTHON_SCRIPT="${SCRIPT_DIR}/setup_manager.py"
 REQUIREMENTS_FILE="${SCRIPT_DIR}/requirements.txt"
+
+# Check if we should use uvx (modern approach)
+USE_UVX=false
+if command -v uvx >/dev/null 2>&1 && [ -f "${SCRIPT_DIR}/pyproject.toml" ]; then
+    USE_UVX=true
+fi
 
 print_status() {
     echo "[*] $1"
@@ -91,14 +97,19 @@ install_requirements() {
 }
 
 run_setup_manager() {
-    print_status "Launching Python setup manager..."
-    echo ""
-
-    # Make the Python script executable
-    chmod +x "$PYTHON_SCRIPT"
-
-    # Run the Python setup manager with any arguments passed to this script
-    $PYTHON_CMD "$PYTHON_SCRIPT" "$@"
+    if [ "$USE_UVX" = true ]; then
+        print_status "Using uvx for modern package execution..."
+        echo ""
+        # Run via uvx with --dev-mode flag pointing to local directory
+        uvx --from "${SCRIPT_DIR}" jk-tools-setup --dev-mode "${SCRIPT_DIR}" "$@"
+    else
+        print_status "Launching Python setup manager (legacy mode)..."
+        echo ""
+        # Make the Python script executable
+        chmod +x "$PYTHON_SCRIPT"
+        # Run the Python setup manager with any arguments passed to this script
+        $PYTHON_CMD "$PYTHON_SCRIPT" "$@"
+    fi
 }
 
 main() {
@@ -107,19 +118,28 @@ main() {
     echo "======================================"
     echo ""
 
-    # Check for Python
-    check_python
+    if [ "$USE_UVX" = true ]; then
+        print_status "Detected uvx - using modern execution mode"
+        echo ""
+        # Skip pip-based setup, go straight to uvx
+        run_setup_manager "$@"
+    else
+        print_status "Using traditional pip-based execution mode"
+        echo ""
+        # Check for Python
+        check_python
 
-    # Check for pip
-    check_pip
+        # Check for pip
+        check_pip
 
-    # Install requirements
-    install_requirements
+        # Install requirements
+        install_requirements
 
-    echo ""
+        echo ""
 
-    # Run the Python setup manager
-    run_setup_manager "$@"
+        # Run the Python setup manager
+        run_setup_manager "$@"
+    fi
 }
 
 # Pass all arguments to main
