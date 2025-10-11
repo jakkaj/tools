@@ -30,11 +30,12 @@ Q: What testing approach best fits this feature's complexity and risk profile?
 | Option | Approach | Best For | Test Coverage |
 |--------|----------|----------|---------------|
 | A | Full TDD | Complex logic, algorithms, APIs | Comprehensive unit/integration/e2e tests |
-| B | Lightweight | Simple operations, config changes | Core functionality validation only |
-| C | Manual Only | One-time scripts, trivial changes | Document manual verification steps |
-| D | Hybrid | Mixed complexity features | TDD for complex, lightweight for simple |
+| B | TAD (Test-Assisted Development) | Features needing executable documentation | Tests as high-fidelity docs; iterative refinement |
+| C | Lightweight | Simple operations, config changes | Core functionality validation only |
+| D | Manual Only | One-time scripts, trivial changes | Document manual verification steps |
+| E | Hybrid | Mixed complexity features | TDD for complex, TAD/lightweight for others |
 
-Answer: [A/B/C/D]
+Answer: [A/B/C/D/E]
 Rationale: [1-2 sentences from user]
 ```
 
@@ -70,11 +71,12 @@ If C (Hybrid): What goes in README vs docs/how/? [Brief split description]
 
 Updates to Spec:
 - Add/Update `## Testing Strategy` section with:
-  - **Approach**: [Full TDD | Lightweight | Manual | Hybrid]
+  - **Approach**: [Full TDD | TAD | Lightweight | Manual | Hybrid]
   - **Rationale**: [User's reasoning]
   - **Focus Areas**: [What needs thorough testing]
   - **Excluded**: [What doesn't need extensive testing]
   - **Mock Usage**: [Avoid mocks | Targeted mocks | Liberal mocks] + rationale
+  - **TAD-Specific** (if TAD selected): Scratch→Promote workflow, Test Doc comment blocks required, promotion heuristic (Critical/Opaque/Regression/Edge)
 - Add/Update `## Documentation Strategy` section with:
   - **Location**: [README.md only | docs/how/ only | Hybrid | None]
   - **Rationale**: [User's reasoning]

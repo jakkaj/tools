@@ -36,7 +36,7 @@ $ARGUMENTS
 2) **Contract** (Read Testing Strategy First):
    a) Extract Testing Strategy from `PLAN`:
       - Locate `## Testing Strategy` section
-      - Read **Approach**: Full TDD | Lightweight | Manual | Hybrid
+      - Read **Approach**: Full TDD | TAD | Lightweight | Manual | Hybrid
       - Read **Mock Usage**: Avoid mocks | Targeted mocks | Liberal mocks
       - Read **Focus Areas** and **Excluded** to understand priorities
 
@@ -45,6 +45,27 @@ $ARGUMENTS
         - RED-GREEN-REFACTOR loop per task: write/adjust test (RED) -> minimal code (GREEN) -> refactor (CLEAN) -> commit
         - Assertions must **document behavior**; not generic truths
         - Apply mock policy from spec (typically "avoid mocks"; use real repo data/fixtures)
+
+      **TAD (Test-Assisted Development)**:
+        - Scratch → Promote cycle per task:
+          1. Create/use tests/scratch/ directory (exclude from CI if not already)
+          2. Write probe tests to explore behavior (fast iteration, no documentation needed)
+          3. Implement code iteratively, refining with scratch probes
+          4. When behavior stabilizes, identify valuable tests using promotion heuristic:
+             * Keep if: Critical path, Opaque behavior, Regression-prone, or Edge case
+          5. Promote valuable tests to tests/unit/ or tests/integration/
+          6. Add Test Doc comment block to each promoted test (required fields):
+             - Why: business/bug/regression reason (1-2 lines)
+             - Contract: plain-English invariant(s) this test asserts
+             - Usage Notes: how to call/configure the API; gotchas
+             - Quality Contribution: what failure this will catch; link to issue/PR/spec
+             - Worked Example: inputs/outputs summarized for scanning
+          7. Delete scratch probes that don't add durable value
+          8. Document learning notes from scratch exploration in execution log
+        - Test naming: "Given...When...Then..." format (e.g., `test_given_iso_date_when_parsing_then_returns_normalized_cents`)
+        - Promoted tests must pass without network/sleep/flakes (<300ms)
+        - Apply mock policy from spec to promoted tests only
+        - Tests are executable documentation; optimize for next developer's understanding
 
       **Lightweight**:
         - Write minimal validation tests focused on core functionality
@@ -75,6 +96,12 @@ $ARGUMENTS
    **For Full TDD**:
      - After each RED-GREEN-REFACTOR cycle: record Test -> expected fail excerpt -> code change summary -> pass excerpt -> refactor note
 
+   **For TAD**:
+     - After scratch exploration: record probe tests written, behavior explored, insights gained
+     - After implementation: record code changes, how scratch probes informed design
+     - After promotion: record which tests promoted, promotion rationale (heuristic applied), Test Doc blocks added
+     - After cleanup: record which scratch tests deleted, learning notes preserved
+
    **For Lightweight**:
      - After implementing functionality: write validation test -> run test -> record pass/fail -> document key verification points
 
@@ -92,13 +119,15 @@ $ARGUMENTS
 4) Output (format adapts to Testing Strategy):
    - **Execution Log** -> write to `EXEC_LOG` (phase log or subtask-specific log):
      * Full TDD: Concise per RED-GREEN-REFACTOR cycle entries
+     * TAD: Scratch exploration notes, promotion decisions with heuristic rationale, Test Doc blocks, learning notes
      * Lightweight: Per-task validation test results and key verification points
      * Manual: Manual verification steps executed and observed outcomes
-     * Hybrid: Mix of TDD cycles and validation results per task annotation
+     * Hybrid: Mix of TDD cycles, TAD promotions, and validation results per task annotation
    - **Unified diffs** for all touched files.
    - **Commands & evidence** (runner output excerpts that prove acceptance criteria):
-     * Full TDD/Lightweight: Test runner output
+     * Full TDD/TAD/Lightweight: Test runner output (TAD includes promoted tests only, not scratch/)
      * Manual: Screenshots, command output, or manual test logs
+     * TAD: Evidence that tests/scratch/ is excluded from CI, promoted tests <300ms
    - **Risk/Impact** confirmation.
    - **Final status** mapped to dossier acceptance criteria + suggested commit message(s)/PR title.
    - Update the `## Evidence Artifacts` section in `PHASE_DOC` with links to the log and any newly produced evidence (store artifacts inside `PHASE_DIR`).

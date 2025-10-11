@@ -59,8 +59,92 @@ If any document uses placeholder tokens like `[ALL_CAPS_IDENTIFIER]`, your respo
    - Write `rules.md` with enforceable statements ("MUST", "SHOULD") covering:
      * Source control hygiene and branching
      * Coding standards, naming, formatting
-     * Testing/verification expectations (unit, integration, acceptance, manual checks)
+     * **Testing/verification expectations** (detailed guidance below)
      * Tooling or automation requirements (linters, CI, coverage, static analysis)
+
+   - **Testing Section Requirements** (expand with TAD philosophy):
+     The testing section in `rules.md` MUST include comprehensive guidance on:
+
+     **1. Testing Philosophy**
+     - Tests as executable documentation (TAD principles)
+     - Quality over coverage: tests must "pay rent" via comprehension value
+     - When to write tests vs when to skip them
+     - Smart application of TDD (test-first when it adds value, not dogmatically)
+
+     **2. Test Quality Standards**
+     - Every test MUST explain **why it exists** (business/bug/regression reason)
+     - Every test MUST document the **contract** it asserts (plain-English invariants)
+     - Every test MUST include **usage notes** (how to call the API, gotchas)
+     - Every test MUST describe its **quality contribution** (what failures it catches)
+     - Every test SHOULD include a **worked example** (inputs/outputs summary)
+     - Tests MUST use clear naming (Given-When-Then or equivalent behavioral format)
+
+     **3. Scratch → Promote Workflow** (TAD approach)
+     - Probe tests MAY be written in `tests/scratch/` for fast exploration/iteration
+     - `tests/scratch/` MUST be excluded from CI (via .gitignore or CI config)
+     - Tests MUST be promoted from scratch/ only if they add durable value
+     - **Promotion heuristic**: Keep if Critical path, Opaque behavior, Regression-prone, or Edge case
+     - Promoted tests MUST move to `tests/unit/` or `tests/integration/`
+     - Promoted tests MUST include complete Test Doc comment blocks (5 required fields)
+     - Non-valuable scratch tests MUST be deleted (keep learning notes in PR/log)
+
+     **4. Test-Driven Development (TDD) Guidance**
+     - TDD (test-first) SHOULD be used for: complex logic, algorithms, APIs, critical paths
+     - TDD MAY be skipped for: simple operations, config changes, trivial wrappers
+     - When using TDD, follow RED-GREEN-REFACTOR cycles
+     - Tests written first MUST document expected behavior clearly
+     - Avoid dogmatic TDD; apply when it adds value to design process
+
+     **5. Test Performance & Reliability**
+     - Promoted tests MUST run in <300ms (per test)
+     - Tests MUST NOT use network calls (use fixtures/mocks for external dependencies)
+     - Tests MUST NOT use sleep/timers (use time mocking if needed)
+     - Tests MUST be deterministic (no flaky tests tolerated in main suite)
+     - Slow integration tests MAY exceed 300ms but MUST be clearly marked
+
+     **6. Test Organization**
+     - `tests/scratch/` – fast probes, excluded from CI, temporary exploration
+     - `tests/unit/` – isolated component tests with Test Doc blocks
+     - `tests/integration/` – multi-component tests with Test Doc blocks
+     - `tests/e2e/` or `tests/acceptance/` – full-system tests (if applicable)
+     - `tests/fixtures/` – shared test data, realistic examples preferred
+
+     **7. Mock Usage Policy**
+     - Follow project-specific mock policy (Avoid | Targeted | Liberal - set in plan-2-clarify)
+     - When mocking, document WHY the real dependency isn't used
+     - Prefer real data/fixtures over mocks when practical
+     - Mocks SHOULD be simple and behavior-focused, not implementation-focused
+
+     **8. Test Documentation Format**
+     Include language-appropriate Test Doc block format examples:
+
+     ```typescript
+     test('given_iso_date_when_parsing_then_returns_normalized_cents', () => {
+       /*
+       Test Doc:
+       - Why: Prevent regression from #482 where AUD rounding truncated cents
+       - Contract: parseInvoice returns {totalCents:number, date:ZonedDate} with exact cent accuracy
+       - Usage Notes: Supply currency code; parser defaults to strict mode (throws on unknown fields)
+       - Quality Contribution: Catches rounding/locale drift and date-TZ bugs; documents required fields
+       - Worked Example: "1,234.56 AUD" → totalCents=123456; "2025-10-11+10:00" → ZonedDate(Australia/Brisbane)
+       */
+       // Arrange-Act-Assert with clear phases
+     });
+     ```
+
+     ```python
+     def test_given_iso_date_when_parsing_then_returns_normalized_cents():
+         """
+         Test Doc:
+         - Why: Regression guard for rounding bug (#482)
+         - Contract: Returns total_cents:int and timezone-aware datetime with exact cents
+         - Usage Notes: Pass currency='AUD'; strict=True raises on unknown fields
+         - Quality Contribution: Prevents silent money loss; showcases canonical call pattern
+         - Worked Example: "1,234.56 AUD" -> 123_456; "2025-10-11+10:00" -> aware datetime
+         """
+         # Arrange-Act-Assert with clear phases
+     ```
+
    - Write `idioms.md` with illustrative patterns, directory conventions, and language-specific examples when relevant.
    - Keep references to the constitution explicit (e.g., link sections or quote identifiers). If any area is not yet defined, leave a TODO entry mirroring the constitution.
 

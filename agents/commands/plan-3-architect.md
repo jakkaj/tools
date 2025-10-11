@@ -105,6 +105,20 @@ Inputs:
 ### Testing Strategy Adaptation
 Read the `## Testing Strategy` section from the spec and adapt plan generation accordingly. Capture both the testing approach and the mock usage preference; reflect both throughout the plan.
 
+**Approach-Specific Guidance:**
+- **Full TDD**: Generate comprehensive test-first tasks for all phases (current template)
+- **TAD (Test-Assisted Development)**: Generate tasks with Scratch→Promote workflow:
+  * Create scratch test exploration tasks (tests/scratch/ directory)
+  * Implementation tasks interleaved with test refinement
+  * Test promotion tasks with Test Doc comment block requirements
+  * Every promoted test must include Test Doc block (Why/Contract/Usage Notes/Quality Contribution/Worked Example)
+  * Focus on tests that "pay rent" via comprehension value
+  * Name tests "Given...When...Then..." format
+  * Keep tests/scratch/ out of CI; promoted tests must be <300ms
+- **Lightweight**: Reduce test tasks to core validation only
+- **Manual Only**: Replace test tasks with manual verification checklists
+- **Hybrid**: Mark phases with approach annotations (TDD/TAD/Lightweight per phase)
+
 ### Documentation Strategy Adaptation
 Read the `## Documentation Strategy` section from the spec and generate appropriate documentation phases based on the location choice:
 
@@ -182,7 +196,7 @@ Documentation phases should include:
 ```markdown
 ### Testing Approach
 [Reference the Testing Strategy from spec]
-- **Selected Approach**: [Full TDD | Lightweight | Manual | Hybrid]
+- **Selected Approach**: [Full TDD | TAD | Lightweight | Manual | Hybrid]
 - **Rationale**: [From spec]
 - **Focus Areas**: [From spec]
 
@@ -191,6 +205,31 @@ Documentation phases should include:
 - Write tests FIRST (RED)
 - Implement minimal code (GREEN)
 - Refactor for quality (REFACTOR)
+
+### Test-Assisted Development (TAD) (if applicable)
+[Include if TAD selected]
+- Tests are executable documentation optimized for developer comprehension
+- **Scratch → Promote workflow**:
+  1. Write probe tests in tests/scratch/ to explore/iterate (fast, excluded from CI)
+  2. Implement code iteratively, refining behavior with scratch probes
+  3. When behavior stabilizes, promote valuable tests to tests/unit/ or tests/integration/
+  4. Add Test Doc comment contract to each promoted test (required fields below)
+  5. Delete scratch probes that don't add durable value; keep learning notes in PR
+- **Promotion heuristic**: Keep if Critical path, Opaque behavior, Regression-prone, or Edge case
+- **Test naming format**: "Given...When...Then..." (e.g., `test_given_iso_date_when_parsing_then_returns_normalized_cents`)
+- **Test Doc comment block** (required for every promoted test):
+  ```
+  /*
+  Test Doc:
+  - Why: <business/bug/regression reason in 1–2 lines>
+  - Contract: <plain-English invariant(s) this test asserts>
+  - Usage Notes: <how a developer should call/configure the API; gotchas>
+  - Quality Contribution: <what failure this will catch; link to issue/PR/spec>
+  - Worked Example: <inputs/outputs summarized for scanning>
+  */
+  ```
+- **Quality principles**: Tests must explain why they exist, what contract they lock in, and how to use the code
+- **CI requirements**: Exclude tests/scratch/ from CI; promoted tests must pass without network/sleep/flakes (<300ms)
 
 ### Lightweight Testing (if applicable)
 [Include if Lightweight or Hybrid selected]
@@ -245,6 +284,17 @@ For **Full TDD** approach:
 | N.4 | [ ] | Integrate [component] with [system] | Integration tests pass | - | |
 | N.5 | [ ] | Refactor for [quality aspect] | Code meets idioms, tests still pass | - | |
 
+For **TAD (Test-Assisted Development)** approach:
+| #   | Status | Task | Success Criteria | Log | Notes |
+|-----|--------|------|------------------|-----|-------|
+| N.1 | [ ] | Create tests/scratch/ directory | Directory exists, excluded from CI config | - | Ensure .gitignore or CI config excludes tests/scratch/ |
+| N.2 | [ ] | Write scratch probes for [component] | 3-5 probe tests exploring behavior | - | Fast iteration, no Test Doc blocks needed |
+| N.3 | [ ] | Implement [component] iteratively | Core functionality works, refined with probes | - | Interleave code and scratch test updates |
+| N.4 | [ ] | Promote valuable tests to tests/unit/ | 2-3 tests moved with Test Doc blocks added | - | Apply heuristic: Critical path, Opaque behavior, Regression-prone, Edge case |
+| N.5 | [ ] | Add Test Doc comment blocks | All promoted tests have Why/Contract/Usage/Quality/Example | - | Required 5 fields per promoted test |
+| N.6 | [ ] | Delete non-valuable scratch tests | Only promoted tests remain in main suite | - | Keep learning notes in execution log/PR |
+| N.7 | [ ] | Verify CI exclusion of scratch/ | CI config explicitly excludes tests/scratch/ | - | |
+
 For **Lightweight** approach:
 | #   | Status | Task | Success Criteria | Log | Notes |
 |-----|--------|------|------------------|-----|-------|
@@ -260,7 +310,7 @@ For **Manual Only** approach:
 | N.3 | [ ] | Execute manual validation | All checks pass | - | |
 
 For **Hybrid** approach:
-[Mark each phase as Full TDD or Lightweight based on complexity]
+[Mark each phase as Full TDD, TAD, or Lightweight based on complexity and documentation needs]
 
 ### Test Examples (Write First!)
 

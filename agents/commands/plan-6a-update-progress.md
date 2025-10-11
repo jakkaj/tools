@@ -36,7 +36,7 @@ $ARGUMENTS
 
 2) Load current state:
    - Read plan markdown to locate the phase heading and plan task table (plan-3 output).
-   - Identify testing approach from the plan table header (TDD, Lightweight, Manual, Hybrid) for anchor naming.
+   - Identify testing approach from the plan table header (TDD, TAD, Lightweight, Manual, Hybrid) for anchor naming.
    - Parse the Change Footnotes Ledger to capture existing numbering.
    - Read `TARGET_DOC` and find the `## Tasks` table:
      * Phase dossiers contain IDs `T###`.
