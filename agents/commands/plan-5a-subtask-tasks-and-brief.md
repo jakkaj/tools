@@ -50,8 +50,24 @@ $ARGUMENTS
 
 4) Content expectations for `${SUBTASK_FILE}` (mirror plan-5 layout, scoped to subtask):
    - Front matter: title = `Subtask <ORD>: <Summary>`; include parent phase + plan links; record today as {{TODAY}}.
-   - `## Subtask Metadata` table with:
-     * Parent Plan, Parent Phase, Parent Task(s) (T-IDs + plan table refs), Subtask Summary, Requested By (default "Human Sponsor"), Created {{NOW}}.
+   - `## Parent Context` section with rich linkage back to parent:
+     ```markdown
+     ## Parent Context
+
+     **Parent Plan:** [View Plan](../../<plan-filename>)
+     **Parent Phase:** <Phase N: Title>
+     **Parent Task(s):** [T<XXX>: <task summary>](../tasks.md#task-t<xxx>)
+     **Plan Task Reference:** [Task <N.M> in Plan](../../<plan-filename>#<plan-task-anchor>)
+
+     **Why This Subtask:**
+     <Reason this subtask was created - captured from user input/arguments>
+
+     **Created:** {{TODAY}}
+     **Requested By:** <user or "Development Team">
+
+     ---
+     ```
+     Replace `<placeholders>` with actual values derived from PLAN, PHASE_HEADING, and parent task linkage identified in step 3.
    - `## Tasks` table using canonical columns
      | Status | ID | Task | Type | Dependencies | Absolute Path(s) | Validation | Notes |
      * Use IDs `ST001`, `ST002`, … (serial, reflect mapping to parent T-ID in Notes like "Supports T003 (footnote captured during plan-6)").
@@ -74,6 +90,43 @@ $ARGUMENTS
    - `## Evidence Artifacts` describing:
      * `execution.log.md` path = `${ORD}-subtask-${SUBTASK_SLUG}.execution.log.md`.
      * Any directories/files for artifacts (tests, fixtures, diagrams exports, etc.).
+   - `## After Subtask Completion` section providing resumption guidance:
+     ```markdown
+     ## After Subtask Completion
+
+     **This subtask resolves a blocker for:**
+     - Parent Task: [T<XXX>: <summary>](../tasks.md#task-t<xxx>)
+     - Plan Task: [<N.M>: <summary>](../../<plan-filename>#<task-anchor>)
+
+     **When all ST### tasks complete:**
+
+     1. **Record completion** in parent execution log:
+        ```
+        ### Subtask <SUBTASK_KEY> Complete
+
+        Resolved: <brief summary of what was fixed>
+        See detailed log: [subtask execution log](./<SUBTASK_KEY>.execution.log.md)
+        ```
+
+     2. **Update parent task** (if it was blocked):
+        - Open: [`tasks.md`](../tasks.md)
+        - Find: T<XXX>
+        - Update Status: `[!]` → `[ ]` (unblock)
+        - Update Notes: Add "Subtask <SUBTASK_KEY> complete"
+
+     3. **Resume parent phase work:**
+        ```bash
+        /plan-6-implement-phase --phase "<PHASE_HEADING>" \
+          --plan "<PLAN_ABSOLUTE_PATH>"
+        ```
+        (Note: NO `--subtask` flag to resume main phase)
+
+     **Quick Links:**
+     - 📋 [Parent Dossier](../tasks.md)
+     - 📄 [Parent Plan](../../<plan-filename>)
+     - 📊 [Parent Execution Log](../execution.log.md)
+     ```
+     Replace `<placeholders>` with actual values; SUBTASK_KEY = `${ORD}-subtask-${SUBTASK_SLUG}`.
    - Trailing directory sketch showing `PHASE_DIR` contents including subtask file + execution log (note that plan-6 writes the log, plan-6a updates both plan + subtask).
 
 5) Safeguards & consistency:
@@ -88,7 +141,25 @@ $ARGUMENTS
    - If `${SUBTASK_LOG}` already exists (prior runs), leave untouched but mention it in Evidence Artifacts; otherwise note that plan-6 will create it.
    - Provide a concise summary of parent linkage at the end (e.g., "Supports T003 in Phase 4").
 
-STOP once the subtask dossier is generated. Await human GO before implementation.
+7) Register subtask in plan's Subtasks Registry:
+   - Read PLAN and check for section `## Subtasks Registry`.
+   - If section doesn't exist, append to bottom of PLAN:
+     ```markdown
+     ## Subtasks Registry
+
+     Mid-implementation detours requiring structured tracking.
+
+     | ID | Created | Phase | Parent Task | Reason | Status | Dossier |
+     |----|---------|-------|-------------|--------|--------|---------|
+     ```
+   - Append new row to the table:
+     ```markdown
+     | ${ORD}-subtask-${SUBTASK_SLUG} | {{TODAY}} | ${PHASE_HEADING} | T${XXX} | <reason from user input> | [ ] Pending | [Link](tasks/${PHASE_SLUG}/${ORD}-subtask-${SUBTASK_SLUG}.md) |
+     ```
+   - The "reason" should match the "Why This Subtask" captured in Parent Context section.
+   - Status starts as `[ ] Pending`; plan-6 will update to `[x] Complete` when all ST### tasks finish.
+
+STOP once the subtask dossier is generated and registry is updated. Await human GO before implementation.
 ```
 
 Why this exists: Subtasks add structured planning for mid-phase branches without exploding the main dossier. They inherit critical context while allowing fine-grained execution tracking.
