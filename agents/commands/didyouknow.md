@@ -205,7 +205,35 @@ Summarize what was decided:
 ✓ Affects: [Which parts of spec/plan/tasks this impacts]
 ```
 
-Only then move to the next insight:
+#### g) **IMMEDIATE UPDATES (Critical - Don't Wait!)**
+**Before moving to the next insight, immediately update affected documents.**
+
+If the decision requires changes to spec/plan/tasks/code:
+1. **Identify affected files** from the "Affects" section
+2. **Read the current content** of those files if needed
+3. **Make the updates** using appropriate editing tools
+4. **Confirm the updates** to the human:
+   ```markdown
+   ✅ Updated [file-path]:
+   - [Change 1]
+   - [Change 2]
+   ```
+
+**Examples of immediate updates:**
+- Decision adds new task → Update tasks.md with the new task
+- Decision changes deployment strategy → Update deployment section in plan
+- Decision requires new component → Add to Phase requirements
+- Decision adds constraint → Update spec with new constraint
+- Decision creates action item → Add to appropriate task list
+
+**Do NOT:**
+- ❌ Wait until all 5 insights are done
+- ❌ Just note that updates are needed
+- ❌ Skip updates because you'll "do them later"
+
+**The updates must happen NOW, while the discussion is fresh.**
+
+After updates are complete, then move to the next insight:
 ```markdown
 Great, moving to insight #2...
 ```
@@ -223,7 +251,9 @@ Great, moving to insight #2...
 
 ### 4) DOCUMENTATION
 
-After all 5 insights have been discussed, append to the **SOURCE DOCUMENT** (the file that was analyzed):
+**Important**: Affected documents are updated IMMEDIATELY after each insight (step 3g above). This section is about the final session summary.
+
+After all 5 insights have been discussed and their updates applied, append to the **SOURCE DOCUMENT** (the file that was analyzed):
 
 ```markdown
 ---
@@ -314,7 +344,7 @@ After documentation is complete, provide a concise summary:
 💡 Insights: 5 critical discoveries
 ✓ Decisions: [count] made
 📋 Actions: [count] follow-up items
-📍 Updates needed: [count] sections
+✅ Updates applied: [count] files updated throughout session
 
 🎯 Top Insights:
 1. [Insight 1 title] → [Key decision]
@@ -340,6 +370,7 @@ We have [high/medium/low] confidence in proceeding based on this clarity session
 - [ ] Exactly 5 insights presented (no more, no less)
 - [ ] Each insight discussed one-at-a-time (no batching!)
 - [ ] Human input received for each insight before proceeding
+- [ ] **Updates applied IMMEDIATELY after each insight** (not deferred to end)
 - [ ] Conversational tone throughout (not formal documentation)
 - [ ] Each insight reveals something non-obvious
 - [ ] Each insight leads to actionable discussion
@@ -358,6 +389,7 @@ We have [high/medium/low] confidence in proceeding based on this clarity session
 **Anti-Patterns to Avoid:**
 - ❌ Dumping all 5 insights at once
 - ❌ Not waiting for human responses
+- ❌ Deferring updates until the end instead of doing them immediately
 - ❌ Stating obvious facts from the docs
 - ❌ Being overly formal or academic
 - ❌ Asking yes/no questions only
@@ -430,6 +462,16 @@ Great call - keeping it simple. A maintenance banner makes total sense.
   - [ ] Brief support team on expected Monday questions
 ✓ Affects: Phase 5 (Deployment), Phase 1 (need banner component)
 
+Let me update those sections right now...
+
+[Updates Phase 5 deployment section with timing requirement]
+[Updates Phase 1 to add maintenance banner component]
+
+✅ Updated docs/plans/002-oauth-integration/oauth-plan.md:
+- Phase 5: Added deployment window requirement (Sunday 3am EST)
+- Phase 5: Added pre-deployment banner requirement (1hr warning)
+- Phase 1: Added maintenance banner component to deliverables
+
 Perfect. Moving to insight #2...
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -450,7 +492,7 @@ Perfect. Moving to insight #2...
 💡 Insights: 5 critical discoveries
 ✓ Decisions: 7 made
 📋 Actions: 12 follow-up items
-📍 Updates needed: 3 phases
+✅ Updates applied: 1 file updated (3 phases modified throughout session)
 
 🎯 Top Insights:
 1. Session Invalidation Cascade → Sunday 3am deployment + banner
@@ -511,16 +553,18 @@ When feeling uncertain:
 
 ## Output Files
 
-1. **Updated Source Document**: Original file + "Critical Insights Discussion" section
-2. **Console Summary**: Session recap with decisions and next steps
+1. **Affected Documents**: Updated throughout the session as each insight is discussed (specs, plans, tasks, etc.)
+2. **Updated Source Document**: Original file + "Critical Insights Discussion" section appended at end
+3. **Console Summary**: Session recap with decisions and next steps
 
-No new files created - insights are documented inline with the artifact being analyzed.
+No new files created - insights and updates are applied to existing documents as the conversation progresses.
 
 ## Why This Works
 
 ✅ **Universal** - Works on any artifact at any stage
 ✅ **Natural** - Feels like talking to a smart, thoughtful teammate
 ✅ **Actionable** - Leads to real decisions and improvements
+✅ **Immediate** - Updates applied right away, not deferred to end
 ✅ **Documented** - Creates permanent record of insights
 ✅ **Non-blocking** - Optional clarity tool, doesn't delay workflow
 ✅ **Depth-first** - One insight at a time = deeper understanding

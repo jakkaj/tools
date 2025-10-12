@@ -69,7 +69,7 @@ $ARGUMENTS
      - **Test naming follows Given-When-Then** format - LOW if violated
      - **Mock usage matches spec preference** in promoted tests - CRITICAL if mismatched
      - **tests/scratch/ excluded from CI** configuration - HIGH if included in CI
-     - **Promoted tests performant** (<300ms, no network/sleep/flakes) - HIGH if violated
+     - **Promoted tests reliable** (no network/sleep/flakes; performance requirements per spec) - HIGH if violated
      - **Scratch exploration documented** in execution log - LOW if missing
      - Skip strict test-first order checks (iterative development is expected for TAD)
 
@@ -120,7 +120,7 @@ $ARGUMENTS
      - Verify promotion decisions align with heuristic: tests kept are Critical path, Opaque behavior, Regression-prone, or Edge case
      - Check execution log documents scratch exploration phase and promotion rationale
      - Confirm tests/scratch/ directory is excluded from CI configuration (.gitignore, CI config, or test runner config)
-     - Validate promoted tests are performant: run in <300ms without network calls, sleep, or flaky dependencies
+     - Validate promoted tests are reliable: no network calls, sleep, or flaky dependencies (performance requirements per spec)
      - Verify test names follow Given-When-Then format (or equivalent clear behavioral naming)
      - If promoted tests lack complete Test Doc blocks, mark CRITICAL with documentation requirements
      - If tests don't provide comprehension value or promotion rationale is weak, mark MEDIUM with heuristic review
@@ -185,7 +185,7 @@ $ARGUMENTS
         - [ ] Test names follow Given-When-Then format
         - [ ] Promotion heuristic applied (tests add durable value)
         - [ ] tests/scratch/ excluded from CI
-        - [ ] Promoted tests are performant (<300ms, no network/sleep/flakes)
+        - [ ] Promoted tests are reliable (no network/sleep/flakes; performance per spec)
         - [ ] Mock usage matches spec in promoted tests: [Avoid | Targeted | Liberal]
         - [ ] Scratch exploration documented in execution log
         - [ ] Test Doc blocks read like high-fidelity documentation
@@ -249,7 +249,7 @@ Review rubric baked into this phase
 
 - **Doctrine** (adapt to Testing Strategy from plan):
   - **Full TDD**: TDD order enforced (tests before code), tests-as-documentation required (assertions show behavior), RED-GREEN-REFACTOR cycles documented in execution log
-  - **TAD (Test-Assisted Development)**: Tests as executable documentation, Scratch→Promote workflow enforced, Test Doc comment blocks required (5 fields: Why/Contract/Usage Notes/Quality Contribution/Worked Example), promotion heuristic applied (Critical/Opaque/Regression/Edge), iterative development acceptable, promoted tests must be performant (<300ms) and valuable for comprehension, tests/scratch/ excluded from CI
+  - **TAD (Test-Assisted Development)**: Tests as executable documentation, Scratch→Promote workflow enforced, Test Doc comment blocks required (5 fields: Why/Contract/Usage Notes/Quality Contribution/Worked Example), promotion heuristic applied (Critical/Opaque/Regression/Edge), iterative development acceptable, promoted tests must be reliable (no network/sleep/flakes) and valuable for comprehension, tests/scratch/ excluded from CI, performance requirements per spec
   - **Lightweight**: Core validation tests required (focus on critical paths per spec Focus Areas), implementation-first acceptable, skip comprehensive edge case coverage if excluded in spec
   - **Manual**: Manual verification steps documented with clear expected outcomes, observed results recorded in execution log, evidence artifacts present (screenshots/logs)
   - **Hybrid**: Per-phase/per-task approach applied based on annotations - Full TDD rules for TDD-marked work, TAD rules for TAD-marked work, Lightweight rules for Lightweight-marked work

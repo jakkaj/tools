@@ -95,12 +95,12 @@ If any document uses placeholder tokens like `[ALL_CAPS_IDENTIFIER]`, your respo
      - Tests written first MUST document expected behavior clearly
      - Avoid dogmatic TDD; apply when it adds value to design process
 
-     **5. Test Performance & Reliability**
-     - Promoted tests MUST run in <300ms (per test)
+     **5. Test Reliability & Quality**
      - Tests MUST NOT use network calls (use fixtures/mocks for external dependencies)
      - Tests MUST NOT use sleep/timers (use time mocking if needed)
      - Tests MUST be deterministic (no flaky tests tolerated in main suite)
-     - Slow integration tests MAY exceed 300ms but MUST be clearly marked
+     - Tests SHOULD be reasonably fast to maintain quick feedback loops
+     - Performance requirements (timing, resource limits) will be specified in the spec when needed
 
      **6. Test Organization**
      - `tests/scratch/` – fast probes, excluded from CI, temporary exploration

@@ -114,7 +114,7 @@ Read the `## Testing Strategy` section from the spec and adapt plan generation a
   * Every promoted test must include Test Doc block (Why/Contract/Usage Notes/Quality Contribution/Worked Example)
   * Focus on tests that "pay rent" via comprehension value
   * Name tests "Given...When...Then..." format
-  * Keep tests/scratch/ out of CI; promoted tests must be <300ms
+  * Keep tests/scratch/ out of CI; promoted tests should be reasonably fast and reliable
 - **Lightweight**: Reduce test tasks to core validation only
 - **Manual Only**: Replace test tasks with manual verification checklists
 - **Hybrid**: Mark phases with approach annotations (TDD/TAD/Lightweight per phase)
@@ -229,7 +229,7 @@ Documentation phases should include:
   */
   ```
 - **Quality principles**: Tests must explain why they exist, what contract they lock in, and how to use the code
-- **CI requirements**: Exclude tests/scratch/ from CI; promoted tests must pass without network/sleep/flakes (<300ms)
+- **CI requirements**: Exclude tests/scratch/ from CI; promoted tests must be deterministic without network/sleep/flakes (performance requirements specified in spec when needed)
 
 ### Lightweight Testing (if applicable)
 [Include if Lightweight or Hybrid selected]
