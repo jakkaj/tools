@@ -130,6 +130,34 @@ $ARGUMENTS
      * TAD: Evidence that tests/scratch/ is excluded from CI, promoted tests are deterministic and reliable
    - **Risk/Impact** confirmation.
    - **Final status** mapped to dossier acceptance criteria + suggested commit message(s)/PR title.
+   - **Subtask completion prompt**:
+     * When executing with `--subtask` AND all ST### tasks complete, display:
+       ```
+       ✅ Subtask ${SUBTASK_KEY} Complete
+
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       📋 Resumption Guide
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+       Why this subtask existed:
+         {Reason from subtask Parent Context section}
+
+       What's now resolved:
+         {Summary of subtask deliverables/ST tasks completed}
+
+       Resume parent work:
+         Phase: {PHASE_HEADING}
+         Task: T{XXX} - {task summary}
+         Status: {current status - check if was blocked}
+
+       Next steps:
+         1. Update parent task in tasks.md (unblock if needed)
+         2. Resume main phase implementation
+
+       Resume command:
+         /plan-6-implement-phase --phase "{PHASE_HEADING}" --plan "{PLAN}"
+       ```
+     * Also update Subtasks Registry in PLAN: locate the subtask row and change status from `[ ] Pending` to `[x] Complete`.
    - Update the `## Evidence Artifacts` section in `PHASE_DOC` with links to the log and any newly produced evidence (store artifacts inside `PHASE_DIR`).
    - If executing a subtask, also review the parent phase dossier to ensure cross-references (e.g., Ready Check, supporting tasks) remain accurate.
 

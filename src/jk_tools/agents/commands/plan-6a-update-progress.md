@@ -384,6 +384,55 @@ Next: Continue with Task 2.4 or run /plan-7-code-review if phase complete
 
 For subtask updates, mirror the same structure but swap task identifiers (e.g., `Task: ST002 - Create sanitized fixtures`), point `Task Log Updated` to `${SUBTASK_KEY}.execution.log.md`, and include the parent plan task reference in the summary.
 
+### Subtask Completion Output:
+
+When marking the LAST ST### task as complete, add parent resumption section to the success output:
+
+```
+✅ Progress Updated Successfully
+
+Plan: /path/to/plan.md
+Phase: Phase 2: Input Validation
+Subtask: 001-subtask-bulk-import-fixtures
+Task: ST003 - Final fixture validation
+Status: completed
+
+[... standard links/footnotes/node IDs sections ...]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 Parent Task Resumption
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Subtask: 001-subtask-bulk-import-fixtures
+Parent Task: T003 - Implement validation module
+Plan Task: 2.3 - Implement validation
+
+Status: All ST### tasks complete ✓
+
+Actions taken:
+- ✓ Updated parent execution log with subtask completion
+- ✓ Parent task unblocked (if was blocked)
+- ✓ Subtasks Registry updated in plan (marked complete)
+
+Resume parent work:
+/plan-6-implement-phase --phase "Phase 2: Input Validation" \
+  --plan "/path/to/plan.md"
+
+Parent links:
+- Parent Dossier: tasks/phase-2/tasks.md#task-t003
+- Parent Plan: ../../plan.md#task-23
+
+Suggested Commit:
+git add -A
+git commit -m "docs: complete subtask 001-subtask-bulk-import-fixtures
+
+- All ST### tasks completed
+- Parent task T003 can resume
+- See subtask execution log for details"
+
+Next: Resume parent task T003 using command above
+```
+
 ### Integration with Other Commands:
 
 **plan-6-implement-phase** should call this after each task:
