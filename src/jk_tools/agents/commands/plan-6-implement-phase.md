@@ -63,7 +63,7 @@ $ARGUMENTS
           7. Delete scratch probes that don't add durable value
           8. Document learning notes from scratch exploration in execution log
         - Test naming: "Given...When...Then..." format (e.g., `test_given_iso_date_when_parsing_then_returns_normalized_cents`)
-        - Promoted tests must pass without network/sleep/flakes (<300ms)
+        - Promoted tests must be deterministic without network/sleep/flakes (performance requirements from spec)
         - Apply mock policy from spec to promoted tests only
         - Tests are executable documentation; optimize for next developer's understanding
 
@@ -127,7 +127,7 @@ $ARGUMENTS
    - **Commands & evidence** (runner output excerpts that prove acceptance criteria):
      * Full TDD/TAD/Lightweight: Test runner output (TAD includes promoted tests only, not scratch/)
      * Manual: Screenshots, command output, or manual test logs
-     * TAD: Evidence that tests/scratch/ is excluded from CI, promoted tests <300ms
+     * TAD: Evidence that tests/scratch/ is excluded from CI, promoted tests are deterministic and reliable
    - **Risk/Impact** confirmation.
    - **Final status** mapped to dossier acceptance criteria + suggested commit message(s)/PR title.
    - Update the `## Evidence Artifacts` section in `PHASE_DOC` with links to the log and any newly produced evidence (store artifacts inside `PHASE_DIR`).

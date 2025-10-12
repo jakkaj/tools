@@ -344,7 +344,37 @@ main() {
         print_error "Source directory not found: ${SOURCE_DIR}"
         exit 1
     fi
-    
+
+    # Sync agents/commands/ to src/jk_tools/agents/commands/ for packaging
+    PACKAGE_COMMANDS_DIR="${REPO_ROOT}/src/jk_tools/agents/commands"
+    print_status "Syncing commands to package directory..."
+
+    if [ ! -d "${PACKAGE_COMMANDS_DIR}" ]; then
+        mkdir -p "${PACKAGE_COMMANDS_DIR}"
+        print_success "Created package commands directory: ${PACKAGE_COMMANDS_DIR}"
+    fi
+
+    # Count files before sync
+    source_count=$(find "${SOURCE_DIR}" -maxdepth 1 -name "*.md" -type f | wc -l | tr -d ' ')
+
+    # Sync all .md files from agents/commands/ to src/jk_tools/agents/commands/
+    if [ "${source_count}" -gt 0 ]; then
+        rsync -a --delete --include="*.md" --exclude="*" "${SOURCE_DIR}/" "${PACKAGE_COMMANDS_DIR}/"
+        package_count=$(find "${PACKAGE_COMMANDS_DIR}" -maxdepth 1 -name "*.md" -type f | wc -l | tr -d ' ')
+
+        if [ "${package_count}" -eq "${source_count}" ]; then
+            print_success "Synced ${source_count} command file(s) to package directory"
+        else
+            print_error "Sync mismatch: source=${source_count}, package=${package_count}"
+            exit 1
+        fi
+    else
+        print_error "No .md files found in ${SOURCE_DIR}"
+        exit 1
+    fi
+
+    echo ""
+
     # Create target directories if they don't exist
     if [ ! -d "${TARGET_DIR}" ]; then
         mkdir -p "${TARGET_DIR}"

@@ -42,18 +42,18 @@ $ARGUMENTS
 
 2) Extract Testing Strategy from plan
    - Locate `## 6. Testing Philosophy` or `## Testing Approach` section in PLAN
-   - Read **Testing Approach**: Full TDD | Lightweight | Manual | Hybrid
+   - Read **Testing Approach**: Full TDD | TAD | Lightweight | Manual | Hybrid
    - Read **Mock Usage**: Avoid mocks | Targeted mocks | Liberal mocks
    - Read **Focus Areas** and **Excluded** sections if present
    - If Testing Strategy section is missing, default to Full TDD and emit warning in review report
-   - Store Testing Approach and Mock Usage for use in validation steps 3 and 4
+   - Store Testing Approach and Mock Usage for use in validation steps 4 and 5
 
 3) Scope guard (PHASE ONLY)
    - Parse `PHASE_DOC` to list target files for this phase; ensure the diff touches only those or justified neighbors.
    - If violations (files outside scope without justification in the alignment brief section of `PHASE_DOC` or EXEC_LOG), flag as HIGH.
 
 4) Rules & doctrine gates (adapt to Testing Strategy)
-   - Extract Testing Approach from step 2 (Full TDD | Lightweight | Manual | Hybrid)
+   - Extract Testing Approach from step 2 (Full TDD | TAD | Lightweight | Manual | Hybrid)
    - Apply approach-specific validation:
 
    **For Full TDD:**
@@ -61,6 +61,17 @@ $ARGUMENTS
      - **Tests as documentation** assertions (clear behavioral expectations) - CRITICAL if missing
      - **Mock usage matches spec preference** (avoid/targeted/liberal) - CRITICAL if mismatched
      - **RED-GREEN-REFACTOR cycles documented** in execution log - HIGH if missing
+
+   **For TAD (Test-Assisted Development):**
+     - **Test Doc comment blocks present** on all promoted tests (not scratch/) - CRITICAL if missing
+     - **Test Doc blocks complete** (Why, Contract, Usage Notes, Quality Contribution, Worked Example) - HIGH if any field incomplete
+     - **Promotion heuristic applied** (tests add durable value per Critical/Opaque/Regression/Edge) - MEDIUM if promotion rationale unclear
+     - **Test naming follows Given-When-Then** format - LOW if violated
+     - **Mock usage matches spec preference** in promoted tests - CRITICAL if mismatched
+     - **tests/scratch/ excluded from CI** configuration - HIGH if included in CI
+     - **Promoted tests reliable** (no network/sleep/flakes; performance requirements per spec) - HIGH if violated
+     - **Scratch exploration documented** in execution log - LOW if missing
+     - Skip strict test-first order checks (iterative development is expected for TAD)
 
    **For Lightweight:**
      - **Core validation tests present** (focused on critical paths per spec Focus Areas) - HIGH if missing
@@ -101,6 +112,19 @@ $ARGUMENTS
      - Confirm `PHASE_DIR/execution.log.md` captures RED/GREEN/REFACTOR evidence for each task
      - Verify every item listed under `## Evidence Artifacts` in `PHASE_DOC` exists and is up to date inside `PHASE_DIR`
      - If a criterion lacks test coverage, mark HIGH with test-first fix suggestion
+
+   **For TAD (Test-Assisted Development) approach:**
+     - Verify promoted tests exist in tests/unit/ or tests/integration/ (not in scratch/)
+     - Check that each promoted test has complete Test Doc comment block with all 5 required fields (Why, Contract, Usage Notes, Quality Contribution, Worked Example)
+     - Confirm Test Doc blocks read like high-fidelity documentation (clear, realistic, valuable for comprehension)
+     - Verify promotion decisions align with heuristic: tests kept are Critical path, Opaque behavior, Regression-prone, or Edge case
+     - Check execution log documents scratch exploration phase and promotion rationale
+     - Confirm tests/scratch/ directory is excluded from CI configuration (.gitignore, CI config, or test runner config)
+     - Validate promoted tests are reliable: no network calls, sleep, or flaky dependencies (performance requirements per spec)
+     - Verify test names follow Given-When-Then format (or equivalent clear behavioral naming)
+     - If promoted tests lack complete Test Doc blocks, mark CRITICAL with documentation requirements
+     - If tests don't provide comprehension value or promotion rationale is weak, mark MEDIUM with heuristic review
+     - Accept that not all acceptance criteria have test coverage (TAD focuses on valuable tests, not comprehensive coverage)
 
    **For Lightweight approach:**
      - Verify core validation tests exist for critical paths identified in spec Focus Areas
@@ -155,6 +179,16 @@ $ARGUMENTS
         - [ ] Tests as docs (assertions show behavior)
         - [ ] Mock usage matches spec: [Avoid | Targeted | Liberal]
         - [ ] Negative/edge cases covered
+
+        For TAD (Test-Assisted Development):
+        - [ ] Promoted tests have complete Test Doc blocks (Why/Contract/Usage/Quality/Example)
+        - [ ] Test names follow Given-When-Then format
+        - [ ] Promotion heuristic applied (tests add durable value)
+        - [ ] tests/scratch/ excluded from CI
+        - [ ] Promoted tests are reliable (no network/sleep/flakes; performance per spec)
+        - [ ] Mock usage matches spec in promoted tests: [Avoid | Targeted | Liberal]
+        - [ ] Scratch exploration documented in execution log
+        - [ ] Test Doc blocks read like high-fidelity documentation
 
         For Lightweight:
         - [ ] Core validation tests present
@@ -215,12 +249,13 @@ Review rubric baked into this phase
 
 - **Doctrine** (adapt to Testing Strategy from plan):
   - **Full TDD**: TDD order enforced (tests before code), tests-as-documentation required (assertions show behavior), RED-GREEN-REFACTOR cycles documented in execution log
+  - **TAD (Test-Assisted Development)**: Tests as executable documentation, Scratch→Promote workflow enforced, Test Doc comment blocks required (5 fields: Why/Contract/Usage Notes/Quality Contribution/Worked Example), promotion heuristic applied (Critical/Opaque/Regression/Edge), iterative development acceptable, promoted tests must be reliable (no network/sleep/flakes) and valuable for comprehension, tests/scratch/ excluded from CI, performance requirements per spec
   - **Lightweight**: Core validation tests required (focus on critical paths per spec Focus Areas), implementation-first acceptable, skip comprehensive edge case coverage if excluded in spec
   - **Manual**: Manual verification steps documented with clear expected outcomes, observed results recorded in execution log, evidence artifacts present (screenshots/logs)
-  - **Hybrid**: Per-phase/per-task approach applied based on annotations - Full TDD rules for TDD-marked work, Lightweight rules for Lightweight-marked work
+  - **Hybrid**: Per-phase/per-task approach applied based on annotations - Full TDD rules for TDD-marked work, TAD rules for TAD-marked work, Lightweight rules for Lightweight-marked work
   - **Mock usage** (all approaches except Manual): Must align with spec preference (avoid/targeted/liberal) - CRITICAL if mismatched
   - **Real repo data/fixtures** whenever the Testing Strategy policy requires it
-  - Flag drift as CRITICAL/HIGH with approach-appropriate fix guidance (test-first for Full TDD, validation tests for Lightweight, manual checklist for Manual)
+  - Flag drift as CRITICAL/HIGH with approach-appropriate fix guidance (test-first for Full TDD, Test Doc blocks for TAD, validation tests for Lightweight, manual checklist for Manual)
 - **BridgeContext patterns** for VS Code/TypeScript work: bounded `vscode.RelativePattern`, remote-safe `vscode.Uri`, pytest debug via `module` not `program` with `--no-cov`.
 - **Plan authority**: Changes must map to the locked structure and explicit acceptance criteria from planning. Testing evidence must match the Testing Approach documented in the plan.
 
