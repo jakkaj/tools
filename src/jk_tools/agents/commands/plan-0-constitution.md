@@ -13,7 +13,7 @@ User input:
 
 $ARGUMENTS
 
-You are updating the project constitution at `/memory/constitution.md` **and** keeping the canonical doctrine files in sync:
+You are updating the project constitution at `docs/rules/constitution.md` **and** keeping the canonical doctrine files in sync:
 - `docs/rules-idioms-architecture/rules.md`        (Rules – normative MUST/SHOULD statements)
 - `docs/rules-idioms-architecture/idioms.md`        (Idioms – recurring patterns and examples)
 - `docs/rules-idioms-architecture/architecture.md`  (Architecture – structure, boundaries, interaction contracts)
@@ -25,7 +25,7 @@ If any document uses placeholder tokens like `[ALL_CAPS_IDENTIFIER]`, your respo
 1) Resolve repository paths
    - If your environment supplies a repository metadata helper (e.g., a prerequisites script defined in command front matter), run it once and parse the returned JSON. Otherwise derive values from the current working directory.
    - Set constants:
-     CONST = `/memory/constitution.md`
+     CONST = `docs/rules/constitution.md`
      RULES = `docs/rules-idioms-architecture/rules.md`
      IDIOMS = `docs/rules-idioms-architecture/idioms.md`
      ARCH  = `docs/rules-idioms-architecture/architecture.md`
@@ -46,7 +46,7 @@ If any document uses placeholder tokens like `[ALL_CAPS_IDENTIFIER]`, your respo
      * MINOR – new principles/sections or materially expanded guidance
      * PATCH – clarifications or formatting adjustments
 
-4) Draft **/memory/constitution.md**
+4) Draft **docs/rules/constitution.md**
    - Replace every placeholder. Standard sections:
      * Header with Title, Version, Ratification date, Last amended date
      * **Guiding Principles** – concise MUST/SHOULD statements with rationale
@@ -202,7 +202,7 @@ The following **must** be enforced across Constitution -> Rules & Idioms -> Plan
 
 --------------------------------
 ## Acceptance Criteria (for this command)
-- `/memory/constitution.md` is fully populated, versioned, and includes a Sync Impact Report.
+- `docs/rules/constitution.md` is fully populated, versioned, and includes a Sync Impact Report.
 - `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}` exist (or are created) and reflect the same doctrine without contradictory guidance.
 - No document retains unresolved placeholders; dates and versions adhere to the rules above.
 - Any touched templates or command prompts reference the canonical doctrine paths and remain stack-neutral.
@@ -217,7 +217,7 @@ The following **must** be enforced across Constitution -> Rules & Idioms -> Plan
 
 Canonical paths enforced by this command
 
-- Constitution: `/memory/constitution.md`
+- Constitution: `docs/rules/constitution.md`
 - Rules: `docs/rules-idioms-architecture/rules.md`
 - Idioms: `docs/rules-idioms-architecture/idioms.md`
 - Architecture: `docs/rules-idioms-architecture/architecture.md`
