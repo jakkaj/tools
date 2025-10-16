@@ -93,6 +93,20 @@ $ARGUMENTS
    - `## Tasks` section that renders the table exactly as defined above (Status checkbox first, then ID, Task, Type, Dependencies, Absolute Path(s), Validation, Notes) with numbered items (T001...), dependencies, [P] guidance, and validation checklist coverage.
    - `## Alignment Brief` section with:
      * Objective recap + behavior checklist (tie to PLAN acceptance criteria)
+     * **Non-Goals (Scope Boundaries)**: Explicitly call out what this phase is **NOT** doing to prevent scope creep and keep implementation focused. Include:
+       - Features/functionality deliberately excluded from this phase (but might be in future phases)
+       - Edge cases or scenarios being deferred
+       - Optimizations or polish that can wait
+       - Refactoring or cleanup not required for acceptance
+       - Alternative approaches explicitly rejected and why
+       Example format:
+       ```
+       ❌ NOT doing in this phase:
+       - Performance optimization (defer to Phase 5)
+       - User-facing error messages (using generic messages for now)
+       - Migration of legacy data (Phase 3 handles only new data)
+       - Advanced caching (simple in-memory cache sufficient for now)
+       ```
      * **Critical Findings Affecting This Phase**: List relevant discoveries from plan § 3 that impact this phase's implementation. For each, briefly note: the finding title, what it constrains/requires, and which tasks address it.
      * Invariants & guardrails (perf/memory/security budgets if relevant)
      * Inputs to read (exact file paths)
