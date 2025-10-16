@@ -9,7 +9,7 @@ Centralized setup and utility scripts for developer tooling across macOS, Linux,
 Run directly from GitHub without cloning:
 
 ```bash
-uvx --from git+https://github.com/yourusername/tools jk-tools-setup
+uvx --from git+https://github.com/jakkaj/tools jk-tools-setup
 ```
 
 Or from a local clone:
@@ -23,7 +23,7 @@ If you have `uvx` installed, it will automatically use the modern execution mode
 ### Traditional Approach (pip)
 
 ```bash
-git clone https://github.com/yourusername/tools.git
+git clone https://github.com/jakkaj/tools.git
 cd tools
 ./setup.sh
 ```
