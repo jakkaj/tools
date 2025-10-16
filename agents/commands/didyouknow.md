@@ -166,15 +166,47 @@ Use:
 - Data/numbers when relevant
 - Visual aids (tables, simple diagrams) if helpful
 
-#### d) Conversation Starter (Open-ended question)
-Invite discussion and decision-making:
-- "What do you think about [approach/tradeoff]?"
-- "Should we [option-A] or [option-B]?"
-- "Does this change how we should [plan/implement/test]?"
-- "Are you comfortable with [risk/assumption]?"
-- "How do you want to handle [challenge]?"
+#### d) Options & Recommendation (Actionable Paths Forward)
+Present 2-4 concrete options for addressing the insight:
 
-Make it a REAL question that requires thought and input.
+```markdown
+Here are our options:
+
+**Option A: [Approach Name]**
+- [What this involves]
+- Pros: [Benefits]
+- Cons: [Tradeoffs/risks]
+- Effort: [High/Medium/Low]
+
+**Option B: [Approach Name]**
+- [What this involves]
+- Pros: [Benefits]
+- Cons: [Tradeoffs/risks]
+- Effort: [High/Medium/Low]
+
+**Option C: [Approach Name]**
+- [What this involves]
+- Pros: [Benefits]
+- Cons: [Tradeoffs/risks]
+- Effort: [High/Medium/Low]
+
+**My Recommendation: Option [X]**
+
+Here's why I think [Option X] is the best path:
+1. [Primary reason - addresses the core concern]
+2. [Secondary reason - practical/feasible]
+3. [Tertiary reason - fits project constraints]
+
+However, [acknowledge valid aspects of other options or when they might be better].
+```
+
+Then invite discussion:
+- "What do you think about this recommendation?"
+- "Does [Option X] align with your priorities, or would you prefer [Option Y] because of [reason]?"
+- "Are there constraints I'm not seeing that would favor a different option?"
+- "Should we adjust any of these options to better fit our situation?"
+
+Make it a REAL question that acknowledges uncertainty and invites challenge to your recommendation.
 
 #### e) **WAIT for Human Response**
 **This is absolutely critical - DO NOT rush through all 5 insights!**
@@ -275,6 +307,14 @@ After all 5 insights have been discussed and their updates applied, append to th
 - [Consequence/implication 2]
 - [Consequence/implication 3]
 
+**Options Considered**:
+- Option A: [Name] - [Brief description]
+- Option B: [Name] - [Brief description]
+- Option C: [Name] - [Brief description]
+
+**AI Recommendation**: [Option X - Name]
+- Reasoning: [1-2 sentences explaining why this was recommended]
+
 **Discussion Summary**:
 [2-3 sentences capturing the key points of the conversation]
 
@@ -296,6 +336,14 @@ After all 5 insights have been discussed and their updates applied, append to th
 - [Point 1]
 - [Point 2]
 - [Point 3]
+
+**Options Considered**:
+- Option A: [Name] - [Brief description]
+- Option B: [Name] - [Brief description]
+- Option C: [Name] - [Brief description]
+
+**AI Recommendation**: [Option X - Name]
+- Reasoning: [1-2 sentences explaining why this was recommended]
 
 **Discussion Summary**: [Conversation recap]
 
@@ -346,12 +394,17 @@ After documentation is complete, provide a concise summary:
 📋 Actions: [count] follow-up items
 ✅ Updates applied: [count] files updated throughout session
 
-🎯 Top Insights:
-1. [Insight 1 title] → [Key decision]
-2. [Insight 2 title] → [Key decision]
-3. [Insight 3 title] → [Key decision]
-4. [Insight 4 title] → [Key decision]
-5. [Insight 5 title] → [Key decision]
+🎯 Top Insights & Recommendations:
+1. [Insight 1 title]
+   💡 Recommended: [Option name] → [Key decision made]
+2. [Insight 2 title]
+   💡 Recommended: [Option name] → [Key decision made]
+3. [Insight 3 title]
+   💡 Recommended: [Option name] → [Key decision made]
+4. [Insight 4 title]
+   💡 Recommended: [Option name] → [Key decision made]
+5. [Insight 5 title]
+   💡 Recommended: [Option name] → [Key decision made]
 
 📄 Documentation:
 Updated: [source-file-path]
@@ -440,11 +493,45 @@ For example, imagine we deploy at 2pm on a Tuesday (peak usage).
 once. OAuth provider's rate limit is 100 req/min. Now we have 400 users
 locked out for 4 minutes, getting angrier by the second.
 
-What do you think about this? Should we:
-A) Add a migration phase where both JWT and OAuth work for 24 hours?
-B) Schedule deployment for 3am Sunday when usage is low?
-C) Build a session migration tool that converts tokens on-the-fly?
-D) Accept the hard cutover and just notify users via banner?
+Here are our options:
+
+**Option A: Dual-Auth Migration Period (24 hours)**
+- Support both JWT and OAuth simultaneously for 24 hours
+- Pros: Zero disruption, graceful transition, users can finish sessions
+- Cons: Complex code, temporary technical debt, security risk window
+- Effort: High (requires dual auth logic + cleanup later)
+
+**Option B: Off-Peak Deployment Window**
+- Schedule deployment for 3am Sunday EST (lowest usage)
+- Pros: Simple, minimal user impact (~10-20 active users)
+- Cons: Requires weekend deployment, still disrupts some users
+- Effort: Low (just timing + maintenance banner)
+
+**Option C: On-the-Fly Token Migration**
+- Build migration tool that converts JWT→OAuth tokens automatically
+- Pros: Zero user disruption, can deploy anytime
+- Cons: Very complex, risky token conversion logic, potential security issues
+- Effort: Very High (complex migration logic)
+
+**Option D: Hard Cutover with Warning Banner**
+- Deploy during business hours, show 1-hour warning banner
+- Pros: Simple, transparent to users
+- Cons: Disrupts all active users, potential rate limiting chaos
+- Effort: Low (just add banner)
+
+**My Recommendation: Option B (Off-Peak Deployment)**
+
+Here's why I think Option B is the best path:
+1. **Minimizes disruption** - Only 10-20 users affected vs 500
+2. **Keeps it simple** - No complex migration code to maintain/debug
+3. **Reduces risk** - Fewer concurrent logins = no rate limit issues
+4. **Reasonable effort** - Just add a maintenance banner (needed anyway)
+
+However, if weekend deployments are a hard constraint for your team,
+Option A becomes worth considering despite the complexity.
+
+What do you think about this recommendation? Does weekend deployment
+work for your team, or should we explore Option A instead?
 
 [WAIT FOR HUMAN RESPONSE]
 
@@ -494,12 +581,17 @@ Perfect. Moving to insight #2...
 📋 Actions: 12 follow-up items
 ✅ Updates applied: 1 file updated (3 phases modified throughout session)
 
-🎯 Top Insights:
-1. Session Invalidation Cascade → Sunday 3am deployment + banner
-2. OAuth Scope Creep Risk → Lock to email/profile only
-3. Token Refresh Edge Cases → Add 5min grace period
-4. Mobile App Token Storage → Use platform secure storage
-5. Audit Log Gap → Add OAuth event logging to Phase 3
+🎯 Top Insights & Recommendations:
+1. Session Invalidation Cascade
+   💡 Recommended: Off-Peak Deployment → Sunday 3am deployment + banner
+2. OAuth Scope Creep Risk
+   💡 Recommended: Minimal Scope Strategy → Lock to email/profile only
+3. Token Refresh Edge Cases
+   💡 Recommended: Grace Period Approach → Add 5min grace period
+4. Mobile App Token Storage
+   💡 Recommended: Platform Keychain → Use platform secure storage
+5. Audit Log Gap
+   💡 Recommended: Event Logging Extension → Add OAuth event logging to Phase 3
 
 📄 Documentation:
 Updated: docs/plans/002-oauth-integration/oauth-plan.md
