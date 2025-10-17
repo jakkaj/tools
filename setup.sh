@@ -8,6 +8,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PYTHON_SCRIPT="${SCRIPT_DIR}/setup_manager.py"
 REQUIREMENTS_FILE="${SCRIPT_DIR}/requirements.txt"
+SYNC_SCRIPT="${SCRIPT_DIR}/scripts/sync-to-dist.sh"
 
 # Check if we should use uvx (modern approach)
 USE_UVX=false
@@ -117,6 +118,13 @@ main() {
     echo "     Tools Repository Setup Script    "
     echo "======================================"
     echo ""
+
+    # Sync all source files to distribution package FIRST
+    if [ -f "${SYNC_SCRIPT}" ]; then
+        print_status "Syncing source files to distribution package..."
+        "${SYNC_SCRIPT}"
+        echo ""
+    fi
 
     if [ "$USE_UVX" = true ]; then
         print_status "Detected uvx - using modern execution mode"

@@ -13,12 +13,6 @@ from pathlib import Path
 from typing import List, Tuple, Optional
 from dataclasses import dataclass
 
-try:
-    from importlib.resources import files
-except ImportError:
-    # Python < 3.9 fallback
-    from importlib_resources import files  # type: ignore
-
 from rich.console import Console
 from rich.progress import (
     Progress,
@@ -54,34 +48,10 @@ class InstallResult:
 class SetupManager:
     """Manages the setup process for the tools repository"""
 
-    def __init__(self, resource_root: Optional[Path] = None):
-        """
-        Initialize the setup manager.
-
-        Args:
-            resource_root: Optional root directory for resources.
-                          If None, will use importlib.resources for packaged installation.
-                          If provided, will use local filesystem paths (for development).
-        """
-        if resource_root is None:
-            # Running from installed package - use package resources
-            try:
-                # Data files are packaged with the module
-                package_dir = Path(__file__).parent
-                self.script_dir = package_dir
-                self.scripts_path = package_dir / "scripts"
-                self.install_path = package_dir / "install"
-            except Exception:
-                # Ultimate fallback - use current working directory
-                self.script_dir = Path.cwd()
-                self.scripts_path = self.script_dir / "scripts"
-                self.install_path = self.script_dir / "install"
-        else:
-            # Development mode - use local filesystem
-            self.script_dir = resource_root
-            self.scripts_path = self.script_dir / "scripts"
-            self.install_path = self.script_dir / "install"
-
+    def __init__(self):
+        self.script_dir = Path(__file__).parent.resolve()
+        self.scripts_path = self.script_dir / "scripts"
+        self.install_path = self.script_dir / "install"
         self.shell_config = Path.home() / ".zshrc"
         self.path_marker = "# Added by tools repository setup"
         self.os_type = self._detect_os()

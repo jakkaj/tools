@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 
 # Install agent commands and MCP server configs for Claude CLI, OpenCode CLI, Codex CLI, and VS Code
+# This script also syncs all source files to the distribution package (src/jk_tools/)
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "${SCRIPT_DIR}")"
 SOURCE_DIR="${REPO_ROOT}/agents/commands"
+SYNC_SCRIPT="${REPO_ROOT}/scripts/sync-to-dist.sh"
 MCP_SOURCE="${REPO_ROOT}/agents/mcp/servers.json"
 ENV_FILE="${REPO_ROOT}/.env"
 TARGET_DIR="${HOME}/.claude/commands"
@@ -337,6 +339,16 @@ main() {
 
 
 
+    # Sync all source files to distribution package (src/jk_tools/)
+    if [ -f "${SYNC_SCRIPT}" ]; then
+        print_status "Running comprehensive sync to distribution package..."
+        "${SYNC_SCRIPT}"
+        echo ""
+    else
+        print_error "Sync script not found: ${SYNC_SCRIPT}"
+        exit 1
+    fi
+
     print_status "Copilot global directory target: ${COPILOT_GLOBAL_DIR}"
 
     # Check if source directory exists
@@ -344,7 +356,8 @@ main() {
         print_error "Source directory not found: ${SOURCE_DIR}"
         exit 1
     fi
-    
+    echo ""
+
     # Create target directories if they don't exist
     if [ ! -d "${TARGET_DIR}" ]; then
         mkdir -p "${TARGET_DIR}"

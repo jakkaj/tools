@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 
 # Install agent commands and MCP server configs for Claude CLI, OpenCode CLI, Codex CLI, and VS Code
+# This script also syncs all source files to the distribution package (src/jk_tools/)
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "${SCRIPT_DIR}")"
 SOURCE_DIR="${REPO_ROOT}/agents/commands"
+SYNC_SCRIPT="${REPO_ROOT}/scripts/sync-to-dist.sh"
 MCP_SOURCE="${REPO_ROOT}/agents/mcp/servers.json"
 ENV_FILE="${REPO_ROOT}/.env"
 TARGET_DIR="${HOME}/.claude/commands"
@@ -337,6 +339,16 @@ main() {
 
 
 
+    # Sync all source files to distribution package (src/jk_tools/)
+    if [ -f "${SYNC_SCRIPT}" ]; then
+        print_status "Running comprehensive sync to distribution package..."
+        "${SYNC_SCRIPT}"
+        echo ""
+    else
+        print_error "Sync script not found: ${SYNC_SCRIPT}"
+        exit 1
+    fi
+
     print_status "Copilot global directory target: ${COPILOT_GLOBAL_DIR}"
 
     # Check if source directory exists
@@ -344,35 +356,6 @@ main() {
         print_error "Source directory not found: ${SOURCE_DIR}"
         exit 1
     fi
-
-    # Sync agents/commands/ to src/jk_tools/agents/commands/ for packaging
-    PACKAGE_COMMANDS_DIR="${REPO_ROOT}/src/jk_tools/agents/commands"
-    print_status "Syncing commands to package directory..."
-
-    if [ ! -d "${PACKAGE_COMMANDS_DIR}" ]; then
-        mkdir -p "${PACKAGE_COMMANDS_DIR}"
-        print_success "Created package commands directory: ${PACKAGE_COMMANDS_DIR}"
-    fi
-
-    # Count files before sync
-    source_count=$(find "${SOURCE_DIR}" -maxdepth 1 -name "*.md" -type f | wc -l | tr -d ' ')
-
-    # Sync all .md files from agents/commands/ to src/jk_tools/agents/commands/
-    if [ "${source_count}" -gt 0 ]; then
-        rsync -a --delete --include="*.md" --exclude="*" "${SOURCE_DIR}/" "${PACKAGE_COMMANDS_DIR}/"
-        package_count=$(find "${PACKAGE_COMMANDS_DIR}" -maxdepth 1 -name "*.md" -type f | wc -l | tr -d ' ')
-
-        if [ "${package_count}" -eq "${source_count}" ]; then
-            print_success "Synced ${source_count} command file(s) to package directory"
-        else
-            print_error "Sync mismatch: source=${source_count}, package=${package_count}"
-            exit 1
-        fi
-    else
-        print_error "No .md files found in ${SOURCE_DIR}"
-        exit 1
-    fi
-
     echo ""
 
     # Create target directories if they don't exist

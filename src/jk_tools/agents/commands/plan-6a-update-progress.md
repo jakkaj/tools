@@ -4,7 +4,7 @@ description: Update plan progress with task status, flowspace node ID footnotes,
 
 # plan-6a-update-progress
 
-Update the plan's progress tracking, footnotes ledger with flowspace node IDs, and maintain detailed task execution log for either the primary phase dossier or a scoped subtask dossier. **Always follow this order:** (1) capture the execution log entry, (2) update the dossier (`tasks.md` or subtask file), (3) sync the main plan checklist and footnotes so every location stays in lockstep.
+Using a subagent - Update the plan's progress tracking, footnotes ledger with flowspace node IDs, and maintain detailed task execution log for either the primary phase dossier or a scoped subtask dossier. **Always follow this order:** (1) capture the execution log entry, (2) update the dossier (`tasks.md` or subtask file), (3) sync the main plan checklist and footnotes so every location stays in lockstep.
 
 ```md
 User input:
