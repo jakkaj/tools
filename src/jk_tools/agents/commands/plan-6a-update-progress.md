@@ -4,7 +4,47 @@ description: Update plan progress with task status, flowspace node ID footnotes,
 
 # plan-6a-update-progress
 
-Using a subagent - Update the plan's progress tracking, footnotes ledger with flowspace node IDs, and maintain detailed task execution log for either the primary phase dossier or a scoped subtask dossier. **Always follow this order:** (1) capture the execution log entry, (2) update the dossier (`tasks.md` or subtask file), (3) sync the main plan checklist and footnotes so every location stays in lockstep.
+Using a subagent - Update the plan's progress tracking, footnotes ledger with flowspace node IDs, and maintain detailed task execution log for either the primary phase dossier or a scoped subtask dossier.
+
+## ⚠️ CRITICAL: This Command Updates THREE Locations
+
+**Every time you run this command, you MUST update ALL THREE:**
+
+1. ✅ **Dossier task table** (`tasks/phase-N/tasks.md` or subtask file) - Status column + footnote
+2. ✅ **Parent plan task table** (`plan.md` § 8) - Status + Log + Notes columns + footnote
+3. ✅ **Both footnote ledgers** (`plan.md` § 12 + dossier § Phase Footnote Stubs)
+
+**Missing ANY of these = INCOMPLETE execution**
+
+Flaky updates happen when agents skip #2 (plan.md updates) or #3 (footnotes). This command enforces atomic updates with validation checkpoints after each step.
+
+**Execution Flow:** Evidence → Atomic 3-Location Update → Validation
+
+## Command Structure (4 Phases)
+
+This command is structured to prevent the common failure mode of forgetting to update plan.md:
+
+- **Phase A**: Resolve Paths & Load Current State
+  - Determine all file paths (plan.md, tasks.md or subtask file, execution log)
+  - Load current state from all three locations to understand what needs updating
+  - Identify next footnote number
+
+- **Phase B**: Capture Execution Log Entry (Evidence First)
+  - Write detailed execution log entry with task anchor
+  - Create backlinks to plan and dossier
+  - Checkpoint: Verify log written before proceeding
+
+- **Phase C**: Atomic 3-Location Update ⚠️ **ALL STEPS REQUIRED**
+  - **Step C1**: Update dossier task table (tasks.md or subtask file)
+  - **Step C2**: Update plan task table (plan.md § 8) ← Often forgotten!
+  - **Step C3**: Update BOTH footnote ledgers (plan.md § 12 + dossier stubs)
+  - **Step C4**: Update progress checklist (plan.md § 11)
+  - Each step has a checkpoint to verify completion
+
+- **Phase D**: Validation & Output
+  - **Step D1**: Pre-output verification checklist (7 items)
+  - **Step D2**: Quality validation rules
+  - **Step D3**: Success output confirming all 3 locations updated
 
 ```md
 User input:
@@ -19,32 +59,57 @@ $ARGUMENTS
 # Optional flag:
 # --subtask "<ORD-subtask-slug>"  # target subtask dossier (e.g., "003-subtask-bulk-import-fixtures")
 
-## Phase 1: Resolve Paths & Load Current State
+## PHASE A: Resolve Paths & Load Current State
 
-1) Determine paths:
-   - PLAN = provided --plan path.
-   - PLAN_DIR = dirname(PLAN).
-   - PHASE_HEADING = `--phase` value; slugify to get `PHASE_SLUG` exactly as plan-5/plan-5a (e.g., "Phase 4: Data Flows" → `phase-4-data-flows`). If `--phase` is omitted, infer the slug by locating the unique tasks directory that contains `tasks.md` or the requested `--subtask`; halt if more than one candidate exists.
-   - PHASE_DIR = `${PLAN_DIR}/tasks/${PHASE_SLUG}`.
-   - TARGET_DOC = `${PHASE_DIR}/tasks.md` (phase dossier by default).
-   - TASK_LOG = `${PHASE_DIR}/execution.log.md`.
-   - When `--subtask` is provided:
-     * SUBTASK_KEY = flag value (e.g., `003-subtask-bulk-import-fixtures`).
-     * TARGET_DOC  = `${PHASE_DIR}/${SUBTASK_KEY}.md`.
-     * TASK_LOG    = `${PHASE_DIR}/${SUBTASK_KEY}.execution.log.md`.
-   - Abort if `TARGET_DOC` does not exist; subtask updates require the plan-5a artifact.
+### Step A1: Determine Paths
 
-2) Load current state:
-   - Read plan markdown to locate the phase heading and plan task table (plan-3 output).
-   - Identify testing approach from the plan table header (TDD, TAD, Lightweight, Manual, Hybrid) for anchor naming.
-   - Parse the Change Footnotes Ledger to capture existing numbering.
-   - Read `TARGET_DOC` and find the `## Tasks` table:
-     * Phase dossiers contain IDs `T###`.
-     * Subtask dossiers contain IDs `ST###`.
-   - If `TASK_LOG` is missing, initialize it with `# Execution Log` and note whether it is phase- or subtask-scoped.
-   - Determine the next footnote number based on the plan ledger (shared across phase and subtask work).
+Resolve all file paths before starting updates:
 
-## Phase 2: Capture Execution Log Entry
+- **PLAN** = provided --plan path
+- **PLAN_DIR** = dirname(PLAN)
+- **PHASE_HEADING** = `--phase` value; slugify to get `PHASE_SLUG` exactly as plan-5/plan-5a (e.g., "Phase 4: Data Flows" → `phase-4-data-flows`)
+  - If `--phase` omitted: infer slug by locating the unique tasks directory containing `tasks.md` or requested `--subtask`
+  - Halt if ambiguous (multiple candidates exist)
+- **PHASE_DIR** = `${PLAN_DIR}/tasks/${PHASE_SLUG}`
+
+**Determine target documents:**
+- If `--subtask` NOT provided (phase execution):
+  * **TARGET_DOC** = `${PHASE_DIR}/tasks.md` (phase dossier)
+  * **TASK_LOG** = `${PHASE_DIR}/execution.log.md`
+  * Task IDs use `T###` format
+
+- If `--subtask` provided (subtask execution):
+  * **SUBTASK_KEY** = flag value (e.g., `003-subtask-bulk-import-fixtures`)
+  * **TARGET_DOC** = `${PHASE_DIR}/${SUBTASK_KEY}.md` (subtask dossier)
+  * **TASK_LOG** = `${PHASE_DIR}/${SUBTASK_KEY}.execution.log.md`
+  * Task IDs use `ST###` format
+
+**Validation:**
+- Abort if `TARGET_DOC` does not exist
+- Abort if `PLAN` does not exist
+
+### Step A2: Load Current State
+
+Read and parse all three locations you will update:
+
+1. **Read PLAN (plan.md)**:
+   - Locate the phase heading and plan task table (from plan-3)
+   - Identify testing approach from plan table header (TDD, TAD, Lightweight, Manual, Hybrid)
+   - Parse `## Change Footnotes Ledger` (§ 12) to capture existing numbering
+   - Determine next footnote number (shared across phase and subtask work)
+
+2. **Read TARGET_DOC (tasks.md or subtask file)**:
+   - Find the `## Tasks` table
+   - Identify task ID format (T### for phase, ST### for subtask)
+   - Parse existing footnote stubs in `## Phase Footnote Stubs` section
+
+3. **Read or Initialize TASK_LOG**:
+   - If missing: create with `# Execution Log` header
+   - Note whether phase-scoped or subtask-scoped
+
+✋ **CHECKPOINT**: Confirm you have loaded state from all three locations before proceeding.
+
+## PHASE B: Capture Execution Log Entry (Evidence First)
 
 Always log the work before adjusting task tables so every location can deep link to the same evidence.
 
@@ -151,47 +216,139 @@ $ pytest tests/fixtures/test_generators.py::test_incomplete_fixture -k "xfail"
 
 Ensure the log entry includes the same task anchor you will reference in the dossier and plan tables.
 
-Backlink checklist:
-- `Plan Reference` should point to the phase section inside `PLAN` (using `PHASE_ANCHOR`).
-- `Task Table Entry` (phases) or `Parent Dossier` (subtasks) must link to the exact row in `TARGET_DOC` via `TASK_ANCHOR`.
-- Mention the execution log anchor (e.g., `log#task-23-implement-validation`) so other surfaces can reference it verbatim.
+✋ **CHECKPOINT**: Confirm execution log entry written to TASK_LOG before proceeding to updates.
 
-## Phase 3: Update Dossier Tasks Table (`TARGET_DOC`)
+## PHASE C: Atomic 3-Location Update (REQUIRED - ALL STEPS)
 
-With the evidence logged, update the relevant table to mirror the task status.
+**This phase is MANDATORY and updates all three locations atomically.**
 
-### 3A. Phase dossier (`tasks.md`):
-1. Locate the `T###` row linked to the plan task.
-2. Update the `Status` glyph (`[x]`, `[~]`, `[!]`).
-3. Confirm `Notes` references the plan task and append/refresh the footnote tag (`[^N]`) that will map to the upcoming footnote entry.
-4. Mention the execution log anchor in `Notes` if space allows (e.g., `Log: #task-23-implement-validation`).
+You MUST complete ALL three steps below for every task update. Missing any step = incomplete execution.
+
+### Step C1: Update Dossier Task Table (TARGET_DOC)
+
+**Location:** `TARGET_DOC` (either `tasks.md` or subtask file)
+
+Update the relevant task row to mirror the new status:
+
+#### For Phase Dossier (`tasks.md`):
+
+1. Locate the `T###` row in the dossier tasks table
+2. Update the `Status` glyph:
+   - `[ ]` = pending (not started)
+   - `[~]` = in_progress (currently working)
+   - `[x]` = completed (done)
+   - `[!]` = blocked (cannot proceed)
+3. Update `Notes` column:
+   - Keep existing plan task reference (e.g., "Supports plan task 2.3")
+   - Add log anchor reference: `log#task-23-implement-validation`
+   - Add footnote tag: `[^N]` (using next available number from Step A2)
+
+**Example transformation:**
 
 Before:
+```markdown
 | [ ] | T003 | Implement validation | Core | T001 | /abs/path | Tests pass | Supports plan task 2.3 |
+```
 
 After:
+```markdown
 | [x] | T003 | Implement validation | Core | T001 | /abs/path | Tests pass | Supports plan task 2.3 · log#task-23-implement-validation [^3] |
+```
 
-### 3B. Subtask dossier (`ORD-subtask-*.md`):
-1. Interpret `--task` as `ST###` and update only `TARGET_DOC`.
-2. Adjust `Status` glyph.
-3. Keep parent linkage in `Notes` (e.g., `Supports T003 / plan task 2.3`). Append/refresh the shared footnote tag and reference the execution log anchor.
+#### For Subtask Dossier (`ORD-subtask-*.md`):
 
-Example:
+1. Locate the `ST###` row in the subtask tasks table
+2. Update the `Status` glyph (same as above)
+3. Update `Notes` column:
+   - Keep parent task reference (e.g., "Supports T003 / plan task 2.3")
+   - Add log anchor reference: `log#task-st002-create-sanitized-fixtures`
+   - Add footnote tag: `[^N]`
+
+**Example transformation:**
 
 Before:
+```markdown
 | [ ] | ST002 | Create sanitized fixtures | Core | ST001 | /abs/path | Fixtures generated | Supports T003 |
+```
 
-After (in progress):
+After:
+```markdown
 | [~] | ST002 | Create sanitized fixtures | Core | ST001 | /abs/path | Fixtures generated | Supports T003 · log#task-st002-create-sanitized-fixtures [^8] |
+```
 
-Do **not** touch the main plan table yet; that occurs after footnotes are recorded.
+✋ **CHECKPOINT C1**: Confirm TARGET_DOC task table updated before proceeding to Step C2.
 
-## Phase 4: Generate Flowspace Node ID Footnotes
+---
 
-Parse the --changes input to create properly formatted footnotes in the Change Footnotes Ledger. Update the corresponding `Notes` cell in `TARGET_DOC` so the footnote tag (`[^N]`) matches the ledger entry—use the next available number, regardless of whether the row is `T###` or `ST###`. Include links to the execution log anchor when helpful (e.g., `Log: #task-23-implement-validation`).
+### Step C2: Update Parent Plan Task Table (PLAN)
 
-### Flowspace Node ID Format Rules:
+**Location:** `PLAN` (the main `plan.md` file)
+
+**CRITICAL:** This step is often forgotten. You MUST update the plan.md task table.
+
+Find the plan task table (usually in § 8 Implementation Phases) and update the corresponding row:
+
+1. **Locate the plan task row** (e.g., `| 2.3 | ...`)
+   - Use the `--task` value provided (e.g., "2.3")
+   - For subtask updates, use the parent plan task that the subtask supports
+
+2. **Update Status column**:
+   - Change checkbox from `[ ]` to match dossier status:
+     * `[x]` = completed
+     * `[~]` = in_progress
+     * `[!]` = blocked
+
+3. **Update Log column**:
+   - Add deep link to execution log anchor:
+   ```markdown
+   [📋](tasks/${PHASE_SLUG}/execution.log.md#${TASK_ANCHOR})
+   ```
+   - For subtask work, point to subtask log:
+   ```markdown
+   [📋](tasks/${PHASE_SLUG}/${SUBTASK_KEY}.execution.log.md#${TASK_ANCHOR})
+   ```
+
+4. **Update Notes column**:
+   - Add status summary (e.g., "Completed", "In progress")
+   - Add log anchor reference: `log#task-23-implement-validation`
+   - Add footnote tag: `[^N]` (same number as Step C1)
+
+**Example transformation:**
+
+Before:
+```markdown
+| 2.3 | [ ] | Implement validation | Tests pass | - | |
+```
+
+After:
+```markdown
+| 2.3 | [x] | Implement validation | Tests pass | [📋](tasks/phase-2/execution.log.md#task-23-implement-validation) | Completed · log#task-23-implement-validation [^3] |
+```
+
+**CRITICAL - Embedded Task Tables:**
+
+If the plan uses **embedded task tables** (tasks within phase sections, not separate tasks.md files), you MUST update ALL columns:
+- **Status**: Change `[ ]` to `[x]`/`[~]`/`[!]`
+- **Log**: Add `[📋](path)` link
+- **Notes**: Add summary + footnote `[^N]`
+
+Do not leave any column with `-` or empty when marking complete.
+
+✋ **CHECKPOINT C2**: Confirm PLAN task table row updated before proceeding to Step C3.
+
+---
+
+### Step C3: Generate Flowspace Node ID Footnotes (Both Ledgers)
+
+**Locations:**
+1. `PLAN` § 12 Change Footnotes Ledger
+2. `TARGET_DOC` § Phase Footnote Stubs
+
+**CRITICAL:** You must update BOTH footnote ledgers with the same `[^N]` number.
+
+Parse the `--changes` input to create properly formatted footnotes using the next available footnote number from Step A2.
+
+#### Flowspace Node ID Format Rules:
 
 **Classes:**
 `class:<file_path>:<ClassName>`
@@ -209,9 +366,9 @@ Example: `function:src/utils/validators.py:validate_email`
 `file:<file_path>`
 Example: `file:config/settings.py`
 
-### Footnote Entry Format:
+#### Footnote Entry Format:
 
-Append to Change Footnotes Ledger section:
+**Step 1: Append to PLAN § 12 Change Footnotes Ledger:**
 ```markdown
 [^3]: Task 2.3 - Added validation function
   - `function:src/validators/input_validator.py:validate_user_input`
@@ -226,7 +383,11 @@ Append to Change Footnotes Ledger section:
   - `file:config/validators.json`
 ```
 
-### Special Cases:
+**Step 2: Append to TARGET_DOC § Phase Footnote Stubs:**
+
+Use the same format and same `[^N]` numbers as in the plan ledger.
+
+#### Special Cases:
 
 **Test files:**
 `function:tests/test_validators.py:test_email_validation`
@@ -240,58 +401,38 @@ Append to Change Footnotes Ledger section:
 **External dependencies:**
 `external:requests:post` (if documenting external API usage)
 
-## Phase 5: Update Phase & Plan Progress
+✋ **CHECKPOINT C3**: Confirm BOTH footnote ledgers updated with matching `[^N]` entries.
 
-If you are updating only a subtask dossier (`--subtask` provided), defer this phase until the parent plan task reflects the new status (rerun without `--subtask`).
+---
 
-### Sync the plan task row:
-1. Locate the plan table row `N.M` that the dossier task supports.
-2. Update the status glyph in the plan table to match the dossier (`[x]`, `[~]`, `[!]`).
-3. Update the `Log` column with a deep link to the execution log anchor captured in Phase 2:
-   ```markdown
-   [📋](tasks/${PHASE_SLUG}/execution.log.md#${TASK_ANCHOR})
-   ```
-   For subtask-driven work, point to `${SUBTASK_KEY}.execution.log.md`.
-4. In the `Notes` column, summarize the outcome and include the footnote tag plus the log anchor reference (e.g., `Completed · log#task-23-implement-validation [^3]`).
-5. Double-check that the checkbox reflects the new state and that the `[📋]` link opens the exact execution log anchor.
+### Step C4: Update Phase Progress Checklist (PLAN)
+
+**Location:** `PLAN` § 11 Progress Checklist
+
+After completing a task, update the phase completion percentage:
+
+1. Count completed tasks in the phase:
+   - Check the dossier tasks table (TARGET_DOC) for completed `T###` or `ST###` rows
+   - Or count from embedded task table in plan if tasks are not separate
+
+2. Update the phase checklist in PLAN § 11:
+
+**Example:**
 
 Before:
-| 2.3 | [ ] | Implement validation | Tests pass | - | |
+```markdown
+## 11. Progress Checklist
 
-After:
-| 2.3 | [x] | Implement validation | Tests pass | [📋](tasks/phase-2/execution.log.md#task-23-implement-validation) | Completed · log#task-23-implement-validation [^3] |
+### Phase Completion Status
+- [x] Phase 1: Setup - COMPLETE
+- [~] Phase 2: Input Validation - IN PROGRESS (50%)
+- [ ] Phase 3: Authentication - PENDING
+- [ ] Phase 4: Testing - PENDING
 
-### Update Phase Status:
-1. Count completed tasks in phase:
-   - **If tasks.md exists**: Check the dossier tasks table for all T### rows
-   - **If tasks are embedded in plan**: Count from the embedded task table under the phase heading
-2. Update phase checklist in plan:
-   - **If tasks.md exists**: Update as a simple checklist referencing dossier tasks
-   - **If tasks are embedded**: Update the full embedded task table with Status, Log, and Notes columns
-   
-   Example for embedded task table format:
-   ```markdown
-   ### Phase 2: Input Validation
+Overall Progress: 1.5/4 phases (38%)
+```
 
-   | #   | Status | Task | Success Criteria | Log | Notes |
-   |-----|--------|------|------------------|-----|-------|
-   | 2.1 | [x] | Completed interface design | Interface documented | [📋](tasks/phase-2/execution.log.md#task-21) | Design complete [^1] |
-   | 2.2 | [x] | Tests written and passing | All tests pass | [📋](tasks/phase-2/execution.log.md#task-22) | Tests passing [^2] |
-   | 2.3 | [x] | Implementation complete | Code reviewed | [📋](tasks/phase-2/execution.log.md#task-23) | Implementation done [^3] |
-   | 2.4 | [ ] | Pending integration tests | Tests pass | - | Pending |
-
-   Progress: 3/4 tasks (75%)
-   ```
-   
-   **CRITICAL**: When updating embedded task tables, you MUST update ALL columns for the task being worked on:
-   - Status: Change [ ] to [x] (completed), [~] (in progress), or [!] (blocked)
-   - Log: Add [📋](path/to/execution.log.md#task-anchor) link
-   - Notes: Add or update with footnote reference [^N]
-   
-   Do not leave any column unchanged when marking a task as complete.
-
-### Update Overall Progress:
-In Progress Checklist section:
+After (task 2.3 completed, now 3/4 tasks done):
 ```markdown
 ## 11. Progress Checklist
 
@@ -304,7 +445,38 @@ In Progress Checklist section:
 Overall Progress: 1.75/4 phases (44%)
 ```
 
-## Phase 6: Validation & Quality Checks
+3. If ALL phase tasks are complete, change phase status:
+   - `[~]` → `[x]`
+   - "IN PROGRESS (100%)" → "COMPLETE"
+   - Recalculate overall progress
+
+✋ **CHECKPOINT C4**: Confirm Progress Checklist updated before proceeding to validation.
+
+---
+
+## PHASE D: Validation & Output
+
+### Step D1: Pre-Output Verification Checklist
+
+**REQUIRED:** Before displaying success message, verify ALL updates were completed:
+
+Run through this checklist mentally:
+
+- [ ] **Execution log written** (TASK_LOG has new entry with task anchor)
+- [ ] **Dossier task table updated** (TARGET_DOC has Status/Notes with footnote)
+- [ ] **Plan task table updated** (PLAN § 8 has Status/Log/Notes with footnote)
+- [ ] **Plan footnotes updated** (PLAN § 12 has `[^N]` entry)
+- [ ] **Dossier footnotes updated** (TARGET_DOC § Phase Footnote Stubs has `[^N]` entry)
+- [ ] **Progress checklist updated** (PLAN § 11 has current percentages)
+- [ ] **Footnote numbers match** (same `[^N]` in dossier, plan table, both ledgers)
+
+**If ANY checkbox is unchecked, GO BACK and complete that step.**
+
+✋ **STOP**: Do not proceed to output until all 7 items are verified.
+
+---
+
+### Step D2: Quality Validation Rules
 
 ### Validation Rules:
 1. **Footnote Numbering**: Ensure sequential, no duplicates
@@ -337,27 +509,61 @@ Correct format: function:src/validators/input_validator.py:validate_user_input
 WARNING: Footnote [^3] already exists, renumbering to [^7]
 ```
 
-## Phase 7: Output & Commit Suggestion
+---
 
-### Success Output:
+### Step D3: Success Output
+
+Display comprehensive update confirmation showing all three locations were modified:
+
 ```
-✅ Progress Updated Successfully
+✅ Progress Updated Successfully - 3 Locations Confirmed
 
 Plan: /Users/jordanknight/github/tools/docs/plans/001-validation/validation-plan.md
 Phase: Phase 2: Input Validation
 Task: 2.3 - Implement validation
 Status: completed
 
-Links Created:
-- Plan → Log: Added [📋] link in task table pointing to execution.log.md#task-23-implement-validation
-- Log → Plan: Added Plan Reference link pointing back to plan.md#phase-2-input-validation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 Locations Updated (All 3 Required)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Footnotes Added:
-- [^3]: Task 2.3 - Added validation function (2 functions)
-- [^4]: Task 2.3 - Updated authentication flow (2 methods)
-- [^5]: Task 2.3 - Configuration changes (2 files)
+1. ✅ Dossier Task Table Updated
+   File: tasks/phase-2/tasks.md
+   Row: T003 status changed to [x]
+   Notes: Added log anchor + footnote [^3]
 
-Flowspace Node IDs Generated (6 total):
+2. ✅ Plan Task Table Updated
+   File: validation-plan.md § 8
+   Row: 2.3 status changed to [x]
+   Log: Added [📋] link to execution.log.md#task-23-implement-validation
+   Notes: Added summary + footnote [^3]
+
+3. ✅ Footnotes Updated (Both Ledgers)
+   - Plan § 12: Added [^3], [^4], [^5]
+   - Dossier stubs: Added [^3], [^4], [^5]
+   - All numbers match and synchronized
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 Execution Log & Evidence
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Task Log: tasks/phase-2/execution.log.md#task-23-implement-validation
+Anchor: task-23-implement-validation
+Duration: 45 minutes
+Evidence: Test output, type check results captured
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔗 Footnotes Added
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[^3]: Task 2.3 - Added validation function (2 functions)
+[^4]: Task 2.3 - Updated authentication flow (2 methods)
+[^5]: Task 2.3 - Configuration changes (2 files)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 Flowspace Node IDs Generated (6 total)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 - function:src/validators/input_validator.py:validate_user_input
 - function:src/validators/input_validator.py:sanitize_input
 - method:src/auth/service.py:AuthService.authenticate
@@ -365,19 +571,28 @@ Flowspace Node IDs Generated (6 total):
 - file:config/settings.py
 - file:config/validators.json
 
-Task Log Updated: .../tasks/phase-2/execution.log.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 Progress Summary
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Phase Progress: 3/4 tasks complete (75%)
-Overall Progress: 44% complete
+Overall Progress: 1.75/4 phases (44%)
+Status: Phase 2 still IN PROGRESS
 
-Suggested Commit:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💾 Suggested Commit
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 git add -A
 git commit -m "docs: update progress for Phase 2 Task 2.3
 
-- Mark task 2.3 as completed
-- Add flowspace node ID footnotes [^3-5]
+- Mark task 2.3 as completed in both dossier and plan
+- Add flowspace node ID footnotes [^3-5] to both ledgers
 - Update execution log with test results and metrics
-- Phase 2 now 75% complete"
+- Sync Status/Log/Notes columns in plan task table
+- Phase 2 now 75% complete (3/4 tasks)"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Next: Continue with Task 2.4 or run /plan-7-code-review if phase complete
 ```
@@ -459,29 +674,69 @@ For subtask execution:
 - Task log complete for the phase
 - Progress accurately reflected
 
-## Best Practices:
+---
 
-1. **Run after EACH task** - Don't batch updates
-2. **Include ALL changes** - Even small helper functions
-3. **Use correct node types** - method vs function matters
-4. **Add context in log** - Future you will thank you
-5. **Verify before commit** - Check footnote links work
-6. **Test deep links** - Ensure both directions navigate correctly
-7. **Use consistent anchors** - Follow the kebab-case convention
+## Best Practices
 
-## Troubleshooting:
+### Critical Rules (Avoid Flaky Updates):
 
-**Q: Footnote numbers seem wrong?**
-A: Check for manual edits. This command assumes sequential numbering.
+1. **ALWAYS update all 3 locations** - Never skip plan.md or footnote ledgers
+2. **Follow Phase C atomically** - Complete C1, C2, C3, C4 in order with checkpoints
+3. **Verify before outputting** - Run Phase D Step D1 checklist before success message
+4. **Run after EACH task** - Don't batch updates; one task = one command execution
+5. **Same footnote number everywhere** - `[^N]` must match in dossier, plan, both ledgers
+
+### Quality Guidelines:
+
+1. **Include ALL changes** - Even small helper functions get flowspace node IDs
+2. **Use correct node types** - `method` vs `function` matters for traceability
+3. **Add context in log** - Future developers will thank you
+4. **Test deep links** - Verify `[📋]` links open the correct execution log anchor
+5. **Use consistent anchors** - Follow kebab-case convention (e.g., `task-23-implement-validation`)
+
+---
+
+## Troubleshooting
+
+### Common Failure Modes:
+
+**❌ PROBLEM: Agent forgot to update plan.md**
+- **Symptom**: Dossier updated but plan task table still shows `[ ]` or missing `[📋]` link
+- **Root Cause**: Skipped Phase C Step C2
+- **Fix**: Always follow the atomic update flow (C1 → C2 → C3 → C4); use checkpoints
+- **Prevention**: Run Phase D Step D1 verification checklist before outputting
+
+**❌ PROBLEM: Footnotes don't match between locations**
+- **Symptom**: plan.md has `[^3]` but tasks.md has `[^5]` for the same task
+- **Root Cause**: Didn't sync footnote numbers in Step C3
+- **Fix**: Use the SAME `[^N]` number determined in Phase A Step A2 everywhere
+- **Prevention**: Checkpoint C3 explicitly verifies both ledgers have matching numbers
+
+**❌ PROBLEM: Progress checklist not updated**
+- **Symptom**: Plan shows "50%" but should be "75%" after completing task
+- **Root Cause**: Skipped Phase C Step C4
+- **Fix**: Always count completed tasks and update § 11 Progress Checklist
+- **Prevention**: Step C4 has its own checkpoint before moving to Phase D
+
+### FAQ:
+
+**Q: Footnote numbers seem wrong or duplicated?**
+A: Check for manual edits that bypassed this command. Load state in Phase A Step A2 to find next available number.
 
 **Q: Can I update multiple tasks at once?**
-A: No, run once per task for accurate tracking.
+A: No, run this command once per task for accurate tracking and atomic updates.
 
 **Q: What if I forgot to track a change?**
-A: Add it in the next task's update with a note.
+A: Add it in the next task's update with a note in the execution log explaining the oversight.
 
-**Q: How to handle refactoring?**
-A: Use "method:file:Class.method" even if just moving code.
+**Q: How to handle refactoring across multiple files?**
+A: Use flowspace node IDs for each affected method/function (e.g., `method:file:Class.method`) even if just moving code.
+
+**Q: What if the plan uses embedded tasks (no separate tasks.md)?**
+A: Follow the same Phase C flow but update the embedded task table in plan.md § 8 twice: once in C1 (as the "dossier") and again in C2 (as the "plan"). Ensure ALL columns (Status/Log/Notes) are updated.
+
+**Q: How do I know if I successfully updated all 3 locations?**
+A: Run the Phase D Step D1 verification checklist. If any item is unchecked, go back and complete it.
 ```
 
 Next step: Use during /plan-6-implement-phase execution
