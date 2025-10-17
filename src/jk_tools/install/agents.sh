@@ -337,15 +337,20 @@ main() {
     echo "======================================"
     echo ""
 
-
-
-    # Sync all source files to distribution package (src/jk_tools/)
-    if [ -f "${SYNC_SCRIPT}" ]; then
+    # Sync all source files to distribution package (only in dev mode)
+    # Dev mode = running from local git repository
+    # Packaged mode = installed via uvx/pip (sync not needed, already packaged)
+    if [ -f "${REPO_ROOT}/.git/config" ] && [ -f "${SYNC_SCRIPT}" ]; then
+        # Dev mode: running from local git repository with sync script
         print_status "Running comprehensive sync to distribution package..."
         "${SYNC_SCRIPT}"
         echo ""
+    elif [ ! -f "${SYNC_SCRIPT}" ]; then
+        # Packaged mode: installed via uvx/pip, sync script not present (expected)
+        print_status "Running in packaged mode (sync not needed)"
     else
-        print_error "Sync script not found: ${SYNC_SCRIPT}"
+        # Unexpected state: sync script exists but not in git repository
+        print_error "Sync script found but not in git repository: ${SYNC_SCRIPT}"
         exit 1
     fi
 
