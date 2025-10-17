@@ -340,18 +340,19 @@ main() {
     # Sync all source files to distribution package (only in dev mode)
     # Dev mode = running from local git repository
     # Packaged mode = installed via uvx/pip (sync not needed, already packaged)
-    if [ -f "${REPO_ROOT}/.git/config" ] && [ -f "${SYNC_SCRIPT}" ]; then
-        # Dev mode: running from local git repository with sync script
-        print_status "Running comprehensive sync to distribution package..."
-        "${SYNC_SCRIPT}"
-        echo ""
-    elif [ ! -f "${SYNC_SCRIPT}" ]; then
-        # Packaged mode: installed via uvx/pip, sync script not present (expected)
-        print_status "Running in packaged mode (sync not needed)"
+    if [ -f "${REPO_ROOT}/.git/config" ]; then
+        # Dev mode: running from local git repository
+        if [ -f "${SYNC_SCRIPT}" ]; then
+            print_status "Running comprehensive sync to distribution package..."
+            "${SYNC_SCRIPT}"
+            echo ""
+        else
+            print_error "Git repository detected but sync script not found: ${SYNC_SCRIPT}"
+            exit 1
+        fi
     else
-        # Unexpected state: sync script exists but not in git repository
-        print_error "Sync script found but not in git repository: ${SYNC_SCRIPT}"
-        exit 1
+        # Packaged mode: installed via uvx/pip, skip sync (already packaged)
+        print_status "Running in packaged mode (sync not needed)"
     fi
 
     print_status "Copilot global directory target: ${COPILOT_GLOBAL_DIR}"
