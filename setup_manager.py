@@ -48,8 +48,21 @@ class InstallResult:
 class SetupManager:
     """Manages the setup process for the tools repository"""
 
-    def __init__(self):
-        self.script_dir = Path(__file__).parent.resolve()
+    def __init__(self, resource_root: Optional[Path] = None):
+        """
+        Initialize SetupManager
+
+        Args:
+            resource_root: Optional path to tools repository for dev mode.
+                          If None, uses package installation location.
+        """
+        if resource_root:
+            # Dev mode: use provided local filesystem path
+            self.script_dir = resource_root.resolve()
+        else:
+            # Normal mode: use package installation location
+            self.script_dir = Path(__file__).parent.resolve()
+
         self.scripts_path = self.script_dir / "scripts"
         self.install_path = self.script_dir / "install"
         self.shell_config = Path.home() / ".zshrc"
