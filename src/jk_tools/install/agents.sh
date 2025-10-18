@@ -94,7 +94,6 @@ generate_mcp_configs() {
                 cat > "${env_file_to_create}" <<'EOF'
 # Perplexity MCP Server Configuration
 PERPLEXITY_API_KEY=your_perplexity_api_key_here
-PERPLEXITY_MODEL=sonar-reasoning
 
 # MCP Browser Use Configuration (optional)
 # MCP_LLM_PROVIDER=openrouter
@@ -118,7 +117,7 @@ EOF
 
     local opencode_global="${HOME}/.config/opencode/opencode.json"
     local opencode_project="${REPO_ROOT}/opencode.json"
-    local claude_project="${REPO_ROOT}/.mcp.json"
+    local claude_global="${HOME}/.claude.json"
     local codex_global="${HOME}/.codex/config.toml"
 
     mkdir -p "${HOME}/.config/opencode"
@@ -126,7 +125,7 @@ EOF
     mkdir -p "$(dirname "${vscode_user_config}")"
     mkdir -p "$(dirname "${vscode_project_config}")"
 
-    python3 - "$mcp_source" "$opencode_global" "$opencode_project" "$claude_project" "$codex_global" "$vscode_user_config" "$vscode_project_config" "$openrouter_key" "$perplexity_key" "$perplexity_model" <<'PYTHON'
+    python3 - "$mcp_source" "$opencode_global" "$opencode_project" "$claude_global" "$codex_global" "$vscode_user_config" "$vscode_project_config" "$openrouter_key" "$perplexity_key" "$perplexity_model" <<'PYTHON'
 import json
 import sys
 from pathlib import Path
@@ -295,7 +294,7 @@ def migrate_opencode_config(data):
 source_path = Path(sys.argv[1])
 opencode_global_path = Path(sys.argv[2])
 opencode_project_path = Path(sys.argv[3])
-claude_project_path = Path(sys.argv[4])
+claude_global_path = Path(sys.argv[4])
 codex_global_path = Path(sys.argv[5])
 vscode_user_path = Path(sys.argv[6])
 vscode_project_path = Path(sys.argv[7])
@@ -314,14 +313,14 @@ servers = json.loads(servers_text)
 
 opencode_global = migrate_opencode_config(load_json(opencode_global_path))
 opencode_project = migrate_opencode_config(load_json(opencode_project_path))
-claude_config = load_json(claude_project_path)
+claude_global_config = load_json(claude_global_path)
 codex_config = load_toml_file(codex_global_path)
 vscode_user_config = load_json(vscode_user_path)
 vscode_project_config = load_json(vscode_project_path)
 
 opencode_global_mcp = opencode_global.setdefault("mcp", {})
 opencode_project_mcp = opencode_project.setdefault("mcp", {})
-claude_servers = claude_config.setdefault("mcpServers", {})
+claude_global_servers = claude_global_config.setdefault("mcpServers", {})
 codex_servers = codex_config.setdefault("mcp_servers", {})
 vscode_user_servers = vscode_user_config.setdefault("mcpServers", {})
 vscode_project_servers = vscode_project_config.setdefault("mcpServers", {})
@@ -354,7 +353,9 @@ for name, config in servers.items():
     opencode_global_mcp[name] = dict(opencode_entry)
     opencode_project_mcp[name] = dict(opencode_entry)
 
-    claude_servers[name] = {
+    # Claude uses "type" instead of transport, and "stdio" for local
+    claude_global_servers[name] = {
+        "type": "stdio",
         "command": config.get("command"),
         "args": config.get("args", []),
         "env": environment if isinstance(environment, dict) else {},
@@ -389,7 +390,7 @@ for name, config in servers.items():
 
 write_json(opencode_global_path, opencode_global)
 write_json(opencode_project_path, opencode_project)
-write_json(claude_project_path, claude_config)
+write_json(claude_global_path, claude_global_config)
 write_toml_file(codex_global_path, codex_config)
 write_json(vscode_user_path, vscode_user_config)
 write_json(vscode_project_path, vscode_project_config)
