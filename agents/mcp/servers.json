@@ -26,6 +26,19 @@
       "@upstash/context7-mcp"
     ]
   },
+  "perplexity": {
+    "type": "local",
+    "enabled": true,
+    "command": "npx",
+    "args": [
+      "-y",
+      "@perplexity-ai/mcp-server"
+    ],
+    "env": {
+      "PERPLEXITY_API_KEY": "${PERPLEXITY_API_KEY}",
+      "PERPLEXITY_MODEL": "${PERPLEXITY_MODEL}"
+    }
+  },
   "_browser-use-disabled": {
     "type": "local",
     "enabled": false,

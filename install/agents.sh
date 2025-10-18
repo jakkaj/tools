@@ -50,9 +50,30 @@ generate_mcp_configs() {
 
     # Load environment variables if .env exists
     local openrouter_key=""
+    local perplexity_key=""
+    local perplexity_model="sonar"
     if [ -f "${ENV_FILE}" ]; then
         source "${ENV_FILE}"
         openrouter_key="${MCP_LLM_OPENROUTER_API_KEY}"
+        perplexity_key="${PERPLEXITY_API_KEY}"
+        perplexity_model="${PERPLEXITY_MODEL:-sonar}"
+    fi
+
+    # Check if Perplexity is enabled in servers.json and validate API key
+    if grep -A 10 '"perplexity"' "${mcp_source}" | grep -q '"enabled".*:.*true'; then
+        if [ -z "${perplexity_key}" ] || [ "${perplexity_key}" = "your_perplexity_api_key_here" ]; then
+            echo ""
+            print_error "Perplexity MCP server is enabled but PERPLEXITY_API_KEY is not set"
+            echo ""
+            echo "To fix this:"
+            echo "  1. Copy .env.sample to .env:  cp .env.sample .env"
+            echo "  2. Edit .env and add your Perplexity API key"
+            echo "  3. Re-run: ./setup.sh"
+            echo ""
+            echo "Or disable Perplexity in agents/mcp/servers.json by setting \"enabled\": false"
+            echo ""
+            return 1
+        fi
     fi
 
     local opencode_global="${HOME}/.config/opencode/opencode.json"
@@ -65,7 +86,7 @@ generate_mcp_configs() {
     mkdir -p "$(dirname "${vscode_user_config}")"
     mkdir -p "$(dirname "${vscode_project_config}")"
 
-    python3 - "$mcp_source" "$opencode_global" "$opencode_project" "$claude_project" "$codex_global" "$vscode_user_config" "$vscode_project_config" "$openrouter_key" <<'PYTHON'
+    python3 - "$mcp_source" "$opencode_global" "$opencode_project" "$claude_project" "$codex_global" "$vscode_user_config" "$vscode_project_config" "$openrouter_key" "$perplexity_key" "$perplexity_model" <<'PYTHON'
 import json
 import sys
 from pathlib import Path
@@ -239,10 +260,16 @@ codex_global_path = Path(sys.argv[5])
 vscode_user_path = Path(sys.argv[6])
 vscode_project_path = Path(sys.argv[7])
 openrouter_key = sys.argv[8] if len(sys.argv) > 8 else ""
+perplexity_key = sys.argv[9] if len(sys.argv) > 9 else ""
+perplexity_model = sys.argv[10] if len(sys.argv) > 10 else "sonar"
 
 servers_text = source_path.read_text(encoding="utf-8")
 if openrouter_key:
     servers_text = servers_text.replace("${OPENROUTER_API_KEY}", openrouter_key)
+if perplexity_key:
+    servers_text = servers_text.replace("${PERPLEXITY_API_KEY}", perplexity_key)
+if perplexity_model:
+    servers_text = servers_text.replace("${PERPLEXITY_MODEL}", perplexity_model)
 servers = json.loads(servers_text)
 
 opencode_global = migrate_opencode_config(load_json(opencode_global_path))
