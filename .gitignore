@@ -8,8 +8,8 @@ codebase.md
 changes.md
 # Ignore environment variables
 .env
-.env.test
-.env.chrome.test
+.env.*
+.env.backup
 .vsc-bridge/host.json
 .vsc-bridge/host.lock
 

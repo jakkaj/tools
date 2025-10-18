@@ -94,7 +94,6 @@ generate_mcp_configs() {
                 cat > "${env_file_to_create}" <<'EOF'
 # Perplexity MCP Server Configuration
 PERPLEXITY_API_KEY=your_perplexity_api_key_here
-PERPLEXITY_MODEL=sonar-reasoning
 
 # MCP Browser Use Configuration (optional)
 # MCP_LLM_PROVIDER=openrouter
@@ -541,9 +540,14 @@ main() {
     if generate_mcp_configs "${MCP_SOURCE}" "${VSCODE_USER_CONFIG}" "${VSCODE_PROJECT_CONFIG}"; then
         print_success "MCP server configuration updated"
     else
-        print_status "MCP configuration skipped"
+        print_error "MCP configuration failed - see error above"
+        echo ""
+        echo "Agent commands were installed successfully, but MCP server configuration"
+        echo "requires additional setup. Please follow the instructions above."
+        echo ""
+        exit 1
     fi
-    
+
     echo ""
     echo "======================================"
     print_success "Setup complete!"

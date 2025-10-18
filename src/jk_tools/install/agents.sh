@@ -541,9 +541,14 @@ main() {
     if generate_mcp_configs "${MCP_SOURCE}" "${VSCODE_USER_CONFIG}" "${VSCODE_PROJECT_CONFIG}"; then
         print_success "MCP server configuration updated"
     else
-        print_status "MCP configuration skipped"
+        print_error "MCP configuration failed - see error above"
+        echo ""
+        echo "Agent commands were installed successfully, but MCP server configuration"
+        echo "requires additional setup. Please follow the instructions above."
+        echo ""
+        exit 1
     fi
-    
+
     echo ""
     echo "======================================"
     print_success "Setup complete!"
