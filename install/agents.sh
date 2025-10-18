@@ -10,7 +10,19 @@ REPO_ROOT="$(dirname "${SCRIPT_DIR}")"
 SOURCE_DIR="${REPO_ROOT}/agents/commands"
 SYNC_SCRIPT="${REPO_ROOT}/scripts/sync-to-dist.sh"
 MCP_SOURCE="${REPO_ROOT}/agents/mcp/servers.json"
-ENV_FILE="${REPO_ROOT}/.env"
+
+# Support multiple .env file locations (first found wins):
+# 1. Current directory .env (project-specific)
+# 2. Home directory ~/.jk-tools.env (recommended for uvx users)
+# 3. Repo root .env (dev mode)
+ENV_FILE=""
+if [ -f "./.env" ]; then
+    ENV_FILE="./.env"
+elif [ -f "${HOME}/.jk-tools.env" ]; then
+    ENV_FILE="${HOME}/.jk-tools.env"
+elif [ -f "${REPO_ROOT}/.env" ]; then
+    ENV_FILE="${REPO_ROOT}/.env"
+fi
 TARGET_DIR="${HOME}/.claude/commands"
 OPENCODE_DIR="${HOME}/.config/opencode/command"
 CODEX_DIR="${HOME}/.codex/prompts"
@@ -65,10 +77,38 @@ generate_mcp_configs() {
             echo ""
             print_error "Perplexity MCP server is enabled but PERPLEXITY_API_KEY is not set"
             echo ""
-            echo "To fix this:"
-            echo "  1. Copy .env.sample to .env:  cp .env.sample .env"
-            echo "  2. Edit .env and add your Perplexity API key"
-            echo "  3. Re-run: ./setup.sh"
+
+            # Determine which .env file to create
+            local env_file_to_create=""
+            if [ -f "${REPO_ROOT}/.git/config" ]; then
+                # Dev mode - use local .env
+                env_file_to_create="${REPO_ROOT}/.env"
+            else
+                # uvx/packaged mode - use ~/.jk-tools.env
+                env_file_to_create="${HOME}/.jk-tools.env"
+            fi
+
+            # Create template .env file if it doesn't exist
+            if [ ! -f "${env_file_to_create}" ]; then
+                print_status "Creating template environment file: ${env_file_to_create}"
+                cat > "${env_file_to_create}" <<'EOF'
+# Perplexity MCP Server Configuration
+PERPLEXITY_API_KEY=your_perplexity_api_key_here
+PERPLEXITY_MODEL=sonar-reasoning
+
+# MCP Browser Use Configuration (optional)
+# MCP_LLM_PROVIDER=openrouter
+# MCP_LLM_OPENROUTER_API_KEY=your_openrouter_api_key_here
+# MCP_LLM_MODEL_NAME=openai/gpt-5-mini
+# MCP_BROWSER_HEADLESS=true
+# MCP_AGENT_TOOL_USE_VISION=false
+EOF
+                print_success "Created ${env_file_to_create}"
+                echo ""
+            fi
+
+            echo "Please edit ${env_file_to_create} and add your Perplexity API key,"
+            echo "then re-run the installer."
             echo ""
             echo "Or disable Perplexity in agents/mcp/servers.json by setting \"enabled\": false"
             echo ""
@@ -362,6 +402,24 @@ main() {
     echo "======================================"
     echo "     Agent Commands Setup Script      "
     echo "======================================"
+    echo ""
+
+    # Show information about .env file for MCP server configuration
+    if [ -f "${REPO_ROOT}/.git/config" ]; then
+        # Dev mode
+        if [ -f "${REPO_ROOT}/.env" ]; then
+            print_status "Environment file found: ${REPO_ROOT}/.env"
+        else
+            print_status "Tip: Create ${REPO_ROOT}/.env to configure MCP servers (e.g., Perplexity)"
+        fi
+    else
+        # uvx/packaged mode
+        if [ -f "${HOME}/.jk-tools.env" ]; then
+            print_status "Environment file found: ${HOME}/.jk-tools.env"
+        else
+            print_status "Tip: Create ~/.jk-tools.env to configure MCP servers (e.g., Perplexity)"
+        fi
+    fi
     echo ""
 
     # Sync all source files to distribution package (only in dev mode)
