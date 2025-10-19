@@ -125,15 +125,10 @@ Analyze from multiple perspectives:
 
 **For EACH of the 5 insights, follow this exact structure:**
 
-#### a) Natural Introduction
-Start casually, like a teammate bringing up something interesting:
-- "Hey, so I was thinking about [aspect of context]..."
-- "You know what I just realized about this [feature/plan/code]?"
-- "Can we talk about something I noticed while looking at [section]?"
-- "I want to bring up something that could be important..."
+**IMPORTANT**: Start directly with the "Did you know" statement. No conversational preamble like "Can we talk about..." or "Hey, so I was thinking...". Get straight to the insight.
 
-#### b) The Core Insight (Clear "Did you know" statement)
-State it directly and clearly:
+#### a) The Core Insight (Clear "Did you know" statement - START HERE)
+State it directly and clearly - no preamble needed:
 - "Did you know that when we [action], [consequence]?"
 - "Did you know this means [implication]?"
 - "Did you know users will experience [change]?"
@@ -141,7 +136,7 @@ State it directly and clearly:
 
 Make it specific and concrete, not vague.
 
-#### c) Deep Dive (Explain the implications)
+#### b) Deep Dive (Explain the implications)
 Break down what this means:
 
 ```markdown
@@ -166,7 +161,7 @@ Use:
 - Data/numbers when relevant
 - Visual aids (tables, simple diagrams) if helpful
 
-#### d) Options & Recommendation (Actionable Paths Forward)
+#### c) Options & Recommendation (Actionable Paths Forward)
 Present 2-4 concrete options for addressing the insight:
 
 ```markdown
@@ -208,7 +203,7 @@ Then invite discussion:
 
 Make it a REAL question that acknowledges uncertainty and invites challenge to your recommendation.
 
-#### e) **WAIT for Human Response**
+#### d) **WAIT for Human Response**
 **This is absolutely critical - DO NOT rush through all 5 insights!**
 
 - Stop and wait for human to respond
@@ -228,7 +223,7 @@ Make it a REAL question that acknowledges uncertainty and invites challenge to y
 - The human acknowledges understanding, OR
 - The team agrees to defer/investigate further
 
-#### f) Capture Decision (After discussion concludes)
+#### e) Capture Decision (After discussion concludes)
 Summarize what was decided:
 ```markdown
 ✓ Decision: [What was decided]
@@ -237,7 +232,7 @@ Summarize what was decided:
 ✓ Affects: [Which parts of spec/plan/tasks this impacts]
 ```
 
-#### g) **IMMEDIATE UPDATES (Critical - Don't Wait!)**
+#### f) **IMMEDIATE UPDATES (Critical - Don't Wait!)**
 **Before moving to the next insight, immediately update affected documents.**
 
 If the decision requires changes to spec/plan/tasks/code:
@@ -283,7 +278,7 @@ Great, moving to insight #2...
 
 ### 4) DOCUMENTATION
 
-**Important**: Affected documents are updated IMMEDIATELY after each insight (step 3g above). This section is about the final session summary.
+**Important**: Affected documents are updated IMMEDIATELY after each insight (step 3f above). This section is about the final session summary.
 
 After all 5 insights have been discussed and their updates applied, append to the **SOURCE DOCUMENT** (the file that was analyzed):
 
@@ -466,11 +461,9 @@ Let's go through them one at a time, and please jump in with thoughts.
 
 💡 Insight #1: Session Invalidation Cascade
 
-Hey, so I was looking at Phase 2 where we're switching from JWT to OAuth...
-
-Did you know that when we deploy this change, every single user who's
-currently logged into the system gets forcibly kicked out? Not gracefully
-logged out - hard disconnect, session gone, right now.
+Did you know that when we deploy this change from JWT to OAuth, every single
+user who's currently logged into the system gets forcibly kicked out? Not
+gracefully logged out - hard disconnect, session gone, right now.
 
 Here's what happens:
 1. We deploy the new OAuth-based auth code

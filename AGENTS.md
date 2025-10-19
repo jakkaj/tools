@@ -222,6 +222,7 @@ When working with this repository, AI assistants should:
 3. **Use aliases**: Prefer short aliases (e.g., `jk-gcm`) for efficiency
 4. **Check requirements**: Tools list their dependencies in help text
 5. **Use scratch directory**: Output temporary files to `./scratch/` to keep repo clean
+6. **Git commands - READ ONLY**: You may use any git command to read repository state (e.g., `git status`, `git diff`, `git log`, `git show`), but **NEVER** modify git state (no `git add`, `git commit`, `git push`, `git checkout`, etc.) unless explicitly requested by the user
 
 Example workflow for an AI assistant:
 ```bash
