@@ -17,15 +17,6 @@
     ],
     "env": {}
   },
-  "context7": {
-    "type": "local",
-    "enabled": true,
-    "command": "npx",
-    "args": [
-      "-y",
-      "@upstash/context7-mcp"
-    ]
-  },
   "perplexity": {
     "type": "local",
     "enabled": true,

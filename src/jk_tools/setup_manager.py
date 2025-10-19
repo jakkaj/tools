@@ -238,6 +238,10 @@ class SetupManager:
             if name in updatable_installers:
                 cmd.append("--update")
 
+        # Add --clear-mcp flag for agents installer if requested
+        if name == "agents" and hasattr(self, 'clear_mcp') and self.clear_mcp:
+            cmd.append("--clear-mcp")
+
         # Run the installer
         returncode, stdout, stderr = self._run_command(cmd, timeout=300)
 
@@ -439,11 +443,17 @@ def main():
         action="store_true",
         help="Update already installed tools to latest versions"
     )
+    parser.add_argument(
+        "--clear-mcp",
+        action="store_true",
+        help="Clear all existing MCP servers before installing new ones"
+    )
 
     args = parser.parse_args()
 
     try:
         manager = SetupManager()
+        manager.clear_mcp = args.clear_mcp
         manager.run(update_mode=args.update)
     except KeyboardInterrupt:
         console.print("\n[yellow]Setup interrupted by user[/yellow]")

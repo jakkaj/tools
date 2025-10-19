@@ -2,6 +2,9 @@
 
 # Install agent commands and MCP server configs for Claude CLI, OpenCode CLI, Codex CLI, and VS Code
 # This script also syncs all source files to the distribution package (src/jk_tools/)
+#
+# Usage: agents.sh [--clear-mcp]
+#   --clear-mcp: Clear all existing MCP servers before installing new ones
 
 set -e
 
@@ -10,6 +13,17 @@ REPO_ROOT="$(dirname "${SCRIPT_DIR}")"
 SOURCE_DIR="${REPO_ROOT}/agents/commands"
 SYNC_SCRIPT="${REPO_ROOT}/scripts/sync-to-dist.sh"
 MCP_SOURCE="${REPO_ROOT}/agents/mcp/servers.json"
+
+# Parse command line arguments
+CLEAR_MCP=false
+for arg in "$@"; do
+    case $arg in
+        --clear-mcp)
+            CLEAR_MCP=true
+            shift
+            ;;
+    esac
+done
 
 # Support multiple .env file locations (first found wins):
 # 1. Current directory .env (project-specific)
@@ -125,7 +139,7 @@ EOF
     mkdir -p "$(dirname "${vscode_user_config}")"
     mkdir -p "$(dirname "${vscode_project_config}")"
 
-    python3 - "$mcp_source" "$opencode_global" "$opencode_project" "$claude_global" "$codex_global" "$vscode_user_config" "$vscode_project_config" "$openrouter_key" "$perplexity_key" "$perplexity_model" <<'PYTHON'
+    python3 - "$mcp_source" "$opencode_global" "$opencode_project" "$claude_global" "$codex_global" "$vscode_user_config" "$vscode_project_config" "$openrouter_key" "$perplexity_key" "$perplexity_model" "$CLEAR_MCP" <<'PYTHON'
 import json
 import sys
 from pathlib import Path
@@ -157,6 +171,20 @@ if toml is None and tomli_w is None:
 
 
 TYPE_MAP = {"stdio": "local", "sse": "remote"}
+
+
+def create_backup(path: Path) -> None:
+    """Create a timestamped backup of a file before modifying it"""
+    if not path.exists():
+        return
+
+    from datetime import datetime
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    backup_path = path.with_suffix(f"{path.suffix}.backup-{timestamp}")
+
+    import shutil
+    shutil.copy2(path, backup_path)
+    print(f"[Backup] Created backup: {backup_path}")
 
 
 def dump_toml(data):
@@ -301,6 +329,7 @@ vscode_project_path = Path(sys.argv[7])
 openrouter_key = sys.argv[8] if len(sys.argv) > 8 else ""
 perplexity_key = sys.argv[9] if len(sys.argv) > 9 else ""
 perplexity_model = sys.argv[10] if len(sys.argv) > 10 else "sonar"
+clear_mcp = sys.argv[11].lower() == "true" if len(sys.argv) > 11 else False
 
 servers_text = source_path.read_text(encoding="utf-8")
 if openrouter_key:
@@ -317,6 +346,16 @@ claude_global_config = load_json(claude_global_path)
 codex_config = load_toml_file(codex_global_path)
 vscode_user_config = load_json(vscode_user_path)
 vscode_project_config = load_json(vscode_project_path)
+
+# Clear existing MCP sections if --clear-mcp flag is set
+if clear_mcp:
+    print("[Clear MCP] Removing all existing MCP servers before installing new ones")
+    opencode_global.pop("mcp", None)
+    opencode_project.pop("mcp", None)
+    claude_global_config.pop("mcpServers", None)
+    codex_config.pop("mcp_servers", None)
+    vscode_user_config.pop("mcpServers", None)
+    vscode_project_config.pop("mcpServers", None)
 
 opencode_global_mcp = opencode_global.setdefault("mcp", {})
 opencode_project_mcp = opencode_project.setdefault("mcp", {})
@@ -388,6 +427,15 @@ for name, config in servers.items():
     vscode_user_servers[name] = dict(vscode_entry)
     vscode_project_servers[name] = dict(vscode_entry)
 
+# Always create backups before writing (with ISO timestamps)
+create_backup(opencode_global_path)
+create_backup(opencode_project_path)
+create_backup(claude_global_path)
+create_backup(codex_global_path)
+create_backup(vscode_user_path)
+create_backup(vscode_project_path)
+
+# Write updated configurations
 write_json(opencode_global_path, opencode_global)
 write_json(opencode_project_path, opencode_project)
 write_json(claude_global_path, claude_global_config)

@@ -1,6 +1,7 @@
 # Ignore ephemeral scratch workspace directory
 scratch/
 opencode.json
+opencode.json.backup*
 # Ignore VS Code workspace artifacts
 .vscode/
 codebase.md
@@ -9,6 +10,10 @@ changes.md
 .env
 .env.*
 .env.backup
+# Ignore all backup files (ISO timestamp format)
+*.backup
+*.backup-*
+*.bak
 .vsc-bridge/host.json
 .vsc-bridge/host.lock
 
