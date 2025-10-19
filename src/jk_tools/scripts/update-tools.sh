@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # NAME
-#   jk-update-tools - Update jk-tools to latest version from GitHub
+#   update-tools - Update jk-tools to latest version from GitHub
 #
 # SYNOPSIS
-#   jk-update-tools
-#   jk-update-tools --help
+#   update-tools
+#   jk-ut (alias)
+#   update-tools --help
 #
 # DESCRIPTION
 #   Updates the jk-tools package to the latest version from GitHub using uvx.
@@ -19,10 +20,12 @@
 #
 # EXAMPLES
 #   # Update to latest version
-#   jk-update-tools
+#   update-tools
+#   jk-ut
 #
 #   # Show help
-#   jk-update-tools --help
+#   update-tools --help
+#   jk-ut --help
 #
 # EXIT STATUS
 #   0   Success
