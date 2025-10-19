@@ -86,8 +86,8 @@ class SetupManager:
         """Run a command and return exit code, stdout, and stderr"""
         try:
             # Create clean environment to prevent BASH_ENV and other startup file interference
-            # BASH_ENV and ENV must be completely removed from the environment
-            # See: https://www.man7.org/linux/man-pages/man1/bash.1.html
+            # Remove BASH_ENV and ENV entirely, AND use bash -p (privileged mode)
+            # See: https://www.gnu.org/software/bash/manual/bash.html
             clean_env = {k: v for k, v in os.environ.items() if k not in ("BASH_ENV", "ENV")}
             clean_env.pop("PROMPT_COMMAND", None)     # Sometimes abused
             clean_env.pop("CDPATH", None)             # Avoid cd surprises
@@ -95,12 +95,12 @@ class SetupManager:
             # Add Cargo to PATH
             clean_env["PATH"] = f"{os.environ.get('HOME', '')}/.cargo/bin:{os.environ.get('PATH', '')}"
 
-            # If executing a shell script, make it executable and call directly
-            # This honors the script's shebang and avoids bash wrapper issues
+            # If executing a shell script, wrap with bash -p (privileged mode)
+            # -p tells bash to ignore BASH_ENV and ENV completely
             if cmd and cmd[0].endswith('.sh'):
-                script_path = Path(cmd[0])
-                # Ensure script is executable
-                script_path.chmod(script_path.stat().st_mode | 0o111)
+                script = cmd[0]
+                args = cmd[1:]
+                cmd = ["/bin/bash", "-p", "--noprofile", "--norc", "--", script, *args]
 
             result = subprocess.run(
                 cmd,
