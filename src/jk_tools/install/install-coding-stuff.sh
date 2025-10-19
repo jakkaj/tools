@@ -8,12 +8,6 @@
 #
 # Works on macOS and Linux
 
-# Self-reexec in clean shell to bypass BASH_ENV
-if [[ -z "${JK_CLEAN_SHELL:-}" ]]; then
-  export JK_CLEAN_SHELL=1
-  exec env -u BASH_ENV /bin/bash --noprofile --norc -- "$0" "$@"
-fi
-
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

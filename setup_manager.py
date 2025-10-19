@@ -85,12 +85,29 @@ class SetupManager:
     def _run_command(self, cmd: List[str], timeout: Optional[int] = None) -> Tuple[int, str, str]:
         """Run a command and return exit code, stdout, and stderr"""
         try:
+            # Create clean environment to prevent BASH_ENV and other startup file interference
+            # BASH_ENV and ENV must be completely removed from the environment
+            # See: https://www.man7.org/linux/man-pages/man1/bash.1.html
+            clean_env = {k: v for k, v in os.environ.items() if k not in ("BASH_ENV", "ENV")}
+            clean_env.pop("PROMPT_COMMAND", None)     # Sometimes abused
+            clean_env.pop("CDPATH", None)             # Avoid cd surprises
+
+            # Add Cargo to PATH
+            clean_env["PATH"] = f"{os.environ.get('HOME', '')}/.cargo/bin:{os.environ.get('PATH', '')}"
+
+            # If executing a shell script, make it executable and call directly
+            # This honors the script's shebang and avoids bash wrapper issues
+            if cmd and cmd[0].endswith('.sh'):
+                script_path = Path(cmd[0])
+                # Ensure script is executable
+                script_path.chmod(script_path.stat().st_mode | 0o111)
+
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
                 timeout=timeout,
-                env={**os.environ, "PATH": f"{os.environ.get('HOME', '')}/.cargo/bin:{os.environ.get('PATH', '')}"}
+                env=clean_env
             )
             return result.returncode, result.stdout, result.stderr
         except subprocess.TimeoutExpired:
@@ -101,12 +118,16 @@ class SetupManager:
     def _get_version(self, command: str) -> Optional[str]:
         """Get version from a command, handling different output formats"""
         try:
+            # Use clean environment (same as _run_command)
+            clean_env = {k: v for k, v in os.environ.items() if k not in ("BASH_ENV", "ENV")}
+            clean_env["PATH"] = f"{os.environ.get('HOME', '')}/.cargo/bin:{os.environ.get('PATH', '')}"
+
             result = subprocess.run(
                 [command, "--version"],
                 capture_output=True,
                 text=True,
                 timeout=10,
-                env={**os.environ, "PATH": f"{os.environ.get('HOME', '')}/.cargo/bin:{os.environ.get('PATH', '')}"}
+                env=clean_env
             )
             if result.returncode == 0:
                 # Clean up version output - remove extra whitespace and normalize
