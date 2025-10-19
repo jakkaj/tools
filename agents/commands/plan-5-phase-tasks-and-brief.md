@@ -1,12 +1,12 @@
 ---
-description: For one selected phase, generate a combined `tasks.md` dossier (tasks + alignment brief) under the plan tree; stop before making code changes.
+description: Use subagent to review previous phase execution (if applicable), then generate a combined `tasks.md` dossier (tasks + alignment brief) under the plan tree; stop before making code changes.
 ---
 
-Please deep think / ultrathink as this is a complex task. 
+Please deep think / ultrathink as this is a complex task.
 
 # plan-5-phase-tasks-and-brief
 
-**One phase at a time.** Generate an actionable **tasks + alignment brief dossier** (`tasks.md`) for the chosen phase, plus the supporting directory structure, and stop before implementation. This merges your previous "tasks" generation with the pre-implementation walkthrough, scoped strictly to **one** phase. Treat the dossier as the shared contract between the human sponsor and the coding agent: lean on visual aids (e.g., Mermaid flow + sequence diagrams) to cement a cohesive understanding before touching code.
+**One phase at a time.** First use a **subagent to thoroughly review the previous phase** (if not Phase 1) including execution log, main plan, and critical findings. Then generate an actionable **tasks + alignment brief dossier** (`tasks.md`) for the chosen phase, plus the supporting directory structure, and stop before implementation. This merges your previous "tasks" generation with the pre-implementation walkthrough, scoped strictly to **one** phase. Treat the dossier as the shared contract between the human sponsor and the coding agent: lean on visual aids (e.g., Mermaid flow + sequence diagrams) to cement a cohesive understanding before touching code.
 
 ```md
 User input:
@@ -17,6 +17,86 @@ $ARGUMENTS
 # --plan "<abs path to docs/plans/<ordinal>-<slug>/<slug>-plan.md>"
 
 1) Verify PLAN exists; set PLAN_DIR = dirname(PLAN); define `PHASE_DIR = PLAN_DIR/tasks/${PHASE_SLUG}` and create it if missing (mkdir -p).
+
+1a) **Subagent Review of Previous Phase** (skip if Phase 1):
+   - **Determine previous phase**: Extract phase number from $PHASE (e.g., "Phase 4: Data Flows" → Phase 3 is previous)
+   - **MANDATORY**: Use the Task tool to launch subagents for comprehensive review
+   - **Strategy**: Launch multiple subagents **in parallel** (single message with multiple Task tool calls) to maximize efficiency. Each subagent focuses on a specific research area, then synthesize their findings.
+
+   **Recommended Parallel Subagent Breakdown** (launch all in one message):
+
+   **Subagent 1 - Deliverables & Dependencies**:
+     "Review the previous phase to identify what was built and what the next phase can use.
+
+     **Read**:
+     - `PLAN_DIR/tasks/${PREV_PHASE_SLUG}/tasks.md` (task table)
+     - `PLAN_DIR/tasks/${PREV_PHASE_SLUG}/execution.log.md` (full log)
+     - `${PLAN}` § 12 (Change Footnotes Ledger)
+
+     **Report**:
+     A. **Completed Deliverables**: Files, modules, classes, functions, APIs created (with absolute paths)
+     D. **Dependencies for Next Phase**: What the next phase can import/call (function signatures, APIs, data structures)
+     G. **Test Infrastructure**: Test files, fixtures, mocks, helpers available for reuse"
+
+   **Subagent 2 - Lessons & Discoveries**:
+     "Review the previous phase to understand what was learned during implementation.
+
+     **Read**:
+     - `PLAN_DIR/tasks/${PREV_PHASE_SLUG}/execution.log.md` (full log)
+     - `${PLAN}` § 8 Progress Tracking for previous phase
+
+     **Report**:
+     B. **Lessons Learned**: Deviations from plan, complexity discovered, approaches that worked/failed
+     C. **Technical Discoveries**: Gotchas, limitations, edge cases, framework constraints
+     I. **Scope Changes**: Requirements changes, features added/removed, criteria modifications"
+
+   **Subagent 3 - Critical Findings & Gaps**:
+     "Review how the previous phase addressed critical findings and what remains incomplete.
+
+     **Read**:
+     - `${PLAN}` § 3 (Critical Research Findings)
+     - `PLAN_DIR/tasks/${PREV_PHASE_SLUG}/execution.log.md` (search for discovery references)
+     - `${PLAN}` § 8 (task statuses for previous phase)
+
+     **Report**:
+     E. **Critical Findings Applied**: Which discoveries were addressed and how (file:line references)
+     F. **Blocked/Incomplete Items**: Tasks not completed, reasons, implications for next phase
+     J. **Key Execution Log References**: Deep links to critical decisions"
+
+   **Subagent 4 - Technical Debt & Architecture**:
+     "Review technical debt, workarounds, and architectural decisions from the previous phase.
+
+     **Read**:
+     - `PLAN_DIR/tasks/${PREV_PHASE_SLUG}/execution.log.md` (full log)
+     - `${PLAN}` § 12 (footnoted changes)
+     - `PLAN_DIR/${SLUG}-spec.md` (architecture impacts)
+
+     **Report**:
+     H. **Technical Debt & Workarounds**: Shortcuts, TODOs, temporary solutions, refactoring needs
+     - Architectural decisions and their rationale
+     - Patterns established that next phase should follow
+     - Anti-patterns to avoid"
+
+   - **Launch Strategy**: Call Task tool 4 times in a single message (parallel execution) with subagent_type="general-purpose"
+   - **Wait for All Subagents**: Block until all 4 subagents complete their research
+   - **Synthesize Results**: Combine all subagent outputs into a cohesive "Previous Phase Review" structured with sections A-J:
+     * A. Completed Deliverables (from Subagent 1)
+     * B. Lessons Learned (from Subagent 2)
+     * C. Technical Discoveries (from Subagent 2)
+     * D. Dependencies for Next Phase (from Subagent 1)
+     * E. Critical Findings Applied (from Subagent 3)
+     * F. Blocked/Incomplete Items (from Subagent 3)
+     * G. Test Infrastructure (from Subagent 1)
+     * H. Technical Debt & Workarounds (from Subagent 4)
+     * I. Scope Changes (from Subagent 2)
+     * J. Key Execution Log References (from Subagent 3)
+   - **Use Synthesized Results**: Let the combined subagent findings inform:
+     * Task breakdown (know what exists, what's reusable)
+     * Dependencies column (reference actual files/functions from previous phase)
+     * Validation criteria (avoid gotchas already discovered)
+     * Non-goals (don't re-solve problems already solved)
+     * Test plan (reuse fixtures and patterns)
+
 2) **Read Critical Research Findings** from the PLAN document:
    - Locate section "## 3. Critical Research Findings" or similar heading in the plan
    - Study each numbered discovery (🚨 Critical Discovery 01, 02, 03...)
@@ -92,6 +172,12 @@ $ARGUMENTS
    - Phase metadata (title, slug, links to SPEC and PLAN, today {{TODAY}}).
    - `## Tasks` section that renders the table exactly as defined above (Status checkbox first, then ID, Task, Type, Dependencies, Absolute Path(s), Validation, Notes) with numbered items (T001...), dependencies, [P] guidance, and validation checklist coverage.
    - `## Alignment Brief` section with:
+     * **Previous Phase Review** (if not Phase 1):
+       - Include the complete subagent review output from step 1a here
+       - Ensure it covers all sections A-J: completed deliverables, lessons learned, dependencies created, gotchas discovered, critical findings addressed, blocked items, test infrastructure, technical debt, scope changes, and execution log references
+       - Include deep links to previous phase execution log for critical decisions
+       - Reference specific footnotes from plan § 12 that affected architecture or design
+       - This section provides essential context for understanding what exists and what needs to be built
      * Objective recap + behavior checklist (tie to PLAN acceptance criteria)
      * **Non-Goals (Scope Boundaries)**: Explicitly call out what this phase is **NOT** doing to prevent scope creep and keep implementation focused. Include:
        - Features/functionality deliberately excluded from this phase (but might be in future phases)
