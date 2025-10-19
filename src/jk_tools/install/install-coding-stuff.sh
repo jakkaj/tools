@@ -9,6 +9,7 @@
 # Works on macOS and Linux
 
 set -e
+set -x  # DEBUG: Enable command tracing
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
