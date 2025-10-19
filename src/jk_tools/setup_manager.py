@@ -100,7 +100,7 @@ class SetupManager:
             if cmd and cmd[0].endswith('.sh'):
                 script = cmd[0]
                 args = cmd[1:]
-                cmd = ["/bin/bash", "-p", "--noprofile", "--norc", "--", script, *args]
+                cmd = ["/bin/bash", "-p", "--noprofile", "--norc", script, *args]
 
             result = subprocess.run(
                 cmd,
