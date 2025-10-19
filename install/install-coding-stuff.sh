@@ -504,7 +504,6 @@ main() {
         case $arg in
             --update|-u)
                 UPDATE_MODE=true
-                shift
                 ;;
             --help|-h)
                 echo "Usage: $0 [OPTIONS]"
