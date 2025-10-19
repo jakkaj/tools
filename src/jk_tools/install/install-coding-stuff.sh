@@ -9,7 +9,6 @@
 # Works on macOS and Linux
 
 set -e
-set -x  # DEBUG: Enable command tracing
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -499,21 +498,12 @@ install_codex() {
 # ============== Main ==============
 
 main() {
-    # DEBUG: Print all received arguments
-    echo "[DEBUG] install-coding-stuff.sh starting"
-    echo "[DEBUG] Script: $0"
-    echo "[DEBUG] Number of args: $#"
-    echo "[DEBUG] All args: $@"
-    echo "[DEBUG] Working directory: $(pwd)"
-
     # Parse command line arguments
     UPDATE_MODE=false
     for arg in "$@"; do
-        echo "[DEBUG] Processing arg: '$arg'"
         case $arg in
             --update|-u)
                 UPDATE_MODE=true
-                echo "[DEBUG] Set UPDATE_MODE=true"
                 ;;
             --help|-h)
                 echo "Usage: $0 [OPTIONS]"
@@ -524,13 +514,9 @@ main() {
                 echo ""
                 exit 0
                 ;;
-            *)
-                echo "[DEBUG] Unknown/ignored arg: '$arg'"
-                ;;
         esac
     done
 
-    echo "[DEBUG] Final UPDATE_MODE=$UPDATE_MODE"
     echo ""
     echo "======================================"
     echo "   Coding Tools Installation Script   "
