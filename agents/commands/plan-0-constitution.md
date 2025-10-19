@@ -32,19 +32,76 @@ If any document uses placeholder tokens like `[ALL_CAPS_IDENTIFIER]`, your respo
      TMPL  = `templates/`  # Optional helper content if present
    - Ensure parent directories exist; create them atomically when missing.
 
-2) Load (or seed) doctrine files
-   - If CONST is missing, create the parent directory and seed an empty constitution skeleton before proceeding.
-   - If RULES, IDIOMS, or ARCH are missing, create each file with a minimal section outline so subsequent runs remain deterministic.
-   - After seeding, read every document and record `[ALL_CAPS]` placeholders, existing version numbers, headings, and gaps.
+2) Launch parallel context gatherers
 
-3) Gather project doctrine inputs
-   - Prefer explicit values supplied in `$ARGUMENTS` (e.g., principles, testing strategy, governance cadence).
-   - Augment from README, CONTRIBUTING, handbooks, or prior specs.
-   - When information is unknown, write `TODO(<FIELD>): reason it is pending` so future maintainers know what to resolve.
-   - Track current and new version numbers using semantic versioning:
-     * MAJOR – breaking changes to principles or governance
-     * MINOR – new principles/sections or materially expanded guidance
-     * PATCH – clarifications or formatting adjustments
+**IMPORTANT**: Use **parallel subagent gatherers** for faster doctrine loading.
+
+**Strategy**: Launch 4 parallel subagents (single message with 4 Task tool calls) to gather doctrine context concurrently.
+
+**Subagent 1: Doctrine Loader**
+"Load existing doctrine files or seed skeletons.
+
+**Tasks**:
+- For each of CONST, RULES, IDIOMS, ARCH:
+  * If file exists: Read fully and extract version number, [PLACEHOLDER] tokens, section headings, TODOs
+  * If missing: Create parent directories and seed with minimal outline
+- Output JSON structure: {file_path, exists, version, placeholders[], headings[], todos[], content_summary}
+
+**Return**: Results for all 4 files with extraction data."
+
+**Subagent 2: Context Gatherer**
+"Gather project governance and quality inputs from documentation.
+
+**Priority order**: $ARGUMENTS > README.md > CONTRIBUTING.md > other handbooks
+
+**Extract**:
+- Guiding principles and values
+- Quality/verification strategy and testing philosophy
+- Delivery practices and governance rules
+- Record source for each value (argument, README, etc.)
+
+**Output**: JSON with {principles[], quality_strategy, delivery_practices, governance, sources{}}
+Flag unknowns as 'UNKNOWN: <reason>' for TODO handling."
+
+**Subagent 3: Template Scanner**
+"Inventory templates and commands that reference doctrine.
+
+**Scan**:
+- agents/commands/*.md for references to constitution, rules, idioms, architecture
+- templates/ directory for similar references
+
+**Output**: JSON with {file_path, references_to[], link_format, expected_paths[]}
+Note any hardcoded paths or placeholders that need updating."
+
+**Subagent 4: Version Analyzer**
+"Determine semantic version bump.
+
+**Given**:
+- Current versions from Subagent 1
+- Changes from Subagent 2 ($ARGUMENTS and context)
+
+**Apply rules**:
+- MAJOR: Breaking changes to principles or governance
+- MINOR: New principles/sections or materially expanded guidance
+- PATCH: Clarifications or formatting adjustments
+
+**Output**: JSON with {current_version, new_version, bump_type, rationale}
+Include amendment date as ISO 8601."
+
+**Wait for All Gatherers**: Block until all 4 subagents complete.
+
+3) Synthesize gathered context
+   - Merge outputs from all 4 subagents into unified doctrine view
+   - Conflict resolution: $ARGUMENTS > explicit docs > inferred > UNKNOWN
+   - Build complete placeholder mapping: [TOKEN] → {value, source, confidence}
+   - Validate version bump against actual changes detected
+   - Create TODO list for any UNKNOWN values: "TODO(<FIELD>): <reason pending>"
+   - Prepare inputs for Step 4 constitution drafting:
+     * All placeholder values (filled or deferred)
+     * Validated principles and practices
+     * Quality strategy with tools/approaches
+     * Template dependency map for Step 7 propagation
+     * Final version number and Sync Impact Report data
 
 4) Draft **docs/rules/constitution.md**
    - Replace every placeholder. Standard sections:

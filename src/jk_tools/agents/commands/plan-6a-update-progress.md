@@ -88,26 +88,86 @@ Resolve all file paths before starting updates:
 - Abort if `TARGET_DOC` does not exist
 - Abort if `PLAN` does not exist
 
-### Step A2: Load Current State
+### Step A2: Load Current State (Parallel Readers)
 
-Read and parse all three locations you will update:
+**IMPORTANT**: Use **parallel subagent readers** for faster state loading.
 
-1. **Read PLAN (plan.md)**:
-   - Locate the phase heading and plan task table (from plan-3)
-   - Identify testing approach from plan table header (TDD, TAD, Lightweight, Manual, Hybrid)
-   - Parse `## Change Footnotes Ledger` (§ 12) to capture existing numbering
-   - Determine next footnote number (shared across phase and subtask work)
+**Strategy**: Launch 3 parallel readers (single message with 3 Task tool calls) to load state from all three locations concurrently.
 
-2. **Read TARGET_DOC (tasks.md or subtask file)**:
-   - Find the `## Tasks` table
-   - Identify task ID format (T### for phase, ST### for subtask)
-   - Parse existing footnote stubs in `## Phase Footnote Stubs` section
+**Subagent A1: Plan Reader**
+"Load plan-level state and metadata.
 
-3. **Read or Initialize TASK_LOG**:
-   - If missing: create with `# Execution Log` header
-   - Note whether phase-scoped or subtask-scoped
+**Read**: `${PLAN}` (plan.md)
 
-✋ **CHECKPOINT**: Confirm you have loaded state from all three locations before proceeding.
+**Extract**:
+- Phase heading and plan task table (§ 8)
+- Testing approach from table header (TDD/TAD/Lightweight/Manual/Hybrid)
+- Parse `## Change Footnotes Ledger` (§ 12) - all existing footnotes
+- Determine next footnote number (max number + 1)
+
+**Report** (JSON):
+```json
+{
+  \"testing_approach\": \"Full TDD|TAD|Lightweight|Manual|Hybrid\",
+  \"existing_footnotes\": [\"[^1]\", \"[^2]\", \"[^3]\"],
+  \"next_footnote\": 4,
+  \"phase_metadata\": {\"number\": 2, \"name\": \"Input Validation\", \"slug\": \"phase-2-input-validation\"}
+}
+```
+"
+
+**Subagent A2: Dossier Reader**
+"Load dossier-level task state.
+
+**Read**: `${TARGET_DOC}` (tasks.md or subtask file)
+
+**Extract**:
+- `## Tasks` table with all rows
+- Task ID format (T### for phase, ST### for subtask)
+- Parse `## Phase Footnote Stubs` section - all existing stubs
+- Current task statuses and dependencies
+
+**Report** (JSON):
+```json
+{
+  \"task_id_format\": \"T###|ST###\",
+  \"tasks\": [{\"id\": \"T003\", \"status\": \"[ ]\", \"paths\": [\"/abs/path\"]}, ...],
+  \"footnote_stubs\": [\"[^1]\", \"[^2]\", \"[^3]\"]
+}
+```
+"
+
+**Subagent A3: Log Reader**
+"Load execution history and anchors.
+
+**Read**: `${TASK_LOG}` (execution.log.md)
+
+**Extract**:
+- If missing: note need to create with `# Execution Log` header
+- Parse existing log entries (newest at bottom)
+- Extract all task anchors currently in use
+- Note whether phase-scoped or subtask-scoped
+
+**Report** (JSON):
+```json
+{
+  \"log_exists\": true/false,
+  \"existing_anchors\": [\"task-21-setup\", \"task-22-configure\"],
+  \"scope\": \"phase|subtask\"
+}
+```
+"
+
+**Wait for All Readers**: Block until all 3 subagents complete.
+
+**Synthesize State**:
+After all readers complete:
+1. Combine state from plan, dossier, log
+2. Verify footnote numbers consistent (plan matches dossier)
+3. Determine next footnote number (from A1)
+4. Store unified state for Phase C updates
+
+✋ **CHECKPOINT**: Confirm all three parallel readers completed and state merged before proceeding.
 
 ## PHASE B: Capture Execution Log Entry (Evidence First)
 
@@ -583,23 +643,122 @@ Overall Progress: 1.75/4 phases (44%)
 
 ## PHASE D: Validation & Output
 
-### Step D1: Pre-Output Verification Checklist
+### Step D1: Pre-Output Verification (Parallel Validators)
 
-**REQUIRED:** Before displaying success message, verify ALL updates were completed:
+**IMPORTANT**: Use **parallel subagent validators** for comprehensive verification.
 
-Run through this checklist mentally:
+**REQUIRED:** Before displaying success message, launch 3 parallel validators to verify ALL updates were completed correctly.
 
-- [ ] **Execution log written** (TASK_LOG has new entry with task anchor)
-- [ ] **Dossier task table updated** (TARGET_DOC has Status/Notes with footnote)
-- [ ] **Plan task table updated** (PLAN § 8 has Status/Log/Notes with footnote)
-- [ ] **Plan footnotes updated** (PLAN § 12 has `[^N]` entry)
-- [ ] **Dossier footnotes updated** (TARGET_DOC § Phase Footnote Stubs has `[^N]` entry)
-- [ ] **Progress checklist updated** (PLAN § 11 has current percentages)
-- [ ] **Footnote numbers match** (same `[^N]` in dossier, plan table, both ledgers)
+**Strategy**: Launch 3 validators (single message with 3 Task tool calls) to check different aspects concurrently.
 
-**If ANY checkbox is unchecked, GO BACK and complete that step.**
+**Subagent D1: Footnote Validator**
+"Verify footnote synchronization and format.
 
-✋ **STOP**: Do not proceed to output until all 7 items are verified.
+**Read**:
+- `${PLAN}` § 12 (Change Footnotes Ledger)
+- `${TARGET_DOC}` § Phase Footnote Stubs
+
+**Check**:
+- Same `[^N]` numbers in all 4 locations: plan table, dossier table, plan ledger, dossier stubs
+- Footnotes are sequential (no gaps)
+- No duplicate numbers
+- FlowSpace node ID format valid (class|method|function|file:path:symbol)
+
+**Report** (JSON):
+```json
+{
+  \"violations\": [
+    {\"severity\": \"CRITICAL\", \"issue\": \"Footnote [^5] in plan but missing in dossier\", \"fix\": \"Add to dossier stubs\"},
+    ...
+  ],
+  \"synchronized\": true/false
+}
+```
+"
+
+**Subagent D2: Link Validator**
+"Verify all deep links resolve correctly.
+
+**Read**:
+- `${PLAN}` (Log column links)
+- `${TARGET_DOC}` (Notes column log anchors)
+- `${TASK_LOG}` (actual anchors)
+
+**Check**:
+- Plan Log column `[📋]` links point to existing log anchors
+- Dossier Notes `log#anchors` match actual log entry headings
+- All cross-references resolvable
+
+**Report** (JSON):
+```json
+{
+  \"violations\": [
+    {\"severity\": \"HIGH\", \"issue\": \"Plan task 2.3 Log link points to #task-23-validation but log anchor is #task-23-implement-validation\", \"fix\": \"Fix anchor mismatch\"},
+    ...
+  ],
+  \"all_links_valid\": true/false
+}
+```
+"
+
+**Subagent D3: Status Validator**
+"Verify status consistency across locations.
+
+**Read**:
+- `${PLAN}` § 8 (plan task statuses)
+- `${TARGET_DOC}` (dossier task statuses)
+- `${PLAN}` § 11 (progress checklist)
+
+**Check**:
+- Plan task status matches dossier task status
+- Progress checklist percentages accurate
+- Phase completion state consistent
+- Execution log entry exists for updated task
+
+**Report** (JSON):
+```json
+{
+  \"violations\": [
+    {\"severity\": \"CRITICAL\", \"plan_task\": \"2.3\", \"plan_status\": \"[x]\", \"dossier_task\": \"T003\", \"dossier_status\": \"[ ]\", \"issue\": \"Status mismatch\", \"fix\": \"Sync statuses\"},
+    ...
+  ],
+  \"synchronized\": true/false
+}
+```
+"
+
+**Wait for All Validators**: Block until all 3 subagents complete.
+
+**Synthesize Validation Results**:
+After all validators complete:
+1. Collect all violations from D1, D2, D3
+2. Determine overall status:
+   - If **ZERO violations**: Proceed to Step D3 (Success Output)
+   - If **ANY violations**: Display detailed error report and ABORT
+
+**Error Output Format** (if violations found):
+```
+❌ Validation Failed - Progress Update Incomplete
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚨 Validation Violations Detected
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Footnote Violations:
+- [!] Footnote [^3] missing from dossier stubs
+- [!] Footnote numbers not synchronized
+
+Link Violations:
+- [!] Broken link: [📋](tasks/phase-2/execution.log.md#wrong-anchor)
+
+Status Violations:
+- [!] Plan shows [x] but dossier shows [~] for task 2.3
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GO BACK and complete Phase C steps that were missed.
+```
+
+✋ **STOP**: Do not proceed to Step D3 until ALL validators report ZERO violations.
 
 ---
 

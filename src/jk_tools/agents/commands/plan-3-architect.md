@@ -38,41 +38,168 @@ Inputs:
 
 ## PHASE 2: Research & Technical Discovery
 
-### Required Research Activities
-1. **Codebase Analysis**
-   - Search for existing patterns and conventions
-   - Identify integration points and dependencies
-   - Document current implementation approaches
+**IMPORTANT**: Use **parallel research subagents** for comprehensive and efficient discovery.
 
-2. **Technical Investigation**
-   - Identify critical technical challenges
-   - Research API limitations and gotchas
-   - Document framework-specific requirements
+**Strategy**: Launch 4 specialized research subagents (single message with 4 Task tool calls) to maximize discovery breadth and depth. Each subagent focuses on a specific domain, then results are synthesized into numbered discoveries.
 
-3. **Discovery Documentation**
-   Format discoveries as numbered entries (01, 02, 03...) for easy reference:
-   ```
-   ### 🚨 Critical Discovery 01: [Title]
-   **Problem**: [What doesn't work as expected]
-   **Root Cause**: [Why it happens]
-   **Solution**: [How to work around it]
-   **Example**:
-   ```[language]
-   // ❌ WRONG - [Why this fails]
-   [bad code example]
+### Parallel Research Architecture
 
-   // ✅ CORRECT - [Why this works]
-   [good code example]
-   ```
-   ```
+**Subagent 1: Codebase Pattern Analyst**
+"Discover existing patterns, conventions, and integration points.
 
-   Number discoveries sequentially (01, 02, 03...) to enable precise references in phase tasks (e.g., "per Critical Discovery 02").
+**Research Areas**:
+- Existing similar features/components and their implementation patterns
+- Naming conventions (file naming, class naming, function naming)
+- Directory structures and organization
+- Design patterns in use (factory, singleton, observer, etc.)
+- Integration points where new feature connects to existing systems
+- Code conventions (error handling, logging, testing styles)
+
+**Output**: 5-8 discoveries numbered S1-01 through S1-08 covering patterns, integration points, and conventions.
+
+**Format per discovery**:
+```markdown
+### Discovery S1-01: [Title]
+**Category**: Pattern | Integration | Convention
+**Impact**: Critical | High | Medium | Low
+**What**: [Concise description]
+**Why It Matters**: [How this affects implementation]
+**Example**:
+​```[language]
+// ❌ WRONG - [Why this violates pattern]
+[counter-example]
+
+// ✅ CORRECT - [Why this follows pattern]
+[good example from codebase]
+​```
+**Action Required**: [What implementation must do]
+```
+"
+
+**Subagent 2: Technical Investigator**
+"Identify technical constraints, API limitations, and framework-specific gotchas.
+
+**Research Areas**:
+- API limitations (rate limits, quotas, restrictions, version compatibility)
+- Framework gotchas (known bugs, common mistakes, performance bottlenecks)
+- Technical constraints (memory/CPU limits, query limits, file system limitations)
+- Security requirements (input validation, sanitization, CORS, CSP)
+
+**Output**: 5-8 discoveries numbered S2-01 through S2-08 covering API limits, framework gotchas, and constraints.
+
+**Format per discovery**:
+```markdown
+### Discovery S2-01: [Title]
+**Category**: API Limit | Framework Gotcha | Constraint
+**Impact**: Critical | High | Medium | Low
+**Problem**: [What doesn't work as expected or limitation exists]
+**Root Cause**: [Why this limitation exists]
+**Solution**: [How to work around it]
+**Example**:
+​```[language]
+// ❌ WRONG - [Why this fails due to limitation]
+[bad code example]
+
+// ✅ CORRECT - [Why this works around limitation]
+[good code example]
+​```
+**References**: [Links to docs, GitHub issues, Stack Overflow]
+```
+"
+
+**Subagent 3: Discovery Documenter**
+"Analyze spec for ambiguities, implications, and edge cases.
+
+**Research Areas**:
+- Spec ambiguities (unclear or underspecified requirements)
+- Implementation implications (performance, data migration, backward compatibility, security)
+- Edge cases and error scenarios (empty/null input, concurrent access, network failures)
+
+**Output**: 5-8 discoveries numbered S3-01 through S3-08 covering ambiguities, implications, and edge cases.
+
+**Format per discovery**:
+```markdown
+### Discovery S3-01: [Title]
+**Category**: Ambiguity | Implication | Edge Case
+**Impact**: Critical | High | Medium | Low
+**Spec Reference**: [Quote relevant spec section]
+**Issue**: [What is unclear, implication, or edge case]
+**Design Decision Required**: [What choice must be made]
+**Recommendation**: [Suggested approach with rationale]
+**Example**: [Scenario with code showing safe/unsafe approaches]
+```
+"
+
+**Subagent 4: Dependency Mapper**
+"Map module dependencies, architectural boundaries, and cross-cutting concerns.
+
+**Research Areas**:
+- Module dependencies (what feature depends on, what depends on it)
+- Architectural boundaries (layers, domains, cross-boundary communication)
+- Cross-cutting concerns (logging, error handling, auth, caching, metrics, config)
+
+**Output**: 5-8 discoveries numbered S4-01 through S4-08 covering dependencies, boundaries, and cross-cutting concerns.
+
+**Format per discovery**:
+```markdown
+### Discovery S4-01: [Title]
+**Category**: Dependency | Boundary | Cross-Cutting Concern
+**Impact**: Critical | High | Medium | Low
+**What**: [Describe dependency/boundary/concern]
+**Architectural Context**: [How this fits into system architecture]
+**Design Constraint**: [What this means for implementation]
+**Example**:
+​```[language]
+// ❌ VIOLATES BOUNDARY - [Why this breaks architectural rules]
+[bad code example]
+
+// ✅ RESPECTS BOUNDARY - [Why this follows architectural rules]
+[good code example]
+​```
+**Reference**: [Link to architecture.md, constitution.md, dependency docs]
+```
+"
+
+**Wait for All Researchers**: Block until all 4 subagents complete.
+
+### Synthesis Phase
+
+After all 4 subagents complete:
+1. **Collect All Discoveries**: Gather S1-01 through S4-08 (approximately 24-32 discoveries)
+2. **Deduplicate**: Merge overlapping findings (note sources: S1-03 + S2-05)
+3. **Renumber Sequentially**: Assign final discovery numbers 01, 02, 03, ..., NN
+   - Order by impact: Critical first, then High, then Medium, then Low
+   - Within each tier, order by implementation phase relevance
+4. **Format Final Discoveries**:
+
+```markdown
+### 🚨 Critical Discovery 01: [Title]
+**Impact**: Critical
+**Sources**: [S1-03, S2-05] (pattern analyst + technical investigator)
+**Problem**: [What doesn't work as expected]
+**Root Cause**: [Why this happens]
+**Solution**: [How to work around it or design for it]
+**Example**:
+​```[language]
+// ❌ WRONG - [Why this fails]
+[bad code example]
+
+// ✅ CORRECT - [Why this works]
+[good code example]
+​```
+**Action Required**: [What implementation must do]
+**Affects Phases**: [List phase numbers, e.g., Phase 3, Phase 5]
+```
 
 ### Research Output Requirements
-- Document at least 3-5 critical findings that affect implementation
-- Number each discovery sequentially for traceability
-- Include code examples for each finding
-- Specify impact on architecture/design decisions
+- Minimum 15-20 final discoveries (after deduplication)
+- At least 3-5 Critical discoveries
+- At least 5-8 High impact discoveries
+- All discoveries include code examples
+- All discoveries specify affected phases
+- Deduplication log showing which subagent findings were merged
+- Each final discovery references source subagent discoveries (e.g., "Sources: [S1-03, S4-02]")
+- If spec ambiguity discovered, note whether /plan-2-clarify should be re-run
 
 ## PHASE 3: Project Structure & Setup
 
