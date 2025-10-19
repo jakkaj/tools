@@ -111,18 +111,33 @@ $ARGUMENTS
    **For Hybrid**:
      - Check task annotation; apply Full TDD or Lightweight workflow accordingly
 
-   - **Update plan footnotes** (all approaches):
-     * In `PLAN` (the plan markdown), for each edited file/method, append a footnote in the **Change Footnotes Ledger**
-       using the exact substrate node-ID format and clickable links from `AGENTS.md`.
-     * In `PHASE_DOC`, ensure each task's Notes entry ends with the correct footnote tag (`[^N]`) mapped to that ledger entry—whether the IDs are `T###` or `ST###`. Maintain sequential, unique numbering across the dossier.
-
 4) Output (format adapts to Testing Strategy):
    - **Execution Log** -> write to `EXEC_LOG` (phase log or subtask-specific log):
-     * Full TDD: Concise per RED-GREEN-REFACTOR cycle entries
-     * TAD: Scratch exploration notes, promotion decisions with heuristic rationale, Test Doc blocks, learning notes
-     * Lightweight: Per-task validation test results and key verification points
-     * Manual: Manual verification steps executed and observed outcomes
-     * Hybrid: Mix of TDD cycles, TAD promotions, and validation results per task annotation
+     * Full TDD: Concise per RED-GREEN-REFACTOR cycle entries (include dossier task ID and plan task ID in metadata - see plan-6a log format)
+     * TAD: Scratch exploration notes, promotion decisions with heuristic rationale, Test Doc blocks, learning notes (include task IDs)
+     * Lightweight: Per-task validation test results and key verification points (include task IDs)
+     * Manual: Manual verification steps executed and observed outcomes (include task IDs)
+     * Hybrid: Mix of TDD cycles, TAD promotions, and validation results per task annotation (include task IDs)
+     * **CRITICAL**: Follow plan-6a execution log format with dossier task ID, plan task ID, and backlinks
+
+   - **Atomic Progress Update** (delegate to plan-6a - REQUIRED):
+     * **IMMEDIATELY** after writing each task entry to EXEC_LOG, delegate to plan-6a for atomic 3-location updates:
+       ```bash
+       /plan-6a-update-progress \
+         --phase "${PHASE_HEADING}" \
+         --plan "${PLAN}" \
+         --task "${TASK_ID}" \
+         --status "completed|in_progress|blocked" \
+         --changes "class:path:ClassName,method:path:ClassName.method,function:path:funcName,file:path"
+       ```
+     * This ensures:
+       - Dossier task table updated (Status + Notes + footnote)
+       - Plan task table updated (Status + Log + Notes + footnote)
+       - Both footnote ledgers synchronized
+       - Progress checklist updated
+     * **DO NOT** manually update task tables or footnotes; always delegate to plan-6a for consistency
+     * For subtask work, include `--subtask "${SUBTASK_KEY}"` flag in the plan-6a command
+
    - **Unified diffs** for all touched files.
    - **Commands & evidence** (runner output excerpts that prove acceptance criteria):
      * Full TDD/TAD/Lightweight: Test runner output (TAD includes promoted tests only, not scratch/)

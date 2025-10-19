@@ -158,7 +158,7 @@ $ARGUMENTS
    ```
 
    **Canonical tasks table layout** (all dossiers MUST follow this column order):
-   | Status | ID | Task | Type | Dependencies | Absolute Path(s) | Validation | Notes |
+   | Status | ID | Task | Type | Dependencies | Absolute Path(s) | Validation | Subtasks | Notes |
    - `Status` is a literal checkbox column; start each row with `[ ]` so later phases can update to `[~]` (in progress) or `[x]` (complete).
    - `ID` uses the T001… dossier sequence and should link back to the matching plan task when applicable (e.g., in notes or alignment brief).
    - `Task` summarizes the work item with sufficient detail for implementation.
@@ -166,11 +166,12 @@ $ARGUMENTS
    - `Dependencies` lists prerequisite task IDs (e.g., "T001, T002") or "–" for none.
    - `Absolute Path(s)` must list every impacted file or directory using absolute paths (REQUIRED - no relative paths).
    - `Validation` captures how acceptance or readiness will be confirmed.
+   - `Subtasks` lists spawned subtask dossiers (e.g., "001-subtask-fixtures, 003-subtask-bulk") or "–" for none. Updated by plan-5a when subtask is created.
    - `Notes` include [P] guidance and contextual references, but defer `[^N]` footnote tags until plan-6 updates the ledger.
 
 6) Write a single combined artifact `PHASE_DIR/tasks.md` containing:
    - Phase metadata (title, slug, links to SPEC and PLAN, today {{TODAY}}).
-   - `## Tasks` section that renders the table exactly as defined above (Status checkbox first, then ID, Task, Type, Dependencies, Absolute Path(s), Validation, Notes) with numbered items (T001...), dependencies, [P] guidance, and validation checklist coverage.
+   - `## Tasks` section that renders the table exactly as defined above (Status checkbox first, then ID, Task, Type, Dependencies, Absolute Path(s), Validation, Subtasks, Notes) with numbered items (T001...), dependencies, [P] guidance, and validation checklist coverage.
    - `## Alignment Brief` section with:
      * **Previous Phase Review** (if not Phase 1):
        - Include the complete subagent review output from step 1a here

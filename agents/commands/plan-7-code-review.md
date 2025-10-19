@@ -52,6 +52,56 @@ $ARGUMENTS
    - Parse `PHASE_DOC` to list target files for this phase; ensure the diff touches only those or justified neighbors.
    - If violations (files outside scope without justification in the alignment brief section of `PHASE_DOC` or EXEC_LOG), flag as HIGH.
 
+3a) Bidirectional Link Validation (CRITICAL for graph integrity)
+
+Cross-check that all FlowSpace graph edges are bidirectional and synchronized:
+
+**Task ↔ Log Validation:**
+- [ ] Every completed task in dossier (`PHASE_DOC` tasks table with status `[x]`) has `log#anchor` reference in Notes column
+- [ ] Every execution log entry (`EXEC_LOG`) has backlinks to both:
+  * Dossier task reference (e.g., `**Dossier Task**: T003` and `[View T003 in Dossier](./tasks.md#task-t003)`)
+  * Plan task reference (e.g., `**Plan Task**: 2.3` and `[View Task 2.3 in Plan](../../plan.md#task-23)`)
+- [ ] Log anchors in dossier Notes match actual log entry headings (kebab-case format)
+- **Violation Severity**: HIGH if any completed task missing log reference; HIGH if log entry missing dossier task ID
+
+**Task ↔ Footnote Validation:**
+- [ ] Every task with modified files (non-empty `Absolute Path(s)` column) has `[^N]` footnote tag in Notes column
+- [ ] Every footnote tag in dossier tasks table has corresponding entry in `PHASE_DOC` § Phase Footnote Stubs
+- [ ] Every footnote in dossier stubs has matching entry in `PLAN` § 12 Change Footnotes Ledger (same `[^N]` number, same content)
+- [ ] Footnote numbers are sequential and unique (no duplicates or gaps)
+- **Violation Severity**: CRITICAL if footnotes not synchronized between plan and dossier; HIGH if task missing footnote tag
+
+**Footnote ↔ File Validation:**
+- [ ] Every FlowSpace node ID in footnote ledgers points to a file that was actually modified (cross-check with diff)
+- [ ] Every FlowSpace node ID follows correct format: `(class|method|function|file|dynamic|external):<path>:<symbol>` or `file:<path>`
+- [ ] FlowSpace node IDs match actual code structure (verify class/method/function names exist in files)
+- [ ] If FlowSpace IDs embedded in source files (Step C3a of plan-6a), verify comments present and match footnote numbers
+- **Violation Severity**: HIGH if node ID points to non-existent file; MEDIUM if format invalid; LOW if embedded comments missing
+
+**Plan ↔ Dossier Task Table Synchronization:**
+- [ ] Every task in plan task table (PLAN § 8) has matching dossier task with same Status
+- [ ] Plan task Log column has `[📋]` link pointing to correct execution log anchor (matches dossier log reference)
+- [ ] Plan task Notes column includes footnote tag matching dossier Notes footnote
+- [ ] Plan task Status checkbox (`[ ]`/`[~]`/`[x]`/`[!]`) matches dossier task Status
+- **Violation Severity**: CRITICAL if plan and dossier status out of sync; HIGH if log links broken; HIGH if footnotes don't match
+
+**Parent ↔ Subtask Validation** (if subtasks exist):
+- [ ] If `PLAN` contains Subtasks Registry, verify each subtask has:
+  * Matching subtask dossier file in `PHASE_DIR`
+  * Parent task ID (T###) in subtask's Parent Context section
+  * Parent task in phase dossier has subtask listed in Subtasks column
+- [ ] Parent task Subtasks column lists all spawned subtasks (comma-separated)
+- [ ] Subtask status in registry matches subtask dossier completion state
+- **Violation Severity**: HIGH if parent→subtask link missing; MEDIUM if subtask→parent link missing
+
+**Violations Reporting:**
+If any bidirectional link is broken, report as finding with:
+- **Severity**: As specified above
+- **Issue**: Describe which link is broken (e.g., "Task T003 has [^3] but plan ledger missing [^3]")
+- **Expected**: Which command should have created it (e.g., "plan-6a should have added [^3] to both ledgers")
+- **Fix**: How to repair (e.g., "Run plan-6a-update-progress --task T003 --changes '...' to synchronize")
+- **Impact**: "Breaks graph traversability; cannot navigate from [X] to [Y]"
+
 4) Rules & doctrine gates (adapt to Testing Strategy)
    - Extract Testing Approach from step 2 (Full TDD | TAD | Lightweight | Manual | Hybrid)
    - Apply approach-specific validation:

@@ -130,8 +130,11 @@ Append the full TDD cycle to `${PHASE_DIR}/execution.log.md` (newest at bottom):
 
 ```markdown
 ## Task 2.3: Implement validation
+**Dossier Task**: T003
+**Plan Task**: 2.3
 **Plan Reference**: [Phase 2: Input Validation](../../${PLAN_NAME}#${PHASE_ANCHOR})
-**Task Table Entry**: [View Task 2.3 in Plan](../../${PLAN_NAME}#${TABLE_ANCHOR})
+**Dossier Reference**: [View T003 in Dossier](./tasks.md#task-t003)
+**Plan Task Entry**: [View Task 2.3 in Plan](../../${PLAN_NAME}#${TABLE_ANCHOR})
 **Status**: Completed
 **Started**: 2025-09-28 13:45:00
 **Completed**: 2025-09-28 14:30:00
@@ -169,6 +172,13 @@ Success: no issues found in 1 source file
 - XSS protection via input sanitization
 - All validators are pure functions (no side effects)
 
+### Footnotes Created:
+- [^3]: Validation functions (3 functions)
+- [^4]: Authentication flow updates (2 methods)
+- [^5]: Configuration changes (2 files)
+
+**Total FlowSpace IDs**: 7
+
 ### Blockers/Issues:
 None
 
@@ -191,8 +201,11 @@ Append entries to `${PHASE_DIR}/${SUBTASK_KEY}.execution.log.md`:
 
 ```markdown
 ## ST002: Create sanitized fixtures
+**Dossier Task**: ST002
+**Parent Task**: T003 (Plan Task 2.3)
 **Plan Reference**: [Phase 2: Input Validation](../../${PLAN_NAME}#${PHASE_ANCHOR})
-**Parent Dossier**: [View ST002](./${SUBTASK_KEY}.md#${TASK_ANCHOR})
+**Subtask Dossier**: [View ST002](./${SUBTASK_KEY}.md#${TASK_ANCHOR})
+**Parent Dossier**: [View T003](./tasks.md#task-t003)
 **Status**: In Progress
 **Started**: 2025-10-02 09:10:00
 **Updated**: 2025-10-02 10:05:00
@@ -402,6 +415,120 @@ Use the same format and same `[^N]` numbers as in the plan ledger.
 `external:requests:post` (if documenting external API usage)
 
 ✋ **CHECKPOINT C3**: Confirm BOTH footnote ledgers updated with matching `[^N]` entries.
+
+---
+
+### Step C3a: Embed FlowSpace IDs in Source Files (Recommended)
+
+**Purpose**: Enable **File → Task** bidirectional graph traversal by embedding FlowSpace IDs as comments in modified source files.
+
+This step completes the bidirectional linkage:
+- **Task → File**: Already established via footnote ledger (Step C3)
+- **File → Task**: Established by embedding FlowSpace ID comments in source code
+
+**When to embed**:
+- After updating footnote ledgers (Step C3)
+- For all files referenced in `--changes` flag
+- Any time you modify a class, method, function, or file
+
+**Format by Language**:
+
+#### Python
+```python
+# FlowSpace: [^3] function:src/validators.py:validate_email
+def validate_email(email: str) -> bool:
+    """Validate email format per RFC 5322."""
+    ...
+
+# FlowSpace: [^4] class:src/auth/service.py:AuthService
+class AuthService:
+    """Authentication service with token validation."""
+
+    # FlowSpace: [^4] method:src/auth/service.py:AuthService.authenticate
+    def authenticate(self, credentials: dict) -> Token:
+        """Authenticate user and return token."""
+        ...
+```
+
+#### TypeScript/JavaScript
+```typescript
+// FlowSpace: [^3] function:src/validators.ts:validateEmail
+export function validateEmail(email: string): boolean {
+    ...
+}
+
+// FlowSpace: [^4] class:src/auth/service.ts:AuthService
+export class AuthService {
+    // FlowSpace: [^4] method:src/auth/service.ts:AuthService.authenticate
+    authenticate(credentials: Credentials): Token {
+        ...
+    }
+}
+```
+
+#### Java
+```java
+// FlowSpace: [^4] class:src/main/java/com/app/auth/AuthService.java:AuthService
+public class AuthService {
+    // FlowSpace: [^4] method:src/main/java/com/app/auth/AuthService.java:AuthService.authenticate
+    public Token authenticate(Credentials credentials) {
+        ...
+    }
+}
+```
+
+#### Rust
+```rust
+// FlowSpace: [^3] function:src/validators.rs:validate_email
+pub fn validate_email(email: &str) -> bool {
+    ...
+}
+```
+
+**Placement Rules**:
+
+1. **Functions/Methods**: Immediately before the function/method definition (after docstring/JSDoc if present)
+2. **Classes**: Immediately before class declaration
+3. **File-level changes**: At top of file (after imports, before first symbol)
+
+**Multiple Footnotes (Chronological)**:
+
+If a symbol was modified across multiple tasks, append footnotes chronologically:
+
+```python
+# FlowSpace: [^3] [^7] [^12] function:src/utils.py:parse_date
+def parse_date(date_str: str) -> datetime:
+    """Parse date string - modified in tasks 2.3, 3.2, 4.1."""
+    ...
+```
+
+This shows the complete modification history: task 2.3 created it, task 3.2 modified it, task 4.1 modified it again.
+
+**Graph Traversal Benefit**:
+
+With embedded FlowSpace IDs, you can:
+
+1. **From file → Find all tasks that ever modified it**:
+   - Open `src/validators.py`
+   - See `# FlowSpace: [^3] [^7]`
+   - Look up `[^3]` in plan.md § 12 → "Task 2.3"
+   - Look up `[^7]` in plan.md § 12 → "Task 3.2"
+
+2. **From task → Find all files it modified**:
+   - Already established via footnote ledger in Step C3
+
+3. **Complete bidirectional graph**:
+   - Task ↔ File (via footnotes)
+   - Task ↔ Log (via anchor references)
+   - File ↔ Log (via task as intermediary)
+
+**Implementation Notes**:
+
+- Embedding is **recommended but not required** for this command to succeed
+- If skipped, File → Task traversal requires searching footnote ledgers manually
+- Future enhancement: `--embed-ids` flag to automate embedding via code editing tools
+
+✋ **CHECKPOINT C3a** (optional): If embedding FlowSpace IDs, verify comments added to all modified files.
 
 ---
 

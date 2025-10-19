@@ -402,15 +402,46 @@ If Constitution/Architecture deviations exist:
 
 #### 11. Change Footnotes Ledger
 
-**NOTE**: This section will be populated during implementation by plan-6.
+**NOTE**: This section will be populated during implementation by plan-6a-update-progress.
 
+**Footnote Numbering Authority**: plan-6a-update-progress is the **single source of truth** for footnote numbering across the entire plan.
+
+**Allocation Strategy**:
+- plan-6a reads the current ledger and determines the next available footnote number
+- Footnote numbers are sequential and shared across all phases and subtasks (e.g., [^1], [^2], [^3]...)
+- Each invocation of plan-6a increments the counter and updates BOTH ledgers (plan and dossier) atomically
+- Footnotes are never manually assigned; always delegated to plan-6a for consistency
+
+**Format**:
+```markdown
+[^N]: Task {plan-task-id} - {one-line summary}
+  - `{flowspace-node-id}`
+  - `{flowspace-node-id}`
+```
+
+**Example Template**:
 ```markdown
 ## Change Footnotes Ledger
 
-During implementation, footnote tags from task Notes will be added here with details per AGENTS.md:
+[^1]: Task 2.3 - Added validation function
+  - `function:src/validators/input_validator.py:validate_user_input`
+  - `function:src/validators/input_validator.py:sanitize_input`
 
-[^1]: [To be added during implementation]
-[^2]: [To be added during implementation]
+[^2]: Task 2.3 - Updated authentication flow
+  - `method:src/auth/service.py:AuthService.authenticate`
+  - `method:src/auth/service.py:AuthService.validate_token`
+
+[^3]: Task 2.4 - Configuration changes
+  - `file:config/settings.py`
+  - `file:config/validators.json`
+```
+
+**Initial State** (before implementation begins):
+```markdown
+## Change Footnotes Ledger
+
+[^1]: [To be added during implementation via plan-6a]
+[^2]: [To be added during implementation via plan-6a]
 ...
 ```
 
@@ -639,6 +670,271 @@ docs/how/
 - Number all phases and tasks consistently
 - Use checkboxes for status tracking
 - Provide absolute paths (no relative paths)
+
+---
+
+## Appendix A: Anchor Naming Conventions
+
+All deep links in the FlowSpace provenance graph use kebab-case anchors for consistency and reliability.
+
+### Phase Anchors
+**Format**: `phase-{number}-{slug}`
+**Example**: `phase-2-input-validation`
+
+Generated from: "Phase 2: Input Validation"
+
+### Task Anchors (Plan)
+**Format**: `task-{number}-{slug}` (use plan task number like "23" for task 2.3)
+**Example**: `task-23-implement-validation`
+
+Generated from: Task 2.3 with name "Implement validation"
+Note: Use the flattened number (2.3 → 23) for uniqueness
+
+### Task Anchors (Dossier)
+**Format**: `task-{id}-{slug}` (use T-ID like "t003")
+**Example**: `task-t003-implement-validation`
+
+Generated from: Dossier task T003 with name "Implement validation"
+Note: Includes "t" prefix to distinguish from plan task anchors
+
+### Table Anchors
+**Format**: `tasks-{approach}-approach` (based on testing approach)
+**Examples**:
+- `tasks-full-tdd-approach`
+- `tasks-tad-approach`
+- `tasks-lightweight-approach`
+- `tasks-manual-approach`
+- `tasks-hybrid-approach`
+
+Generated from: Testing approach specified in plan § 6 Testing Strategy
+
+### Subtask Anchors
+**Format**: `{ordinal}-subtask-{slug}`
+**Example**: `003-subtask-bulk-import-fixtures`
+
+Generated from: Subtask ordinal (003) + slugified name
+
+### Slugification Rules
+
+**Algorithm** (used by plan-5, plan-5a, plan-6a):
+1. Convert to lowercase
+2. Replace spaces with hyphens
+3. Replace non-alphanumeric characters (except hyphens) with hyphens
+4. Collapse multiple consecutive hyphens to single hyphen
+5. Trim leading and trailing hyphens
+
+**Command**:
+```bash
+ANCHOR=$(echo "${INPUT}" | tr ' ' '-' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//')
+```
+
+**Examples**:
+- "Phase 2: Input Validation" → `phase-2-input-validation`
+- "Task 2.3: Implement Validation" → `task-23-implement-validation` (plan) or `task-t003-implement-validation` (dossier)
+- "Full TDD Approach" → `tasks-full-tdd-approach`
+- "003-subtask-bulk import_fixtures!" → `003-subtask-bulk-import-fixtures`
+
+### Anchor Stability
+
+**IMPORTANT**: Once anchors are created and referenced, they should not change. Modifying task names or phase titles should NOT break existing deep links.
+
+**Best Practice**: If a task name must change after implementation begins:
+1. Keep the original anchor unchanged
+2. Update only the visible heading text
+3. Verify all deep links still resolve correctly
+
+---
+
+## Appendix B: Graph Traversal Guide
+
+The FlowSpace planning system creates a **bidirectional provenance graph** connecting tasks, logs, files, and footnotes. This guide shows how to navigate the graph in all directions.
+
+### Graph Node Types
+
+1. **Plan Tasks** - Tasks in plan.md § 8 (numbered 2.3, 4.1, etc.)
+2. **Dossier Tasks** - Tasks in `tasks/phase-N/tasks.md` (numbered T001, T002, ST001, etc.)
+3. **Execution Log Entries** - In `tasks/phase-N/execution.log.md`
+4. **Modified Files** - Source code, docs, configs with embedded FlowSpace IDs
+5. **Footnotes** - In plan.md § 11 and dossier § Phase Footnote Stubs
+
+### Navigation Patterns
+
+#### From Task → Everything
+
+**Starting Point**: Dossier task T003 in `tasks/phase-2/tasks.md`
+
+1. **Find execution log entries**:
+   - Look in Notes column for: `log#task-23-implement-validation`
+   - Open: `tasks/phase-2/execution.log.md#task-23-implement-validation`
+   - View implementation notes, test results, timing, and decisions
+
+2. **Find modified files**:
+   - Look in Absolute Path(s) column: `/abs/path/to/validators.py, /abs/path/to/auth.py`
+   - Look in Notes column for footnote: `[^3]`
+   - Jump to footnote ledger (bottom of tasks.md or plan.md § 11)
+   - Read FlowSpace node IDs:
+     * `function:src/validators.py:validate_email`
+     * `method:src/auth/service.py:AuthService.authenticate`
+   - Open files and navigate to specific symbols
+
+3. **Find plan task**:
+   - Look in Notes column for: "Supports plan task 2.3"
+   - Open: `../../plan.md#task-23-implement-validation`
+   - View plan-level task details and acceptance criteria
+
+4. **Find subtasks** (if any):
+   - Look in Subtasks column: `001-subtask-fixtures, 003-subtask-bulk`
+   - Open: `tasks/phase-2/001-subtask-fixtures.md`
+   - View subtask dossier and ST### tasks
+
+#### From File → Tasks
+
+**Starting Point**: Source file `src/validators.py`
+
+1. **Find embedded FlowSpace ID comments**:
+   ```python
+   # FlowSpace: [^3] [^7] [^12] function:src/validators.py:validate_email
+   def validate_email(email: str) -> bool:
+       ...
+   ```
+   - Note footnote numbers: `[^3]`, `[^7]`, `[^12]`
+   - These represent all tasks that ever modified this function
+
+2. **Look up footnotes in plan**:
+   - Open: `plan.md` § 11 Change Footnotes Ledger
+   - Find: `[^3]: Task 2.3 - Added validation function`
+   - Find: `[^7]: Task 3.2 - Enhanced email validation`
+   - Find: `[^12]: Task 4.1 - Added internationalization support`
+
+3. **Navigate to tasks**:
+   - From footnote, note task IDs: "2.3", "3.2", "4.1"
+   - Open plan tasks: `plan.md#task-23`, `plan.md#task-32`, `plan.md#task-41`
+   - Or navigate to dossier tasks via plan task links
+
+**Result**: Complete modification history showing which tasks touched this file and why
+
+#### From Execution Log → Task → Files
+
+**Starting Point**: Log entry in `execution.log.md`
+
+1. **Read log metadata**:
+   ```markdown
+   ## Task 2.3: Implement validation
+   **Dossier Task**: T003
+   **Plan Task**: 2.3
+   **Plan Reference**: [Phase 2: Input Validation](../../plan.md#phase-2-input-validation)
+   **Dossier Reference**: [View T003 in Dossier](./tasks.md#task-t003)
+   **Plan Task Entry**: [View Task 2.3 in Plan](../../plan.md#task-23-implement-validation)
+   ```
+
+2. **Navigate to tasks**:
+   - Click dossier link → `tasks.md#task-t003`
+   - Click plan link → `plan.md#task-23-implement-validation`
+   - View task details, dependencies, validation criteria
+
+3. **From task, find modified files**:
+   - Check Absolute Path(s) column for direct file paths
+   - Check Notes column for footnote: `[^3]`
+   - Look up `[^3]` in footnote ledger
+   - Get FlowSpace node IDs for specific symbols
+   - Open files and navigate to symbols
+
+#### From Footnote → Everything
+
+**Starting Point**: Footnote `[^3]` in plan.md § 11
+
+1. **Read footnote content**:
+   ```markdown
+   [^3]: Task 2.3 - Added validation function
+     - `function:src/validators/input_validator.py:validate_user_input`
+     - `function:src/validators/input_validator.py:sanitize_input`
+     - `function:src/validators/input_validator.py:validate_email_format`
+   ```
+
+2. **Navigate to task**:
+   - Note task ID: "2.3"
+   - Open: `plan.md#task-23-implement-validation`
+   - View task acceptance criteria and status
+
+3. **Navigate to files**:
+   - Extract file path from FlowSpace IDs: `src/validators/input_validator.py`
+   - Open file
+   - Search for embedded FlowSpace ID comments with `[^3]`
+   - Navigate to specific functions
+
+4. **Navigate to execution log**:
+   - From task, find log reference: `log#task-23-implement-validation`
+   - Open: `tasks/phase-2/execution.log.md#task-23-implement-validation`
+   - View implementation details and test results
+
+#### From Subtask → Parent Task
+
+**Starting Point**: Subtask dossier `tasks/phase-2/001-subtask-fixtures.md`
+
+1. **Read Parent Context section**:
+   ```markdown
+   ## Parent Context
+   **Parent Task(s):** [T003: Implement validation](../tasks.md#task-t003)
+   **Plan Task(s):** [2.3: Implement validation](../../plan.md#task-23-implement-validation)
+   **Why This Subtask:** Test fixtures needed before implementing validation...
+   ```
+
+2. **Navigate to parent**:
+   - Click parent dossier link → `tasks.md#task-t003`
+   - Click plan task link → `plan.md#task-23-implement-validation`
+   - View parent task context
+
+3. **Check resumption status**:
+   - In plan.md, find Subtasks Registry
+   - Locate row for `001-subtask-fixtures`
+   - Check Status: `[x] Complete` or `[ ] Pending`
+
+#### From Parent Task → Subtasks
+
+**Starting Point**: Dossier task T003 in `tasks/phase-2/tasks.md`
+
+1. **Check Subtasks column**:
+   - Look for: `001-subtask-fixtures, 003-subtask-bulk`
+   - Note: comma-separated list of subtask IDs
+
+2. **Navigate to subtask dossiers**:
+   - Open: `tasks/phase-2/001-subtask-fixtures.md`
+   - Open: `tasks/phase-2/003-subtask-bulk.md`
+   - View subtask tasks (ST### format) and alignment brief
+
+3. **Check subtask status in registry**:
+   - Open: `plan.md` § Subtasks Registry
+   - Find rows for subtasks
+   - Check completion status
+
+### Common Traversal Scenarios
+
+**Scenario 1: "Which tasks modified this file?"**
+- Open file → Find FlowSpace ID comments → Extract footnote numbers → Look up in plan § 11 → Get task IDs
+
+**Scenario 2: "What did task 2.3 actually change?"**
+- Open plan.md#task-23 → Check footnote in Notes → Look up in § 11 → Get FlowSpace node IDs → Open files
+
+**Scenario 3: "Why was this function added?"**
+- Open file → Find FlowSpace ID with footnote → Look up footnote → Get task ID → Open log entry → Read "Why" and rationale
+
+**Scenario 4: "What's the history of this class?"**
+- Open file → Find FlowSpace ID with multiple footnotes (e.g., `[^3] [^7] [^12]`) → Look up each footnote → Get chronological task list
+
+**Scenario 5: "Is this subtask blocking the parent task?"**
+- Open parent task → Check Subtasks column → Open subtask → Check status → Review Subtasks Registry
+
+### Graph Integrity
+
+All edges are **bidirectional**. If you can go from A→B, you can also go from B→A:
+- Task ↔ Log (via log#anchor references and task metadata in logs)
+- Task ↔ File (via footnotes and embedded FlowSpace IDs)
+- Task ↔ Footnote (via Notes column and footnote task references)
+- Plan Task ↔ Dossier Task (via "Supports plan task X.Y" and task correlation)
+- Parent Task ↔ Subtask (via Subtasks column and Parent Context section)
+
+**Validation**: Run `/plan-7-code-review` to verify all bidirectional links are intact and synchronized.
+
 ```
 
 Next step (when happy): Run **/plan-4-complete-the-plan** to validate readiness.

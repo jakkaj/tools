@@ -159,7 +159,23 @@ $ARGUMENTS
    - The "reason" should match the "Why This Subtask" captured in Parent Context section.
    - Status starts as `[ ] Pending`; plan-6 will update to `[x] Complete` when all ST### tasks finish.
 
-STOP once the subtask dossier is generated and registry is updated. Await human GO before implementation.
+8) Update parent task's Subtasks column (bidirectional link):
+   - Open parent dossier: `${PHASE_DIR}/tasks.md`
+   - Locate parent task row (T${XXX}) in the tasks table
+   - Update the `Subtasks` column:
+     * If column currently shows "–" (no subtasks), replace with: `${ORD}-subtask-${SUBTASK_SLUG}`
+     * If column already has subtasks (comma-separated list), append: `, ${ORD}-subtask-${SUBTASK_SLUG}`
+   - Example transformation:
+     ```markdown
+     Before:
+     | [~] | T003 | Implement validation | Core | T001 | /abs/path | Tests pass | – | Supports plan task 2.3 |
+
+     After:
+     | [~] | T003 | Implement validation | Core | T001 | /abs/path | Tests pass | 001-subtask-fixtures | Supports plan task 2.3 |
+     ```
+   - This enables bidirectional graph traversal: parent task → subtasks AND subtask → parent task
+
+STOP once the subtask dossier is generated, registry is updated, and parent task is linked. Await human GO before implementation.
 ```
 
 Why this exists: Subtasks add structured planning for mid-phase branches without exploding the main dossier. They inherit critical context while allowing fine-grained execution tracking.
