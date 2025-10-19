@@ -97,10 +97,11 @@ class SetupManager:
 
             # If executing a shell script, wrap with bash -p (privileged mode)
             # -p tells bash to ignore BASH_ENV and ENV completely
+            # NOTE: Long options must come BEFORE short options for bash 3.2 compatibility
             if cmd and cmd[0].endswith('.sh'):
                 script = cmd[0]
                 args = cmd[1:]
-                cmd = ["/bin/bash", "-p", "--noprofile", "--norc", script, *args]
+                cmd = ["/bin/bash", "--noprofile", "--norc", "-p", script, *args]
 
             result = subprocess.run(
                 cmd,

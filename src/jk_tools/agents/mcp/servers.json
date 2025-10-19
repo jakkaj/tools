@@ -27,7 +27,7 @@
     ],
     "env": {
       "PERPLEXITY_API_KEY": "${PERPLEXITY_API_KEY}",
-      "PERPLEXITY_MODEL": "${PERPLEXITY_MODEL}"
+      "PERPLEXITY_TIMEOUT_MS": "2000000"
     }
   },
   "_browser-use-disabled": {
