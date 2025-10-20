@@ -220,6 +220,11 @@ class SetupManager:
 
     def get_installers(self) -> List[Path]:
         """Get list of installer scripts in the correct order"""
+        # TODO: Phase 2+ - Replace bash script installers with Python CodingToolsInstaller
+        # from install.coding_tools_installer import CodingToolsInstaller
+        # installer = CodingToolsInstaller(console=console, update_mode=update_mode)
+        # installer.run()
+
         if not self.install_path.exists():
             return []
 
