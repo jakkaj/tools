@@ -88,9 +88,24 @@ class SetupManager:
             # Create clean environment to prevent BASH_ENV and other startup file interference
             # Remove BASH_ENV and ENV entirely, AND use bash -p (privileged mode)
             # See: https://www.gnu.org/software/bash/manual/bash.html
-            clean_env = {k: v for k, v in os.environ.items() if k not in ("BASH_ENV", "ENV")}
-            clean_env.pop("PROMPT_COMMAND", None)     # Sometimes abused
-            clean_env.pop("CDPATH", None)             # Avoid cd surprises
+
+            # Filter out problematic environment variables that could interfere with bash
+            # This includes both bash-specific and zsh-specific variables
+            problematic_vars = {
+                "BASH_ENV",      # Bash startup file for non-interactive shells
+                "ENV",           # POSIX shell startup file
+                "PROMPT_COMMAND",# Sometimes abused to run code before prompts
+                "CDPATH",        # Causes cd to search multiple directories
+                "BASH_FUNC_*",   # Exported bash functions (shellshock-related)
+                "ZDOTDIR",       # Zsh config directory (shouldn't affect bash, but be safe)
+            }
+
+            clean_env = {}
+            for k, v in os.environ.items():
+                # Skip problematic variables and bash function exports
+                if k in problematic_vars or k.startswith("BASH_FUNC_"):
+                    continue
+                clean_env[k] = v
 
             # Add Cargo to PATH
             clean_env["PATH"] = f"{os.environ.get('HOME', '')}/.cargo/bin:{os.environ.get('PATH', '')}"
@@ -120,7 +135,12 @@ class SetupManager:
         """Get version from a command, handling different output formats"""
         try:
             # Use clean environment (same as _run_command)
-            clean_env = {k: v for k, v in os.environ.items() if k not in ("BASH_ENV", "ENV")}
+            problematic_vars = {"BASH_ENV", "ENV", "PROMPT_COMMAND", "CDPATH", "ZDOTDIR"}
+            clean_env = {}
+            for k, v in os.environ.items():
+                if k in problematic_vars or k.startswith("BASH_FUNC_"):
+                    continue
+                clean_env[k] = v
             clean_env["PATH"] = f"{os.environ.get('HOME', '')}/.cargo/bin:{os.environ.get('PATH', '')}"
 
             result = subprocess.run(
