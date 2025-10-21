@@ -1,22 +1,4 @@
 {
-  "serena": {
-    "type": "local",
-    "enabled": true,
-    "command": "uvx",
-    "args": [
-      "--from",
-      "git+https://github.com/oraios/serena",
-      "serena",
-      "start-mcp-server",
-      "--context",
-      "ide-assistant",
-      "--project",
-      ".",
-      "--enable-web-dashboard",
-      "False"
-    ],
-    "env": {}
-  },
   "perplexity": {
     "type": "local",
     "enabled": true,
