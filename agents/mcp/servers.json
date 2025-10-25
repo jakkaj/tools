@@ -11,20 +11,5 @@
       "PERPLEXITY_API_KEY": "${PERPLEXITY_API_KEY}",
       "PERPLEXITY_TIMEOUT_MS": "2000000"
     }
-  },
-  "_browser-use-disabled": {
-    "type": "local",
-    "enabled": false,
-    "command": "uvx",
-    "args": [
-      "mcp-server-browser-use@latest"
-    ],
-    "env": {
-      "MCP_LLM_OPENROUTER_API_KEY": "${OPENROUTER_API_KEY}",
-      "MCP_LLM_PROVIDER": "openrouter",
-      "MCP_LLM_MODEL_NAME": "openai/gpt-5-mini",
-      "MCP_BROWSER_HEADLESS": "true",
-      "MCP_AGENT_TOOL_USE_VISION": "false"
-    }
   }
 }
