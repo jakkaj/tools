@@ -307,15 +307,22 @@ Ensure the log entry includes the same task anchor you will reference in the dos
 
 ## PHASE C: Atomic 3-Location Update (REQUIRED - ALL STEPS)
 
+⚡ **YOU LAUNCH SUBAGENTS IN THIS PHASE**
+
 **This phase is MANDATORY and updates all three locations atomically.**
 
-You MUST complete ALL three steps below for every task update. Missing any step = incomplete execution.
+You MUST complete ALL four steps below for every task update. Missing any step = incomplete execution.
 
-### Step C1: Update Dossier Task Table (TARGET_DOC)
+**IMPORTANT - YOU MUST LAUNCH**: After Phase B completes, **YOU** launch 3 parallel updater subagents (single message with 3 Task tool calls) to update all locations concurrently.
 
-**Location:** `TARGET_DOC` (either `tasks.md` or subtask file)
+**Strategy**: Launch 3 updaters in parallel - each handles one step independently.
 
-Update the relevant task row to mirror the new status:
+**Subagent C1: Dossier Updater**
+"Update the dossier task table.
+
+**Location:** `${TARGET_DOC}` (either `tasks.md` or subtask file)
+
+**Task**: Update the relevant task row to mirror the new status:
 
 #### For Phase Dossier (`tasks.md`):
 
@@ -363,13 +370,16 @@ After:
 | [~] | ST002 | Create sanitized fixtures | Core | ST001 | /abs/path | Fixtures generated | Supports T003 · log#task-st002-create-sanitized-fixtures [^8] |
 ```
 
-✋ **CHECKPOINT C1**: Confirm TARGET_DOC task table updated before proceeding to Step C2.
+**Report** (confirmation):
+`Dossier task table updated: ${TASK_ID} status set to ${STATUS}, footnote [^${N}] added`
+"
 
 ---
 
-### Step C2: Update Parent Plan Task Table (PLAN)
+**Subagent C2: Plan Updater**
+"Update the parent plan task table.
 
-**Location:** `PLAN` (the main `plan.md` file)
+**Location:** `${PLAN}` (the main `plan.md` file)
 
 **CRITICAL:** This step is often forgotten. You MUST update the plan.md task table.
 
@@ -421,17 +431,21 @@ If the plan uses **embedded task tables** (tasks within phase sections, not sepa
 
 Do not leave any column with `-` or empty when marking complete.
 
-✋ **CHECKPOINT C2**: Confirm PLAN task table row updated before proceeding to Step C3.
+**Report** (confirmation):
+`Plan task table updated: task ${PLAN_TASK_ID} status set to ${STATUS}, log link added, footnote [^${N}] added`
+"
 
 ---
 
-### Step C3: Generate Flowspace Node ID Footnotes (Both Ledgers)
+**Subagent C3: Footnote & Progress Updater**
+"Update both footnote ledgers AND the progress checklist.
 
 **Locations:**
-1. `PLAN` § 12 Change Footnotes Ledger
-2. `TARGET_DOC` § Phase Footnote Stubs
+1. `${PLAN}` § 12 Change Footnotes Ledger
+2. `${TARGET_DOC}` § Phase Footnote Stubs
+3. `${PLAN}` § 11 Progress Checklist
 
-**CRITICAL:** You must update BOTH footnote ledgers with the same `[^N]` number.
+**CRITICAL:** You must update BOTH footnote ledgers with the same `[^N]` number AND update the progress checklist.
 
 Parse the `--changes` input to create properly formatted footnotes using the next available footnote number from Step A2.
 
@@ -602,13 +616,13 @@ With embedded FlowSpace IDs, you can:
 - If skipped, File → Task traversal requires searching footnote ledgers manually
 - Future enhancement: `--embed-ids` flag to automate embedding via code editing tools
 
-✋ **CHECKPOINT C3a** (optional): If embedding FlowSpace IDs, verify comments added to all modified files.
+✋ **Checkpoint C3a** (optional): If embedding FlowSpace IDs, verify comments added to all modified files.
 
 ---
 
-### Step C4: Update Phase Progress Checklist (PLAN)
+#### Update Phase Progress Checklist
 
-**Location:** `PLAN` § 11 Progress Checklist
+**Location:** `${PLAN}` § 11 Progress Checklist
 
 After completing a task, update the phase completion percentage:
 
@@ -651,7 +665,13 @@ Overall Progress: 1.75/4 phases (44%)
    - "IN PROGRESS (100%)" → "COMPLETE"
    - Recalculate overall progress
 
-✋ **CHECKPOINT C4**: Confirm Progress Checklist updated before proceeding to validation.
+**Report** (confirmation):
+`Footnotes added to both ledgers: [^${N}] with ${COUNT} FlowSpace IDs. Progress checklist updated: phase at ${PERCENTAGE}%`
+"
+
+**Wait for the 3 updater subagents YOU just launched**: Block until all 3 subagents complete (C1: Dossier, C2: Plan, C3: Footnotes+Progress).
+
+✋ **CHECKPOINT C**: Confirm ALL THREE locations updated (dossier table, plan table, both footnote ledgers + progress checklist) before proceeding to validation.
 
 ---
 
