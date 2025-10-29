@@ -57,6 +57,22 @@ Test Doc:
 - **No logs/prints:** Encode expectations in assertions and comments
 - **Cross-link:** Reference spec/ADR/issue IDs where relevant
 
+## Two Kinds of Tests
+
+### Scratch Tests (Development Tools - Temporary)
+- **Purpose**: Fast feedback during coding - RUN them repeatedly to validate isolated code
+- **Lifespan**: Temporary - most will be DELETED after implementation
+- **Documentation**: None required - they're throwaway exploration tools
+- **Expected count**: 10-20 per feature during development
+- **Value**: High-fidelity loop that validates code WITHOUT running entire project
+
+### Promoted Tests (Documentation - Permanent)
+- **Purpose**: Teach future developers how code works
+- **Lifespan**: Permanent - will stay in codebase and run in CI
+- **Documentation**: Full Test Doc comment blocks required (all 5 fields)
+- **Expected count**: 1-2 per feature (typically 5-10% of scratch tests)
+- **Value**: "Pay rent" via comprehension - must be critical/opaque/regression-prone/edge cases
+
 ## Scratch → Promote Workflow
 
 ### 1) Write Probes in `tests/scratch/`
@@ -65,14 +81,22 @@ Test Doc:
 - Don't worry about coverage or quality yet
 - **Exclude from CI** (via .gitignore or test runner config)
 
-### 2) Implement iteratively
-- Code and scratch tests evolve together
-- Use probes to validate each step
-- Refine understanding as you go
+### 2) Run-Implement-Fix Loop (THE CORE VALUE OF TAD)
+- **Write** a scratch test for small isolated behavior
+- **RUN** the test (expect failure - RED)
+- **Write** minimal code to make it pass
+- **RUN** test again (expect success - GREEN)
+- **Refactor** if needed, re-run test to verify
+- **REPEAT** for next behavior
+- This tight loop validates isolated code WITHOUT running entire project
+- Expected: 10-20 scratch tests written during this phase
+- Most of these tests will be DELETED later - they're dev tools, not documentation
 
-### 3) Promote valuable tests
-- When behavior stabilizes, identify tests worth keeping
-- Apply **CORE heuristic**: Critical path, Opaque behavior, Regression-prone, Edge case
+### 3) Promote valuable tests (VERY SELECTIVE)
+- When behavior stabilizes, identify tests worth keeping (typically 1-2 per feature)
+- **Most scratch tests are DELETED** - they're temporary development tools
+- Apply **CORE heuristic ruthlessly**: Critical path, Opaque behavior, Regression-prone, Edge case
+- Expected promotion rate: 5-10% (if you wrote 15 scratch tests, promote ~1-2)
 - Move to `tests/unit/` or `tests/integration/`
 
 ### 4) Add Test Doc blocks
@@ -94,10 +118,11 @@ Test Doc:
 ## What to Produce (when implementing a feature)
 
 1. **Scratch probes** in `tests/scratch/` that isolate the behavior
-2. **Implementation** informed by iterative probe refinement
-3. **Promotion plan:** Which probes to promote/delete using CORE heuristic
-4. **Promoted tests** with complete Test Doc comment blocks
-5. **Learning notes:** Brief summary of exploration insights (in execution log)
+2. **Execution evidence**: Show test runs, RED→GREEN cycles, iteration counts
+3. **Implementation** informed by iterative probe refinement
+4. **Promotion plan:** Which probes to promote/delete using CORE heuristic (expect ~5-10% promotion rate)
+5. **Promoted tests** (typically 1-2) with complete Test Doc comment blocks
+6. **Learning notes:** Brief summary of exploration insights (in execution log)
 
 ## Example Workflow
 
@@ -204,12 +229,13 @@ def test_given_iso_date_and_aud_totals_when_parsing_then_returns_normalized_cent
 
 ## Remember
 
+- **RUN scratch tests repeatedly during development** – this is the core value of TAD
+- **DELETE most scratch tests** – they're development tools, not documentation (90-95% deletion rate)
+- **Promote only 1-2 tests per feature** – use CORE heuristic ruthlessly (5-10% promotion rate)
 - **Tests are executable documentation** – optimize for the next developer's understanding
-- **Keep only what enforces a contract or teaches something important** – delete the rest
 - **Quality over coverage** – every promoted test must "pay rent" via comprehension value
-- **Be smart about TDD** – test-first when it adds value, not dogmatically
 - **Scratch is temporary** – it's a thinking space, not the final product
-- **Promotion is selective** – use the CORE heuristic ruthlessly
+- **The fast feedback loop is everything** – RUN tests to validate isolated code without running entire project
 
 ## When to Use TAD
 

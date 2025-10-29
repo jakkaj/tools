@@ -47,21 +47,30 @@ $ARGUMENTS
         - Apply mock policy from spec (typically "avoid mocks"; use real repo data/fixtures)
 
       **TAD (Test-Assisted Development)**:
-        - Scratch → Promote cycle per task:
+        - Scratch → RUN → Promote cycle per task:
           1. Create/use tests/scratch/ directory (exclude from CI if not already)
           2. Write probe tests to explore behavior (fast iteration, no documentation needed)
-          3. Implement code iteratively, refining with scratch probes
-          4. When behavior stabilizes, identify valuable tests using promotion heuristic:
+          3. **RUN scratch tests REPEATEDLY** during implementation (RED→GREEN cycle):
+             * Write scratch test for small isolated behavior
+             * RUN test (expect failure - RED)
+             * Write minimal code to pass test
+             * RUN test again (expect success - GREEN)
+             * Refactor if needed, re-run test
+             * REPEAT for next behavior
+             * This tight loop validates isolated code WITHOUT running entire project
+          4. Implement code iteratively, refining with scratch probes after each test run
+          5. When behavior stabilizes, identify valuable tests using promotion heuristic (expect ~5-10% promotion rate):
              * Keep if: Critical path, Opaque behavior, Regression-prone, or Edge case
-          5. Promote valuable tests to tests/unit/ or tests/integration/
-          6. Add Test Doc comment block to each promoted test (required fields):
+             * **Most scratch tests are DELETED** - they're temporary development tools
+          6. Promote valuable tests (typically 1-2 per feature) to tests/unit/ or tests/integration/
+          7. Add Test Doc comment block to each promoted test (required fields):
              - Why: business/bug/regression reason (1-2 lines)
              - Contract: plain-English invariant(s) this test asserts
              - Usage Notes: how to call/configure the API; gotchas
              - Quality Contribution: what failure this will catch; link to issue/PR/spec
              - Worked Example: inputs/outputs summarized for scanning
-          7. Delete scratch probes that don't add durable value
-          8. Document learning notes from scratch exploration in execution log
+          8. Delete scratch probes that don't add durable value (expect to delete 90-95%)
+          9. Document learning notes from scratch exploration in execution log
         - Test naming: "Given...When...Then..." format (e.g., `test_given_iso_date_when_parsing_then_returns_normalized_cents`)
         - Promoted tests must be deterministic without network/sleep/flakes (performance requirements from spec)
         - Apply mock policy from spec to promoted tests only
@@ -97,9 +106,10 @@ $ARGUMENTS
      - After each RED-GREEN-REFACTOR cycle: record Test -> expected fail excerpt -> code change summary -> pass excerpt -> refactor note
 
    **For TAD**:
-     - After scratch exploration: record probe tests written, behavior explored, insights gained
+     - During scratch exploration: record test runs (RED→GREEN cycles), iteration counts, timing
+     - After scratch exploration: record probe tests written (count), runs executed, behavior explored, insights gained
      - After implementation: record code changes, how scratch probes informed design
-     - After promotion: record which tests promoted, promotion rationale (heuristic applied), Test Doc blocks added
+     - After promotion: record which tests promoted (typically 1-2), promotion ratio (e.g., "2 of 15 = 13% promoted"), promotion rationale (heuristic applied), Test Doc blocks added
      - After cleanup: record which scratch tests deleted, learning notes preserved
 
    **For Lightweight**:

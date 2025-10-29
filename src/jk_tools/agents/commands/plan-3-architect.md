@@ -336,13 +336,21 @@ Documentation phases should include:
 ### Test-Assisted Development (TAD) (if applicable)
 [Include if TAD selected]
 - Tests are executable documentation optimized for developer comprehension
-- **Scratch → Promote workflow**:
+- **Scratch → RUN → Promote workflow**:
   1. Write probe tests in tests/scratch/ to explore/iterate (fast, excluded from CI)
-  2. Implement code iteratively, refining behavior with scratch probes
-  3. When behavior stabilizes, promote valuable tests to tests/unit/ or tests/integration/
-  4. Add Test Doc comment contract to each promoted test (required fields below)
-  5. Delete scratch probes that don't add durable value; keep learning notes in PR
-- **Promotion heuristic**: Keep if Critical path, Opaque behavior, Regression-prone, or Edge case
+  2. **RUN scratch tests repeatedly** in tight feedback loop (RED→GREEN cycle):
+     * Write scratch test for small isolated behavior
+     * RUN test (expect failure - RED)
+     * Write minimal code to pass test
+     * RUN test again (expect success - GREEN)
+     * Refactor if needed, re-run test
+     * REPEAT for next behavior
+     * This high-fidelity loop validates isolated code WITHOUT running entire project
+  3. Implement code iteratively, refining behavior after each test run
+  4. When behavior stabilizes, promote valuable tests (typically 1-2 per feature, ~5-10% promotion rate) to tests/unit/ or tests/integration/
+  5. Add Test Doc comment contract to each promoted test (required fields below)
+  6. Delete scratch probes that don't add durable value (expect to delete 90-95%); keep learning notes in PR
+- **Promotion heuristic (apply ruthlessly)**: Keep if Critical path, Opaque behavior, Regression-prone, or Edge case
 - **Test naming format**: "Given...When...Then..." (e.g., `test_given_iso_date_when_parsing_then_returns_normalized_cents`)
 - **Test Doc comment block** (required for every promoted test):
   ```
@@ -415,12 +423,13 @@ For **TAD (Test-Assisted Development)** approach:
 | #   | Status | Task | Success Criteria | Log | Notes |
 |-----|--------|------|------------------|-----|-------|
 | N.1 | [ ] | Create tests/scratch/ directory | Directory exists, excluded from CI config | - | Ensure .gitignore or CI config excludes tests/scratch/ |
-| N.2 | [ ] | Write scratch probes for [component] | 3-5 probe tests exploring behavior | - | Fast iteration, no Test Doc blocks needed |
-| N.3 | [ ] | Implement [component] iteratively | Core functionality works, refined with probes | - | Interleave code and scratch test updates |
-| N.4 | [ ] | Promote valuable tests to tests/unit/ | 2-3 tests moved with Test Doc blocks added | - | Apply heuristic: Critical path, Opaque behavior, Regression-prone, Edge case |
-| N.5 | [ ] | Add Test Doc comment blocks | All promoted tests have Why/Contract/Usage/Quality/Example | - | Required 5 fields per promoted test |
-| N.6 | [ ] | Delete non-valuable scratch tests | Only promoted tests remain in main suite | - | Keep learning notes in execution log/PR |
-| N.7 | [ ] | Verify CI exclusion of scratch/ | CI config explicitly excludes tests/scratch/ | - | |
+| N.2 | [ ] | Write scratch probes for [component] | 10-15 probe tests exploring behavior | - | Fast iteration, no Test Doc blocks needed |
+| N.3 | [ ] | Run-Implement-Fix loop for [component] | 10-20 test runs showing RED→GREEN cycles | - | RUN tests repeatedly, validate isolated behavior |
+| N.4 | [ ] | Complete implementation | Core functionality works, all scratch tests pass | - | Code refined through iterative testing |
+| N.5 | [ ] | Promote valuable tests to tests/unit/ | 1-2 tests moved (~5-10% of scratch tests) with Test Doc blocks added | - | Apply heuristic ruthlessly: Critical path, Opaque behavior, Regression-prone, Edge case |
+| N.6 | [ ] | Add Test Doc comment blocks | All promoted tests have Why/Contract/Usage/Quality/Example | - | Required 5 fields per promoted test |
+| N.7 | [ ] | Delete non-valuable scratch tests | 90-95% of scratch tests deleted, only promoted tests remain in main suite | - | Keep learning notes in execution log/PR |
+| N.8 | [ ] | Verify CI exclusion of scratch/ | CI config explicitly excludes tests/scratch/ | - | |
 
 For **Lightweight** approach:
 | #   | Status | Task | Success Criteria | Log | Notes |

@@ -4,7 +4,19 @@ description: Update plan progress with task status, flowspace node ID footnotes,
 
 # plan-6a-update-progress
 
-Using a subagent - Update the plan's progress tracking, footnotes ledger with flowspace node IDs, and maintain detailed task execution log for either the primary phase dossier or a scoped subtask dossier.
+**You execute this using subagents** - Update the plan's progress tracking, footnotes ledger with flowspace node IDs, and maintain detailed task execution log for either the primary phase dossier or a scoped subtask dossier.
+
+## ⚠️ CRITICAL: You Must Launch the Subagents Yourself
+
+**This slash command expands a prompt - it does NOT auto-launch subagents.**
+
+When you invoke `/plan-6a-update-progress`:
+1. The SlashCommand tool expands this markdown into your context
+2. **YOU must launch the Task tool calls described below**
+3. **YOU execute this work BY USING subagents** (not waiting for auto-execution)
+4. The command does NOT run automatically
+
+**Do not wait - YOU must invoke the Task tools yourself.**
 
 ## ⚠️ CRITICAL: This Command Updates THREE Locations
 
@@ -90,9 +102,11 @@ Resolve all file paths before starting updates:
 
 ### Step A2: Load Current State (Parallel Readers)
 
-**IMPORTANT**: Use **parallel subagent readers** for faster state loading.
+⚡ **YOU LAUNCH SUBAGENTS IN THIS STEP**
 
-**Strategy**: Launch 3 parallel readers (single message with 3 Task tool calls) to load state from all three locations concurrently.
+**IMPORTANT - YOU MUST LAUNCH**: Use **parallel subagent readers** for faster state loading.
+
+**Strategy**: **YOU** launch 3 parallel readers (single message with 3 Task tool calls) to load state from all three locations concurrently.
 
 **Subagent A1: Plan Reader**
 "Load plan-level state and metadata.
@@ -158,7 +172,7 @@ Resolve all file paths before starting updates:
 ```
 "
 
-**Wait for All Readers**: Block until all 3 subagents complete.
+**Wait for the 3 subagents YOU just launched**: Block until all 3 subagents complete.
 
 **Synthesize State**:
 After all readers complete:
@@ -645,11 +659,13 @@ Overall Progress: 1.75/4 phases (44%)
 
 ### Step D1: Pre-Output Verification (Parallel Validators)
 
-**IMPORTANT**: Use **parallel subagent validators** for comprehensive verification.
+⚡ **YOU LAUNCH SUBAGENTS IN THIS STEP**
 
-**REQUIRED:** Before displaying success message, launch 3 parallel validators to verify ALL updates were completed correctly.
+**IMPORTANT - YOU MUST LAUNCH**: Use **parallel subagent validators** for comprehensive verification.
 
-**Strategy**: Launch 3 validators (single message with 3 Task tool calls) to check different aspects concurrently.
+**REQUIRED:** Before displaying success message, **YOU** launch 3 parallel validators to verify ALL updates were completed correctly.
+
+**Strategy**: **YOU** launch 3 validators (single message with 3 Task tool calls) to check different aspects concurrently.
 
 **Subagent D1: Footnote Validator**
 "Verify footnote synchronization and format.
@@ -727,7 +743,7 @@ Overall Progress: 1.75/4 phases (44%)
 ```
 "
 
-**Wait for All Validators**: Block until all 3 subagents complete.
+**Wait for the 3 validator subagents YOU just launched**: Block until all 3 subagents complete.
 
 **Synthesize Validation Results**:
 After all validators complete:
