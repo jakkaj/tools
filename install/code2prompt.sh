@@ -3,7 +3,7 @@
 # Install code2prompt via cargo
 # Requires Rust/Cargo to be installed first
 
-set -e
+# set -e  # Disabled to allow proper error handling and prevent killing parent process
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 

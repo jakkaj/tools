@@ -6,7 +6,7 @@
 # Usage: agents.sh [--clear-mcp]
 #   --clear-mcp: Clear all existing MCP servers before installing new ones
 
-set -e
+# set -e  # Disabled to allow proper error handling and prevent killing parent process
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "${SCRIPT_DIR}")"

@@ -4,7 +4,7 @@
 # Works on macOS and Linux
 # https://github.com/casey/just
 
-set -e
+# set -e  # Disabled to allow proper error handling and prevent killing parent process
 
 print_status() {
     echo "[*] $1"

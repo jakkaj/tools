@@ -3,7 +3,7 @@
 # Install OpenCode - Terminal coding agent
 # Works on macOS and Linux
 
-set -e
+# set -e  # Disabled to allow proper error handling and prevent killing parent process
 
 OPENCODE_METHOD=""
 OPENCODE_INSTALLED="no"
