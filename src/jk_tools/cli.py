@@ -72,7 +72,8 @@ Examples:
         manager = SetupManager(resource_root=args.dev_mode)
         manager.clear_mcp = args.clear_mcp
         manager.commands_local = args.commands_local
-        manager.local_dir = args.local_dir if args.local_dir else None
+        if args.local_dir:
+            manager.local_dir = args.local_dir
         manager.run(update_mode=args.update)
     except KeyboardInterrupt:
         console.print("\n[yellow]Setup interrupted by user[/yellow]")

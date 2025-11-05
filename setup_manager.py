@@ -73,7 +73,7 @@ class SetupManager:
         # Optional flags (set by main())
         self.clear_mcp = False
         self.commands_local = ""
-        self.local_dir = os.getcwd()
+        self.local_dir = str(Path.cwd())
 
     def _detect_os(self) -> str:
         """Detect the operating system"""
@@ -527,7 +527,8 @@ def main():
         manager = SetupManager()
         manager.clear_mcp = args.clear_mcp
         manager.commands_local = args.commands_local
-        manager.local_dir = args.local_dir
+        if args.local_dir:
+            manager.local_dir = args.local_dir
         manager.run(update_mode=args.update)
     except KeyboardInterrupt:
         console.print("\n[yellow]Setup interrupted by user[/yellow]")
