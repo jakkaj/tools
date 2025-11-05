@@ -27,6 +27,9 @@ Examples:
   # Clear old MCP servers and install fresh
   jk-tools-setup --clear-mcp
 
+  # Install commands locally to project
+  jk-tools-setup --commands-local claude,opencode
+
   # Use local development version
   jk-tools-setup --dev-mode /path/to/tools
         """
@@ -42,6 +45,20 @@ Examples:
         help="Clear all existing MCP servers before installing new ones"
     )
     parser.add_argument(
+        "--commands-local",
+        type=str,
+        default="",
+        metavar="CLIS",
+        help="Install commands locally to project directory (comma-separated: claude,opencode,ghcp,codex)"
+    )
+    parser.add_argument(
+        "--local-dir",
+        type=str,
+        default="",
+        metavar="PATH",
+        help="Target directory for local commands (default: current directory)"
+    )
+    parser.add_argument(
         "--dev-mode",
         type=Path,
         metavar="PATH",
@@ -54,6 +71,8 @@ Examples:
         # Create manager with optional dev mode path
         manager = SetupManager(resource_root=args.dev_mode)
         manager.clear_mcp = args.clear_mcp
+        manager.commands_local = args.commands_local
+        manager.local_dir = args.local_dir if args.local_dir else None
         manager.run(update_mode=args.update)
     except KeyboardInterrupt:
         console.print("\n[yellow]Setup interrupted by user[/yellow]")
