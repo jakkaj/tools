@@ -335,15 +335,41 @@ Documentation phases should include:
 
 ### Test-Assisted Development (TAD) (if applicable)
 [Include if TAD selected]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#### ⚠️ TEST EXECUTION REQUIREMENT (MANDATORY FOR TAD)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**TAD is not possible without executing tests repeatedly.**
+
+Implementers MUST:
+- **RUN** scratch tests after writing them (RED phase)
+- **RUN** tests after each code change (GREEN phase)
+- **RUN** tests after refactoring (verification)
+- Provide test execution output as evidence
+- Demonstrate 10-20+ RED→GREEN cycles per feature
+
+```bash
+# Example Python test execution
+pytest tests/scratch/test_feature.py -v --tb=short
+
+# Example TypeScript test execution
+npm test tests/scratch/test-feature.test.ts
+```
+
+**Success criteria must include**: "Test runner output shows X RED→GREEN cycles"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 - Tests are executable documentation optimized for developer comprehension
 - **Scratch → RUN → Promote workflow**:
   1. Write probe tests in tests/scratch/ to explore/iterate (fast, excluded from CI)
-  2. **RUN scratch tests repeatedly** in tight feedback loop (RED→GREEN cycle):
+  2. **🔴🟢 RUN scratch tests repeatedly** in tight feedback loop (RED→GREEN cycle):
      * Write scratch test for small isolated behavior
-     * RUN test (expect failure - RED)
+     * **RUN test** (expect failure - RED) ← **EXECUTE WITH TEST RUNNER**
      * Write minimal code to pass test
-     * RUN test again (expect success - GREEN)
-     * Refactor if needed, re-run test
+     * **RUN test again** (expect success - GREEN) ← **EXECUTE WITH TEST RUNNER**
+     * Refactor if needed, **re-run test**
      * REPEAT for next behavior
      * This high-fidelity loop validates isolated code WITHOUT running entire project
   3. Implement code iteratively, refining behavior after each test run
@@ -424,7 +450,7 @@ For **TAD (Test-Assisted Development)** approach:
 |-----|--------|------|------------------|-----|-------|
 | N.1 | [ ] | Create tests/scratch/ directory | Directory exists, excluded from CI config | - | Ensure .gitignore or CI config excludes tests/scratch/ |
 | N.2 | [ ] | Write scratch probes for [component] | 10-15 probe tests exploring behavior | - | Fast iteration, no Test Doc blocks needed |
-| N.3 | [ ] | Run-Implement-Fix loop for [component] | 10-20 test runs showing RED→GREEN cycles | - | RUN tests repeatedly, validate isolated behavior |
+| N.3 | [ ] | **RUN-Implement-Fix loop** for [component] | **Test runner output shows 10-20 RED→GREEN cycles** | - | **MUST EXECUTE**: pytest/npm test commands run repeatedly, paste output as evidence |
 | N.4 | [ ] | Complete implementation | Core functionality works, all scratch tests pass | - | Code refined through iterative testing |
 | N.5 | [ ] | Promote valuable tests to tests/unit/ | 1-2 tests moved (~5-10% of scratch tests) with Test Doc blocks added | - | Apply heuristic ruthlessly: Critical path, Opaque behavior, Regression-prone, Edge case |
 | N.6 | [ ] | Add Test Doc comment blocks | All promoted tests have Why/Contract/Usage/Quality/Example | - | Required 5 fields per promoted test |

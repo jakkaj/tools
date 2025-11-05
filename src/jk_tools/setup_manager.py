@@ -70,6 +70,11 @@ class SetupManager:
         self.os_type = self._detect_os()
         self.results: List[InstallResult] = []
 
+        # Optional flags (set by main())
+        self.clear_mcp = False
+        self.commands_local = ""
+        self.local_dir = os.getcwd()
+
     def _detect_os(self) -> str:
         """Detect the operating system"""
         system = platform.system()
@@ -289,6 +294,12 @@ class SetupManager:
         if name == "agents" and hasattr(self, 'clear_mcp') and self.clear_mcp:
             cmd.append("--clear-mcp")
 
+        # Add --commands-local flags for agents installer if requested
+        if name == "agents" and hasattr(self, 'commands_local') and self.commands_local:
+            cmd.extend(["--commands-local", self.commands_local])
+            if hasattr(self, 'local_dir'):
+                cmd.extend(["--local-dir", self.local_dir])
+
         # Run the installer
         returncode, stdout, stderr = self._run_command(cmd, timeout=300)
 
@@ -495,12 +506,28 @@ def main():
         action="store_true",
         help="Clear all existing MCP servers before installing new ones"
     )
+    parser.add_argument(
+        "--commands-local",
+        type=str,
+        default="",
+        metavar="CLIS",
+        help="Install commands locally to project directory (comma-separated: claude,opencode,ghcp,codex)"
+    )
+    parser.add_argument(
+        "--local-dir",
+        type=str,
+        default=os.getcwd(),
+        metavar="PATH",
+        help="Target directory for local commands (default: current directory)"
+    )
 
     args = parser.parse_args()
 
     try:
         manager = SetupManager()
         manager.clear_mcp = args.clear_mcp
+        manager.commands_local = args.commands_local
+        manager.local_dir = args.local_dir
         manager.run(update_mode=args.update)
     except KeyboardInterrupt:
         console.print("\n[yellow]Setup interrupted by user[/yellow]")

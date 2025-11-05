@@ -47,17 +47,26 @@ $ARGUMENTS
         - Apply mock policy from spec (typically "avoid mocks"; use real repo data/fixtures)
 
       **TAD (Test-Assisted Development)**:
-        - Scratch → RUN → Promote cycle per task:
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        ⚠️ **CRITICAL**: You MUST execute tests repeatedly
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        - Scratch → **RUN** → Promote cycle per task:
           1. Create/use tests/scratch/ directory (exclude from CI if not already)
           2. Write probe tests to explore behavior (fast iteration, no documentation needed)
-          3. **RUN scratch tests REPEATEDLY** during implementation (RED→GREEN cycle):
+          3. **🔴🟢 RUN scratch tests REPEATEDLY** during implementation (RED→GREEN cycle):
              * Write scratch test for small isolated behavior
-             * RUN test (expect failure - RED)
+             * **RUN test** with test runner (expect failure - RED)
+               ```bash
+               pytest tests/scratch/test_feature.py -v  # Python
+               npm test tests/scratch/  # JavaScript/TypeScript
+               ```
              * Write minimal code to pass test
-             * RUN test again (expect success - GREEN)
-             * Refactor if needed, re-run test
-             * REPEAT for next behavior
+             * **RUN test again** (expect success - GREEN)
+             * Refactor if needed, **re-run test**
+             * REPEAT for next behavior (10-20+ cycles expected)
              * This tight loop validates isolated code WITHOUT running entire project
+             * **Show test execution output** as evidence of RED→GREEN cycles
           4. Implement code iteratively, refining with scratch probes after each test run
           5. When behavior stabilizes, identify valuable tests using promotion heuristic (expect ~5-10% promotion rate):
              * Keep if: Critical path, Opaque behavior, Regression-prone, or Edge case
@@ -106,11 +115,13 @@ $ARGUMENTS
      - After each RED-GREEN-REFACTOR cycle: record Test -> expected fail excerpt -> code change summary -> pass excerpt -> refactor note
 
    **For TAD**:
-     - During scratch exploration: record test runs (RED→GREEN cycles), iteration counts, timing
+     - **MANDATORY**: Include test execution output showing RED→GREEN cycles
+     - During scratch exploration: record test runs (RED→GREEN cycles), iteration counts, timing, **paste test runner output**
      - After scratch exploration: record probe tests written (count), runs executed, behavior explored, insights gained
      - After implementation: record code changes, how scratch probes informed design
      - After promotion: record which tests promoted (typically 1-2), promotion ratio (e.g., "2 of 15 = 13% promoted"), promotion rationale (heuristic applied), Test Doc blocks added
      - After cleanup: record which scratch tests deleted, learning notes preserved
+     - **Evidence checklist**: ✓ Test failures shown, ✓ Test passes shown, ✓ Multiple RED→GREEN cycles demonstrated
 
    **For Lightweight**:
      - After implementing functionality: write validation test -> run test -> record pass/fail -> document key verification points

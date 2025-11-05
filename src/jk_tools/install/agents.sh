@@ -3,8 +3,10 @@
 # Install agent commands and MCP server configs for Claude CLI, OpenCode CLI, Codex CLI, and VS Code
 # This script also syncs all source files to the distribution package (src/jk_tools/)
 #
-# Usage: agents.sh [--clear-mcp]
+# Usage: agents.sh [OPTIONS]
 #   --clear-mcp: Clear all existing MCP servers before installing new ones
+#   --commands-local <clis>: Install commands locally (comma-separated: claude,opencode,ghcp,codex)
+#   --local-dir <path>: Target directory for local commands (default: current directory)
 
 # set -e  # Disabled to allow proper error handling and prevent killing parent process
 
@@ -16,10 +18,24 @@ MCP_SOURCE="${REPO_ROOT}/agents/mcp/servers.json"
 
 # Parse command line arguments
 CLEAR_MCP=false
-for arg in "$@"; do
-    case $arg in
+COMMANDS_LOCAL=""
+LOCAL_DIR="${PWD}"
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
         --clear-mcp)
             CLEAR_MCP=true
+            shift
+            ;;
+        --commands-local)
+            COMMANDS_LOCAL="$2"
+            shift 2
+            ;;
+        --local-dir)
+            LOCAL_DIR="$2"
+            shift 2
+            ;;
+        *)
             shift
             ;;
     esac
@@ -62,6 +78,10 @@ print_success() {
 
 print_error() {
     echo "[✗] $1" >&2
+}
+
+print_warning() {
+    echo "[⚠] $1"
 }
 
 generate_mcp_configs() {
@@ -447,7 +467,133 @@ PYTHON
     return $?
 }
 
+install_local_commands() {
+    local cli_list="$1"
+    local target_dir="$2"
+
+    echo "======================================"
+    echo "   Local Commands Installation        "
+    echo "======================================"
+    echo ""
+    print_status "Installing commands locally to: ${target_dir}"
+    print_status "Target CLIs: ${cli_list}"
+    echo ""
+
+    # Check if source directory exists
+    if [ ! -d "${SOURCE_DIR}" ]; then
+        print_error "Source directory not found: ${SOURCE_DIR}"
+        exit 1
+    fi
+
+    # Count files to copy
+    file_count=$(find "${SOURCE_DIR}" -maxdepth 1 -name "*.md" -type f | wc -l | tr -d ' ')
+
+    if [ "${file_count}" -eq 0 ]; then
+        print_error "No .md files found in ${SOURCE_DIR}"
+        exit 1
+    fi
+
+    print_status "Found ${file_count} command file(s) to copy"
+    echo ""
+
+    # Claude
+    if [[ "$cli_list" == *"claude"* ]]; then
+        local claude_dir="${target_dir}/.claude/commands"
+        mkdir -p "${claude_dir}"
+        print_status "Installing Claude commands to ${claude_dir}"
+
+        for file in "${SOURCE_DIR}"/*.md; do
+            if [ -f "${file}" ]; then
+                filename=$(basename "${file}")
+                cp "${file}" "${claude_dir}/${filename}"
+                echo "  [↻] ${filename}"
+            fi
+        done
+
+        print_success "Installed ${file_count} commands to ${claude_dir}"
+        echo ""
+    fi
+
+    # OpenCode
+    if [[ "$cli_list" == *"opencode"* ]]; then
+        local opencode_dir="${target_dir}/.opencode/command"
+        mkdir -p "${opencode_dir}"
+        print_status "Installing OpenCode commands to ${opencode_dir}"
+
+        for file in "${SOURCE_DIR}"/*.md; do
+            if [ -f "${file}" ]; then
+                filename=$(basename "${file}")
+                cp "${file}" "${opencode_dir}/${filename}"
+                echo "  [↻] ${filename}"
+            fi
+        done
+
+        print_success "Installed ${file_count} commands to ${opencode_dir}"
+        echo ""
+    fi
+
+    # GitHub Copilot
+    if [[ "$cli_list" == *"ghcp"* ]]; then
+        local ghcp_dir="${target_dir}/.github/prompts"
+        mkdir -p "${ghcp_dir}"
+        print_status "Installing GitHub Copilot prompts to ${ghcp_dir}"
+
+        for file in "${SOURCE_DIR}"/*.md; do
+            if [ -f "${file}" ]; then
+                filename=$(basename "${file}")
+                prompt_name="${filename%.md}.prompt.md"
+                cp "${file}" "${ghcp_dir}/${prompt_name}"
+                echo "  [↻] ${filename} -> ${prompt_name}"
+            fi
+        done
+
+        print_success "Installed ${file_count} prompts to ${ghcp_dir}"
+        print_status "Note: Use paperclip icon in IDE to attach .prompt.md files"
+        echo ""
+    fi
+
+    # Codex (warn not supported)
+    if [[ "$cli_list" == *"codex"* ]]; then
+        echo ""
+        print_warning "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        print_warning "Codex does not support local/project commands"
+        print_warning "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        print_status "Codex only supports global commands at ~/.codex/prompts/"
+        print_status "This is a known limitation (GitHub issue #4734)"
+        print_status ""
+        print_status "Workarounds:"
+        print_status "  1. Use global commands only (current setup)"
+        print_status "  2. Set CODEX_HOME=\$(pwd)/.codex/ per project"
+        print_status "  3. Use third-party tool: cx-prompts (hardlinks)"
+        echo ""
+    fi
+
+    echo "======================================"
+    print_success "Local commands installation complete!"
+    echo ""
+    echo "Commands installed to:"
+    if [[ "$cli_list" == *"claude"* ]]; then
+        echo "  ${target_dir}/.claude/commands/ (${file_count} files)"
+    fi
+    if [[ "$cli_list" == *"opencode"* ]]; then
+        echo "  ${target_dir}/.opencode/command/ (${file_count} files)"
+    fi
+    if [[ "$cli_list" == *"ghcp"* ]]; then
+        echo "  ${target_dir}/.github/prompts/ (${file_count} .prompt.md files)"
+    fi
+    echo ""
+    print_status "Tip: Commit these directories to version control to share with team"
+    echo "======================================"
+}
+
 main() {
+    # If --commands-local is provided, ONLY install commands locally (no MCP, no global)
+    if [ -n "$COMMANDS_LOCAL" ]; then
+        install_local_commands "$COMMANDS_LOCAL" "$LOCAL_DIR"
+        exit 0
+    fi
+
+    # Default behavior: Global installation with MCP setup
     echo "======================================"
     echo "     Agent Commands Setup Script      "
     echo "======================================"

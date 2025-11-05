@@ -140,6 +140,89 @@ To add a new agent command:
    - `~/.config/github-copilot/prompts/my-new-command.prompt.md`
    - `src/jk_tools/agents/commands/my-new-command.md` (for distribution)
 
+### Installing Commands Locally (Project-Specific)
+
+By default, commands are installed globally (user home directory). You can also install commands locally to a project directory for version control and team sharing:
+
+#### Global Installation (Default)
+```bash
+# Installs to ~/.claude/commands, ~/.config/opencode/command, etc.
+uvx jk-tools
+./setup.sh
+```
+
+#### Local Installation (Project-Specific)
+```bash
+# Install commands locally to current directory
+uvx jk-tools --commands-local claude,opencode,ghcp
+
+# Install to specific directory
+uvx jk-tools --commands-local claude --local-dir ~/my-project
+```
+
+#### Supported Local Paths
+
+| CLI Tool | Local Directory | Auto-Discovery | Status |
+|----------|----------------|----------------|--------|
+| **Claude Code** | `.claude/commands/` | ✅ Yes | ✅ Fully supported |
+| **OpenCode** | `.opencode/command/` | ✅ Yes | ✅ Fully supported |
+| **GitHub Copilot** | `.github/prompts/*.prompt.md` | ⚠️ Manual attach | ✅ Supported |
+| **Codex** | N/A | ❌ No | ❌ Not supported |
+
+#### Local Installation Behavior
+
+**What gets installed:**
+- ✅ Command/prompt files ONLY
+- ❌ NO MCP server configuration
+- ❌ NO global setup
+- ❌ NO other tools installation
+
+**Example:**
+```bash
+# Only installs commands to .claude/commands/ in current directory
+uvx jk-tools --commands-local claude
+
+# Result:
+# ./
+# └── .claude/
+#     └── commands/
+#         ├── plan-0-constitution.md
+#         ├── plan-1-specify.md
+#         ├── tad.md
+#         └── ... (14 command files)
+```
+
+#### GitHub Copilot Notes
+
+- Files are renamed with `.prompt.md` extension (e.g., `tad.md` → `tad.prompt.md`)
+- Use the paperclip icon in your IDE to attach prompts
+- Alternatively, create `.github/copilot-instructions.md` for auto-loaded instructions
+
+#### Codex Limitation
+
+Codex does not currently support project-local commands (requested feature: GitHub issue #4734).
+
+**Workarounds:**
+1. Use global commands only: `~/.codex/prompts/`
+2. Set per-project: `CODEX_HOME=$(pwd)/.codex/`
+3. Use third-party tool: [cx-prompts](https://github.com/Hotion13/cx-prompts)
+
+#### Version Control
+
+Local commands can be committed to git for team sharing:
+
+```bash
+# Add local commands to git
+git add .claude/commands/
+git add .opencode/command/
+git add .github/prompts/
+
+git commit -m "Add local AI CLI commands"
+git push
+```
+
+Team members will automatically have access to project-specific commands after cloning.
+
 ### Adding New Tools
 
 To add a new tool to the repository:

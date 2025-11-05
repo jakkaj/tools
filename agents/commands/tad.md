@@ -6,6 +6,33 @@ description: Test-Assisted Development (TAD) workflow guide for LLM coding agent
 
 You are practicing **Test-Assisted Development (TAD)** with "tests as documentation."
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## ⚠️ CRITICAL ACTION: **RUN** Tests Repeatedly
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**TAD requires executing tests throughout development**:
+
+```bash
+# Python example
+pytest tests/scratch/test_your_feature.py -v
+
+# TypeScript/JavaScript example
+npm test tests/scratch/test-your-feature.test.ts
+
+# Run continuously during implementation
+npm test -- --watch
+```
+
+**You MUST**:
+1. **RUN** scratch tests after writing them (expect RED)
+2. **RUN** tests again after implementation changes (expect GREEN)
+3. **RUN** tests after refactoring (verify still GREEN)
+4. **REPEAT** this RED→GREEN cycle 10-20+ times per feature
+
+**If you are not running tests, you are not doing TAD.**
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 ## Goal
 
 - Use tests as a fast execution harness to explore/iterate
@@ -81,16 +108,25 @@ Test Doc:
 - Don't worry about coverage or quality yet
 - **Exclude from CI** (via .gitignore or test runner config)
 
-### 2) Run-Implement-Fix Loop (THE CORE VALUE OF TAD)
-- **Write** a scratch test for small isolated behavior
-- **RUN** the test (expect failure - RED)
-- **Write** minimal code to make it pass
-- **RUN** test again (expect success - GREEN)
-- **Refactor** if needed, re-run test to verify
-- **REPEAT** for next behavior
-- This tight loop validates isolated code WITHOUT running entire project
-- Expected: 10-20 scratch tests written during this phase
-- Most of these tests will be DELETED later - they're dev tools, not documentation
+### 2) **RUN-Implement-Fix Loop** (THE CORE VALUE OF TAD)
+
+**THIS IS THE MOST IMPORTANT STEP - YOU MUST EXECUTE TESTS**:
+
+1. **Write** a scratch test for small isolated behavior
+2. **🔴 RUN the test** → expect failure (RED)
+   ```bash
+   pytest tests/scratch/test_feature.py -v  # Python
+   npm test tests/scratch/test-feature.test.ts  # JS/TS
+   ```
+3. **Write** minimal code to make it pass
+4. **🟢 RUN test again** → expect success (GREEN)
+5. **Refactor** if needed, **re-run test** to verify
+6. **REPEAT** for next behavior (expect 10-20 cycles)
+
+**Evidence Required**: Show test execution output proving RED→GREEN cycles
+
+This tight loop validates isolated code WITHOUT running entire project.
+Most scratch tests will be DELETED later - they're dev tools, not documentation.
 
 ### 3) Promote valuable tests (VERY SELECTIVE)
 - When behavior stabilizes, identify tests worth keeping (typically 1-2 per feature)
