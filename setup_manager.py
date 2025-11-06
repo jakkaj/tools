@@ -239,7 +239,7 @@ class SetupManager:
             "just.sh",
             "code2prompt.sh",
             "agents.sh",
-            "opencode.sh",
+            # "opencode.sh",  # Commented out - OpenCode installation disabled
             "claude-code.sh",
             "codex.sh",
             "aliases.py"
@@ -247,15 +247,18 @@ class SetupManager:
 
         installers = []
 
+        # Explicitly disabled installers
+        disabled_installers = ["opencode.sh"]
+
         # Add installers in specified order first
         for name in install_order:
             installer = self.install_path / name
             if installer.exists():
                 installers.append(installer)
 
-        # Add any remaining installers
+        # Add any remaining installers (excluding disabled ones)
         for installer in self.install_path.iterdir():
-            if installer.suffix in ['.sh', '.py'] and installer not in installers:
+            if installer.suffix in ['.sh', '.py'] and installer not in installers and installer.name not in disabled_installers:
                 installers.append(installer)
 
         return installers
@@ -267,13 +270,13 @@ class SetupManager:
 
         # Get version before installation for version-tracked tools
         version_before = None
-        if name in ["codex", "claude-code", "opencode"]:
+        if name in ["codex", "claude-code"]:  # Removed opencode
             if name == "codex":
                 version_before = self._get_version("codex")
             elif name == "claude-code":
                 version_before = self._get_version("claude")
-            elif name == "opencode":
-                version_before = self._get_version("opencode")
+            # elif name == "opencode":  # Commented out - OpenCode disabled
+            #     version_before = self._get_version("opencode")
 
         if progress and task_id is not None:
             action = "Updating" if update_mode else "Installing"
@@ -286,7 +289,7 @@ class SetupManager:
         cmd = [str(installer)]
         if update_mode:
             # Add update flag for installers that support it
-            updatable_installers = ["opencode", "claude-code", "codex", "install-coding-stuff"]
+            updatable_installers = ["claude-code", "codex", "install-coding-stuff"]  # Removed opencode
             if name in updatable_installers:
                 cmd.append("--update")
 
@@ -308,13 +311,13 @@ class SetupManager:
 
         # Get version after installation for version-tracked tools
         version_after = None
-        if name in ["codex", "claude-code", "opencode"]:
+        if name in ["codex", "claude-code"]:  # Removed opencode
             if name == "codex":
                 version_after = self._get_version("codex")
             elif name == "claude-code":
                 version_after = self._get_version("claude")
-            elif name == "opencode":
-                version_after = self._get_version("opencode")
+            # elif name == "opencode":  # Commented out - OpenCode disabled
+            #     version_after = self._get_version("opencode")
 
         if success:
             message = f"Successfully installed {name}"
@@ -407,7 +410,7 @@ class SetupManager:
         console.print(f"  Total time: {sum(r.duration for r in self.results):.2f}s")
 
         # Show version summary for tracked tools
-        version_tracked_tools = ["codex", "claude-code", "opencode"]
+        version_tracked_tools = ["codex", "claude-code"]  # Removed opencode
         version_results = [r for r in self.results if r.name in version_tracked_tools and r.success]
 
         if version_results:
