@@ -21,6 +21,21 @@ check_rust_installed() {
     if command -v cargo >/dev/null 2>&1 && command -v rustc >/dev/null 2>&1; then
         local cargo_version=$(cargo --version 2>/dev/null | cut -d' ' -f2)
         local rustc_version=$(rustc --version 2>/dev/null | cut -d' ' -f2)
+
+        # Check if rustup is available and has a default toolchain
+        if command -v rustup >/dev/null 2>&1; then
+            if ! rustup show active-toolchain >/dev/null 2>&1; then
+                print_status "Rust is installed but no default toolchain is set"
+                print_status "Setting default toolchain to stable..."
+                if rustup default stable >/dev/null 2>&1; then
+                    print_success "Default toolchain set to stable"
+                else
+                    print_error "Failed to set default toolchain"
+                    return 1
+                fi
+            fi
+        fi
+
         print_success "Rust is already installed (cargo: $cargo_version, rustc: $rustc_version)"
         return 0
     else
@@ -83,16 +98,25 @@ install_prerequisites() {
 
 install_rust() {
     print_status "Installing Rust via rustup..."
-    
+
     # Download and run rustup installer
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-    
+
     # Source cargo environment
     if [ -f "$HOME/.cargo/env" ]; then
         source "$HOME/.cargo/env"
         print_success "Rust environment loaded"
     else
         print_error "Could not find Rust environment file"
+        exit 1
+    fi
+
+    # Set default toolchain to stable
+    print_status "Setting default toolchain to stable..."
+    if rustup default stable >/dev/null 2>&1; then
+        print_success "Default toolchain set to stable"
+    else
+        print_error "Failed to set default toolchain"
         exit 1
     fi
 }
