@@ -177,12 +177,27 @@ uvx jk-tools --commands-local claude --local-dir ~/my-project
 - ❌ NO global setup
 - ❌ NO other tools installation
 
-**Example:**
+**Examples:**
 ```bash
-# Only installs commands to .claude/commands/ in current directory
-uvx jk-tools --commands-local claude
+# Install from local repository (for development)
+uvx jk-tools-setup --commands-local claude
 
-# Result:
+# Install from GitHub (for production use)
+uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local claude
+
+# Install GitHub Copilot commands from GitHub
+uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local ghcp
+
+# Install to specific directory
+uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local claude --local-dir ~/my-project
+
+# Install multiple CLIs at once
+uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local claude,ghcp,opencode
+
+# Force reinstall to get latest version
+uvx --force-reinstall --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local ghcp
+
+# Result (Claude example):
 # ./
 # └── .claude/
 #     └── commands/

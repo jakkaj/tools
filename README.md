@@ -43,6 +43,42 @@ cd tools
 - **Cross-platform**: Works on macOS, Linux, and Windows (WSL/Git Bash)
 - **Idempotent**: Safe to run multiple times
 - **Update mode**: `jk-tools-setup --update` to update existing tools
+- **Local command installation**: Install commands to project directories for version control
+
+## Installing Commands Locally
+
+Install AI CLI commands to your project directory without full setup:
+
+```bash
+# Install GitHub Copilot commands from GitHub
+uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local ghcp
+
+# Install Claude commands
+uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local claude
+
+# Install multiple CLI commands at once
+uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local claude,ghcp,opencode
+
+# Install to specific directory
+uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local ghcp --local-dir ~/my-project
+
+# Force reinstall to get latest version
+uvx --force-reinstall --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local ghcp
+```
+
+**What gets installed:**
+- ✅ Command/prompt files ONLY
+- ❌ NO MCP server configuration
+- ❌ NO global setup
+- ❌ NO other tools installation
+
+**Supported CLIs:**
+- `claude` → `.claude/commands/` (auto-discovered by Claude Code)
+- `opencode` → `.opencode/command/` (auto-discovered by OpenCode)
+- `ghcp` → `.github/prompts/*.prompt.md` (attach manually in IDE)
+- `codex` → Not supported (use global installation only)
+
+See [CLAUDE.md](CLAUDE.md) for full documentation.
 
 ## Development
 
