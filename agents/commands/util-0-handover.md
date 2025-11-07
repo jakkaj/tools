@@ -233,5 +233,3 @@ Content (by format):
 - **lean**: Emit Markdown with 10 sections mirroring the compact data.
 - **json**: Emit JSON with full-word keys mirroring the compact data.
 
-
-This version retains your project/phase/tasks/ADR/next‑step backbone, adds intent quotes + timeline, and enforces strict caps so the handover stays small enough to seed a fresh session without burning context.
