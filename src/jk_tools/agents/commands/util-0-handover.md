@@ -4,164 +4,234 @@ description: Generate a comprehensive handover document for LLM agent continuity
 
 Please deep think / ultrathink as this is a complex task.
 
-# util-0-handover (v2 • “Quick Handover”)
+util-0-compact-handover
 
-Goal: Emit a minimal, high‑signal handover so another coding agent can resume instantly.
-Hard rules:
-
-Do not open/read files or spawn subagents; summarize only from current session memory.
-
-Output within ≤ 800 tokens (target 400–600).
-
-No “working…” logs, no “Read …” lines, no mermaid, no diffs.
-
-If a detail isn’t in memory, leave a stub and point to the plan path/section instead of re-reading.
+A conversation+code compaction handover that another LLM can paste in and resume immediately.
 
 CLI
-/util-0-handover
-  --plan "<path>"              # optional; path to current plan doc (for references only)
-  --phase "<Phase N: Title>"   # optional; if omitted, treat as current/latest
-  --format "mini|md|json"      # default: mini (compact microformat)
-  --max 800                    # hard token cap; default 800
+/util-0-compact-handover
+  --plan "<path>"                  # optional; used only for pointers/anchors
+  --phase "<Phase N: Title>"       # optional; defaults to current/latest
+  --format "compact|lean|json"     # default: compact
+  --max 1400                       # token cap (default 1400; hard stop 1600)
 
+Hard Rules
 
-mini is the default compact microformat (see schema). md = short markdown; json = readable JSON (same fields).
+Memory only: Do not open files or call tools. Summarize from session memory.
 
-Output: HOVR/1 microformat (mini)
+No scaffolding noise: No “Read…”, “Working…”, diffs, mermaid, stack traces, or step logs.
 
-A single block with short keys. Keep lines short; lists are top‑N (≤5). Values should be terse phrases, IDs, or paths.
+Pointers, not payloads: If a detail isn’t remembered, write ? and add a pointer in Refs (plan §/dossier/log).
 
-HOVR/1
-m:{ts:"<UTC>", plan:"<abs path>", phase:"<name>", prog:"<% or x/y>", feat:"<slug>"}
-last:{done:"<task-id>: <one-liner>", log:"<ts>: <one-liner>"}
-next:{task:"<task-id>", why:"<one-liner>", validate:"<bullet-ish>", cmd:"<resume cmd>"}
-st:{
-  dec:[["<id>","<decision>","<impact>"], ...≤5]
-  blk:[["<id>","<reason>","<mitigation>"], ...≤3]
-  tsk:{d:[ids≤8], ip:[ids≤5], p:[ids≤8], b:[ids≤5]}
-  chg:["<path>@+n/-m", ...≤8]
-  files:["<abs path>", ...≤8]        # if chg counts unknown, list hot files instead
+Status tokens: [ ] pending, [~] in‑progress, [x] complete, [!] blocked.
+
+Context protection: Obey strict caps; keep strings short (≤12 words) and lists Top‑N only.
+
+Deterministic: Natural sort for IDs; consistent key order.
+
+Two‑Stage Generation (single response)
+
+Internal consolidation (silent): Do a quick chronological mental pass of the conversation/session to recover: user’s explicit requests (quote key lines), your actions, decisions, code touchpoints, and current focus.
+
+Emit summary: Output one artifact in the requested format using the schema below. If near --max, drop lowest‑priority sections in the Trim Order.
+
+Output Formats
+A) --format compact (default; tight and skimmable)
+
+HOVR/2 microformat with short keys and capped lists. One fenced block; no extra text.
+
+HOVR/2
+m:{ts:"<UTC>", plan:"<path or ?>", phase:"<name>", feat:"<slug or ?>", prog:"<x/y or %>"}
+
+intent:{
+  primary:"<one-liner>",
+  quotes:["<verbatim short quote>", ...≤2],
+  scope:["<in/out of scope>", ...≤3]
 }
-tst:{unit:"p/f", integ:"p/f", cov:"<% or unknown>", notes:"<≤80 chars>"}
-risk:["<short item>", ...≤5]
-ref:{plan:"<§/anchors to check>", tasks:"<phase dossier path>", log:"<log path if any>"}
+
+timeline:{
+  last_actions:["<past action or decision>", ...≤4],
+  current:"<what you were doing right before handover>"
+}
+
+concepts:{keys:["<key technical concept>", ...≤6]}
+
+code:{
+  files:["<abs path or ?>", ...≤8],
+  hot:["<path>@+n/-m or 'hot'>", ...≤6]
+}
+
+decisions:{
+  adrs:[["ADR-####","<constraint>", "affects <area>"], ...≤4],
+  other:[["<id>","<decision>", "<impact>"], ...≤6]
+}
+
+tasks:{
+  done:[ids…≤8], ip:[ids…≤5], pend:[ids…≤10], blk:[["<id>","<reason>"], ...≤3],
+  critdeps:[["T033","T032"], ...≤5]
+}
+
+tests:{unit:"pass|fail|mixed|?", integ:"pass|fail|mixed|?", cov:"<%|?>", notes:"<≤80 chars>"}
+
+risks:[["<risk>", "<mitigation>", "<watch>"], ...≤5]
+
+next:{
+  task:"<id>",
+  why:"<one-liner>",
+  validate:["<success criterion>", ...≤3],
+  cmd:"/plan-6-implement-phase --phase \"<phase>\" --plan \"<path>\" --task \"<id>\""
+}
+
+refs:{plan:"<path> §<anchor|?>", dossier:"<.../tasks/<phase>/tasks.md|?>", log:"<.../execution.log.md|?>", paths:["<key dir/file>", ...≤5]}
 
 
-Notes
+Trim Order (when hitting --max): code.hot → risks → concepts.keys → decisions.other → tasks.pend → code.files → tests.notes → refs.paths.
+Never trim: m, intent.primary, timeline.current, next.
 
-Prefer IDs over prose (e.g., T032, ADR-0001, ST004).
+B) --format lean (readable Markdown, still tight)
+# Handover
+Plan: <path> • Phase: <name> • Feature: <slug> • Progress: <x/y or %> • Generated: <UTC ISO>
 
-If a field is unknown, supply "?" or an empty list []—do not fetch.
+## 1) Primary Intent
+- Summary: <one‑liner>
+- Quotes: “<short verbatim>”; “<short verbatim>”
+- Scope: <in/out of scope bullets, ≤3>
 
-Use absolute paths only when already known in memory.
+## 2) Timeline (Most Recent First)
+- Current focus: <what you were doing right before handover>
+- Recent actions: <≤4 bullets; actions/decisions taken>
 
-cmd should be a single ready-to-run resume command (no fenced code block in mini).
+## 3) Key Technical Concepts (≤6)
+- <concept> — <why it matters>
 
-Output: Markdown (md)
+## 4) Code Touchpoints
+- Files (≤8): <abs path or ?>
+- Hot changes (≤6): <path>@+n/‑m or “hot”
 
-When --format md, emit a five-section, single-screen doc. Headings only; no nested tables.
+## 5) Decisions & ADRs
+- ADR‑#### — <constraint> — Affects: <area> (≤4)
+- Other decisions (≤6): <id> — <decision> — Impact: <≤12 words>
 
-# Handover (Quick)
-- Plan: <path> • Phase: <name> • Progress: <x/y or %> • Feature: <slug>
-- Last: <task-id one-liner> • Log: <ts summary>
-- Next: <task-id> — Why: <one-liner> — Validate: <criteria> — Cmd: <one-liner>
+## 6) Tasks Snapshot
+- Done (≤8): <ids…>
+- In‑Progress (≤5): <ids…>
+- Pending (≤10): <ids…>
+- Blocked (≤3): <id — reason>
+- Critical deps (≤5): T033 ← T032; T037 ← T035 + T036
 
-## Decisions (≤5)
-- <id>: <decision> — Impact: <impact>
+## 7) Tests
+- Unit: <pass|fail|mixed|?> • Integration: <pass|fail|mixed|?> • Coverage: <value or ?>
+- Notes: <≤80 chars>
 
-## Status
-- Done: <ids…>
-- In-Progress: <ids…>
-- Pending: <ids…>
-- Blocked: <id: reason → mitigation> (≤3)
+## 8) Risks (≤5)
+- <risk> — Mitigation: <short> — Watch: <signal>
 
-## Changes / Hot Files (≤8)
-- <path> (@+n/-m or “hot”)
+## 9) Next Steps
+- Immediate: <task‑id> — <why>
+  - Validation: <≤3 criteria>
+  - Resume: `/plan-6-implement-phase --phase "<phase>" --plan "<path>" --task "<id>"`
+- Then (≤4): T0xx — <one‑liner> (deps: <ids>)
 
-## Tests / Risks / Refs
-- Tests: unit <p/f>, integ <p/f>, cov <value>, notes <≤80 chars>
-- Risks (≤5): <one-liners>
-- Refs: plan § to re-open, dossier path, log path
+## 10) References
+- Plan: <path> §<anchor|?>
+- Phase dossier: <.../tasks/<phase>/tasks.md|?>
+- Phase log: <.../execution.log.md|?>
+- Paths (≤5): <key files/dirs>
 
-Output: JSON (json)
+C) --format json (expanded keys; mirrors compact/lean)
 
-Readable JSON mirror of the mini fields (expand keys to full words). Keep values short; same caps and limits.
+Keys: meta, intent, timeline, concepts, code, decisions, tasks, tests, risks, next, refs.
+Values follow the same caps and semantics as compact.
 
-Generation Algorithm (single pass)
+Size & Priority Policy
 
-Assemble from memory
+Global cap: --max (default 1400; hard stop 1600).
 
-Pull: current plan path (if provided), current phase name, last task touched, immediate next task, the top decisions/risk/blockers you remember, hot files/paths previously modified or referenced, quick test/coverage status if recalled, and any resume command used last time.
+Section caps: Concepts ≤6; Files ≤8; Hot ≤6; Decisions(other) ≤6; ADRs ≤4; Done ≤8; In‑Progress ≤5; Pending ≤10; Blocked ≤3; CritDeps ≤5; Risks ≤5; Then ≤4.
 
-Trim & cap
+Strings: Prefer ≤12 words. Use IDs and pointers over prose.
 
-Enforce list caps; shorten strings to phrases; drop examples/code; no diffs.
+Required fields even when trimmed: meta, intent.primary, timeline.current, next (task/why/validate/cmd).
 
-If any critical value is missing, write "?" and add a ref.plan pointer like § Progress/Phase N or the phase dossier path.
+Normalization
 
-Emit exactly one artifact in the requested format. No auxiliary chatter, no step logs.
+IDs: T###, ST###, ADR‑####.
 
-Quality & Size Guards
+Paths: Absolute when remembered; else ?.
 
-Token budget: Stop adding items once you hit ≈90% of --max. Prefer dropping lowest-priority sections: chg → files → risk → tst (in that order).
+Times: UTC ISO (YYYY‑MM‑DDThh:mm:ssZ).
 
-Priority order: m, next, last, st.dec, st.tsk, st.blk, ref, then the rest.
+Booleans as status words: pass|fail|mixed|?.
 
-Deterministic order: Sort IDs naturally (T001…T999).
+Quotes: Keep verbatim user quotes short to anchor intent.
 
-No tables in mini; no code fences except the HOVR/1 header line.
+Example (--format compact)
 
-No network, no disk, no tool calls.
+(Illustrative; replace with session memory; use ? if unknown.)
 
-Example (mini)
+HOVR/2
+m:{ts:"2025-11-07T23:18:00Z",plan:"/workspaces/.../realtime-chatbot-plan.md",phase:"Phase 5: WebRTC",feat:"realtime-chatbot",prog:"4/9"}
 
-(Illustrative only—fill from memory; use ? where unknown; keep it short.)
+intent:{
+  primary:"Enable browser↔Azure WebRTC voice with ephemeral creds",
+  quotes:["“get webrtc working end-to-end”","“no key caching”"],
+  scope:["POC OK","manual tests acceptable","keep SDK types below repo"]
+}
 
-HOVR/1
-m:{ts:"2025-11-07T22:40Z",plan:"/workspaces/.../realtime-chatbot-plan.md",phase:"Phase 5: WebRTC",prog:"4/9",feat:"realtime-chatbot"}
-last:{done:"ST008: pytest infra docs",log:"2025-11-07: subtask complete"}
-next:{task:"T032",why:"implement RealtimeService",validate:"tests ST004 go GREEN",cmd:`/plan-6-implement-phase --phase "Phase 5: WebRTC" --plan "/workspaces/.../realtime-chatbot-plan.md"`}
-st:{dec:[["ADR-0001","repo pattern SDK isolation","affects svc/router"],["CF-01","ephemeral key per session","no caching"]],
-    blk:[],tsk:{d:["ST001","ST002","ST003","ST004","ST005","ST006","ST007","ST008"],ip:[],p:["T033","T034","T035","T036","T037","T038"],b:[]},
-    chg:["src/backend/app/main.py@?","src/backend/app/repos/azure_realtime_repo.py@?"],
-    files:["tests/unit/test_realtime_service.py","src/backend/app/repos/types.py"]}
-tst:{unit:"mixed",integ:"pass",cov:"~50%",notes:"RED→GREEN expected after T032"}
-risk:["mic permission denial","region mismatch URL"]
-ref:{plan:"§ Phase 5 tasks",tasks:".../tasks/phase-5/tasks.md",log:".../phase-5/001-subtask-pytest-infrastructure.execution.log.md"}
+timeline:{
+  last_actions:["documented pytest infra (ST008)","set ADR‑0001 repo isolation","outlined router endpoints"],
+  current:"implement RealtimeService (T032) before wiring router"
+}
 
-Why this fixes the problems
+concepts:{keys:["ephemeral key mint","region-scoped webrtc URL","repo pattern isolation","TDD cycles","telemetry endpoint","no caching"]}
 
-No I/O: Eliminates the minute‑long “read everything” phase and the verbose step logs seen in the prior handover. 
+code:{
+  files:["src/backend/app/services/realtime_service.py","src/backend/app/routers/realtime.py","src/backend/app/main.py","tests/unit/test_realtime_service.py","tests/integration/test_realtime.py","src/ui/components/webrtc_client.html"],
+  hot:["src/backend/app/main.py@?","tests/unit/test_realtime_service.py@?"]
+}
 
-handover-2025-11-07
+decisions:{
+  adrs:[["ADR-0001","domain types above repo","services/routers"]],
+  other:[["DEC-telemetry","/telemetry collects client stats","observability"],["DEC-ephemeral","mint per Start click","stateless svc call"]]
+}
 
-Hard caps + short keys: Keeps output compact and pasteable as session seed context.
+tasks:{
+  done:["ST008"], ip:[], pend:["T032","T033","T034","T035","T036"], blk:[],
+  critdeps:[["T033","T032"],["T037","T035","T036"]]
+}
 
-Pointers over payloads: When detail is missing, the next agent opens the plan/dossier/log themselves.
+tests:{unit:"mixed", integ:"pass", cov:"~50%", notes:"RED→GREEN expected after T032"}
 
-Triage‑friendly: next is always prominent; decisions and task IDs are skimmable.
+risks:[["mic permission denial","UI prompt/handle NotAllowedError","browser console"],["region mismatch","derive from AZURE_OPENAI_REGION","403/connect-failed"]] 
 
-Drop‑in prompt (paste into your system/command definition)
-You are producing a **Quick Handover** for immediate agent resumption.
+next:{
+  task:"T032",
+  why:"service layer needed before router",
+  validate:["unit tests green","returns domain type only","no caching"],
+  cmd:"/plan-6-implement-phase --phase \"Phase 5: WebRTC\" --plan \"/workspaces/.../realtime-chatbot-plan.md\" --task \"T032\""
+}
+
+refs:{plan:"/workspaces/.../realtime-chatbot-plan.md § Phase 5", dossier:".../tasks/phase-5/tasks.md", log:".../tasks/phase-5/execution.log.md", paths:["src/backend/app/","tests/","src/ui/components/"]}
+
+Drop‑in System Prompt
+You are a **compact handover generator** for agent continuity.
 
 Constraints:
-- Summarize **only** from what you remember in this session; **do not** read files or call tools.
-- Output ≤ `--max` tokens (default 800). Prefer brevity over completeness.
-- Use the requested format: mini (default), md, or json.
-- If a detail isn’t in memory, write "?" and add a helpful `ref.plan` pointer (section/anchor) instead of fetching.
+- Summarize from current-session memory only. Do NOT read files or call tools.
+- Respect a hard token cap of `--max` (default 1400; hard stop 1600).
+- If unsure, output "?" and add a pointer in Refs rather than guessing.
+- Output exactly one artifact in the requested format: compact (default), lean, or json.
+- No scaffolding/logs/diffs/mermaid; keep strings ≤12 words; Top‑N caps per section.
 
-Content (priority order):
-1) meta (m): ts, plan (if provided), phase, progress, feature
-2) next: task id, why, validation, single resume cmd
-3) last: last completed task + one‑line log
-4) state (st):
-   - dec (≤5): [id, decision, impact]
-   - tsk: {d (done ≤8), ip (in‑progress ≤5), p (pending ≤8), b (blocked ≤5)}
-   - blk (≤3): [id, reason, mitigation]
-   - chg (≤8): "<path>@+n/-m" if remembered; else drop
-   - files (≤8): hot/likely paths if remembered
-5) tst: unit pass/fail, integ pass/fail, coverage (short), note (≤80 chars)
-6) risk (≤5): terse items
-7) ref: plan section(s), dossier path, log path (pointers only)
+Method:
+1) Internally review the session chronologically to recall: explicit user requests (quote briefly), your actions, decisions, code touchpoints, state, and current focus.
+2) Emit the summary using the chosen format and schema. Apply Trim Order when near the cap: code.hot → risks → concepts.keys → decisions.other → tasks.pend → code.files → tests.notes → refs.paths.
+3) Never trim: meta, primary intent, current focus, and next steps.
 
-Never print read/scan steps, stack traces, mermaid, or diffs. Output exactly one artifact 
+Content (by format):
+- **compact**: Emit HOVR/2 block with sections: m, intent, timeline, concepts, code, decisions, tasks, tests, risks, next, refs.
+- **lean**: Emit Markdown with 10 sections mirroring the compact data.
+- **json**: Emit JSON with full-word keys mirroring the compact data.
+
+
+This version retains your project/phase/tasks/ADR/next‑step backbone, adds intent quotes + timeline, and enforces strict caps so the handover stays small enough to seed a fresh session without burning context.
