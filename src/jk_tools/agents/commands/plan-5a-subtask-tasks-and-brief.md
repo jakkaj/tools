@@ -8,6 +8,31 @@ Please deep think / ultrathink as this is a nuanced extension of plan-5 outputs.
 
 Generate an actionable **subtask dossier** alongside the parent phase's `tasks.md`. Use this when a request needs structured planning but stays within an approved phase. Produce a self-contained markdown file named `PHASE_DIR/<ordinal>-subtask-<slug>.md` and stop before any implementation.
 
+---
+
+## 🚫 CRITICAL PROHIBITION: NO TIME ESTIMATES
+
+**NEVER** output time or duration estimates in **ANY FORM**:
+- ❌ Hours, minutes, days, weeks, months
+- ❌ "Quick", "fast", "soon", "trivial duration"
+- ❌ "ETA", "deadline", "timeline"
+- ❌ "~4 hours", "2-3 days", "should take X time"
+- ❌ "Total Estimated Effort: X hours/days"
+
+**ONLY** use **Complexity Score (CS 1-5)** from constitution rubric:
+- ✅ CS-1 (trivial): 0-2 complexity points
+- ✅ CS-2 (small): 3-4 complexity points
+- ✅ CS-3 (medium): 5-7 complexity points
+- ✅ CS-4 (large): 8-9 complexity points
+- ✅ CS-5 (epic): 10-12 complexity points
+
+**Rubric factors** (each scored 0-2): Scope, Interconnections, Dependencies, Novelty, Fragility, Testing
+Reference: `docs/rules-idioms-architecture/constitution.md` § 9
+
+**Before outputting subtask dossier, validate**: No time language present? All subtask estimates use CS 1-5 only?
+
+---
+
 ```md
 User input:
 

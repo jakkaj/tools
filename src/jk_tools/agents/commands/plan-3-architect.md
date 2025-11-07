@@ -8,6 +8,31 @@ Please deep think / ultrathink as this is a complex task.
 
 Generate a **comprehensive, phase-based implementation plan** with detailed tasks, TDD structure, and acceptance criteria. This command produces the master plan document that will guide all subsequent implementation phases.
 
+---
+
+## 🚫 CRITICAL PROHIBITION: NO TIME ESTIMATES
+
+**NEVER** output time or duration estimates in **ANY FORM**:
+- ❌ Hours, minutes, days, weeks, months
+- ❌ "Quick", "fast", "soon", "trivial duration"
+- ❌ "ETA", "deadline", "timeline"
+- ❌ "~4 hours", "2-3 days", "should take X time"
+- ❌ "Total Estimated Effort: X hours"
+
+**ONLY** use **Complexity Score (CS 1-5)** from constitution rubric:
+- ✅ CS-1 (trivial): 0-2 complexity points
+- ✅ CS-2 (small): 3-4 complexity points
+- ✅ CS-3 (medium): 5-7 complexity points
+- ✅ CS-4 (large): 8-9 complexity points
+- ✅ CS-5 (epic): 10-12 complexity points
+
+**Rubric factors** (each scored 0-2): Scope, Interconnections, Dependencies, Novelty, Fragility, Testing
+Reference: `docs/rules-idioms-architecture/constitution.md` § 9
+
+**Before outputting the plan, validate**: No time language present? All estimates use CS 1-5 only?
+
+---
+
 ```md
 Inputs:
   FEATURE_SPEC = `docs/plans/<ordinal>-<slug>/<slug>-spec.md` (co-located with plan),

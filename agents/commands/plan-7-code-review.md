@@ -230,6 +230,147 @@ For each violation, include:
 - ⚠️ MINOR_ISSUES (1-2 medium/low) → APPROVE with warnings
 - ❌ BROKEN (any high/critical) → REQUEST_CHANGES (must fix before merge)
 
+3b) Cross-Phase Regression Guard (optional, recommended for critical phases)
+
+**IMPORTANT**: This step validates that changes do not break functionality from previous phases.
+
+**Strategy**: Run parallel validation across integration boundaries and prior phase outputs.
+
+**Execution Control**:
+- Default: ENABLED for all phases
+- Override: Use `--skip-regression-check` flag to skip (faster but riskier)
+- Recommended: Always run for phases touching shared/core modules
+
+**Validation Steps**:
+
+1. **Identify previous phases**:
+   - Parse PLAN § 8 task table to find completed phases before current phase
+   - Load execution logs from `PLAN_DIR/tasks/<prior-phase-slug>/execution.log.md`
+   - Extract test command patterns and validation steps
+
+2. **Re-run previous phase tests** (if project supports):
+   - Execute test commands from prior phase execution logs
+   - Run against current code state (including current phase changes)
+   - Capture pass/fail status and any new failures
+   - **Severity**: CRITICAL if previously passing tests now fail
+
+3. **Contract validation**:
+   - Check for breaking changes to public interfaces/APIs modified in earlier phases
+   - Verify function signatures, return types, error contracts unchanged (or backward compatible)
+   - Scan for removed exports, renamed functions, changed behavior
+   - **Severity**: HIGH if contracts broken without deprecation notices
+
+4. **Integration point checks**:
+   - Identify integration points between current phase and previous phases
+   - Verify data flow contracts (input/output shapes) remain valid
+   - Check for missing error handling at integration boundaries
+   - **Severity**: HIGH if integration contracts violated
+
+5. **Backward compatibility validation**:
+   - Flag removal of functionality added in previous phases
+   - Check for changed configuration schemas without migration
+   - Verify database/storage changes include backward compat layer
+   - **Severity**: MEDIUM if backward compat broken (depends on project policy)
+
+**Report Format**:
+```json
+{
+  "regression_findings": [
+    {
+      "id": "REG-001",
+      "severity": "CRITICAL|HIGH|MEDIUM|LOW",
+      "prior_phase": "Phase 1: Authentication",
+      "issue": "Previously passing test now fails: test_login_with_valid_credentials",
+      "evidence": "Test failure output or diff showing breakage",
+      "impact": "Login functionality broken by current changes",
+      "fix": "Restore previous behavior or update tests with justification",
+      "affected_files": ["src/auth/login.ts", "tests/auth/test_login.py"]
+    }
+  ],
+  "tests_rerun": N,
+  "tests_failed": M,
+  "contracts_broken": P,
+  "verdict": "PASS|FAIL"
+}
+```
+
+**Synthesis**:
+- If `verdict: "FAIL"` (any CRITICAL or HIGH findings): set REQUEST_CHANGES flag
+- Add findings to Section E.0 (Cross-Phase Regression Analysis) in review report
+- Include fix suggestions with references to prior phase work
+
+**Performance Note**:
+Run regression validation **in parallel** with Step 3a (link validation). Both steps read artifacts independently and can execute concurrently.
+
+**Skip Conditions** (when `--skip-regression-check` is appropriate):
+- Isolated feature additions with no shared code
+- Documentation-only changes
+- First phase of a plan (no prior phases to regress)
+- Hotfix phases with explicit regression testing in test suite
+
+3c) Plan Authority Conflict Resolution
+
+**Goal**: Detect and resolve conflicts between plan footnotes and dossier footnotes, ensuring graph integrity.
+
+**Authority Hierarchy** (per line 845):
+- **Plan § 12 Change Footnotes Ledger**: PRIMARY authority
+- **Dossier Phase Footnote Stubs**: DERIVED from plan (must sync)
+- **Resolution**: Plan wins in conflicts; dossier must update to match
+
+**Validation Steps**:
+
+1. **Load ledgers**:
+   - Read PLAN § 12 (Change Footnotes Ledger) for all footnotes
+   - Read PHASE_DOC § Phase Footnote Stubs for current phase footnotes
+   - Extract footnote numbers, FlowSpace node IDs, descriptions
+
+2. **Conflict detection**:
+   - **Missing in dossier**: Plan has [^N] but dossier doesn't
+   - **Missing in plan**: Dossier has [^N] but plan doesn't (orphan)
+   - **Content mismatch**: [^N] exists in both but with different node IDs or descriptions
+   - **Numbering gaps**: Sequential numbering broken (e.g., [^1], [^2], [^5] skips [^3], [^4])
+
+3. **Authority resolution**:
+   - For **missing in dossier**: Mark HIGH severity, recommend running `plan-6a --sync-footnotes`
+   - For **missing in plan**: Mark MEDIUM severity (orphan footnote), recommend removing from dossier
+   - For **content mismatch**: Mark CRITICAL severity, apply plan's version as canonical
+   - For **numbering gaps**: Mark MEDIUM severity, recommend renumbering for consistency
+
+4. **Synchronization check**:
+   - Validate that task table footnote references ([^N] in Notes column) match ledger entries
+   - Verify all changed files in diff have corresponding footnotes
+   - Check that FlowSpace node IDs point to actual modified code locations
+
+**Report Format**:
+```json
+{
+  "authority_conflicts": [
+    {
+      "id": "AUTH-001",
+      "severity": "CRITICAL|HIGH|MEDIUM|LOW",
+      "conflict_type": "missing_in_dossier|missing_in_plan|content_mismatch|numbering_gap",
+      "footnote": "[^3]",
+      "plan_content": "FlowSpace node ID from plan",
+      "dossier_content": "FlowSpace node ID from dossier (or null)",
+      "resolution": "Apply plan authority: update dossier to match plan",
+      "fix_command": "plan-6a --sync-footnotes --footnote 3"
+    }
+  ],
+  "total_conflicts": N,
+  "synchronized": true/false,
+  "verdict": "PASS|FAIL"
+}
+```
+
+**Synthesis**:
+- If any CRITICAL conflicts: set REQUEST_CHANGES flag
+- If HIGH conflicts without auto-resolution: set REQUEST_CHANGES flag
+- Add findings to Section E.1 (Doctrine & Testing Compliance) under "Authority Conflicts"
+- Provide clear resolution path (usually: run `plan-6a` to sync)
+
+**Execution Note**:
+This step runs **after** Step 3a (depends on link validation data) but can run in parallel with Step 3b (regression guard).
+
 4) Rules & doctrine gates (parallel subagent validation)
 
    **IMPORTANT**: This step uses **parallel subagent validation** for approach-specific testing doctrine compliance and universal pattern checks.
@@ -314,8 +455,23 @@ For each violation, include:
         * **Opaque behavior**: Complex logic not obvious from reading code
         * **Regression-prone**: Bug-fix or fragile code likely to break again
         * **Edge case**: Boundary condition or unusual scenario worth documenting
-      - Verify rationale is specific and meaningful (not generic like \"useful test\")
-      - **Severity**: MEDIUM if rationale weak, generic, or doesn't map to heuristic
+      - Verify rationale is specific and meaningful with concrete evidence:
+        ✅ GOOD: "Regression-prone: Bug #482 where AUD rounding truncated cents"
+        ✅ GOOD: "Critical path: User login flow - 80% of users hit this daily"
+        ✅ GOOD: "Opaque behavior: Binary search with custom comparator for time ranges"
+        ✅ GOOD: "Edge case: Timezone boundary at DST transition (midnight ambiguity)"
+        ❌ REJECT: "This is a useful test" (too vague)
+        ❌ REJECT: "Good to have" (no heuristic mapping)
+        ❌ REJECT: "Important functionality" (which heuristic? what evidence?)
+        ❌ REJECT: "Covers this method" (coverage alone isn't justification)
+      - Apply **heuristic quality score** (0-10 scale):
+        * 8-10: Concrete evidence, specific impact, clear heuristic bucket
+        * 5-7: Heuristic identified but evidence weak or impact unclear
+        * 0-4: Generic rationale, no evidence, or no heuristic mapping
+      - **Severity**:
+        * HIGH if score 0-4 (weak justification, should not have been promoted)
+        * MEDIUM if score 5-7 (acceptable but could be stronger)
+        * LOW if score 8-10 but could add more detail (e.g., bug reference missing)
 
    4. **Test naming follows Given-When-Then** format
       - Pattern: test_given<Context>_when<Action>_then<Outcome>
@@ -445,26 +601,67 @@ For each violation, include:
       - **Severity**: HIGH if plan/rules violated
 
    3. **BridgeContext patterns** (for VS Code/TypeScript work):
-      Remote-safety is CRITICAL for VS Code extensions. Flag violations of these patterns:
+      Remote-safety is CRITICAL for VS Code extensions. Flag violations of these 10 patterns:
 
-      **Use vscode.Uri (not Node path module) for file paths:**
-      - ❌ Wrong: const filePath = path.join(workspaceRoot, 'file.txt');
-      - ✅ Correct: const fileUri = vscode.Uri.joinPath(workspaceRootUri, 'file.txt');
+      **Pattern 1: Use vscode.Uri (not Node path module) for file paths**
+      - ❌ Wrong: `const filePath = path.join(workspaceRoot, 'file.txt');`
+      - ✅ Correct: `const fileUri = vscode.Uri.joinPath(workspaceRootUri, 'file.txt');`
+      - **Rationale**: Node `path` APIs assume local filesystem; breaks in remote/container/WSL environments
       - **Severity**: HIGH (breaks remote environments)
 
-      **Use bounded vscode.RelativePattern with exclude + maxResults for searches:**
-      - ❌ Wrong: workspace.findFiles('**/*')
-      - ✅ Correct: workspace.findFiles(new vscode.RelativePattern(baseUri, '*.ts'), '**/node_modules/**', 100)
+      **Pattern 2: Use bounded vscode.RelativePattern with exclude + maxResults for searches**
+      - ❌ Wrong: `workspace.findFiles('**/*')`
+      - ✅ Correct: `workspace.findFiles(new vscode.RelativePattern(baseUri, '*.ts'), '**/node_modules/**', 100)`
+      - **Rationale**: Unbounded searches can scan millions of files (node_modules, build artifacts)
       - **Severity**: HIGH (unbounded searches hang in large repos)
 
-      **Avoid workspace.findFiles('**/*') without bounds:**
-      - Must specify exclude patterns and maxResults
+      **Pattern 3: Avoid workspace.findFiles('**/*') without bounds**
+      - Must specify exclude patterns and maxResults (always)
+      - Common excludes: `**/node_modules/**`, `**/dist/**`, `**/.git/**`, `**/build/**`
+      - Typical maxResults: 100 for UI pickers, 1000 for batch operations, 10000 absolute max
       - **Severity**: HIGH (performance/reliability issue)
 
-      **Python debugging uses { module: 'pytest', args: ['--no-cov', ...] } config:**
-      - ❌ Wrong: { type: 'python', program: '/path/to/pytest' }
-      - ✅ Correct: { type: 'debugpy', module: 'pytest', args: ['--no-cov', 'tests/'] }
+      **Pattern 4: Python debugging uses { module: 'pytest', args: ['--no-cov', ...] } config**
+      - ❌ Wrong: `{ type: 'python', program: '/path/to/pytest' }`
+      - ✅ Correct: `{ type: 'debugpy', module: 'pytest', args: ['--no-cov', 'tests/'] }`
+      - **Rationale**: Absolute paths break in containers/remote; module invocation is portable
       - **Severity**: HIGH (breaks remote debugging and coverage tools)
+
+      **Pattern 5: Use vscode.workspace.getConfiguration() instead of process.env for settings**
+      - ❌ Wrong: `const apiKey = process.env.MY_EXTENSION_API_KEY;`
+      - ✅ Correct: `const config = vscode.workspace.getConfiguration('myExtension'); const apiKey = config.get('apiKey');`
+      - **Rationale**: Environment variables are local process-specific; config syncs across remote connections
+      - **Severity**: MEDIUM (breaks user settings in remote scenarios)
+
+      **Pattern 6: Use vscode.tasks API instead of child_process for running commands**
+      - ❌ Wrong: `child_process.exec('npm test', { cwd: workspaceRoot })`
+      - ✅ Correct: `const task = new vscode.Task(...); vscode.tasks.executeTask(task);`
+      - **Rationale**: child_process runs on extension host (wrong machine); tasks run in correct environment
+      - **Severity**: HIGH (runs commands on wrong machine in remote)
+
+      **Pattern 7: Use vscode.workspace.createFileSystemWatcher() with bounded patterns**
+      - ❌ Wrong: `vscode.workspace.createFileSystemWatcher('**/*')`
+      - ✅ Correct: `vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(baseUri, 'src/**/*.ts'))`
+      - **Rationale**: Unbounded watchers consume file handles; bounded patterns are efficient
+      - **Severity**: MEDIUM (performance degradation, file handle exhaustion)
+
+      **Pattern 8: Always use Uri.fsPath for display, never manipulate path strings directly**
+      - ❌ Wrong: `const display = uri.path.replace('/c:', 'C:\\');` (manual path manipulation)
+      - ✅ Correct: `const display = uri.fsPath;` (handles platform differences automatically)
+      - **Rationale**: Uri.fsPath handles Windows/Unix/UNC/remote paths correctly; manual manipulation breaks
+      - **Severity**: MEDIUM (wrong paths displayed, file operations fail)
+
+      **Pattern 9: Handle multi-root workspaces (check workspaceFolders array)**
+      - ❌ Wrong: `const root = vscode.workspace.workspaceFolders[0];` (assumes single workspace)
+      - ✅ Correct: `const folders = vscode.workspace.workspaceFolders ?? []; // handle null and iterate`
+      - **Rationale**: Users can have 0 or multiple workspace folders; always handle array
+      - **Severity**: HIGH (crashes on multi-root or no-workspace scenarios)
+
+      **Pattern 10: Validate Uri.scheme for remote compatibility before file operations**
+      - ❌ Wrong: `fs.readFileSync(uri.fsPath)` (assumes 'file:' scheme)
+      - ✅ Correct: `if (uri.scheme === 'file') { await vscode.workspace.fs.readFile(uri); }`
+      - **Rationale**: Remote/virtual URIs have schemes like 'vscode-remote', 'vscode-test-web'; Node fs APIs only work with 'file:' scheme
+      - **Severity**: HIGH (crashes or wrong behavior in remote/web extensions)
 
    **Report** (JSON format):
    ```json
@@ -509,6 +706,49 @@ For each violation, include:
 
 5) Testing evidence & coverage alignment (adapt to Testing Strategy)
    - Cross-check the alignment brief acceptance criteria in `PHASE_DOC` against evidence based on Testing Approach:
+
+   **Coverage Map Accuracy Validation** (applies to all approaches with tests):
+
+   For each acceptance criterion → test mapping:
+
+   1. **Explicit linkage check**:
+      - Verify test names reference criterion IDs (e.g., `test_AC01_login_success`)
+      - Check test docstrings/comments explicitly mention acceptance criteria
+      - Look for criterion IDs in test file organization (e.g., `tests/ac01_login/`)
+      - **Confidence score**: 100% if explicit ID reference, 75% if behavior match, 50% if inferred, 0% if unclear
+
+   2. **Behavioral alignment verification**:
+      - Compare acceptance criterion statement with test assertion
+      - Verify test actually validates the specified behavior (not a related but different behavior)
+      - Check test covers the full scope of criterion (not just subset)
+      - Flag if test name is generic/unclear (e.g., `test_feature_works`)
+
+   3. **Narrative test detection**:
+      - Flag tests without clear criterion mapping as "narrative tests"
+      - Narrative tests are informative but don't validate specific acceptance criteria
+      - **Severity**: MEDIUM if critical criteria lack non-narrative tests
+      - Examples of narrative tests:
+        * Integration smoke tests ("everything works together")
+        * Exploratory tests ("try various inputs")
+        * Performance benchmarks without acceptance criteria thresholds
+
+   4. **Coverage confidence reporting**:
+      - Calculate per-criterion confidence score (0-100%):
+        * 100%: Explicit criterion ID in test name/comment + behavioral match
+        * 75%: Clear behavioral match but no explicit ID reference
+        * 50%: Likely covers criterion (inferred from test behavior)
+        * 25%: Weak/partial coverage (test exists but scope unclear)
+        * 0%: No test found for this criterion
+      - Report overall coverage confidence: (sum of all scores) / (number of criteria)
+      - **Severity**:
+        * HIGH if overall confidence < 50% (weak mappings dominate)
+        * MEDIUM if overall confidence 50-75% (acceptable but improvable)
+        * LOW if overall confidence > 75% (good mappings)
+
+   5. **Recommendations for improving mapping**:
+      - Suggest adding criterion IDs to test names
+      - Recommend test file organization by acceptance criteria
+      - Provide template for explicit test-to-criterion documentation
 
    **For Full TDD approach:**
      - Verify test changes exist (added/updated tests in `tests/` or stack-native locations)
@@ -559,9 +799,51 @@ For each violation, include:
 
 6) Quality and safety review (parallel subagent analysis)
 
-   Launch **4 parallel specialized reviewers** as subagents. Each reviewer inspects the unified diff independently, outputs findings in a structured format, then synthesize into a unified safety report.
+   Launch **5 parallel specialized reviewers** as subagents. Each reviewer inspects the unified diff independently, outputs findings in a structured format, then synthesize into a unified safety report.
 
-   **Subagent 1: Correctness Reviewer**
+   **Subagent 1: Semantic Analysis Reviewer**
+   ```
+   You are a Semantic Analysis Reviewer for code changes. Analyze the provided unified diff against the spec requirements to verify domain logic correctness, algorithm accuracy, and business rule compliance.
+
+   **Inputs:**
+   - Unified diff (all modified files)
+   - PLAN (for acceptance criteria and business requirements)
+   - PHASE_DOC (for specific phase requirements and constraints)
+   - Spec Testing Strategy section (for expected behaviors)
+
+   **Focus Areas:**
+   - Domain logic correctness (business rules implemented as specified)
+   - Algorithm accuracy (correct implementation of specified algorithms, not just pattern matching)
+   - Data flow correctness (inputs → processing → outputs match spec)
+   - Business rule violations (deviations from requirements)
+   - Specification drift (implementation doesn't match documented behavior)
+   - Contract violations (breaking promised interfaces or guarantees)
+
+   **Output Format:**
+   For each finding, return:
+   {
+     "severity": "CRITICAL|HIGH|MEDIUM|LOW",
+     "file": "absolute/path/to/file.ts",
+     "lines": "123-145",
+     "issue": "One-sentence description of semantic error",
+     "spec_requirement": "Quote the specific spec requirement violated",
+     "impact": "Business/user impact if this ships",
+     "fix": "Specific fix aligned with spec (2-3 sentences)",
+     "patch": "Unified diff snippet showing the fix (optional, only if < 10 lines)"
+   }
+
+   **Severity Guidelines:**
+   - CRITICAL: Wrong business outcomes, data corruption, spec non-compliance breaking core functionality
+   - HIGH: Logic gaps causing incorrect results in common scenarios, missing required business rules
+   - MEDIUM: Edge case logic errors, incomplete spec implementation (non-critical features)
+   - LOW: Semantic code smells, overly clever implementations that obscure intent
+
+   **Important:** Focus on semantic correctness, not syntax/style. Flag only concrete spec violations with evidence.
+
+   Return JSON array of findings. If no issues found, return empty array [].
+   ```
+
+   **Subagent 2: Correctness Reviewer**
    ```
    You are a Correctness Reviewer for code changes. Analyze the provided unified diff and identify logic defects, error handling gaps, and algorithmic issues.
 
@@ -594,7 +876,7 @@ For each violation, include:
    Return JSON array of findings. If no issues found, return empty array [].
    ```
 
-   **Subagent 2: Security Reviewer**
+   **Subagent 3: Security Reviewer**
    ```
    You are a Security Reviewer for code changes. Analyze the provided unified diff for security vulnerabilities and unsafe patterns.
 
@@ -629,7 +911,7 @@ For each violation, include:
    Return JSON array of findings. If no issues found, return empty array [].
    ```
 
-   **Subagent 3: Performance Reviewer**
+   **Subagent 4: Performance Reviewer**
    ```
    You are a Performance Reviewer for code changes. Analyze the provided unified diff for performance regressions and scalability issues.
 
@@ -663,7 +945,7 @@ For each violation, include:
    Return JSON array of findings. If no issues found, return empty array [].
    ```
 
-   **Subagent 4: Observability Reviewer**
+   **Subagent 5: Observability Reviewer**
    ```
    You are an Observability Reviewer for code changes. Analyze the provided unified diff for logging, metrics, and debugging gaps.
 
@@ -701,7 +983,7 @@ For each violation, include:
    ```
 
    **Synthesis Process:**
-   1. **Aggregate findings** from all 4 reviewers into a single JSON array
+   1. **Aggregate findings** from all 5 reviewers into a single JSON array
    2. **Deduplicate** findings with identical file:lines (keep highest severity)
    3. **Merge by file** for reporting (group findings by file, then by line range)
    4. **Calculate safety score**:
@@ -757,7 +1039,7 @@ For each violation, include:
    - Rules/idioms from `docs/rules-idioms-architecture/` if available
 
    **Execution:**
-   Run all 4 reviewers **in parallel** (concurrent subagent prompts), then synthesize. Total wall time should be ~1 reviewer duration, not 4x sequential.
+   Run all 5 reviewers **in parallel** (concurrent subagent prompts), then synthesize. Total wall time should be ~1 reviewer duration, not 5x sequential.
 
 7) Static & type checks (project-native)
    - Run project-native linters/type-checkers/formatters as specified by PLAN and `PHASE_DOC` (e.g., `just test-extension`, `pytest -q`, `eslint --max-warnings=0`, `tsc --noEmit`).
@@ -815,9 +1097,38 @@ For each violation, include:
         | ID | Severity | File:Lines | Summary | Recommendation |
         |----|----------|------------|---------|----------------|
      E) **Detailed Findings**
-        E.1) **Doctrine & Testing Compliance** (from steps 3a, 4, 5)
-        E.2) **Quality & Safety Analysis** (from step 6 parallel reviewers - see synthesis format above)
+        E.0) **Cross-Phase Regression Analysis** (from step 3b - if enabled, otherwise "Skipped: --skip-regression-check")
+           - Regression findings table with prior phase references
+           - Tests rerun count, failures, contracts broken
+           - Integration point validation results
+           - Backward compatibility check results
+
+        E.1) **Doctrine & Testing Compliance** (from steps 3a, 3c, 4, 5)
+           - Graph integrity violations (link validation from 3a)
+           - Authority conflicts (plan/dossier sync from 3c)
+           - TDD/TAD/Lightweight/Mock/Universal validator findings (from 4)
+           - Testing evidence and coverage findings (from 5)
+
+        E.2) **Semantic Analysis** (from step 6, Subagent 1 - Semantic Analysis Reviewer)
+           - Domain logic correctness findings
+           - Algorithm accuracy violations
+           - Business rule compliance issues
+           - Specification drift detection
+           - Each finding includes spec_requirement quote
+
+        E.3) **Quality & Safety Analysis** (from step 6, Subagents 2-5 - Correctness, Security, Performance, Observability)
+           - Correctness: Logic defects, error handling, race conditions
+           - Security: Vulnerabilities, unsafe patterns, secrets
+           - Performance: Regressions, scalability issues, inefficiencies
+           - Observability: Logging gaps, metrics, debugging limitations
+           - (See synthesis format in step 6 for detailed structure)
+
      F) **Coverage Map** (acceptance criteria <-> test files/assertions)
+        - Per-criterion confidence scores (0-100%)
+        - Overall coverage confidence percentage
+        - Narrative test identification
+        - Weak mapping flagged with recommendations
+
      G) **Commands Executed** (copy/paste)
      H) **Decision & Next Steps** (who approves; what to fix)
      I) **Footnotes Audit**: summary table listing each diff-touched path, associated footnote tag(s) from `PHASE_DOC`, and node-ID link(s) recorded in the plan ledger.
@@ -847,16 +1158,60 @@ Notes:
 
 Review rubric baked into this phase
 
-- **Doctrine** (adapt to Testing Strategy from plan):
+- **Cross-Phase Regression** (Step 3b):
+  - **Tests rerun**: Execute test commands from prior phases against current code state
+  - **Contract validation**: No breaking changes to interfaces/APIs from earlier phases
+  - **Integration points**: Data flow contracts remain valid across phase boundaries
+  - **Backward compatibility**: Functionality added in prior phases not removed/broken
+  - Flag violations as CRITICAL/HIGH with specific prior phase references
+
+- **Plan Authority & Graph Integrity** (Steps 3a, 3c):
+  - **Link validation**: Bidirectional links intact (Task↔Log, Task↔Footnote, Footnote↔File, Plan↔Dossier, Parent↔Subtask)
+  - **Authority conflicts**: Plan § 12 wins over dossier when conflicts; sync via plan-6a
+  - **Footnote ledger**: Sequential numbering, all changed files have footnotes, FlowSpace node IDs valid
+  - Flag graph breaks as CRITICAL/HIGH (blocks traversability)
+
+- **Doctrine** (Step 4 - adapt to Testing Strategy from plan):
   - **Full TDD**: TDD order enforced (tests before code), tests-as-documentation required (assertions show behavior), RED-GREEN-REFACTOR cycles documented in execution log
-  - **TAD (Test-Assisted Development)**: Tests as executable documentation, Scratch→Promote workflow enforced, Test Doc comment blocks required (5 fields: Why/Contract/Usage Notes/Quality Contribution/Worked Example), promotion heuristic applied (Critical/Opaque/Regression/Edge), iterative development acceptable, promoted tests must be reliable (no network/sleep/flakes) and valuable for comprehension, tests/scratch/ excluded from CI, performance requirements per spec
+  - **TAD (Test-Assisted Development)**: Tests as executable documentation, Scratch→Promote workflow enforced, Test Doc comment blocks required (5 fields: Why/Contract/Usage Notes/Quality Contribution/Worked Example), **promotion heuristic rigorously applied** with concrete evidence (score 0-10, reject 0-4 as HIGH, accept 5-7 as MEDIUM, 8-10 as good), iterative development acceptable, promoted tests must be reliable (no network/sleep/flakes) and valuable for comprehension, tests/scratch/ excluded from CI, performance requirements per spec
   - **Lightweight**: Core validation tests required (focus on critical paths per spec Focus Areas), implementation-first acceptable, skip comprehensive edge case coverage if excluded in spec
   - **Manual**: Manual verification steps documented with clear expected outcomes, observed results recorded in execution log, evidence artifacts present (screenshots/logs)
   - **Hybrid**: Per-phase/per-task approach applied based on annotations - Full TDD rules for TDD-marked work, TAD rules for TAD-marked work, Lightweight rules for Lightweight-marked work
   - **Mock usage** (all approaches except Manual): Must align with spec preference (avoid/targeted/liberal) - CRITICAL if mismatched
   - **Real repo data/fixtures** whenever the Testing Strategy policy requires it
   - Flag drift as CRITICAL/HIGH with approach-appropriate fix guidance (test-first for Full TDD, Test Doc blocks for TAD, validation tests for Lightweight, manual checklist for Manual)
-- **BridgeContext patterns** for VS Code/TypeScript work: bounded `vscode.RelativePattern`, remote-safe `vscode.Uri`, pytest debug via `module` not `program` with `--no-cov`.
+
+- **Coverage Map Accuracy** (Step 5):
+  - **Explicit linkage**: Test names/comments reference criterion IDs (confidence: 100% explicit, 75% behavioral, 50% inferred, 0% unclear)
+  - **Narrative test detection**: Flag tests without clear criterion mapping as informative but not validating
+  - **Overall confidence**: Report aggregate score (HIGH if <50%, MEDIUM if 50-75%, LOW if >75%)
+  - Recommend adding criterion IDs to test names, test file organization by criteria
+
+- **Semantic Analysis** (Step 6, Subagent 1 - NEW):
+  - **Domain logic**: Business rules implemented as specified in plan/spec
+  - **Algorithm accuracy**: Correct implementation of specified algorithms (not just pattern matching)
+  - **Data flow correctness**: Inputs → processing → outputs match spec
+  - **Specification drift**: Implementation matches documented behavior (quote spec requirements in findings)
+  - Flag semantic errors as CRITICAL/HIGH with spec requirement evidence
+
+- **Quality & Safety** (Step 6, Subagents 2-5):
+  - **Correctness**: Logic defects, error handling, race conditions, type mismatches
+  - **Security**: Path traversal, injection, secrets, auth bypasses, weak crypto
+  - **Performance**: N+1 queries, unbounded scans, memory leaks, inefficient algorithms
+  - **Observability**: Missing error logs, insufficient context, broken remote logging, no metrics
+
+- **BridgeContext patterns** (Step 4, Subagent 4 - EXPANDED to 10 patterns):
+  1. Use vscode.Uri (not Node path) for file paths
+  2. Bounded vscode.RelativePattern with exclude + maxResults
+  3. Never workspace.findFiles('**/*') without bounds
+  4. Python debug via { module: 'pytest', args: ['--no-cov'] }
+  5. Use workspace.getConfiguration() instead of process.env
+  6. Use vscode.tasks API instead of child_process
+  7. Bounded createFileSystemWatcher() patterns
+  8. Use Uri.fsPath for display (never manipulate path strings)
+  9. Handle multi-root workspaces (workspaceFolders array)
+  10. Validate Uri.scheme before file operations
+
 - **Plan authority**: Changes must map to the locked structure and explicit acceptance criteria from planning. Testing evidence must match the Testing Approach documented in the plan.
 
 Flow update (ordered commands)

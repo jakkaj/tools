@@ -8,6 +8,31 @@ Please deep think / ultrathink as this is a complex task.
 
 **One phase at a time.** First use a **subagent to thoroughly review the previous phase** (if not Phase 1) including execution log, main plan, and critical findings. Then generate an actionable **tasks + alignment brief dossier** (`tasks.md`) for the chosen phase, plus the supporting directory structure, and stop before implementation. This merges your previous "tasks" generation with the pre-implementation walkthrough, scoped strictly to **one** phase. Treat the dossier as the shared contract between the human sponsor and the coding agent: lean on visual aids (e.g., Mermaid flow + sequence diagrams) to cement a cohesive understanding before touching code.
 
+---
+
+## 🚫 CRITICAL PROHIBITION: NO TIME ESTIMATES
+
+**NEVER** output time or duration estimates in **ANY FORM**:
+- ❌ Hours, minutes, days, weeks, months
+- ❌ "Quick", "fast", "soon", "trivial duration"
+- ❌ "ETA", "deadline", "timeline"
+- ❌ "~4 hours", "2-3 days", "should take X time"
+- ❌ "Total Estimated Effort: X hours/days"
+
+**ONLY** use **Complexity Score (CS 1-5)** from constitution rubric:
+- ✅ CS-1 (trivial): 0-2 complexity points
+- ✅ CS-2 (small): 3-4 complexity points
+- ✅ CS-3 (medium): 5-7 complexity points
+- ✅ CS-4 (large): 8-9 complexity points
+- ✅ CS-5 (epic): 10-12 complexity points
+
+**Rubric factors** (each scored 0-2): Scope, Interconnections, Dependencies, Novelty, Fragility, Testing
+Reference: `docs/rules-idioms-architecture/constitution.md` § 9
+
+**Before outputting tasks.md, validate**: No time language present? All task estimates use CS 1-5 only?
+
+---
+
 ```md
 User input:
 
