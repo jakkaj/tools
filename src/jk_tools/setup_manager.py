@@ -341,13 +341,25 @@ class SetupManager:
 
     def install_tools(self, update_mode: bool = False) -> None:
         """Install all tools with progress tracking"""
-        installers = self.get_installers()
+        # Check if we're in local-commands-only mode
+        is_local_mode = hasattr(self, 'commands_local') and self.commands_local
 
-        if not installers:
-            console.print("[yellow]No installers found[/yellow]")
-            return
+        if is_local_mode:
+            # In local mode, only run agents.sh
+            agents_installer = self.install_path / "agents.sh"
+            if not agents_installer.exists():
+                console.print(f"[red]agents.sh installer not found at {agents_installer}[/red]")
+                return
+            installers = [agents_installer]
+            action = "install local commands"
+        else:
+            # Standard mode: get all installers
+            installers = self.get_installers()
+            if not installers:
+                console.print("[yellow]No installers found[/yellow]")
+                return
+            action = "update" if update_mode else "install"
 
-        action = "update" if update_mode else "install"
         console.print(f"\n[bold cyan]Found {len(installers)} installer(s) to {action}[/bold cyan]\n")
 
         with Progress(
@@ -452,8 +464,15 @@ class SetupManager:
 
     def run(self, update_mode: bool = False) -> None:
         """Run the complete setup process"""
+        # Check if we're in local-commands-only mode
+        is_local_mode = hasattr(self, 'commands_local') and self.commands_local
+
         # Display header
-        mode_text = "UPDATE MODE" if update_mode else "INSTALL MODE"
+        if is_local_mode:
+            mode_text = "LOCAL COMMANDS MODE"
+        else:
+            mode_text = "UPDATE MODE" if update_mode else "INSTALL MODE"
+
         console.print(Panel.fit(
             f"[bold cyan]Tools Repository Setup Manager[/bold cyan]\n"
             f"[dim]OS: {self.os_type} | Path: {self.script_dir}[/dim]\n"
@@ -461,37 +480,58 @@ class SetupManager:
             border_style="cyan"
         ))
 
-        # Check prerequisites
-        console.print("\n[bold]Checking prerequisites...[/bold]")
-        if not self.check_prerequisites():
-            console.print("[red]Prerequisites check failed. Exiting.[/red]")
-            sys.exit(1)
-        console.print("[green]✓[/green] Prerequisites check passed")
+        # In local mode, skip most setup steps
+        if is_local_mode:
+            # Only install local commands via agents.sh
+            console.print("\n[bold]Installing local commands...[/bold]")
+            console.print(f"[dim]Target: {self.local_dir}[/dim]")
+            console.print(f"[dim]CLIs: {self.commands_local}[/dim]\n")
+            self.install_tools(update_mode)
 
-        # Add to PATH
-        console.print("\n[bold]Configuring PATH...[/bold]")
-        self.add_to_path()
+            # Show summary
+            self.show_summary()
 
-        # Make scripts executable
-        console.print("\n[bold]Setting permissions...[/bold]")
-        self.make_scripts_executable()
+            # Custom final message for local mode
+            console.print(Panel(
+                "[green]Local commands installed![/green]\n\n"
+                f"Commands have been installed to:\n"
+                f"  [cyan]{self.local_dir}[/cyan]\n\n"
+                "The commands are now available for your project.",
+                border_style="green"
+            ))
+        else:
+            # Standard full setup mode
+            # Check prerequisites
+            console.print("\n[bold]Checking prerequisites...[/bold]")
+            if not self.check_prerequisites():
+                console.print("[red]Prerequisites check failed. Exiting.[/red]")
+                sys.exit(1)
+            console.print("[green]✓[/green] Prerequisites check passed")
 
-        # Install/Update tools
-        action = "Updating" if update_mode else "Installing"
-        console.print(f"\n[bold]{action} tools...[/bold]")
-        self.install_tools(update_mode)
+            # Add to PATH
+            console.print("\n[bold]Configuring PATH...[/bold]")
+            self.add_to_path()
 
-        # Show summary
-        self.show_summary()
+            # Make scripts executable
+            console.print("\n[bold]Setting permissions...[/bold]")
+            self.make_scripts_executable()
 
-        # Final message
-        console.print(Panel(
-            "[green]Setup complete![/green]\n\n"
-            "To use the changes in your current shell:\n"
-            "  [cyan]source ~/.zshrc[/cyan]\n\n"
-            "Or simply open a new terminal window.",
-            border_style="green"
-        ))
+            # Install/Update tools
+            action = "Updating" if update_mode else "Installing"
+            console.print(f"\n[bold]{action} tools...[/bold]")
+            self.install_tools(update_mode)
+
+            # Show summary
+            self.show_summary()
+
+            # Final message
+            console.print(Panel(
+                "[green]Setup complete![/green]\n\n"
+                "To use the changes in your current shell:\n"
+                "  [cyan]source ~/.zshrc[/cyan]\n\n"
+                "Or simply open a new terminal window.",
+                border_style="green"
+            ))
 
 
 def main():

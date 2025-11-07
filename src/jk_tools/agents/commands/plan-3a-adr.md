@@ -1,7 +1,7 @@
 ---
 mode: 'agent'
 description: 'Generate an Architectural Decision Record (ADR) from the feature spec and clarifications; persist to docs/adr and cross-link into the plan.'
-tools: ['changes', 'search/codebase', 'edit/editFiles', 'extensions', 'fetch', 'githubRepo', 'openSimpleBrowser', 'problems', 'runTasks', 'search', 'search/searchResults', 'runCommands/terminalLastCommand', 'runCommands/terminalSelection', 'testFailure', 'usages', 'vscodeAPI']
+
 ---
 
 Please deep think / ultrathink as this is a complex task.
