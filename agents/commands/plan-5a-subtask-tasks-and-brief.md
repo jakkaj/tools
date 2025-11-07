@@ -69,8 +69,9 @@ $ARGUMENTS
      ```
      Replace `<placeholders>` with actual values derived from PLAN, PHASE_HEADING, and parent task linkage identified in step 3.
    - `## Tasks` table using canonical columns
-     | Status | ID | Task | Type | Dependencies | Absolute Path(s) | Validation | Notes |
+     | Status | ID | Task | CS | Type | Dependencies | Absolute Path(s) | Validation | Notes |
      * Use IDs `ST001`, `ST002`, … (serial, reflect mapping to parent T-ID in Notes like "Supports T003 (footnote captured during plan-6)").
+     * `CS` (Complexity Score 1-5) is required for each subtask using constitution rubric (CS-1=trivial, CS-2=small, CS-3=medium, CS-4=large, CS-5=epic).
      * Dependencies reference other ST IDs (and optionally parent T-IDs in Notes).
      * Absolute paths remain mandatory (absolute); include parent dossier paths if reused.
      * Notes capture context (e.g., parent T-ID, [P] guidance) without adding `[^N]` footnote tags; plan-6 will append ledger references after implementation.

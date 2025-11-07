@@ -108,18 +108,36 @@ Analyze from multiple perspectives:
 - "Rollback becomes [harder/impossible/risky] because ..."
 - "Monitoring/alerting needs to [change/expand] ..."
 
+**Complexity-Aware Analysis (When Analyzing Plans/Tasks):**
+
+If analyzing a plan or tasks document that includes CS (Complexity Score) ratings:
+
+- **CS-1 (Trivial)**: Focus on "what could make this NOT trivial?" - hidden assumptions, edge cases
+- **CS-2 (Small)**: Focus on integration points - "what else does this touch?"
+- **CS-3 (Medium)**: Focus on testing strategy - "how do we prove this works?"
+- **CS-4 (Large)**: Focus on rollout safety - "what's the rollback plan?"
+- **CS-5 (Epic)**: Focus on phasing - "how do we break this down further?"
+
+**Complexity Insights to Consider:**
+- **Scope underestimation**: "This task is marked CS-2, but did you know it touches 5 external systems?" → Recommend re-scoring to CS-4
+- **Testing gap**: "These CS-4 tasks have no staged rollout plan" → Recommend adding feature flags + monitoring
+- **Risk mismatch**: "CS-5 task has no subtask breakdown" → Recommend /plan-5a-subtask for decomposition
+- **Breadth discovery**: "Surface Area factor is underestimated" → Discuss actual file count vs estimate
+
 **Selection Criteria - Choose the 5 most impactful insights that are:**
 1. **Truly impactful** - Not trivial observations, but things that matter
 2. **Non-obvious** - Not explicitly stated in the docs, requires deep analysis
 3. **Actionable** - Leads to decisions, changes, or important acknowledgments
 4. **Discussion-worthy** - Promotes meaningful conversation and alignment
 5. **Prioritized** - Ordered by impact (most critical first)
+6. **Complexity-conscious** - When CS scores exist, validate them and surface mismatches
 
 **Quality Bar:**
 - Each insight should make the human go "Wow, I didn't think of that"
 - Each insight should change how we think about the work
 - Each insight should prevent a future problem or improve the outcome
 - Insights should span different perspectives (not all technical, not all UX)
+- When analyzing scored work, challenge CS ratings that seem misaligned with actual scope/risk
 
 ### 3) CONVERSATIONAL PRESENTATION (One at a Time - CRITICAL!)
 
@@ -171,19 +189,19 @@ Here are our options:
 - [What this involves]
 - Pros: [Benefits]
 - Cons: [Tradeoffs/risks]
-- Effort: [High/Medium/Low]
+- Complexity: CS-[1-5] ([trivial/small/medium/large/epic])
 
 **Option B: [Approach Name]**
 - [What this involves]
 - Pros: [Benefits]
 - Cons: [Tradeoffs/risks]
-- Effort: [High/Medium/Low]
+- Complexity: CS-[1-5] ([trivial/small/medium/large/epic])
 
 **Option C: [Approach Name]**
 - [What this involves]
 - Pros: [Benefits]
 - Cons: [Tradeoffs/risks]
-- Effort: [High/Medium/Low]
+- Complexity: CS-[1-5] ([trivial/small/medium/large/epic])
 
 **My Recommendation: Option [X]**
 
@@ -492,25 +510,25 @@ Here are our options:
 - Support both JWT and OAuth simultaneously for 24 hours
 - Pros: Zero disruption, graceful transition, users can finish sessions
 - Cons: Complex code, temporary technical debt, security risk window
-- Effort: High (requires dual auth logic + cleanup later)
+- Complexity: CS-4 (large - requires dual auth logic + cleanup later)
 
 **Option B: Off-Peak Deployment Window**
 - Schedule deployment for 3am Sunday EST (lowest usage)
 - Pros: Simple, minimal user impact (~10-20 active users)
 - Cons: Requires weekend deployment, still disrupts some users
-- Effort: Low (just timing + maintenance banner)
+- Complexity: CS-2 (small - just timing + maintenance banner)
 
 **Option C: On-the-Fly Token Migration**
 - Build migration tool that converts JWT→OAuth tokens automatically
 - Pros: Zero user disruption, can deploy anytime
 - Cons: Very complex, risky token conversion logic, potential security issues
-- Effort: Very High (complex migration logic)
+- Complexity: CS-5 (epic - complex migration logic with security concerns)
 
 **Option D: Hard Cutover with Warning Banner**
 - Deploy during business hours, show 1-hour warning banner
 - Pros: Simple, transparent to users
 - Cons: Disrupts all active users, potential rate limiting chaos
-- Effort: Low (just add banner)
+- Complexity: CS-2 (small - just add banner)
 
 **My Recommendation: Option B (Off-Peak Deployment)**
 

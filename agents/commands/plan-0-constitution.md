@@ -202,6 +202,53 @@ Include amendment date as ISO 8601."
          # Arrange-Act-Assert with clear phases
      ```
 
+     **9. Complexity-First Estimation Policy (REQUIRED)**
+
+     The constitution MUST enforce a **no-time policy** for all estimates and planning:
+
+     - **Prohibition**: Never output or imply time, duration, or ETA in any form (hours, minutes, days, "quick", "fast", "soon", deadlines, etc.)
+     - **Replacement**: All effort quantification MUST use the **Complexity Score (CS 1-5)** system
+     - **Scoring rubric**: Compute points (0-2 each) for 6 factors, sum to CS:
+       * **Surface Area (S)**: Files/modules touched; breadth of change (0=one file, 1=multiple files, 2=many files/cross-cutting)
+       * **Integration Breadth (I)**: External libs/services/APIs/tooling (0=internal only, 1=one external, 2=multiple externals/unstable API)
+       * **Data & State (D)**: Schema changes, migrations, concurrency (0=none, 1=minor tweaks, 2=non-trivial migration/concurrency)
+       * **Novelty & Ambiguity (N)**: Requirements clarity, research needed (0=well-specified, 1=some ambiguity, 2=unclear specs/significant discovery)
+       * **Non-Functional Constraints (F)**: Performance, security, compliance (0=standard gates, 1=moderate constraints, 2=strict/critical constraints)
+       * **Testing & Rollout (T)**: Test depth, flags, staged rollout (0=unit only, 1=integration/e2e, 2=flags/staged rollout/backward compat)
+     - **Mapping**: Total points P (0-12) maps to CS:
+       * CS-1 (0-2): Trivial - isolated tweak, no new deps, unit test touchups
+       * CS-2 (3-4): Small - few files, familiar code, maybe one internal integration
+       * CS-3 (5-7): Medium - multiple modules, small migration or stable external API, integration tests
+       * CS-4 (8-9): Large - cross-component, new dependency/service, meaningful migration, rollout plan
+       * CS-5 (10-12): Epic - architectural change/new service, high uncertainty, phased rollout with flags
+
+     **Mandatory output fields** wherever planning or reporting occurs:
+     ```json
+     {
+       "complexity": {
+         "score": 3,
+         "label": "medium",
+         "breakdown": {"surface": 1, "integration": 1, "data_state": 1, "novelty": 1, "nfr": 0, "testing_rollout": 1},
+         "confidence": 0.75
+       },
+       "assumptions": ["Spec is final"],
+       "dependencies": ["Payments service schema v2"],
+       "risks": ["Downstream consumer expectations"],
+       "phases": ["Design notes", "Implementation", "Tests", "Flagged rollout"]
+     }
+     ```
+
+     **Enforcement rules**:
+     - For CS ≥ 4, MUST include staged rollout, feature flags, and rollback plan in phases
+     - Prefer complexity idioms: "scope", "risk", "breadth", "unknowns" over any time language
+     - If uncertainty is high, ask clarifying questions and reflect in Novelty (N) + lower confidence
+     - Self-check: If time words appear in drafts, replace with complexity reasoning or remove
+
+     **Calibration examples** (include in idioms.md):
+     - Rename a constant used in one file: S=0, I=0, D=0, N=0, F=0, T=0 → **CS-1 (trivial)**
+     - Add new endpoint using existing service: S=1, I=1, D=1, N=1, F=0, T=1 → P=5 → **CS-3 (medium)**
+     - Introduce new service with schema migration and staged rollout: S=2, I=2, D=2, N=2, F=1, T=2 → P=11 → **CS-5 (epic)**
+
    - Write `idioms.md` with illustrative patterns, directory conventions, and language-specific examples when relevant.
    - Keep references to the constitution explicit (e.g., link sections or quote identifiers). If any area is not yet defined, leave a TODO entry mirroring the constitution.
 

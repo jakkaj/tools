@@ -252,7 +252,7 @@ Read the `## Testing Strategy` section from the spec and adapt plan generation a
   * Every promoted test must include Test Doc block (Why/Contract/Usage Notes/Quality Contribution/Worked Example)
   * Focus on tests that "pay rent" via comprehension value
   * Name tests "Given...When...Then..." format
-  * Keep tests/scratch/ out of CI; promoted tests should be reasonably fast and reliable
+  * Keep tests/scratch/ out of CI; promoted tests should be reliable and deterministic
 - **Lightweight**: Reduce test tasks to core validation only
 - **Manual Only**: Replace test tasks with manual verification checklists
 - **Hybrid**: Mark phases with approach annotations (TDD/TAD/Lightweight per phase)
@@ -260,7 +260,7 @@ Read the `## Testing Strategy` section from the spec and adapt plan generation a
 ### Documentation Strategy Adaptation
 Read the `## Documentation Strategy` section from the spec and generate appropriate documentation phases based on the location choice:
 
-- **README.md only**: Create single documentation phase updating root README.md with quick-start content
+- **README.md only**: Create single documentation phase updating root README.md with getting-started content
 - **docs/how/ only**: Create documentation phase(s) for detailed guides under docs/how/
   - Structure: `docs/how/<feature-name>/N-topic.md` (numbered files within feature directory)
   - **Intelligent file placement**:
@@ -269,7 +269,7 @@ Read the `## Documentation Strategy` section from the spec and generate appropri
     3. Determine file strategy: create new numbered file OR append to existing file if content is small/related
     4. Use sequential numbering (1-overview.md, 2-usage.md, 3-api.md, etc.)
 - **Hybrid**: Create multiple documentation phases:
-  - Phase for README.md updates (quick-start, overview, essential commands)
+  - Phase for README.md updates (getting-started, overview, essential commands)
   - Phase for docs/how/ content following structure above
   - Ensure content split matches spec guidance
 - **None**: Skip documentation phases (note in plan why docs are not needed)
@@ -449,39 +449,39 @@ For EACH phase, generate:
 ### Tasks (Adapt based on Testing Strategy)
 
 For **Full TDD** approach:
-| #   | Status | Task | Success Criteria | Log | Notes |
-|-----|--------|------|------------------|-----|-------|
-| N.1 | [ ] | Write comprehensive tests for [component] | Tests cover: [scenarios], all fail initially | - | |
-| N.2 | [ ] | Implement [component] to pass tests | All tests from N.1 pass | - | |
-| N.3 | [ ] | Write integration tests for [feature] | Tests document expected behavior | - | |
-| N.4 | [ ] | Integrate [component] with [system] | Integration tests pass | - | |
-| N.5 | [ ] | Refactor for [quality aspect] | Code meets idioms, tests still pass | - | |
+| #   | Status | Task | CS | Success Criteria | Log | Notes |
+|-----|--------|------|----|------------------|-----|-------|
+| N.1 | [ ] | Write comprehensive tests for [component] | 2 | Tests cover: [scenarios], all fail initially | - | |
+| N.2 | [ ] | Implement [component] to pass tests | 3 | All tests from N.1 pass | - | |
+| N.3 | [ ] | Write integration tests for [feature] | 2 | Tests document expected behavior | - | |
+| N.4 | [ ] | Integrate [component] with [system] | 3 | Integration tests pass | - | |
+| N.5 | [ ] | Refactor for [quality aspect] | 2 | Code meets idioms, tests still pass | - | |
 
 For **TAD (Test-Assisted Development)** approach:
-| #   | Status | Task | Success Criteria | Log | Notes |
-|-----|--------|------|------------------|-----|-------|
-| N.1 | [ ] | Create tests/scratch/ directory | Directory exists, excluded from CI config | - | Ensure .gitignore or CI config excludes tests/scratch/ |
-| N.2 | [ ] | Write scratch probes for [component] | 10-15 probe tests exploring behavior | - | Fast iteration, no Test Doc blocks needed |
-| N.3 | [ ] | **RUN-Implement-Fix loop** for [component] | **Test runner output shows 10-20 RED→GREEN cycles** | - | **MUST EXECUTE**: pytest/npm test commands run repeatedly, paste output as evidence |
-| N.4 | [ ] | Complete implementation | Core functionality works, all scratch tests pass | - | Code refined through iterative testing |
-| N.5 | [ ] | Promote valuable tests to tests/unit/ | 1-2 tests moved (~5-10% of scratch tests) with Test Doc blocks added | - | Apply heuristic ruthlessly: Critical path, Opaque behavior, Regression-prone, Edge case |
-| N.6 | [ ] | Add Test Doc comment blocks | All promoted tests have Why/Contract/Usage/Quality/Example | - | Required 5 fields per promoted test |
-| N.7 | [ ] | Delete non-valuable scratch tests | 90-95% of scratch tests deleted, only promoted tests remain in main suite | - | Keep learning notes in execution log/PR |
-| N.8 | [ ] | Verify CI exclusion of scratch/ | CI config explicitly excludes tests/scratch/ | - | |
+| #   | Status | Task | CS | Success Criteria | Log | Notes |
+|-----|--------|------|----|------------------|-----|-------|
+| N.1 | [ ] | Create tests/scratch/ directory | 1 | Directory exists, excluded from CI config | - | Ensure .gitignore or CI config excludes tests/scratch/ |
+| N.2 | [ ] | Write scratch probes for [component] | 2 | 10-15 probe tests exploring behavior | - | Fast iteration, no Test Doc blocks needed |
+| N.3 | [ ] | **RUN-Implement-Fix loop** for [component] | 3 | **Test runner output shows 10-20 RED→GREEN cycles** | - | **MUST EXECUTE**: pytest/npm test commands run repeatedly, paste output as evidence |
+| N.4 | [ ] | Complete implementation | 3 | Core functionality works, all scratch tests pass | - | Code refined through iterative testing |
+| N.5 | [ ] | Promote valuable tests to tests/unit/ | 2 | 1-2 tests moved (~5-10% of scratch tests) with Test Doc blocks added | - | Apply heuristic ruthlessly: Critical path, Opaque behavior, Regression-prone, Edge case |
+| N.6 | [ ] | Add Test Doc comment blocks | 2 | All promoted tests have Why/Contract/Usage/Quality/Example | - | Required 5 fields per promoted test |
+| N.7 | [ ] | Delete non-valuable scratch tests | 1 | 90-95% of scratch tests deleted, only promoted tests remain in main suite | - | Keep learning notes in execution log/PR |
+| N.8 | [ ] | Verify CI exclusion of scratch/ | 1 | CI config explicitly excludes tests/scratch/ | - | |
 
 For **Lightweight** approach:
-| #   | Status | Task | Success Criteria | Log | Notes |
-|-----|--------|------|------------------|-----|-------|
-| N.1 | [ ] | Implement [component] | Basic functionality works | - | |
-| N.2 | [ ] | Write validation test | Core behavior verified | - | |
-| N.3 | [ ] | Run smoke test | End-to-end flow works | - | |
+| #   | Status | Task | CS | Success Criteria | Log | Notes |
+|-----|--------|------|----|------------------|-----|-------|
+| N.1 | [ ] | Implement [component] | 2 | Basic functionality works | - | |
+| N.2 | [ ] | Write validation test | 1 | Core behavior verified | - | |
+| N.3 | [ ] | Run smoke test | 1 | End-to-end flow works | - | |
 
 For **Manual Only** approach:
-| #   | Status | Task | Success Criteria | Log | Notes |
-|-----|--------|------|------------------|-----|-------|
-| N.1 | [ ] | Implement [component] | Functionality complete | - | |
-| N.2 | [ ] | Document manual test steps | Clear verification process | - | |
-| N.3 | [ ] | Execute manual validation | All checks pass | - | |
+| #   | Status | Task | CS | Success Criteria | Log | Notes |
+|-----|--------|------|----|------------------|-----|-------|
+| N.1 | [ ] | Implement [component] | 2 | Functionality complete | - | |
+| N.2 | [ ] | Document manual test steps | 1 | Clear verification process | - | |
+| N.3 | [ ] | Execute manual validation | 1 | All checks pass | - | |
 
 For **Hybrid** approach:
 [Mark each phase as Full TDD, TAD, or Lightweight based on complexity and documentation needs]
@@ -555,11 +555,21 @@ describe('[Component]', () => {
 
 #### 9. Complexity Tracking
 
-If Constitution/Architecture deviations exist:
+Track component-level complexity using CS 1-5 scale:
 
-| Component | Complexity | Justification | Simplification Plan |
-|-----------|------------|---------------|-------------------|
-| [Component] | High | [Why needed] | [Future refactor approach] |
+| Component | CS | Label | Breakdown (S,I,D,N,F,T) | Justification | Mitigation |
+|-----------|-----|-------|------------------------|---------------|------------|
+| [Component] | 4 | Large | S=2,I=1,D=2,N=1,F=1,T=2 | [Why this complexity unavoidable] | [Rollout plan, flags, monitoring] |
+
+**When to populate**:
+- Any component with CS ≥ 3 (medium or higher)
+- Constitution/Architecture deviations
+- Technical debt accumulation points
+- High-risk integration points
+
+**CS mapping**: CS-1 (trivial), CS-2 (small), CS-3 (medium), CS-4 (large), CS-5 (epic)
+
+**For CS ≥ 4**: Mitigation MUST include staged rollout, feature flags, and rollback plan
 
 #### 10. Progress Tracking
 
@@ -676,16 +686,16 @@ Note: This example shows Full TDD approach. Adapt based on Testing Strategy from
 
 ### Tasks (TDD Approach)
 
-| #   | Status | Task | Success Criteria | Log | Notes |
-|-----|--------|------|------------------|-----|-------|
-| 1.1 | [ ] | Write comprehensive tests for BridgeContext | Tests cover: version check, getWorkspace, getConfiguration, error cases | - | Create BridgeContext.test.ts |
-| 1.2 | [ ] | Write tests for BridgeContext factory | Tests cover: singleton behavior, lifecycle, context injection | - | Create factory.test.ts |
-| 1.3 | [ ] | Create BridgeContext TypeScript interface | Interface compiles, exports properly | - | Define in types.ts |
-| 1.4 | [ ] | Implement BridgeContext to pass tests | All tests from 1.1 pass | - | Thin wrappers around VS Code APIs |
-| 1.5 | [ ] | Implement factory to pass tests | All tests from 1.2 pass | - | Singleton pattern |
-| 1.6 | [ ] | Write tests for logger service | Tests cover: log levels, output channel, formatting | - | Integrate with BridgeContext.test.ts |
-| 1.7 | [ ] | Implement logger service | Logger uses OutputChannel, all tests pass | - | Use VS Code OutputChannel API |
-| 1.8 | [ ] | Create index exports and validate | Can import from 'core/bridge-context' | - | Clean module exports |
+| #   | Status | Task | CS | Success Criteria | Log | Notes |
+|-----|--------|------|----|------------------|-----|-------|
+| 1.1 | [ ] | Write comprehensive tests for BridgeContext | 2 | Tests cover: version check, getWorkspace, getConfiguration, error cases | - | Create BridgeContext.test.ts |
+| 1.2 | [ ] | Write tests for BridgeContext factory | 2 | Tests cover: singleton behavior, lifecycle, context injection | - | Create factory.test.ts |
+| 1.3 | [ ] | Create BridgeContext TypeScript interface | 1 | Interface compiles, exports properly | - | Define in types.ts |
+| 1.4 | [ ] | Implement BridgeContext to pass tests | 3 | All tests from 1.1 pass | - | Thin wrappers around VS Code APIs |
+| 1.5 | [ ] | Implement factory to pass tests | 2 | All tests from 1.2 pass | - | Singleton pattern |
+| 1.6 | [ ] | Write tests for logger service | 2 | Tests cover: log levels, output channel, formatting | - | Integrate with BridgeContext.test.ts |
+| 1.7 | [ ] | Implement logger service | 2 | Logger uses OutputChannel, all tests pass | - | Use VS Code OutputChannel API |
+| 1.8 | [ ] | Create index exports and validate | 1 | Can import from 'core/bridge-context' | - | Clean module exports |
 
 ### Test Examples (Write First!)
 
@@ -762,7 +772,7 @@ Note: This example shows a Hybrid documentation approach (README + docs/how/). A
 **Objective**: Document the BridgeContext feature for users and maintainers following hybrid approach (essentials in README, details in docs/how/bridge-context/).
 
 **Deliverables**:
-- Updated README.md with quick-start guide
+- Updated README.md with getting-started guide
 - Detailed guides in docs/how/bridge-context/ (numbered structure)
 
 **Dependencies**: All implementation phases complete, tests passing
@@ -791,20 +801,20 @@ docs/how/
 
 ### Tasks (Lightweight Approach for Documentation)
 
-| #   | Status | Task | Success Criteria | Log | Notes |
-|-----|--------|------|------------------|-----|-------|
-| N.1 | [ ] | Survey existing docs/how/ directories | Documented existing structure, identified no conflicts | - | Discovery step |
-| N.2 | [ ] | Update README.md with BridgeContext quick-start | Installation, basic usage, link to docs/how/bridge-context/ | - | /path/to/repo/README.md |
-| N.3 | [ ] | Create docs/how/bridge-context/1-overview.md | Introduction, motivation, architecture diagram complete | - | /path/to/repo/docs/how/bridge-context/1-overview.md |
-| N.4 | [ ] | Create docs/how/bridge-context/2-usage.md | Step-by-step usage guide with code examples | - | /path/to/repo/docs/how/bridge-context/2-usage.md |
-| N.5 | [ ] | Create docs/how/bridge-context/3-api.md | All public APIs documented with examples | - | /path/to/repo/docs/how/bridge-context/3-api.md |
-| N.6 | [ ] | Review documentation for clarity and completeness | Peer review passed, no broken links | - | All docs reviewed |
+| #   | Status | Task | CS | Success Criteria | Log | Notes |
+|-----|--------|------|----|------------------|-----|-------|
+| N.1 | [ ] | Survey existing docs/how/ directories | 1 | Documented existing structure, identified no conflicts | - | Discovery step |
+| N.2 | [ ] | Update README.md with BridgeContext getting-started | 2 | Installation, basic usage, link to docs/how/bridge-context/ | - | /path/to/repo/README.md |
+| N.3 | [ ] | Create docs/how/bridge-context/1-overview.md | 2 | Introduction, motivation, architecture diagram complete | - | /path/to/repo/docs/how/bridge-context/1-overview.md |
+| N.4 | [ ] | Create docs/how/bridge-context/2-usage.md | 2 | Step-by-step usage guide with code examples | - | /path/to/repo/docs/how/bridge-context/2-usage.md |
+| N.5 | [ ] | Create docs/how/bridge-context/3-api.md | 2 | All public APIs documented with examples | - | /path/to/repo/docs/how/bridge-context/3-api.md |
+| N.6 | [ ] | Review documentation for clarity and completeness | 1 | Peer review passed, no broken links | - | All docs reviewed |
 
 ### Content Outlines
 
-**README.md section** (Hybrid: quick-start only):
+**README.md section** (Hybrid: getting-started only):
 - What is BridgeContext (1-2 sentences)
-- Installation/setup (quick steps)
+- Installation/setup (essential steps)
 - Basic usage example (minimal code snippet)
 - Link to detailed docs: `docs/how/bridge-context/`
 
@@ -827,7 +837,7 @@ docs/how/
 - Code examples for each method
 
 ### Acceptance Criteria
-- [ ] README.md updated with quick-start section
+- [ ] README.md updated with getting-started section
 - [ ] All docs/how/bridge-context/ files created and complete
 - [ ] Code examples tested and working
 - [ ] No broken links (internal or external)

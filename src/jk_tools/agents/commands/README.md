@@ -9,6 +9,7 @@ A comprehensive guide to the /plan command suite for structured, phase-by-phase 
 - [Command Flow Diagram](#command-flow-diagram)
 - [Core Workflow Commands](#core-workflow-commands)
 - [Optional Enhancement Commands](#optional-enhancement-commands)
+- [Complexity Scoring (CS 1-5)](#complexity-scoring-cs-1-5)
 - [Testing Philosophy](#testing-philosophy)
 - [Directory Structure](#directory-structure)
 - [Best Practices](#best-practices)
@@ -579,6 +580,84 @@ file:<file_path>
 7. Appends Critical Insights Discussion section
 
 **Key Feature**: Updates are applied IMMEDIATELY after each insight discussion, not deferred to end
+
+## Complexity Scoring (CS 1-5)
+
+### No-Time Policy
+
+**All planning commands enforce a strict no-time policy:**
+- ❌ **Never** use time/duration estimates (hours, days, "quick", "fast", "soon", ETA, deadlines)
+- ✅ **Always** use Complexity Score (CS 1-5) for effort quantification
+- ✅ Use complexity idioms: "scope", "risk", "breadth", "unknowns"
+
+### CS Rubric
+
+**Compute points (0-2 each) for 6 factors:**
+
+| Factor | 0 Points | 1 Point | 2 Points |
+|--------|----------|---------|----------|
+| **Surface Area (S)** | One file, isolated change | Multiple files or small module | Many files/modules, cross-cutting |
+| **Integration (I)** | Internal only | One external lib/service | Multiple externals, unstable API |
+| **Data/State (D)** | No schema/migration changes | Minor field/state tweaks | Non-trivial migration, concurrency |
+| **Novelty (N)** | Well-specified, known pattern | Some ambiguity, light research | Unclear specs, significant discovery |
+| **Non-Functional (F)** | Standard quality gates | Moderate perf/security constraints | Strict constraints, critical path |
+| **Testing/Rollout (T)** | Unit tests only, local scope | Integration/e2e tests | Feature flags, staged rollout, backward compat |
+
+**Total P = S + I + D + N + F + T (0-12)**
+
+**Map to CS:**
+- **CS-1** (0-2 points): **Trivial** - Isolated tweak, no new deps, unit test touchups
+- **CS-2** (3-4 points): **Small** - Few files, familiar code, maybe one internal integration
+- **CS-3** (5-7 points): **Medium** - Multiple modules, small migration or stable external API, integration tests
+- **CS-4** (8-9 points): **Large** - Cross-component, new dependency/service, meaningful migration, quality gates + rollout plan
+- **CS-5** (10-12 points): **Epic** - Architectural change/new service, high uncertainty, design + phased rollout with flags/fallbacks
+
+### CS Output Format
+
+**Required JSON wherever planning/reporting:**
+```json
+{
+  "complexity": {
+    "score": 3,
+    "label": "medium",
+    "breakdown": {
+      "surface": 1,
+      "integration": 1,
+      "data_state": 1,
+      "novelty": 1,
+      "nfr": 0,
+      "testing_rollout": 1
+    },
+    "confidence": 0.75
+  },
+  "assumptions": ["Spec is final"],
+  "dependencies": ["Payments service schema v2"],
+  "risks": ["Downstream consumer expectations"],
+  "phases": ["Design notes", "Implementation", "Tests", "Flagged rollout"]
+}
+```
+
+**For CS ≥ 4**: Phases MUST include staged rollout, feature flags, and rollback plan
+
+### Calibration Examples
+
+| Example | S | I | D | N | F | T | P | CS | Label |
+|---------|---|---|---|---|---|---|---|----|----|
+| Rename constant (1 file) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | CS-1 | Trivial |
+| Add endpoint (existing service) | 1 | 1 | 1 | 1 | 0 | 1 | 5 | CS-3 | Medium |
+| New service + migration + rollout | 2 | 2 | 2 | 2 | 1 | 2 | 11 | CS-5 | Epic |
+
+### Task Table Format
+
+**Canonical task table includes CS column:**
+```markdown
+| Status | ID | Task | CS | Type | Dependencies | Absolute Path(s) | Validation | Subtasks | Notes |
+|--------|-----|------|-----|------|-------------|------------------|------------|----------|-------|
+| [ ] | T001 | Setup validation module | 2 | Core | -- | /path/to/validators.py | Tests pass | -- | [P] Use constitution patterns |
+| [ ] | T002 | Implement async retry | 4 | Core | T001 | /path/to/retry.py | Integration tests, rollout plan | -- | [P] Feature flag required |
+```
+
+**CS appears after Task, before Type** for visibility during planning and implementation
 
 ## Testing Philosophy
 

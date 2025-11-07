@@ -147,10 +147,11 @@ $ARGUMENTS
    ```
 
    **Canonical tasks table layout** (all dossiers MUST follow this column order):
-   | Status | ID | Task | Type | Dependencies | Absolute Path(s) | Validation | Subtasks | Notes |
+   | Status | ID | Task | CS | Type | Dependencies | Absolute Path(s) | Validation | Subtasks | Notes |
    - `Status` is a literal checkbox column; start each row with `[ ]` so later phases can update to `[~]` (in progress) or `[x]` (complete).
    - `ID` uses the T001… dossier sequence and should link back to the matching plan task when applicable (e.g., in notes or alignment brief).
    - `Task` summarizes the work item with sufficient detail for implementation.
+   - `CS` is the Complexity Score (1-5) computed from constitution rubric: CS-1 (trivial), CS-2 (small), CS-3 (medium), CS-4 (large), CS-5 (epic). Score each task using S,I,D,N,F,T factors (0-2 each).
    - `Type` classifies it (Setup/Test/Core/Integration/Doc/etc.).
    - `Dependencies` lists prerequisite task IDs (e.g., "T001, T002") or "–" for none.
    - `Absolute Path(s)` must list every impacted file or directory using absolute paths (REQUIRED - no relative paths).
@@ -160,7 +161,7 @@ $ARGUMENTS
 
 6) Write a single combined artifact `PHASE_DIR/tasks.md` containing:
    - Phase metadata (title, slug, links to SPEC and PLAN, today {{TODAY}}).
-   - `## Tasks` section that renders the table exactly as defined above (Status checkbox first, then ID, Task, Type, Dependencies, Absolute Path(s), Validation, Subtasks, Notes) with numbered items (T001...), dependencies, [P] guidance, and validation checklist coverage.
+   - `## Tasks` section that renders the table exactly as defined above (Status checkbox first, then ID, Task, CS, Type, Dependencies, Absolute Path(s), Validation, Subtasks, Notes) with numbered items (T001...), complexity scores, dependencies, [P] guidance, and validation checklist coverage.
    - `## Alignment Brief` section with:
      * **Prior Phases Review** (if not Phase 1):
        - Include the complete cross-phase synthesis from step 1a here

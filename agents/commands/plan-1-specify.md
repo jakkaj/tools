@@ -22,6 +22,24 @@ $ARGUMENTS
    - `## Summary` – short WHAT/WHY overview
    - `## Goals` – bullet list of desired outcomes/user value
    - `## Non-Goals` – explicitly out-of-scope behavior
+   - `## Complexity` – initial complexity assessment using CS 1-5 system:
+     * **Score**: CS-{1|2|3|4|5} ({trivial|small|medium|large|epic})
+     * **Breakdown**: S={0-2}, I={0-2}, D={0-2}, N={0-2}, F={0-2}, T={0-2}
+     * **Confidence**: {0.00-1.00} (agent's confidence in the score)
+     * **Assumptions**: [list of assumptions made during scoring]
+     * **Dependencies**: [external dependencies or blockers]
+     * **Risks**: [complexity-related risks]
+     * **Phases**: [suggested high-level phases; for CS ≥ 4 must include flags + rollout + rollback]
+
+     Use the CS rubric from constitution:
+     - Surface Area (S): Files/modules touched (0=one, 1=multiple, 2=many/cross-cutting)
+     - Integration (I): External deps (0=internal, 1=one external, 2=multiple/unstable)
+     - Data/State (D): Schema/migrations (0=none, 1=minor, 2=non-trivial)
+     - Novelty (N): Req clarity (0=well-specified, 1=some ambiguity, 2=unclear/discovery)
+     - Non-Functional (F): Perf/security/compliance (0=standard, 1=moderate, 2=strict)
+     - Testing/Rollout (T): Test depth/staging (0=unit only, 1=integration, 2=flags/staged)
+
+     Total P = S+I+D+N+F+T → CS mapping: 0-2=CS-1, 3-4=CS-2, 5-7=CS-3, 8-9=CS-4, 10-12=CS-5
    - `## Acceptance Criteria` – numbered, testable scenarios framed as observable outcomes
    - `## Risks & Assumptions`
    - `## Open Questions`
