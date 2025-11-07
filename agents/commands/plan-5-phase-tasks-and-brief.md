@@ -83,6 +83,17 @@ $ARGUMENTS
    - These findings MUST inform task design, implementation approach, and validation strategies
    - Critical findings often reveal API limitations, framework requirements, or implementation constraints that change how tasks should be structured
    - Reference discoveries by number when applicable (e.g., "per Critical Discovery 02")
+
+2a) **Read ADRs (if any)** from `docs/adr/` that reference this spec/plan:
+   - Scan docs/adr/ for ADRs containing references to the current feature (by slug or spec path)
+   - For each relevant ADR, extract:
+     * ADR ID (NNNN) and title
+     * Status (Proposed/Accepted/Rejected/Superseded)
+     * The Decision (one-line summary)
+     * Specific constraints that affect this phase
+   - These ADR constraints MUST be incorporated into task design
+   - Tag affected tasks in the Notes column with ADR IDs (e.g., "Per ADR-0007")
+
 3) Locate the exact phase heading = $PHASE in PLAN. Abort if not found.
 4) **Read plan-3's task table format** from the PLAN document:
    - plan-3 outputs tasks with columns: `#`, `Status`, `Task`, `Success Criteria`, `Log`, `Notes`
@@ -181,6 +192,11 @@ $ARGUMENTS
        - Advanced caching (simple in-memory cache sufficient for now)
        ```
      * **Critical Findings Affecting This Phase**: List relevant discoveries from plan § 3 that impact this phase's implementation. For each, briefly note: the finding title, what it constrains/requires, and which tasks address it.
+     * **ADR Decision Constraints** (if ADRs exist):
+       - List each relevant ADR: `ADR-NNNN: [Title] – [Decision one-liner]`
+       - Note specific constraints from the ADR that affect this phase
+       - Map constraints to specific tasks: "Constrains: [items]; Addressed by: [T00X, T00Y]"
+       - Tag affected task rows in the Notes column with "Per ADR-NNNN"
      * Invariants & guardrails (perf/memory/security budgets if relevant)
      * Inputs to read (exact file paths)
      * Visual alignment aids: capture both a Mermaid flow diagram (system states) and a Mermaid sequence diagram (actor/interaction order). Treat these as shared-understanding checkpoints so the human sponsor and coding agent agree on the flow before implementation begins.
@@ -189,6 +205,7 @@ $ARGUMENTS
      * Commands to run (copy/paste): env setup, test runner, linters, type checks
      * Risks/unknowns (flag severity, mitigation steps)
      * **Ready Check** (checkboxes) -> await explicit GO/NO-GO
+       - [ ] ADR constraints mapped to tasks (IDs noted in Notes column) - N/A if no ADRs exist
    - `## Phase Footnote Stubs` section: include the heading and an empty table shell (or explicit note) so plan-6 can add entries post-implementation; do **not** create footnote tags or stubs during planning.
    - `## Evidence Artifacts` describing where implementation will write the execution log (`PHASE_DIR/execution.log.md`) and any supporting files.
 

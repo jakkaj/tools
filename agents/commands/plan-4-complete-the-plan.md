@@ -126,7 +126,33 @@ Inputs: PLAN_PATH, SPEC_PATH (co-located as `<plan-dir>/<slug>-spec.md>`), rules
 ```
 "
 
-**Wait for All Validators**: Block until all 4 subagents complete validation.
+**Subagent 5 - ADR Validator (Optional)**:
+"Validate ADR awareness and alignment (if ADRs exist).
+
+**Read**:
+- `${PLAN_PATH}` (entire plan)
+- `docs/adr/*.md` (only ADRs that reference this spec/plan)
+
+**Check**:
+- If ADRs exist: plan references ADR IDs in Critical Findings or Acceptance Criteria
+- No direct contradiction between plan decisions and any **Accepted** ADR
+- If contradictions exist: plan records deviation with mitigation or recommends superseding flow
+- ADR Ledger table present in plan if relevant ADRs found
+
+**Report** (JSON format):
+```json
+{
+  \"violations\": [
+    {\"severity\": \"HIGH\", \"issue\": \"Plan omits ADR-0007 constraints\", \"fix\": \"Add ADR mapping in Acceptance Criteria\"},
+    {\"severity\": \"MEDIUM\", \"issue\": \"Plan contradicts ADR-0003 without justification\", \"fix\": \"Document deviation or supersede ADR\"}
+  ],
+  \"adr_present\": true/false,
+  \"adr_aligned\": true/false
+}
+```
+"
+
+**Wait for All Validators**: Block until all 5 subagents complete validation.
 
 **Synthesize Results**:
 
@@ -137,6 +163,7 @@ After all validators complete:
    - Testing Validator: PASS (0 HIGH) | ISSUES (N violations)
    - Completeness Validator: PASS (0 HIGH) | ISSUES (N violations)
    - Doctrine Validator: PASS (0 HIGH) | ISSUES (N violations)
+   - ADR Validator: PASS (0 HIGH) | ISSUES (N violations) | N/A (no ADRs)
 3. Determine overall verdict:
    - All validators PASS (0 HIGH violations) → **READY**
    - Any HIGH violations → **NOT READY** (with remediation list)

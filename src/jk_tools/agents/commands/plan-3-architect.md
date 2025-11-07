@@ -36,6 +36,17 @@ Inputs:
 - Verify language-agnostic GraphBuilder compliance
 - Document any architectural exceptions with justification
 
+### GATE - ADR (Optional)
+- Scan `docs/adr/` for ADRs that reference this feature (match by slug/title or spec path)
+- Build an ADR Ledger table:
+
+| ADR | Status | Affects Phases | Notes |
+|-----|--------|----------------|-------|
+
+- If existing ADRs found, populate table with each ADR's ID (NNNN), status, affected phases, and key constraints
+- If a critical design choice is being made in this plan and no ADR exists, recommend running `/plan-3a-adr` before finalizing
+- Note: This gate is non-blocking; plan can proceed with or without ADRs
+
 ## PHASE 2: Research & Technical Discovery
 
 **IMPORTANT**: Use **parallel research subagents** for comprehensive and efficient discovery.
@@ -271,6 +282,7 @@ Documentation phases should include:
 - Content outlines (what sections/topics to cover)
 - Target audience considerations
 - Maintenance/update expectations
+- **ADR references**: Link relevant ADR(s) in the plan's References & per-phase Acceptance Criteria if they constrain the work
 
 - **Full TDD**: Generate comprehensive test-first tasks for all phases (current template)
 - **Lightweight**:
@@ -521,6 +533,7 @@ describe('[Component]', () => {
 - [ ] Test coverage > 80% for new code
 - [ ] Mock usage conforms to spec preference (document deviations)
 - [ ] Documentation updated
+- [ ] ADR constraints respected (list ADR-NNNN IDs where applicable)
 
 #### 8. Cross-Cutting Concerns
 

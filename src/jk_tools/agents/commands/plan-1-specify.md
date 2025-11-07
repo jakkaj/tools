@@ -25,6 +25,10 @@ $ARGUMENTS
    - `## Acceptance Criteria` – numbered, testable scenarios framed as observable outcomes
    - `## Risks & Assumptions`
    - `## Open Questions`
+   - `## ADR Seeds (Optional)` – capture decision context without solutioning:
+     * Decision Drivers: [constraints/NFRs that push an architectural choice]
+     * Candidate Alternatives: [A, B, C (one-line summaries)]
+     * Stakeholders: [roles/names if known]
    If `templates/spec-template.md` exists, you may reference it for wording, but this command must succeed without it.
 4) For unknowns, embed `[NEEDS CLARIFICATION: ...]` markers within the appropriate section.
 5) Write spec to SPEC_FILE and report branch + path.
