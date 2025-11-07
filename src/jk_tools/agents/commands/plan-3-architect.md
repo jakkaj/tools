@@ -13,7 +13,7 @@ Inputs:
   FEATURE_SPEC = `docs/plans/<ordinal>-<slug>/<slug>-spec.md` (co-located with plan),
   PLAN_PATH (absolute; MUST match `docs/plans/<ordinal>-<slug>/<slug>-plan.md`),
   rules at `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}`,
-  constitution at `docs/rules/constitution.md` (if present),
+  constitution at `docs/rules-idioms-architecture/constitution.md` (if present),
   today {{TODAY}}.
 
 ## PHASE 1: Initial Gates & Validation
@@ -24,7 +24,7 @@ Inputs:
 - User can explicitly override with --skip-clarify flag
 
 ### GATE - Constitution
-- Validate plan against docs/rules/constitution.md if present
+- Validate plan against docs/rules-idioms-architecture/constitution.md if present
 - Document any necessary deviations in deviation ledger:
 
 | Principle Violated | Why Needed | Simpler Alternative Rejected | Risk Mitigation |

@@ -105,7 +105,7 @@ Inputs: PLAN_PATH, SPEC_PATH (co-located as `<plan-dir>/<slug>-spec.md>`), rules
 - `docs/rules-idioms-architecture/rules.md`
 - `docs/rules-idioms-architecture/idioms.md`
 - `docs/rules-idioms-architecture/architecture.md`
-- `docs/rules/constitution.md` (if exists)
+- `docs/rules-idioms-architecture/constitution.md` (if exists)
 
 **Check**:
 - Plan respects rules.md (coding standards, testing requirements, tooling, CI)

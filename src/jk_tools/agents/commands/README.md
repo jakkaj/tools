@@ -143,7 +143,7 @@ graph TD
 ```
 
 **Creates**:
-- `docs/rules/constitution.md` - Main constitution with versioning
+- `docs/rules-idioms-architecture/constitution.md` - Main constitution with versioning
 - `docs/rules-idioms-architecture/rules.md` - Enforceable MUST/SHOULD statements
 - `docs/rules-idioms-architecture/idioms.md` - Recurring patterns
 - `docs/rules-idioms-architecture/architecture.md` - System boundaries
@@ -733,7 +733,7 @@ Set during clarification:
 
 ```mermaid
 graph TD
-    P0["plan-0-constitution"] --> D0["Creates:<br/>docs/rules/constitution.md<br/>docs/rules-idioms-architecture/"]
+    P0["plan-0-constitution"] --> D0["Creates:<br/>docs/rules-idioms-architecture/<br/>constitution.md, rules.md,<br/>idioms.md, architecture.md"]
 
     P1["plan-1-specify"] --> D1["Creates:<br/>docs/plans/001-feature/"]
     D1 --> F1["feature-spec.md"]
@@ -759,9 +759,8 @@ graph TD
 
 ```
 docs/
-├── rules/
-│   └── constitution.md                 # Project constitution
 ├── rules-idioms-architecture/
+│   ├── constitution.md                 # Project constitution
 │   ├── rules.md                        # Enforceable standards
 │   ├── idioms.md                       # Patterns and conventions
 │   └── architecture.md                 # System boundaries

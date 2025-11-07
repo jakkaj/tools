@@ -25,7 +25,7 @@ If any document uses placeholder tokens like `[ALL_CAPS_IDENTIFIER]`, your respo
 1) Resolve repository paths
    - If your environment supplies a repository metadata helper (e.g., a prerequisites script defined in command front matter), run it once and parse the returned JSON. Otherwise derive values from the current working directory.
    - Set constants:
-     CONST = `docs/rules/constitution.md`
+     CONST = `docs/rules-idioms-architecture/constitution.md`
      RULES = `docs/rules-idioms-architecture/rules.md`
      IDIOMS = `docs/rules-idioms-architecture/idioms.md`
      ARCH  = `docs/rules-idioms-architecture/architecture.md`
