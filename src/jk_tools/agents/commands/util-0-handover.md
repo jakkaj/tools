@@ -50,8 +50,9 @@ intent:{
 }
 
 timeline:{
-  last_actions:["<past action or decision>", ...≤4],
-  current:"<what you were doing right before handover>"
+  just_completed:"<last task/action finished with ID>",
+  current:"<what you were doing right before handover>",
+  last_actions:["<past action or decision>", ...≤4]
 }
 
 concepts:{keys:["<key technical concept>", ...≤6]}
@@ -77,16 +78,17 @@ risks:[["<risk>", "<mitigation>", "<watch>"], ...≤5]
 
 next:{
   task:"<id>",
+  tasks_file:"<absolute-path-to-tasks.md>",
   why:"<one-liner>",
   validate:["<success criterion>", ...≤3],
   cmd:"/plan-6-implement-phase --phase \"<phase>\" --plan \"<path>\" --task \"<id>\""
 }
 
-refs:{plan:"<path> §<anchor|?>", dossier:"<.../tasks/<phase>/tasks.md|?>", log:"<.../execution.log.md|?>", paths:["<key dir/file>", ...≤5]}
+refs:{plan:"<path> §<anchor|?>", tasks_file:"<absolute-path-to-tasks.md|?>", log:"<.../execution.log.md|?>", paths:["<key dir/file>", ...≤5]}
 
 
 Trim Order (when hitting --max): code.hot → risks → concepts.keys → decisions.other → tasks.pend → code.files → tests.notes → refs.paths.
-Never trim: m, intent.primary, timeline.current, next.
+Never trim: m, intent.primary, timeline.just_completed, timeline.current, next (including next.tasks_file).
 
 B) --format lean (readable Markdown, still tight)
 # Handover
@@ -98,6 +100,7 @@ Plan: <path> • Phase: <name> • Feature: <slug> • Progress: <x/y or %> • 
 - Scope: <in/out of scope bullets, ≤3>
 
 ## 2) Timeline (Most Recent First)
+- Just completed: <last task/action finished with ID>
 - Current focus: <what you were doing right before handover>
 - Recent actions: <≤4 bullets; actions/decisions taken>
 
@@ -128,13 +131,14 @@ Plan: <path> • Phase: <name> • Feature: <slug> • Progress: <x/y or %> • 
 
 ## 9) Next Steps
 - Immediate: <task‑id> — <why>
+  - Tasks file: <absolute-path-to-tasks.md>
   - Validation: <≤3 criteria>
   - Resume: `/plan-6-implement-phase --phase "<phase>" --plan "<path>" --task "<id>"`
 - Then (≤4): T0xx — <one‑liner> (deps: <ids>)
 
 ## 10) References
 - Plan: <path> §<anchor|?>
-- Phase dossier: <.../tasks/<phase>/tasks.md|?>
+- Tasks file: <absolute-path-to-tasks.md|?>
 - Phase log: <.../execution.log.md|?>
 - Paths (≤5): <key files/dirs>
 
@@ -179,8 +183,9 @@ intent:{
 }
 
 timeline:{
-  last_actions:["documented pytest infra (ST008)","set ADR‑0001 repo isolation","outlined router endpoints"],
-  current:"implement RealtimeService (T032) before wiring router"
+  just_completed:"ST008 pytest infra documented and green",
+  current:"implement RealtimeService (T032) before wiring router",
+  last_actions:["set ADR‑0001 repo isolation","outlined router endpoints","configured telemetry endpoint"]
 }
 
 concepts:{keys:["ephemeral key mint","region-scoped webrtc URL","repo pattern isolation","TDD cycles","telemetry endpoint","no caching"]}
@@ -206,12 +211,13 @@ risks:[["mic permission denial","UI prompt/handle NotAllowedError","browser cons
 
 next:{
   task:"T032",
+  tasks_file:"/workspaces/.../tasks/phase-5/tasks.md",
   why:"service layer needed before router",
   validate:["unit tests green","returns domain type only","no caching"],
   cmd:"/plan-6-implement-phase --phase \"Phase 5: WebRTC\" --plan \"/workspaces/.../realtime-chatbot-plan.md\" --task \"T032\""
 }
 
-refs:{plan:"/workspaces/.../realtime-chatbot-plan.md § Phase 5", dossier:".../tasks/phase-5/tasks.md", log:".../tasks/phase-5/execution.log.md", paths:["src/backend/app/","tests/","src/ui/components/"]}
+refs:{plan:"/workspaces/.../realtime-chatbot-plan.md § Phase 5", tasks_file:"/workspaces/.../tasks/phase-5/tasks.md", log:"/workspaces/.../tasks/phase-5/execution.log.md", paths:["src/backend/app/","tests/","src/ui/components/"]}
 
 Drop‑in System Prompt
 You are a **compact handover generator** for agent continuity.
@@ -224,9 +230,9 @@ Constraints:
 - No scaffolding/logs/diffs/mermaid; keep strings ≤12 words; Top‑N caps per section.
 
 Method:
-1) Internally review the session chronologically to recall: explicit user requests (quote briefly), your actions, decisions, code touchpoints, state, and current focus.
+1) Internally review the session chronologically to recall: explicit user requests (quote briefly), your actions, decisions, code touchpoints, state, just completed work, and current focus.
 2) Emit the summary using the chosen format and schema. Apply Trim Order when near the cap: code.hot → risks → concepts.keys → decisions.other → tasks.pend → code.files → tests.notes → refs.paths.
-3) Never trim: meta, primary intent, current focus, and next steps.
+3) Never trim: meta, primary intent, timeline.just_completed, timeline.current, next (including next.tasks_file).
 
 Content (by format):
 - **compact**: Emit HOVR/2 block with sections: m, intent, timeline, concepts, code, decisions, tasks, tests, risks, next, refs.
