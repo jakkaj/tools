@@ -7,11 +7,22 @@
 #   --clear-mcp: Clear all existing MCP servers before installing new ones
 #   --commands-local <clis>: Install commands locally (comma-separated: claude,opencode,ghcp,codex)
 #   --local-dir <path>: Target directory for local commands (default: current directory)
+#   --no-auto-sudo: Disable automatic sudo retry on permission errors
 
 # set -e  # Disabled to allow proper error handling and prevent killing parent process
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "${SCRIPT_DIR}")"
+
+# Source the permission helper library if it exists
+PERMISSION_HELPER="${SCRIPT_DIR}/lib/permission_helper.sh"
+if [ -f "${PERMISSION_HELPER}" ]; then
+    source "${PERMISSION_HELPER}"
+else
+    # Fallback functions if helper isn't available
+    mkdir_with_retry() { mkdir -p "$1"; }
+    cp_with_retry() { cp -r "$1" "$2"; }
+fi
 SOURCE_DIR="${REPO_ROOT}/agents/commands"
 SYNC_SCRIPT="${REPO_ROOT}/scripts/sync-to-dist.sh"
 MCP_SOURCE="${REPO_ROOT}/agents/mcp/servers.json"
@@ -34,6 +45,10 @@ while [[ $# -gt 0 ]]; do
         --local-dir)
             LOCAL_DIR="$2"
             shift 2
+            ;;
+        --no-auto-sudo)
+            export AUTO_SUDO_ENABLED=false
+            shift
             ;;
         *)
             shift
@@ -154,10 +169,10 @@ EOF
     local claude_global="${HOME}/.claude.json"
     local codex_global="${HOME}/.codex/config.toml"
 
-    mkdir -p "${HOME}/.config/opencode"
-    mkdir -p "${HOME}/.codex"
-    mkdir -p "$(dirname "${vscode_user_config}")"
-    mkdir -p "$(dirname "${vscode_project_config}")"
+    mkdir_with_retry "${HOME}/.config/opencode"
+    mkdir_with_retry "${HOME}/.codex"
+    mkdir_with_retry "$(dirname "${vscode_user_config}")"
+    mkdir_with_retry "$(dirname "${vscode_project_config}")"
 
     python3 - "$mcp_source" "$opencode_global" "$opencode_project" "$claude_global" "$codex_global" "$vscode_user_config" "$vscode_project_config" "$openrouter_key" "$perplexity_key" "$perplexity_model" "$CLEAR_MCP" <<'PYTHON'
 import json
@@ -499,13 +514,13 @@ install_local_commands() {
     # Claude
     if [[ "$cli_list" == *"claude"* ]]; then
         local claude_dir="${target_dir}/.claude/commands"
-        mkdir -p "${claude_dir}"
+        mkdir_with_retry "${claude_dir}"
         print_status "Installing Claude commands to ${claude_dir}"
 
         for file in "${SOURCE_DIR}"/*.md; do
             if [ -f "${file}" ]; then
                 filename=$(basename "${file}")
-                cp "${file}" "${claude_dir}/${filename}"
+                cp_with_retry "${file}" "${claude_dir}/${filename}"
                 echo "  [↻] ${filename}"
             fi
         done
@@ -517,13 +532,13 @@ install_local_commands() {
     # OpenCode
     if [[ "$cli_list" == *"opencode"* ]]; then
         local opencode_dir="${target_dir}/.opencode/command"
-        mkdir -p "${opencode_dir}"
+        mkdir_with_retry "${opencode_dir}"
         print_status "Installing OpenCode commands to ${opencode_dir}"
 
         for file in "${SOURCE_DIR}"/*.md; do
             if [ -f "${file}" ]; then
                 filename=$(basename "${file}")
-                cp "${file}" "${opencode_dir}/${filename}"
+                cp_with_retry "${file}" "${opencode_dir}/${filename}"
                 echo "  [↻] ${filename}"
             fi
         done
@@ -535,14 +550,14 @@ install_local_commands() {
     # GitHub Copilot
     if [[ "$cli_list" == *"ghcp"* ]]; then
         local ghcp_dir="${target_dir}/.github/prompts"
-        mkdir -p "${ghcp_dir}"
+        mkdir_with_retry "${ghcp_dir}"
         print_status "Installing GitHub Copilot prompts to ${ghcp_dir}"
 
         for file in "${SOURCE_DIR}"/*.md; do
             if [ -f "${file}" ]; then
                 filename=$(basename "${file}")
                 prompt_name="${filename%.md}.prompt.md"
-                cp "${file}" "${ghcp_dir}/${prompt_name}"
+                cp_with_retry "${file}" "${ghcp_dir}/${prompt_name}"
                 echo "  [↻] ${filename} -> ${prompt_name}"
             fi
         done
@@ -646,42 +661,62 @@ main() {
 
     # Create target directories if they don't exist
     if [ ! -d "${TARGET_DIR}" ]; then
-        mkdir -p "${TARGET_DIR}"
-        print_success "Created directory: ${TARGET_DIR}"
+        if mkdir_with_retry "${TARGET_DIR}"; then
+            print_success "Created directory: ${TARGET_DIR}"
+        else
+            print_error "Failed to create directory: ${TARGET_DIR}"
+            exit 1
+        fi
     else
         print_status "Target directory already exists: ${TARGET_DIR}"
     fi
 
     if [ ! -d "${OPENCODE_DIR}" ]; then
-        mkdir -p "${OPENCODE_DIR}"
-        print_success "Created directory: ${OPENCODE_DIR}"
+        if mkdir_with_retry "${OPENCODE_DIR}"; then
+            print_success "Created directory: ${OPENCODE_DIR}"
+        else
+            print_error "Failed to create directory: ${OPENCODE_DIR}"
+            exit 1
+        fi
     else
         print_status "OpenCode directory already exists: ${OPENCODE_DIR}"
     fi
 
     if [ ! -d "${CODEX_DIR}" ]; then
-        mkdir -p "${CODEX_DIR}"
-        print_success "Created directory: ${CODEX_DIR}"
+        if mkdir_with_retry "${CODEX_DIR}"; then
+            print_success "Created directory: ${CODEX_DIR}"
+        else
+            print_error "Failed to create directory: ${CODEX_DIR}"
+            exit 1
+        fi
     else
         print_status "Codex directory already exists: ${CODEX_DIR}"
     fi
 
     if [ ! -d "${VSCODE_USER_DIR}" ]; then
-        mkdir -p "${VSCODE_USER_DIR}"
-        print_success "Created VS Code user directory: ${VSCODE_USER_DIR}"
+        if mkdir_with_retry "${VSCODE_USER_DIR}"; then
+            print_success "Created VS Code user directory: ${VSCODE_USER_DIR}"
+        else
+            print_error "Failed to create VS Code user directory: ${VSCODE_USER_DIR}"
+            exit 1
+        fi
     else
         print_status "VS Code user directory already exists: ${VSCODE_USER_DIR}"
     fi
 
     if [ ! -d "${VSCODE_PROJECT_DIR}" ]; then
-        mkdir -p "${VSCODE_PROJECT_DIR}"
-        print_success "Created VS Code project directory: ${VSCODE_PROJECT_DIR}"
+        if mkdir_with_retry "${VSCODE_PROJECT_DIR}"; then
+            print_success "Created VS Code project directory: ${VSCODE_PROJECT_DIR}"
+        else
+            print_error "Failed to create VS Code project directory: ${VSCODE_PROJECT_DIR}"
+            exit 1
+        fi
     else
         print_status "VS Code project directory already exists: ${VSCODE_PROJECT_DIR}"
     fi
 
     if [ ! -d "${COPILOT_GLOBAL_DIR}" ]; then
-        if mkdir -p "${COPILOT_GLOBAL_DIR}"; then
+        if mkdir_with_retry "${COPILOT_GLOBAL_DIR}"; then
             print_success "Created Copilot global directory: ${COPILOT_GLOBAL_DIR}"
         else
             print_error "Could not create Copilot global directory: ${COPILOT_GLOBAL_DIR} (continuing)"
@@ -712,12 +747,12 @@ main() {
             copilot_prompt_name="${filename%.md}.prompt.md"
             copilot_global_file="${COPILOT_GLOBAL_DIR}/${copilot_prompt_name}"
 
-            # Copy to destinations
-            cp "${file}" "${target_file}"
-            cp "${file}" "${opencode_file}"
-            cp "${file}" "${codex_file}"
-            cp "${file}" "${vscode_project_file}"
-            cp "${file}" "${copilot_global_file}"
+            # Copy to destinations using retry logic
+            cp_with_retry "${file}" "${target_file}"
+            cp_with_retry "${file}" "${opencode_file}"
+            cp_with_retry "${file}" "${codex_file}"
+            cp_with_retry "${file}" "${vscode_project_file}"
+            cp_with_retry "${file}" "${copilot_global_file}"
             echo "  [↻] ${filename} (updated Claude/OpenCode/Codex/VS Code)"
             echo "  [↻ Copilot] ${filename} -> ${copilot_prompt_name}"
         fi

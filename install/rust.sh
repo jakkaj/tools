@@ -2,8 +2,47 @@
 
 # Install Rust and Cargo via rustup
 # Works on macOS and Linux
+# Supports --no-auto-sudo flag to disable automatic sudo retry
 
 # set -e  # Disabled to allow proper error handling and prevent killing parent process
+
+# Source the permission helper library if it exists
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PERMISSION_HELPER="${SCRIPT_DIR}/lib/permission_helper.sh"
+if [ -f "${PERMISSION_HELPER}" ]; then
+    source "${PERMISSION_HELPER}"
+else
+    # Fallback if helper isn't available
+    install_package() {
+        local package="$1"
+        if command -v apt-get >/dev/null 2>&1; then
+            sudo apt-get install -y "$package"
+        elif command -v dnf >/dev/null 2>&1; then
+            sudo dnf install -y "$package"
+        elif command -v yum >/dev/null 2>&1; then
+            sudo yum install -y "$package"
+        elif command -v pacman >/dev/null 2>&1; then
+            sudo pacman -S --noconfirm "$package"
+        elif command -v zypper >/dev/null 2>&1; then
+            sudo zypper install -y "$package"
+        elif command -v apk >/dev/null 2>&1; then
+            sudo apk add "$package"
+        fi
+    }
+fi
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --no-auto-sudo)
+            export AUTO_SUDO_ENABLED=false
+            shift
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
 
 print_status() {
     echo "[*] $1"
@@ -65,23 +104,35 @@ install_prerequisites() {
             # Linux - Install build tools
             if command -v apt-get >/dev/null 2>&1; then
                 print_status "Installing build tools for Debian/Ubuntu..."
-                sudo apt update
-                sudo apt install -y build-essential curl
+                run_with_retry "apt-get update" "update package lists" true
+                install_package "build-essential"
+                install_package "curl"
             elif command -v dnf >/dev/null 2>&1; then
                 print_status "Installing build tools for Fedora..."
-                sudo dnf install -y gcc gcc-c++ make curl
+                install_package "gcc"
+                install_package "gcc-c++"
+                install_package "make"
+                install_package "curl"
             elif command -v yum >/dev/null 2>&1; then
                 print_status "Installing build tools for RHEL/CentOS..."
-                sudo yum install -y gcc gcc-c++ make curl
+                install_package "gcc"
+                install_package "gcc-c++"
+                install_package "make"
+                install_package "curl"
             elif command -v pacman >/dev/null 2>&1; then
                 print_status "Installing build tools for Arch..."
-                sudo pacman -S --needed base-devel curl
+                install_package "base-devel"
+                install_package "curl"
             elif command -v zypper >/dev/null 2>&1; then
                 print_status "Installing build tools for openSUSE..."
-                sudo zypper install -y gcc gcc-c++ make curl
+                install_package "gcc"
+                install_package "gcc-c++"
+                install_package "make"
+                install_package "curl"
             elif command -v apk >/dev/null 2>&1; then
                 print_status "Installing build tools for Alpine..."
-                sudo apk add build-base curl
+                install_package "build-base"
+                install_package "curl"
             else
                 print_status "Could not detect package manager."
                 print_status "Please ensure GCC/Clang and curl are installed according to your distribution's documentation."

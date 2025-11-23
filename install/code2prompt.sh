@@ -2,10 +2,36 @@
 
 # Install code2prompt via cargo
 # Requires Rust/Cargo to be installed first
+# Supports --no-auto-sudo flag to disable automatic sudo retry
 
 # set -e  # Disabled to allow proper error handling and prevent killing parent process
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Source the permission helper library if it exists
+PERMISSION_HELPER="${SCRIPT_DIR}/lib/permission_helper.sh"
+if [ -f "${PERMISSION_HELPER}" ]; then
+    source "${PERMISSION_HELPER}"
+else
+    # Fallback if helper isn't available
+    run_with_retry() {
+        eval "$1"
+        return $?
+    }
+fi
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --no-auto-sudo)
+            export AUTO_SUDO_ENABLED=false
+            shift
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
 
 print_status() {
     echo "[*] $1"
@@ -39,9 +65,13 @@ ensure_rust_installed() {
     if ! command -v cargo >/dev/null 2>&1; then
         print_status "Cargo not found. Installing Rust first..."
         
-        # Run the rust installation script
+        # Run the rust installation script (pass through --no-auto-sudo if set)
         if [ -f "${SCRIPT_DIR}/rust.sh" ]; then
-            bash "${SCRIPT_DIR}/rust.sh"
+            if [[ "$AUTO_SUDO_ENABLED" == "false" ]]; then
+                bash "${SCRIPT_DIR}/rust.sh" --no-auto-sudo
+            else
+                bash "${SCRIPT_DIR}/rust.sh"
+            fi
             
             # Source cargo environment after installation
             if [ -f "$HOME/.cargo/env" ]; then
@@ -64,9 +94,9 @@ ensure_rust_installed() {
 install_code2prompt() {
     print_status "Installing code2prompt via cargo..."
     print_status "This may take a few minutes as it compiles from source..."
-    
-    # Install code2prompt using cargo
-    if cargo install code2prompt; then
+
+    # Install code2prompt using cargo with retry on permission errors
+    if run_with_retry "cargo install code2prompt" "install code2prompt to ~/.cargo/bin"; then
         print_success "code2prompt installed successfully"
     else
         print_error "Failed to install code2prompt"

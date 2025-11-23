@@ -303,6 +303,10 @@ class SetupManager:
             if hasattr(self, 'local_dir'):
                 cmd.extend(["--local-dir", self.local_dir])
 
+        # Add --no-auto-sudo flag if requested (for all installers)
+        if hasattr(self, 'no_auto_sudo') and self.no_auto_sudo:
+            cmd.append("--no-auto-sudo")
+
         # Run the installer
         returncode, stdout, stderr = self._run_command(cmd, timeout=300)
 
@@ -563,6 +567,11 @@ def main():
         metavar="PATH",
         help="Target directory for local commands (default: current directory)"
     )
+    parser.add_argument(
+        "--no-auto-sudo",
+        action="store_true",
+        help="Disable automatic sudo retry on permission errors"
+    )
 
     args = parser.parse_args()
 
@@ -570,6 +579,7 @@ def main():
         manager = SetupManager()
         manager.clear_mcp = args.clear_mcp
         manager.commands_local = args.commands_local
+        manager.no_auto_sudo = args.no_auto_sudo
         if args.local_dir:
             manager.local_dir = args.local_dir
         manager.run(update_mode=args.update)
