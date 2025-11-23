@@ -1,10 +1,12 @@
 ---
-description: Establish or refresh the project constitution and align the supporting norms documents before any planning phases begin.
+description: Establish or refresh the project constitution and align the supporting norms documents before any planning phases begin. Re-entrant command that preserves user customizations during updates.
 ---
 
-Please deep think / ultrathink as this is a complex task. 
+Please deep think / ultrathink as this is a complex task.
 
 # plan-0-constitution (alias: phase-0-constitution)
+
+**Re-entrancy Support**: This command is now re-entrant and will intelligently preserve user customizations when updating existing constitution files. Mark your custom content with `<!-- USER CONTENT START -->` and `<!-- USER CONTENT END -->` for guaranteed preservation across updates.
 
 ````md
 The user input to you can be provided directly by the agent or as a command argument - you **MUST** consider it before proceeding (if not empty).
@@ -22,7 +24,7 @@ If any document uses placeholder tokens like `[ALL_CAPS_IDENTIFIER]`, your respo
 
 --------------------------------
 ## Execution Flow (deterministic)
-1) Resolve repository paths
+1) Resolve repository paths and detect mode
    - If your environment supplies a repository metadata helper (e.g., a prerequisites script defined in command front matter), run it once and parse the returned JSON. Otherwise derive values from the current working directory.
    - Set constants:
      CONST = `docs/rules-idioms-architecture/constitution.md`
@@ -32,22 +34,41 @@ If any document uses placeholder tokens like `[ALL_CAPS_IDENTIFIER]`, your respo
      TMPL  = `templates/`  # Optional helper content if present
    - Ensure parent directories exist; create them atomically when missing.
 
+   **Re-entrancy Detection**:
+   - Check if any of CONST, RULES, IDIOMS, ARCH already exist
+   - If ANY exist: **UPDATE MODE** - Will preserve user customizations
+   - If NONE exist: **CREATE MODE** - Will create fresh documents
+   - Display mode to user: "🔄 Updating existing constitution..." or "✨ Creating new constitution..."
+
 2) Launch parallel context gatherers
 
 **IMPORTANT**: Use **parallel subagent gatherers** for faster doctrine loading.
 
 **Strategy**: Launch 4 parallel subagents (single message with 4 Task tool calls) to gather doctrine context concurrently.
 
-**Subagent 1: Doctrine Loader**
-"Load existing doctrine files or seed skeletons.
+**Subagent 1: Doctrine Loader (Re-entrancy Aware)**
+"Load existing doctrine files and categorize content for preservation.
 
 **Tasks**:
 - For each of CONST, RULES, IDIOMS, ARCH:
-  * If file exists: Read fully and extract version number, [PLACEHOLDER] tokens, section headings, TODOs
-  * If missing: Create parent directories and seed with minimal outline
-- Output JSON structure: {file_path, exists, version, placeholders[], headings[], todos[], content_summary}
+  * If file exists:
+    - Read fully and extract version number, [PLACEHOLDER] tokens, section headings, TODOs
+    - Identify sections marked with `<!-- USER CONTENT START -->` and `<!-- USER CONTENT END -->`
+    - Categorize each section as: 'generated' (safe to update), 'custom' (must preserve), or 'mixed' (needs merge)
+    - Extract any filled placeholder values that replaced `[ALL_CAPS_TOKENS]`
+    - Note custom sections not in standard template
+  * If missing: Note for creation with minimal outline
 
-**Return**: Results for all 4 files with extraction data."
+**Categorization Rules**:
+- Content between USER CONTENT markers = 'custom'
+- Standard template sections without modifications = 'generated'
+- Standard sections with significant user additions = 'mixed'
+- Entirely new user-added sections = 'custom'
+
+**Output**: JSON with {file_path, exists, version, placeholders[], headings[], todos[],
+  sections[{name, type, content, preserve}], custom_additions[], filled_values{}}
+
+**Return**: Results for all 4 files with preservation metadata."
 
 **Subagent 2: Context Gatherer**
 "Gather project governance and quality inputs from documentation.
@@ -90,30 +111,66 @@ Include amendment date as ISO 8601."
 
 **Wait for All Gatherers**: Block until all 4 subagents complete.
 
-3) Synthesize gathered context
+3) Synthesize gathered context and prepare merge strategy
    - Merge outputs from all 4 subagents into unified doctrine view
    - Conflict resolution: $ARGUMENTS > explicit docs > inferred > UNKNOWN
    - Build complete placeholder mapping: [TOKEN] → {value, source, confidence}
    - Validate version bump against actual changes detected
    - Create TODO list for any UNKNOWN values: "TODO(<FIELD>): <reason pending>"
+
+   **Re-entrancy Merge Strategy** (if UPDATE MODE):
+   - For each file, prepare merge plan:
+     * Sections marked 'custom' → PRESERVE entirely
+     * Sections marked 'generated' → UPDATE with new content
+     * Sections marked 'mixed' → MERGE: Keep user additions, update framework
+   - Preserve all filled placeholder values from existing files
+   - Keep user-added sections not in template
+   - Maintain existing TODOs that are still unresolved
+   - Track what will change for user confirmation
+
    - Prepare inputs for Step 4 constitution drafting:
-     * All placeholder values (filled or deferred)
-     * Validated principles and practices
+     * All placeholder values (filled or deferred, preferring existing)
+     * Validated principles and practices (merging existing with new)
      * Quality strategy with tools/approaches
      * Template dependency map for Step 7 propagation
      * Final version number and Sync Impact Report data
+     * Merge strategy per file with preservation instructions
 
-4) Draft **docs/rules/constitution.md**
+4) Draft **docs/rules/constitution.md** (re-entrancy aware)
+   **For CREATE MODE**:
    - Replace every placeholder. Standard sections:
      * Header with Title, Version, Ratification date, Last amended date
      * **Guiding Principles** – concise MUST/SHOULD statements with rationale
      * **Quality & Verification Strategy** – document how the team proves changes safe (tests, analysis, reviews). Highlight preferred tools per language when known; keep wording inclusive (examples are optional callouts).
      * **Delivery Practices** – planning cadence, documentation expectations, definition of done
      * **Governance** – amendment procedure, review cadence, compliance tracking
-   - Prepend a **Sync Impact Report** HTML comment summarizing version bump, affected sections, outstanding TODOs, and whether supporting docs/templates were updated.
 
-5) Align **Rules & Idioms**
-   - Write `rules.md` with enforceable statements ("MUST", "SHOULD") covering:
+   **For UPDATE MODE**:
+   - Preserve all sections marked as 'custom' from Step 3 analysis
+   - Update 'generated' sections with new framework content
+   - For 'mixed' sections: Keep user additions, update framework parts
+   - Maintain filled placeholder values from existing file
+   - Add new standard sections if missing, mark with `<!-- NEWLY ADDED -->`
+   - Keep user's custom sections even if not in template
+   - Update version number appropriately (PATCH for clarifications, MINOR for new sections, MAJOR for breaking changes)
+
+   - Prepend a **Sync Impact Report** HTML comment summarizing:
+     * Mode: CREATE or UPDATE
+     * Version bump: old → new with rationale
+     * Sections preserved vs updated
+     * Custom content retained
+     * New sections added
+     * Outstanding TODOs
+     * Supporting docs/templates update status
+
+5) Align **Rules & Idioms** (re-entrancy aware)
+   **For UPDATE MODE**:
+   - Apply same preservation strategy as constitution
+   - Keep user's custom rules and examples
+   - Update framework rules while preserving additions
+   - Merge testing section carefully to keep project-specific policies
+
+   - Write/update `rules.md` with enforceable statements ("MUST", "SHOULD") covering:
      * Source control hygiene and branching
      * Coding standards, naming, formatting
      * **Testing/verification expectations** (detailed guidance below)
@@ -252,8 +309,14 @@ Include amendment date as ISO 8601."
    - Write `idioms.md` with illustrative patterns, directory conventions, and language-specific examples when relevant.
    - Keep references to the constitution explicit (e.g., link sections or quote identifiers). If any area is not yet defined, leave a TODO entry mirroring the constitution.
 
-6) Maintain **architecture.md**
-   - Capture the system's high-level structure: modules, services, layers, data flows, integration points.
+6) Maintain **architecture.md** (re-entrancy aware)
+   **For UPDATE MODE**:
+   - Preserve user's architectural decisions and custom diagrams
+   - Update framework structure while keeping project-specific sections
+   - Maintain technology stack choices and integration details
+   - Keep custom anti-patterns and project-specific checklists
+
+   - Capture/update the system's high-level structure: modules, services, layers, data flows, integration points.
    - Define boundaries and contracts (who may call whom, allowed dependencies, deployment targets).
    - Document technology-agnostic rules first; add stack-specific notes in dedicated subsections (e.g., "Example: Node service" / "Example: C# backend").
    - Track anti-patterns and reviewer checklists that should remain stable across implementations.
@@ -270,15 +333,55 @@ Include amendment date as ISO 8601."
    - Architecture doc reflects the latest agreed structure without contradicting Rules or Constitution.
    - Templates/commands (when touched) remain idempotent and reference the canonical paths exactly.
 
-9) Write files atomically
-   - Overwrite CONST, RULES, IDIOMS, and ARCH with the updated content.
-   - Apply the minimal set of edits needed for any templates or helper commands.
-   - Preserve contributor-authored content outside the edited blocks.
+   **For UPDATE MODE - User Confirmation**:
+   - Display summary of proposed changes:
+     * "Will preserve: X custom sections, Y user values"
+     * "Will update: Z framework sections"
+     * "Will add: N new sections"
+   - Show diff preview of significant changes
+   - Ask: "Proceed with update? (backups will be created)"
+   - If user declines, abort with no changes
+
+9) Write files with intelligent merge
+   **For CREATE MODE**:
+   - Write CONST, RULES, IDIOMS, and ARCH with fresh content
+   - Mark sections that users can customize with `<!-- USER CONTENT START -->` and `<!-- USER CONTENT END -->`
+
+   **For UPDATE MODE**:
+   - For each file, apply merge strategy from Step 3:
+     * Preserve sections marked 'custom' completely
+     * Update sections marked 'generated' with new content
+     * Intelligently merge 'mixed' sections (keep user content, update framework)
+   - Add protective markers around user content for future runs
+   - Validate no user content was lost in the merge
+   - Create backup of original files before writing (stored in `.constitution-backup/`)
+
+   **For both modes**:
+   - Apply the minimal set of edits needed for any templates or helper commands
+   - Preserve contributor-authored content outside the edited blocks
+   - Ensure all files remain internally consistent
 
 10) Final summary (stdout)
-   - Include new version, bump rationale, and list of updated paths.
-   - Mention outstanding TODOs or follow-up owners if doctrine remains incomplete.
-   - Provide a commit message suggestion such as `docs: refresh constitution and aligned doctrine files`.
+   **For CREATE MODE**:
+   - Report: "✨ Created new constitution and doctrine files"
+   - Include version 1.0.0 and creation date
+   - List all created files
+
+   **For UPDATE MODE**:
+   - Report: "🔄 Updated constitution and doctrine files"
+   - Show version change: old → new with bump rationale
+   - List what was preserved vs updated:
+     * "Preserved: N custom sections, M filled values"
+     * "Updated: X framework sections"
+     * "Added: Y new sections"
+   - If backups created, note location: `.constitution-backup/`
+
+   **For both modes**:
+   - List all modified paths with change type
+   - Mention outstanding TODOs or follow-up owners if doctrine remains incomplete
+   - Provide appropriate commit message:
+     * CREATE: `docs: establish project constitution and doctrine files`
+     * UPDATE: `docs: update constitution v{old} → v{new} while preserving customizations`
 
 --------------------------------
 ## Synchronized doctrine (authoritative excerpts to enforce)
@@ -307,10 +410,14 @@ The following **must** be enforced across Constitution -> Rules & Idioms -> Plan
 --------------------------------
 ## Acceptance Criteria (for this command)
 - `docs/rules/constitution.md` is fully populated, versioned, and includes a Sync Impact Report.
-- `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}` exist (or are created) and reflect the same doctrine without contradictory guidance.
+- `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}` exist (or are created/updated) and reflect the same doctrine without contradictory guidance.
+- **For UPDATE MODE**: All user customizations are preserved, no content is lost.
+- **For CREATE MODE**: Files include protective markers for future customizations.
+- Backups are created before updates (stored in `.constitution-backup/` with timestamp).
 - No document retains unresolved placeholders; dates and versions adhere to the rules above.
 - Any touched templates or command prompts reference the canonical doctrine paths and remain stack-neutral.
-- Final summary surfaces version bump, updated paths, and outstanding TODO follow-ups.
+- Final summary surfaces version bump, updated paths, preserved content metrics, and outstanding TODO follow-ups.
+- User is shown preview and asked for confirmation before applying updates in UPDATE MODE.
 
 --------------------------------
 ## Formatting & Style
