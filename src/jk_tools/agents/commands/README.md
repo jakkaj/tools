@@ -49,10 +49,13 @@ graph LR
 ### New Feature Workflow
 
 ```bash
-# 1. Start with feature description
-/plan-1-specify "Add user authentication with OAuth2 support for Google and GitHub providers"
+# 1. (Optional) Research existing codebase
+/plan-1a-explore --plan oauth "research current authentication system"
 
-# 2. Clarify ambiguities (answer ≤8 questions)
+# 2. Start with feature specification
+/plan-1b-specify "Add user authentication with OAuth2 support for Google and GitHub providers"
+
+# 3. Clarify ambiguities (answer ≤8 questions)
 /plan-2-clarify
 
 # 3. Generate implementation plan
@@ -84,10 +87,13 @@ graph LR
 ```mermaid
 graph TD
     Start([Start New Feature]) --> P0["plan-0-constitution<br/>Once per project"]
-    P0 --> P1["plan-1-specify<br/>Feature specification"]
-    Start --> P1
+    P0 --> P1A["plan-1a-explore<br/>Research (optional)"]
+    P0 --> P1B["plan-1b-specify<br/>Feature specification"]
+    P1A --> P1B
+    Start --> P1A
+    Start --> P1B
 
-    P1 --> P2["plan-2-clarify<br/>Answer ≤8 questions"]
+    P1B --> P2["plan-2-clarify<br/>Answer ≤8 questions"]
     P2 --> P3["plan-3-architect<br/>Generate plan"]
 
     P3 -.-> P3A["plan-3a-adr<br/>Optional ADRs"]
@@ -148,11 +154,32 @@ graph TD
 - `docs/rules-idioms-architecture/idioms.md` - Recurring patterns
 - `docs/rules-idioms-architecture/architecture.md` - System boundaries
 
-**Next**: `/plan-1-specify`
+**Next**: `/plan-1a-explore` (optional research) or `/plan-1b-specify`
 
 ---
 
-### /plan-1-specify
+### /plan-1a-explore
+
+**Purpose**: Research existing codebase functionality before making changes
+
+**Usage**:
+```bash
+# Console output (arbitrary research)
+/plan-1a-explore "research how the search service works"
+
+# Save to plan folder
+/plan-1a-explore --plan authentication-upgrade "research current auth system"
+```
+
+**Output**:
+- Without --plan: Research report to console
+- With --plan: `docs/plans/<ordinal>-<slug>/research-dossier.md`
+
+**Next**: `/plan-1b-specify`
+
+---
+
+### /plan-1b-specify
 **Purpose**: Create feature specification focusing on WHAT and WHY, not HOW
 
 **When to use**:
@@ -161,7 +188,7 @@ graph TD
 
 **Inputs**:
 ```bash
-/plan-1-specify "Natural language description of the feature"
+/plan-1b-specify "Natural language description of the feature"
 ```
 
 **Creates**:
@@ -735,7 +762,7 @@ Set during clarification:
 graph TD
     P0["plan-0-constitution"] --> D0["Creates:<br/>docs/rules-idioms-architecture/<br/>constitution.md, rules.md,<br/>idioms.md, architecture.md"]
 
-    P1["plan-1-specify"] --> D1["Creates:<br/>docs/plans/001-feature/"]
+    P1B["plan-1b-specify"] --> D1["Creates:<br/>docs/plans/001-feature/"]
     D1 --> F1["feature-spec.md"]
 
     P3["plan-3-architect"] --> D3["Adds:<br/>feature-plan.md<br/>tasks/"]
@@ -865,7 +892,7 @@ This bidirectional graph enables traversal from any node to understand the compl
 
 ```bash
 # 1. Specify the feature
-/plan-1-specify "Add real-time notifications using WebSockets"
+/plan-1b-specify "Add real-time notifications using WebSockets"
 
 # 2. Clarify testing approach and ambiguities
 /plan-2-clarify

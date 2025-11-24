@@ -74,6 +74,51 @@ Inputs:
 
 ## PHASE 2: Research & Technical Discovery
 
+### Check for Existing Research
+
+**FIRST**: Check if `research-dossier.md` exists in the plan folder:
+- If `${PLAN_DIR}/research-dossier.md` exists:
+  * Read the research dossier completely
+  * Extract all critical and high-impact findings
+  * Note discovered patterns, dependencies, and constraints
+  * **OPTIMIZE**: Reduce research subagents from 4 to 2 (focus on implementation-specific discovery)
+  * Reference research findings throughout the plan (e.g., "Per Research Finding IA-03...")
+- If no research exists:
+  * Proceed with full 4-subagent research as described below
+  * Note: "ℹ️ Consider running `/plan-1a-explore` before planning for deeper understanding"
+
+### Optimized Research Mode (when research-dossier.md exists)
+
+Launch **2 specialized subagents** focusing on implementation planning:
+
+**Subagent 1: Implementation Strategist**
+"Based on existing research in research-dossier.md, create implementation strategy.
+
+**Given Research**: [Summary of critical findings from dossier]
+
+**Tasks**:
+- Design phase breakdown based on discovered dependencies
+- Identify implementation order considering existing patterns
+- Plan integration approach using discovered extension points
+- Design testing strategy based on existing test infrastructure
+
+**Output**: Implementation-focused discoveries I1-01 through I1-08."
+
+**Subagent 2: Risk & Mitigation Planner**
+"Based on research findings, identify implementation risks and mitigation.
+
+**Given Research**: [Danger zones and constraints from dossier]
+
+**Tasks**:
+- Map high-risk implementation areas
+- Design mitigation strategies for each risk
+- Plan rollback approach for dangerous changes
+- Identify required safety checks and validations
+
+**Output**: Risk-focused discoveries R1-01 through R1-08."
+
+### Full Research Mode (when no research exists)
+
 **IMPORTANT**: Use **parallel research subagents** for comprehensive and efficient discovery.
 
 **Strategy**: Launch 4 specialized research subagents (single message with 4 Task tool calls) to maximize discovery breadth and depth. Each subagent focuses on a specific domain, then results are synthesized into numbered discoveries.

@@ -4,7 +4,7 @@ description: Create or update the feature specification from a natural language 
 
 Please deep think / ultrathink as this is a complex task. 
 
-# plan-1-specify
+# plan-1b-specify
 
 Create or update the feature **spec** from a natural-language description (WHAT/WHY only; no tech choices). Follow the canonical spec structure described below.
 
@@ -13,16 +13,37 @@ User input:
 
 $ARGUMENTS
 
-1) Determine the feature slug from user input and create:
-   - PLAN_DIR = `docs/plans/<ordinal>-<slug>/` (use next available ordinal)
+1) Determine the feature slug from user input and check for existing plan folder:
+   - Generate slug from feature description
+   - Check if `docs/plans/*-<slug>/` already exists (created by plan-1a-explore)
+   - If exists: Use existing folder and check for `research-dossier.md`
+   - If not exists: Create new folder with next available ordinal
+   - PLAN_DIR = `docs/plans/<ordinal>-<slug>/`
    - SPEC_FILE = `${PLAN_DIR}/<slug>-spec.md` (spec co-located with plan)
-2) Ensure PLAN_DIR exists (create if needed).
+
+1a) Check for and incorporate existing research:
+   - If `${PLAN_DIR}/research-dossier.md` exists:
+     * Read the research dossier completely
+     * Note critical findings and modification considerations
+     * Use research to inform complexity scoring
+     * Reference key discoveries in relevant spec sections
+     * Add note: "📚 This specification incorporates findings from research-dossier.md"
+   - If no research exists:
+     * Add note: "ℹ️ Consider running `/plan-1a-explore` for deeper codebase understanding"
+   - Also check `docs/research/` for recent (< 24 hours) research on similar topics
+
+2) Ensure PLAN_DIR exists (create only if not already present).
 3) Populate SPEC_FILE with these sections (use Markdown headings):
    - `# <Feature Title>`
+   - `## Research Context` (if research exists) – brief summary of key findings:
+     * Components affected: [from research]
+     * Critical dependencies: [from research]
+     * Modification risks: [from research]
+     * Link: See `research-dossier.md` for full analysis
    - `## Summary` – short WHAT/WHY overview
-   - `## Goals` – bullet list of desired outcomes/user value
-   - `## Non-Goals` – explicitly out-of-scope behavior
-   - `## Complexity` – initial complexity assessment using CS 1-5 system:
+   - `## Goals` – bullet list of desired outcomes/user value (informed by research if available)
+   - `## Non-Goals` – explicitly out-of-scope behavior (informed by research boundaries)
+   - `## Complexity` – initial complexity assessment using CS 1-5 system (research-informed):
      * **Score**: CS-{1|2|3|4|5} ({trivial|small|medium|large|epic})
      * **Breakdown**: S={0-2}, I={0-2}, D={0-2}, N={0-2}, F={0-2}, T={0-2}
      * **Confidence**: {0.00-1.00} (agent's confidence in the score)

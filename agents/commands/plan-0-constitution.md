@@ -436,4 +436,4 @@ Canonical paths enforced by this command
 
 Run this command once per project (or whenever the guiding principles change) before executing planning or implementation phases.
 
-Next step (when happy): Run **/plan-1-specify** to capture the feature specification.
+Next step (when happy): Run **/plan-1a-explore** for research or **/plan-1b-specify** to capture the feature specification.

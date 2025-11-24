@@ -1,0 +1,543 @@
+---
+description: Deep-dive research into existing codebase functionality. Outputs to console for immediate use or saves to plan folder when --plan is provided. Integrates with FlowSpace MCP when available.
+---
+
+Please deep think / ultrathink as this is a complex task.
+
+# plan-1a-explore
+
+**Research and understand** how existing functionality works in the codebase. Perfect for arbitrary research questions or pre-planning exploration.
+
+User input:
+```
+$ARGUMENTS
+# Expected format:
+# /plan-1a-explore "research query"  # Outputs research to console
+# /plan-1a-explore --plan <name> "research query"  # Saves to plan folder
+#
+# Examples:
+# /plan-1a-explore "research how the search service works"
+# /plan-1a-explore --plan authentication-upgrade "research the current auth system"
+```
+
+## Purpose
+
+Perform deep codebase research to understand how existing functionality works. Can be used for arbitrary research (outputs to console) or tied to a specific plan (saves to plan folder).
+
+## Behavior
+
+- **Without --plan**: Outputs research report directly to console for immediate use
+- **With --plan**: Creates/uses plan folder and saves research as `research-dossier.md`
+
+## Execution Flow
+
+### 1) Parse Input
+
+Extract research query and optional plan name:
+- Parse $ARGUMENTS for --plan flag and research query
+- If --plan provided:
+  * Extract plan name (everything after --plan until research query)
+  * Determine plan folder (see section 1a below)
+  * Will save research to: `docs/plans/<ordinal>-<slug>/research-dossier.md`
+- If no --plan:
+  * Research will be output directly to console
+  * No files created
+
+### 1a) Plan Folder Management (when --plan provided)
+
+```python
+# Pseudo-code for plan folder handling
+def determine_plan_folder(plan_name):
+    # Check if plan_name is already a folder (e.g., "001-auth")
+    if matches_pattern(r'^\d{3}-', plan_name):
+        if exists(f"docs/plans/{plan_name}"):
+            return f"docs/plans/{plan_name}"
+        else:
+            error(f"Plan folder {plan_name} does not exist")
+
+    # plan_name is just a slug (e.g., "auth" or "authentication-upgrade")
+    slug = slugify(plan_name)
+
+    # Search for existing folder with this slug
+    for folder in list_folders("docs/plans/"):
+        if folder.endswith(f"-{slug}"):
+            return f"docs/plans/{folder}"
+
+    # No existing folder found - create new with next ordinal
+    next_ordinal = get_next_ordinal()
+    new_folder = f"docs/plans/{next_ordinal:03d}-{slug}"
+    create_folder(new_folder)
+    return new_folder
+```
+
+### 2) FlowSpace MCP Detection
+
+**CRITICAL**: Check for FlowSpace MCP availability to leverage enhanced exploration
+
+```python
+# Pseudo-code for detection
+try:
+    # Try calling a FlowSpace tool
+    call_tool("mcp__flowspace__get_status") or
+    call_tool("mcp__flowspace__search_nodes", {"query": "test"})
+    FLOWSPACE_AVAILABLE = True
+    print("✅ FlowSpace MCP detected - using enhanced exploration")
+except:
+    FLOWSPACE_AVAILABLE = False
+    print("ℹ️ FlowSpace not available - using standard tools")
+```
+
+If FlowSpace is available, first query:
+"Use FlowSpace MCP to look up documentation on how to search properly with FlowSpace for comprehensive codebase exploration."
+
+### 3) Launch Parallel Research Subagents
+
+**IMPORTANT**: Use **parallel subagent execution** for comprehensive and efficient research.
+
+**Strategy**: Launch 6 specialized subagents in a single message with 6 Task tool calls.
+
+#### Subagent Prompts (FlowSpace Mode)
+
+**Subagent 1: Implementation Archaeologist (FlowSpace)**
+"Map the complete implementation landscape of [RESEARCH_TOPIC].
+
+**If FlowSpace is available**: Use FlowSpace MCP tools as documented by FlowSpace for searching and exploring code.
+
+**Tasks**:
+- Find all entry points (APIs, commands, event handlers)
+- Trace execution flow using node relationships
+- Document core algorithms and business logic
+- Map data transformations with node IDs
+- Identify configuration and initialization
+
+**Output**: 8-10 findings numbered IA-01 through IA-10:
+```markdown
+### Finding IA-01: Main Entry Point
+**Node ID**: method:src/search/service.py:SearchService.search
+**Related Nodes**:
+  - class:SearchService
+  - function:src/search/utils.py:normalize_query
+**Description**: [What this does]
+**Code Example**: [Show actual code]
+**Flow**: [How execution proceeds from here]
+```
+
+Return complete findings list."
+
+**Subagent 2: Dependency Cartographer (FlowSpace)**
+"Create comprehensive dependency map for [RESEARCH_TOPIC].
+
+**If FlowSpace is available**: Use FlowSpace MCP tools as documented by FlowSpace for dependency analysis.
+
+**Tasks**:
+- Map what [RESEARCH_TOPIC] depends on (imports, calls)
+- Map what depends on [RESEARCH_TOPIC] (consumers)
+- Document external service integrations
+- Identify database/storage interactions
+- Trace configuration dependencies
+
+**Output**: 8-10 findings numbered DC-01 through DC-10 with dependency graphs and node IDs."
+
+**Subagent 3: Pattern & Convention Scout (FlowSpace)**
+"Identify design patterns and conventions in [RESEARCH_TOPIC].
+
+**If FlowSpace is available**: Use FlowSpace MCP tools as documented by FlowSpace for pattern discovery.
+
+**Tasks**:
+- Design patterns used (Factory, Observer, Repository, etc.)
+- Error handling approaches with examples
+- Logging and monitoring strategies
+- Naming conventions and code organization
+- Architectural patterns (MVC, Clean, Hexagonal)
+
+**Output**: 8-10 findings numbered PS-01 through PS-10 with pattern examples and node IDs."
+
+**Subagent 4: Quality & Testing Investigator (FlowSpace)**
+"Analyze quality and testing aspects of [RESEARCH_TOPIC].
+
+**If FlowSpace is available**: Use FlowSpace MCP tools as documented by FlowSpace for test discovery.
+
+**Tasks**:
+- Current test coverage (unit, integration, e2e)
+- Test strategies and patterns used
+- Performance characteristics if documented
+- Known bugs, limitations, tech debt
+- Code quality indicators
+
+**Output**: 8-10 findings numbered QT-01 through QT-10 with metrics and test references."
+
+**Subagent 5: Interface & Contract Analyst (FlowSpace)**
+"Document all interfaces and contracts for [RESEARCH_TOPIC].
+
+**If FlowSpace is available**: Use FlowSpace MCP tools as documented by FlowSpace for interface discovery.
+
+**Tasks**:
+- Public API signatures and endpoints
+- Data schemas and validation rules
+- Message/event contracts
+- Integration protocols and formats
+- Backward compatibility commitments
+
+**Output**: 8-10 findings numbered IC-01 through IC-10 with contract details and node IDs."
+
+**Subagent 6: Documentation & Evolution Historian (FlowSpace)**
+"Gather documentation and historical context for [RESEARCH_TOPIC].
+
+**If FlowSpace is available**: Use FlowSpace MCP tools as documented by FlowSpace for documentation discovery.
+
+**Tasks**:
+- Existing documentation (README, docs, wikis)
+- Important code comments and design notes
+- Related ADRs or design decisions
+- Configuration documentation
+- Migration and evolution history
+
+**Output**: 8-10 findings numbered DE-01 through DE-10 with documentation references."
+
+#### Subagent Prompts (Standard Mode - when FlowSpace unavailable)
+
+**Subagent 1: Implementation Archaeologist (Standard)**
+"Map the implementation landscape of [RESEARCH_TOPIC].
+
+**Use standard tools**:
+- Glob to find relevant files
+- Grep to search for patterns
+- Read to examine key files
+
+**Tasks**:
+- Find entry points by searching for route definitions, main functions
+- Trace execution by reading core files
+- Document algorithms by examining implementation
+- Map data flow by following function calls
+
+**Output**: 8-10 findings numbered IA-01 through IA-10 with file:line references."
+
+[Similar adaptations for other 5 subagents using Glob/Grep/Read instead of FlowSpace]
+
+**Wait for All Subagents**: Block until all 6 subagents complete.
+
+### 4) Synthesize Research Findings
+
+After all subagents complete:
+
+1. **Collect All Findings**: Gather ~50-60 findings from all subagents
+2. **Deduplicate**: Merge overlapping discoveries (note sources)
+3. **Prioritize**: Order by impact (Critical → High → Medium → Low)
+4. **Validate**: Ensure all findings have code references
+5. **Synthesize**: Create coherent narrative of how system works
+
+### 5) Generate Research Report
+
+Create comprehensive research document with this structure:
+
+```markdown
+# Research Report: [RESEARCH_TOPIC]
+
+**Generated**: [ISO-8601 timestamp]
+**Research Query**: "[Original user input]"
+**Mode**: [Research-Only | Pre-Plan | Plan-Associated]
+**Location**: [Output path]
+**FlowSpace**: [Available/Not Available]
+**Findings**: [Total count]
+
+## Executive Summary
+
+### What It Does
+[2-3 sentence high-level description of functionality]
+
+### Business Purpose
+[Why this exists in the system, what problem it solves]
+
+### Key Insights
+1. [Most important discovery]
+2. [Second critical finding]
+3. [Third key insight]
+
+### Quick Stats
+- **Components**: [N files, M classes]
+- **Dependencies**: [X internal, Y external]
+- **Test Coverage**: [Percentage or qualitative]
+- **Complexity**: [High/Medium/Low assessment]
+
+## How It Currently Works
+
+### Entry Points
+[Where execution begins - APIs, commands, events]
+
+| Entry Point | Type | Location | Purpose |
+|------------|------|----------|---------|
+| [Name] | API/Command/Event | [Node ID or file:line] | [What triggers this] |
+
+### Core Execution Flow
+[Step-by-step explanation with code references]
+
+1. **Step Name**: Description
+   - Node/File: `[reference]`
+   - What happens: [explanation]
+   - Code snippet:
+   ```[language]
+   // Relevant code
+   ```
+
+2. [Continue for main flow]
+
+### Data Flow
+```mermaid
+graph LR
+    A[Input] --> B[Processing]
+    B --> C[Transform]
+    C --> D[Output]
+```
+[Explain how data moves through the system]
+
+### State Management
+[How state is maintained, stored, synchronized]
+
+## Architecture & Design
+
+### Component Map
+[Visual or textual representation of components]
+
+#### Core Components
+- **[Component Name]**: [Purpose and location]
+  - Node ID: `[if FlowSpace]`
+  - File: `[path]`
+  - Responsibility: [what it does]
+
+### Design Patterns Identified
+1. **[Pattern Name]**: [Where used and why]
+   - Example: [code showing pattern]
+   - Benefits: [why this pattern here]
+
+### System Boundaries
+- **Internal Boundaries**: [Where this system ends]
+- **External Interfaces**: [How it connects to outside]
+- **Integration Points**: [Where other systems connect]
+
+## Dependencies & Integration
+
+### What This Depends On
+
+#### Internal Dependencies
+| Dependency | Type | Purpose | Risk if Changed |
+|------------|------|---------|-----------------|
+| [Module] | Required/Optional | [Why needed] | [Impact] |
+
+#### External Dependencies
+| Service/Library | Version | Purpose | Criticality |
+|-----------------|---------|---------|-------------|
+| [Name] | [Version] | [Why used] | High/Medium/Low |
+
+### What Depends on This
+
+#### Direct Consumers
+- **[Consumer Name]**: [How it uses this]
+  - Contract: [What it expects]
+  - Breaking changes: [What would break it]
+
+#### Indirect Consumers
+[Systems that transitively depend on this]
+
+### Integration Architecture
+[How this fits into larger system]
+
+## Quality & Testing
+
+### Current Test Coverage
+- **Unit Tests**: [Coverage and location]
+- **Integration Tests**: [What's tested]
+- **E2E Tests**: [End-to-end scenarios]
+- **Gaps**: [What's not tested]
+
+### Test Strategy Analysis
+[Patterns and approaches used in testing]
+
+### Known Issues & Technical Debt
+| Issue | Severity | Location | Impact |
+|-------|----------|----------|---------|
+| [Description] | High/Medium/Low | [Where] | [What it affects] |
+
+### Performance Characteristics
+- **Response Time**: [Typical performance]
+- **Resource Usage**: [Memory, CPU patterns]
+- **Bottlenecks**: [Known slow points]
+- **Scalability**: [Limits and considerations]
+
+## Modification Considerations
+
+### ✅ Safe to Modify
+Areas with low risk of breaking changes:
+1. **[Area]**: [Why it's safe]
+   - Well tested
+   - Clear boundaries
+   - Few dependencies
+
+### ⚠️ Modify with Caution
+Areas requiring careful consideration:
+1. **[Area]**: [Why it's risky]
+   - Risk: [What could break]
+   - Mitigation: [How to safely change]
+
+### 🚫 Danger Zones
+High-risk modification areas:
+1. **[Area]**: [Why it's dangerous]
+   - Dependencies: [What depends on this]
+   - Alternative: [Safer approach]
+
+### Extension Points
+Designed for modification:
+1. **[Extension Point]**: [How to extend]
+   - Pattern: [Expected approach]
+   - Example: [How others have extended]
+
+## Critical Discoveries
+
+### 🚨 Critical Finding 01: [Title]
+**Impact**: Critical
+**Source**: [Which subagents found this]
+**Node IDs**: [If FlowSpace available]
+**What**: [Description]
+**Why It Matters**: [Impact on any modifications]
+**Required Action**: [What must be considered]
+
+[Continue for all critical findings]
+
+## Supporting Documentation
+
+### Related Documentation
+- [README files]: [Paths and relevance]
+- [Design Docs]: [Links and summaries]
+- [ADRs]: [Relevant architectural decisions]
+
+### Key Code Comments
+[Important inline documentation found]
+
+### Historical Context
+[Significant evolution insights from git history]
+
+## Recommendations
+
+### If Modifying This System
+1. [First consideration]
+2. [Second consideration]
+3. [Third consideration]
+
+### If Extending This System
+1. [Recommended approach]
+2. [Pattern to follow]
+3. [What to avoid]
+
+### If Refactoring This System
+1. [Opportunity identified]
+2. [Suggested improvement]
+3. [Risk assessment]
+
+## Appendix: File Inventory
+
+### Core Files
+| File | Purpose | Lines | Last Modified |
+|------|---------|-------|---------------|
+| [Path] | [What it does] | [LOC] | [Date] |
+
+### Test Files
+[List of test files related to this functionality]
+
+### Configuration Files
+[Config files that affect this system]
+
+## Next Steps
+
+[Based on mode]
+- Research-Only: Review findings and decide on action
+- Pre-Plan: Run `/plan-1-specify "[feature]"` to create specification
+- Plan-Associated: Continue with plan phases
+
+---
+
+**Research Complete**: [Timestamp]
+**Report Location**: [Full path]
+```
+
+### 6) Output Research
+
+**Without --plan**:
+- Output the full research report directly to console
+- No success message needed (the research IS the output)
+- User can copy/paste or use immediately
+
+**With --plan**:
+```
+✅ Research complete: docs/plans/[ordinal]-[slug]/research-dossier.md
+- Plan folder: [Created new | Using existing]
+- Components analyzed: [N] files
+- Critical findings: [Count]
+- FlowSpace mode: [Yes/No]
+- Next step: Run /plan-1b-specify "[feature description]"
+```
+
+## Error Handling
+
+### Common Errors
+1. **No topic provided**: "Error: Please specify what to research"
+2. **Plan not found**: "Error: Plan [ID] does not exist"
+3. **Ambiguous topic**: "Warning: Topic too broad, please be specific"
+4. **No relevant code found**: "Warning: Could not find code matching [topic]"
+
+### Recovery Strategies
+- If FlowSpace fails mid-research: Fallback to standard tools
+- If subagent fails: Continue with other 5 and note gap
+- If synthesis fails: Output raw findings
+
+## Success Criteria
+
+✅ **Answers the question**: "How does [X] currently work?"
+✅ **Comprehensive**: Covers implementation, dependencies, patterns, quality
+✅ **Actionable**: Identifies safe vs dangerous modifications
+✅ **Well-referenced**: All findings have code locations
+✅ **Tool-adaptive**: Uses FlowSpace when available, standard tools when not
+✅ **Clear output**: Easy to understand research report
+✅ **Integration-ready**: Works with or without planning workflow
+
+## Integration with Other Commands
+
+### With plan-1b-specify
+- Checks for research-dossier.md in plan folder
+- Incorporates findings into specification
+- References critical discoveries
+
+### With plan-3-architect
+- If research exists, reduces redundant discovery
+- References research finding IDs
+- Focuses on implementation planning
+
+### With plan-2-clarify
+- Can reference research to inform questions
+- May trigger additional targeted research
+
+## Examples
+
+### Example 1: Quick Research (Console Output)
+```bash
+/plan-1a-explore "research how the search service works"
+```
+Outputs research directly to console. No files created.
+
+### Example 2: Research for New Plan
+```bash
+/plan-1a-explore --plan authentication-upgrade "research the current auth system"
+```
+Creates `docs/plans/001-authentication-upgrade/research-dossier.md`
+
+### Example 3: Research for Existing Plan (by slug)
+```bash
+/plan-1a-explore --plan search-improvement "research search indexing strategy"
+```
+If `002-search-improvement` exists, saves there. Otherwise creates new folder.
+
+### Example 4: Research for Existing Plan (by full name)
+```bash
+/plan-1a-explore --plan 003-payment-refactor "deep dive on payment processing"
+```
+Saves to `docs/plans/003-payment-refactor/research-dossier.md`
+
+This command provides deep, actionable research into existing codebase functionality, filling the critical gap between needing to change something and understanding how it currently works. It adapts to available tools (FlowSpace or standard) and integrates seamlessly with the planning workflow when desired.
