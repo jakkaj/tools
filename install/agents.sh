@@ -763,7 +763,17 @@ main() {
     if [ "${copilot_global_count}" -eq "${file_count}" ]; then
         echo "[✓ Idempotent] Copilot prompts mirrored (${copilot_global_count} of ${file_count} sources)"
     else
-        print_error "[Idempotent] Copilot prompt count mismatch (sources=${file_count}, global=${copilot_global_count})"
+        print_warning "[Idempotent] Copilot prompt count mismatch (sources=${file_count}, global=${copilot_global_count})"
+        # Report extra files in global dir that aren't in source
+        if [ "${copilot_global_count}" -gt "${file_count}" ]; then
+            echo "  Extra files in ${COPILOT_GLOBAL_DIR}:"
+            for global_file in "${COPILOT_GLOBAL_DIR}"/*.prompt.md; do
+                base_name=$(basename "${global_file}" .prompt.md)
+                if [ ! -f "${SOURCE_DIR}/${base_name}.md" ]; then
+                    echo "    - $(basename "${global_file}")"
+                fi
+            done
+        fi
     fi
 
     echo ""
