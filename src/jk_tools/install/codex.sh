@@ -111,9 +111,28 @@ install_codex() {
     # Try npm first
     if command -v npm >/dev/null 2>&1; then
         print_status "Installing Codex via npm..."
+
+        # Use user-local install (no sudo needed)
+        # This avoids permission issues in containers and restricted environments
+        local npm_prefix="$HOME/.npm-global"
+        mkdir -p "$npm_prefix"
+
+        print_status "Setting npm prefix to $npm_prefix..."
+        npm config set prefix "$npm_prefix"
+        export PATH="$npm_prefix/bin:$PATH"
+
         # Install Codex CLI
         if npm install -g @openai/codex 2>/dev/null; then
-            print_success "Codex CLI installed via npm"
+            print_success "Codex CLI installed via npm to $npm_prefix"
+
+            # Add to shell config if not already there
+            if [ -f "$HOME/.zshrc" ] && ! grep -q ".npm-global/bin" "$HOME/.zshrc" 2>/dev/null; then
+                echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.zshrc"
+                print_status "Added ~/.npm-global/bin to PATH in .zshrc"
+            elif [ -f "$HOME/.bashrc" ] && ! grep -q ".npm-global/bin" "$HOME/.bashrc" 2>/dev/null; then
+                echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bashrc"
+                print_status "Added ~/.npm-global/bin to PATH in .bashrc"
+            fi
         else
             print_status "npm installation failed, trying alternative methods..."
 
@@ -148,7 +167,8 @@ install_codex() {
     fi
 
     # Verify installation
-    if command -v codex >/dev/null 2>&1 || [ -x "$HOME/.codex/bin/codex" ]; then
+    local npm_prefix="$HOME/.npm-global"
+    if command -v codex >/dev/null 2>&1 || [ -x "$HOME/.codex/bin/codex" ] || [ -x "$npm_prefix/bin/codex" ]; then
         print_success "Codex CLI installation verified"
         print_status "Run 'codex' to start and authenticate with ChatGPT plan or API key"
         return 0

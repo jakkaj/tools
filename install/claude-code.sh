@@ -84,8 +84,27 @@ install_claude_code() {
     fi
 
     print_status "Installing Claude Code via npm..."
+
+    # Try user-local install first (no sudo needed)
+    # This avoids permission issues in containers and restricted environments
+    local npm_prefix="$HOME/.npm-global"
+    mkdir -p "$npm_prefix"
+
+    print_status "Setting npm prefix to $npm_prefix..."
+    npm config set prefix "$npm_prefix"
+    export PATH="$npm_prefix/bin:$PATH"
+
     if npm install -g @anthropic-ai/claude-code; then
-        print_success "Claude Code CLI installed via npm"
+        print_success "Claude Code CLI installed via npm to $npm_prefix"
+
+        # Add to shell config if not already there
+        if [ -f "$HOME/.zshrc" ] && ! grep -q ".npm-global/bin" "$HOME/.zshrc" 2>/dev/null; then
+            echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.zshrc"
+            print_status "Added ~/.npm-global/bin to PATH in .zshrc"
+        elif [ -f "$HOME/.bashrc" ] && ! grep -q ".npm-global/bin" "$HOME/.bashrc" 2>/dev/null; then
+            echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bashrc"
+            print_status "Added ~/.npm-global/bin to PATH in .bashrc"
+        fi
     else
         print_error "Claude Code CLI npm installation failed"
         return 1
@@ -96,7 +115,7 @@ install_claude_code() {
         source "$HOME/.zshrc" 2>/dev/null || true
     fi
 
-    if command -v claude >/dev/null 2>&1 || [ -x "$HOME/.claude/bin/claude" ]; then
+    if command -v claude >/dev/null 2>&1 || [ -x "$HOME/.claude/bin/claude" ] || [ -x "$npm_prefix/bin/claude" ]; then
         print_success "Claude Code CLI installation verified"
         print_status "Run 'claude login' to authenticate"
         return 0
