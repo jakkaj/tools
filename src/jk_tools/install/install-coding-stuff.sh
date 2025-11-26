@@ -389,8 +389,23 @@ install_claude_code() {
     # Try npm first (most reliable)
     if check_command npm; then
         print_status "Installing Claude Code via npm..."
+
+        # Use user-local install (no sudo needed)
+        # This avoids permission issues in containers and restricted environments
+        local npm_prefix="$HOME/.npm-global"
+        mkdir -p "$npm_prefix"
+        npm config set prefix "$npm_prefix"
+        export PATH="$npm_prefix/bin:$PATH"
+
         if npm install -g @anthropic-ai/claude-code; then
-            print_success "Claude Code CLI installed via npm"
+            print_success "Claude Code CLI installed via npm to $npm_prefix"
+
+            # Add to shell config if not already there
+            if [ -f "$HOME/.zshrc" ] && ! grep -q ".npm-global/bin" "$HOME/.zshrc" 2>/dev/null; then
+                echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.zshrc"
+            elif [ -f "$HOME/.bashrc" ] && ! grep -q ".npm-global/bin" "$HOME/.bashrc" 2>/dev/null; then
+                echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bashrc"
+            fi
         else
             print_warning "npm installation failed, trying native installer..."
             if curl -fsSL https://claude.ai/install.sh 2>/dev/null | bash; then
@@ -412,7 +427,8 @@ install_claude_code() {
     fi
 
     # Verify installation
-    if check_command claude; then
+    local npm_prefix="$HOME/.npm-global"
+    if check_command claude || [ -x "$npm_prefix/bin/claude" ]; then
         print_success "Claude Code CLI installation verified"
         print_status "Run 'claude' to start and authenticate"
         print_status "Run 'claude doctor' for diagnostics"
@@ -445,15 +461,20 @@ install_codex() {
     if check_command npm; then
         print_status "Installing Codex via npm (locally)..."
         # Install to user's home directory to avoid permission issues
-        npm config set prefix "$HOME/.npm-global"
-        export PATH="$HOME/.npm-global/bin:$PATH"
+        local npm_prefix="$HOME/.npm-global"
+        mkdir -p "$npm_prefix"
+        npm config set prefix "$npm_prefix"
+        export PATH="$npm_prefix/bin:$PATH"
 
         if npm install -g @openai/codex 2>/dev/null; then
             print_success "Codex CLI installed via npm to ~/.npm-global"
             # Add to shell config if not already there
-            if ! grep -q ".npm-global/bin" "$HOME/.zshrc" 2>/dev/null; then
+            if [ -f "$HOME/.zshrc" ] && ! grep -q ".npm-global/bin" "$HOME/.zshrc" 2>/dev/null; then
                 echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.zshrc"
                 print_status "Added ~/.npm-global/bin to PATH in .zshrc"
+            elif [ -f "$HOME/.bashrc" ] && ! grep -q ".npm-global/bin" "$HOME/.bashrc" 2>/dev/null; then
+                echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bashrc"
+                print_status "Added ~/.npm-global/bin to PATH in .bashrc"
             fi
         else
             print_warning "npm installation failed"
@@ -486,7 +507,8 @@ install_codex() {
     fi
 
     # Verify installation
-    if check_command codex; then
+    local npm_prefix="$HOME/.npm-global"
+    if check_command codex || [ -x "$npm_prefix/bin/codex" ]; then
         print_success "Codex CLI installation verified"
         print_status "Run 'codex' to start and authenticate with ChatGPT plan or API key"
     else
