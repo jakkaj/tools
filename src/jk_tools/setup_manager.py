@@ -235,8 +235,8 @@ class SetupManager:
 
         # Specified order for dependencies
         install_order = [
-            "rust.sh",
             "just.sh",
+            "rust.sh",
             "code2prompt.sh",
             "agents.sh",
             # "opencode.sh",  # Commented out - OpenCode installation disabled
