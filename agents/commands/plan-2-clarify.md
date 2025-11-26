@@ -2,7 +2,7 @@
 description: Resolve high-impact ambiguities (<=8 questions), capture answers in the spec, and update relevant sections immediately.
 ---
 
-Please deep think / ultrathink as this is a complex task. 
+Please deep think / ultrathink as this is a complex task.
 
 # plan-2-clarify
 
@@ -17,11 +17,37 @@ Flow:
 1) Determine PLAN_DIR from the spec path provided, then set FEATURE_SPEC = `${PLAN_DIR}/<slug>-spec.md` (spec co-located with plan).
 2) Scan spec with taxonomy (Testing Strategy, Documentation Strategy, FRs, NFRs, data model, integrations, UX, edge cases, terminology).
 3) Ask ONE question at a time (MC table 2-5 options or short answer <=5 words); cap at 8 total (only ask high-impact questions).
-   - PRIORITIZE Testing Strategy question if not already defined (usually Q1 or Q2)
+   - **Q1 MUST be Workflow Mode selection** (Simple vs Full) - see format below
+   - PRIORITIZE Testing Strategy question next if not already defined (usually Q2)
    - Ask for mock/stub preference immediately after the testing strategy unless already documented
-   - Ask Documentation Strategy question early (usually Q2 or Q3) to guide phase planning
-4) After each answer: append under `## Clarifications` -> `### Session YYYY-MM-DD`, then update the matching section(s) (Testing Strategy/Documentation Strategy/FRs/NFRs/data model/stories/edge cases). Save after each edit.
+   - Ask Documentation Strategy question early (usually Q3 or Q4) to guide phase planning
+4) After each answer: append under `## Clarifications` -> `### Session YYYY-MM-DD`, then update the matching section(s) (Mode/Testing Strategy/Documentation Strategy/FRs/NFRs/data model/stories/edge cases). Save after each edit.
 5) Stop when critical ambiguities resolved or cap reached. Emit coverage summary (Resolved/Deferred/Outstanding).
+
+Workflow Mode Question Format (MUST BE Q1):
+```
+Q1: What workflow mode fits this task?
+
+| Option | Mode | Best For | What Changes |
+|--------|------|----------|--------------|
+| A | Simple | CS-1/CS-2 tasks, single phase, quick path to implementation | Single-phase plan, inline tasks, plan-4/plan-5 optional |
+| B | Full | CS-3+ features, multiple phases, comprehensive gates | Multi-phase plan, required dossiers, all gates |
+
+Answer: [A/B]
+Rationale: [1-2 sentences from user]
+```
+
+**If Simple Mode Selected:**
+- Update spec header with `**Mode**: Simple`
+- Continue with remaining questions (user can stop anytime)
+- Testing Strategy defaults to Lightweight unless user specifies otherwise
+- plan-3-architect will generate single-phase plan with inline tasks
+- plan-4 and plan-5 become optional (user can skip to plan-6)
+
+**If Full Mode Selected:**
+- Update spec header with `**Mode**: Full`
+- Continue with full question flow as normal
+- All gates (plan-4, plan-5) remain required
 
 Testing Strategy Question Format:
 ```

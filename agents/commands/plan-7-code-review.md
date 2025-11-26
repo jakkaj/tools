@@ -17,7 +17,7 @@ User input:
 
 $ARGUMENTS
 # Required flags (absolute paths):
-# --phase "<Phase N: Title>"
+# --phase "<Phase N: Title>"   # Required for Full Mode, omit for Simple Mode
 # --plan "<abs path to docs/plans/<ordinal>-<slug>/<slug>-plan.md>"
 # Optional flags:
 # --diff-file "<abs path to unified.diff>"   # if omitted, compute from git
@@ -26,12 +26,30 @@ $ARGUMENTS
 # --strict                                   # treat HIGH as blocking
 
 1) Resolve inputs & artifacts
+   - **Detect Workflow Mode**: Read PLAN and check for `**Mode**: Simple` or `**Mode**: Full`
+     * If `Mode: Simple` → Use **Simple Mode** artifact resolution
+     * If `Mode: Full` or not specified → Use **Full Mode** artifact resolution
+
+   **Full Mode Resolution:**
    - Run {SCRIPT} to resolve:
      PLAN        = provided --plan
      PLAN_DIR    = dirname(PLAN)
      PHASE_DIR   = PLAN_DIR/tasks/${PHASE_SLUG}  # abort if missing; phase tasks not generated
      PHASE_DOC   = PHASE_DIR/tasks.md            # abort if missing; plan-5 dossier not created
      EXEC_LOG    = PHASE_DIR/execution.log.md (required)
+
+   **Simple Mode Resolution:**
+   - PLAN = provided --plan
+   - PLAN_DIR = dirname(PLAN)
+   - PHASE_DOC = PLAN itself (read inline task table from `## Implementation (Single Phase)`)
+   - EXEC_LOG = `${PLAN_DIR}/execution.log.md` (sibling to plan)
+   - PHASE_DIR = PLAN_DIR (no separate phase directory)
+   - `--phase` flag is ignored (single phase)
+   - **Artifact Tolerance**: Some artifacts may not exist:
+     * No separate tasks.md dossier (tasks are inline in plan)
+     * No Phase Footnote Stubs section (only plan ledger exists)
+     * No cross-phase artifacts (single phase)
+     * Execution log may be at plan level, not phase level
    - **Plan Footnotes Evidence**:
      Read the plan footer "Change Footnotes Ledger"; map footnote tags in `PHASE_DOC` to detailed node-ID entries
      (per `AGENTS.md`). Ensure numbering is sequential/unique and each changed file/method has a corresponding footnote entry.
@@ -51,12 +69,21 @@ $ARGUMENTS
 3) Scope guard (PHASE ONLY)
    - Parse `PHASE_DOC` to list target files for this phase; ensure the diff touches only those or justified neighbors.
    - If violations (files outside scope without justification in the alignment brief section of `PHASE_DOC` or EXEC_LOG), flag as HIGH.
+   - **Simple Mode**: Scope guard applies to inline task table paths in `## Implementation (Single Phase)` section.
 
 3a) Bidirectional Link Validation (CRITICAL for graph integrity)
 
 **IMPORTANT**: This step uses **parallel subagent validation** for comprehensive and efficient graph integrity checks.
 
-**Strategy**: Launch 5 validators simultaneously (single message with 5 Task tool calls), one per link type. Each validator focuses on specific graph edges, then results are synthesized into unified findings.
+**Simple Mode Adjustments:**
+- Skip **Subagent 4 (Plan↔Dossier Sync)** - no separate dossier exists
+- Skip **Subagent 5 (Parent↔Subtask)** - single phase, no subtasks
+- **Subagent 2 (Task↔Footnote)** checks only plan ledger (no dossier stubs)
+- Reduce parallel subagents from 5 to 3 (Task↔Log, Task↔Footnote, Footnote↔File)
+
+**Full Mode Strategy**: Launch 5 validators simultaneously (single message with 5 Task tool calls), one per link type. Each validator focuses on specific graph edges, then results are synthesized into unified findings.
+
+**Simple Mode Strategy**: Launch 3 validators simultaneously (Task↔Log, Task↔Footnote, Footnote↔File only).
 
 **Subagent Breakdown**:
 
@@ -234,10 +261,13 @@ For each violation, include:
 
 **IMPORTANT**: This step validates that changes do not break functionality from previous phases.
 
+**Simple Mode**: SKIP this step entirely - there are no previous phases to regress against (single phase plan).
+
 **Strategy**: Run parallel validation across integration boundaries and prior phase outputs.
 
 **Execution Control**:
-- Default: ENABLED for all phases
+- Default: ENABLED for Full Mode phases
+- **Simple Mode**: DISABLED (auto-skipped)
 - Override: Use `--skip-regression-check` flag to skip (faster but riskier)
 - Recommended: Always run for phases touching shared/core modules
 
@@ -1097,15 +1127,18 @@ This step runs **after** Step 3a (depends on link validation data) but can run i
         | ID | Severity | File:Lines | Summary | Recommendation |
         |----|----------|------------|---------|----------------|
      E) **Detailed Findings**
-        E.0) **Cross-Phase Regression Analysis** (from step 3b - if enabled, otherwise "Skipped: --skip-regression-check")
-           - Regression findings table with prior phase references
+        E.0) **Cross-Phase Regression Analysis** (from step 3b)
+           - **Simple Mode**: "Skipped: Simple Mode (single phase)"
+           - **Full Mode**: Regression findings table with prior phase references
            - Tests rerun count, failures, contracts broken
            - Integration point validation results
            - Backward compatibility check results
 
         E.1) **Doctrine & Testing Compliance** (from steps 3a, 3c, 4, 5)
            - Graph integrity violations (link validation from 3a)
+             * **Simple Mode**: Reduced validators (3 instead of 5)
            - Authority conflicts (plan/dossier sync from 3c)
+             * **Simple Mode**: "N/A - no separate dossier"
            - TDD/TAD/Lightweight/Mock/Universal validator findings (from 4)
            - Testing evidence and coverage findings (from 5)
 
@@ -1132,7 +1165,13 @@ This step runs **after** Step 3a (depends on link validation data) but can run i
      G) **Commands Executed** (copy/paste)
      H) **Decision & Next Steps** (who approves; what to fix)
      I) **Footnotes Audit**: summary table listing each diff-touched path, associated footnote tag(s) from `PHASE_DOC`, and node-ID link(s) recorded in the plan ledger.
+
+   **Output file paths:**
+   - **Full Mode**: `PLAN_DIR/reviews/review.${PHASE_SLUG}.md`
+   - **Simple Mode**: `PLAN_DIR/reviews/review.md` (no phase slug - single phase)
+
    - `PLAN_DIR/reviews/fix-tasks.${PHASE_SLUG}.md` (only if REQUEST_CHANGES)
+     - **Simple Mode**: `PLAN_DIR/reviews/fix-tasks.md`
      - Micro-tasks with exact file paths + patch hints
      - Fix ordering adapted to Testing Approach:
        * Full TDD: Tests-first ordering (what to assert, then code)

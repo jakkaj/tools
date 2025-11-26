@@ -19,6 +19,13 @@ $ARGUMENTS
 1) Resolve paths:
    PLAN         = provided --plan
    PLAN_DIR     = dirname(PLAN)
+
+   **Detect Workflow Mode:**
+   - Read PLAN file and check for `**Mode**: Simple` or `**Mode**: Full` in header
+   - If `Mode: Simple` → Use **Simple Mode** (inline tasks, no dossier required)
+   - If `Mode: Full` or not specified → Use **Full Mode** (requires dossier)
+
+   **Full Mode Path Resolution:**
    PHASE_HEADING = provided --phase (required when multiple phases exist); slugify to get `PHASE_SLUG` exactly as plan-5/plan-5a generate directories (e.g., "Phase 4: Data Flows" → `phase-4-data-flows`).
    If `--phase` omitted, infer `PHASE_SLUG` by locating the unique tasks directory that contains either `tasks.md` or the requested `--subtask` file; abort when inference is ambiguous.
    PHASE_DIR    = PLAN_DIR/tasks/${PHASE_SLUG}
@@ -32,6 +39,23 @@ $ARGUMENTS
      - EXEC_LOG      = `${PHASE_DIR}/${SUBTASK_KEY}.execution.log.md`; create if missing during step 4.
      - Capture parent task linkage from the subtask metadata table before execution.
    Load task definitions and Alignment Brief sections from `PHASE_DOC`.
+
+   **Simple Mode Path Resolution:**
+   - `--phase` flag is ignored (single phase)
+   - PHASE_DIR = PLAN_DIR (no separate tasks directory)
+   - Check if dossier exists: `${PLAN_DIR}/tasks/implementation/tasks.md`
+     * If exists → PHASE_DOC = that file (user ran plan-5 optionally)
+     * If not exists → PHASE_DOC = PLAN itself (read inline task table from § Implementation)
+   - EXEC_LOG = `${PLAN_DIR}/execution.log.md` (sibling to plan file)
+   - INLINE_MODE = true if reading tasks from plan directly
+
+   **Simple Mode Task Loading:**
+   When INLINE_MODE = true:
+   - Parse `## Implementation (Single Phase)` section from PLAN
+   - Extract `### Tasks` table (same 9-column format as dossier)
+   - Extract `### Acceptance Criteria` as validation checkpoints
+   - Testing Approach and Mock Usage from section header
+   - No Alignment Brief section (use plan's Executive Summary for context)
 
 2) **Contract** (Read Testing Strategy First):
    a) Extract Testing Strategy from `PLAN`:
@@ -142,7 +166,9 @@ $ARGUMENTS
      * **CRITICAL**: Follow plan-6a execution log format with dossier task ID, plan task ID, and backlinks
 
    - **Atomic Progress Update** (delegate to plan-6a - REQUIRED):
-     * **IMMEDIATELY** after writing each task entry to EXEC_LOG, delegate to plan-6a for atomic 3-location updates:
+     * **IMMEDIATELY** after writing each task entry to EXEC_LOG, delegate to plan-6a for atomic updates:
+
+       **Full Mode:**
        ```bash
        /plan-6a-update-progress \
          --phase "${PHASE_HEADING}" \
@@ -151,11 +177,22 @@ $ARGUMENTS
          --status "completed|in_progress|blocked" \
          --changes "class:path:ClassName,method:path:ClassName.method,function:path:funcName,file:path"
        ```
+
+       **Simple Mode (INLINE_MODE = true):**
+       ```bash
+       /plan-6a-update-progress \
+         --plan "${PLAN}" \
+         --task "${TASK_ID}" \
+         --status "completed|in_progress|blocked" \
+         --changes "class:path:ClassName,method:path:ClassName.method,function:path:funcName,file:path" \
+         --inline
+       ```
+       The `--inline` flag tells plan-6a to update the inline task table in the plan itself.
+
      * This ensures:
-       - Dossier task table updated (Status + Notes + footnote)
-       - Plan task table updated (Status + Log + Notes + footnote)
-       - Both footnote ledgers synchronized
-       - Progress checklist updated
+       - **Full Mode**: Dossier task table + Plan task table + Both footnote ledgers updated
+       - **Simple Mode**: Plan inline task table + Plan footnote ledger updated
+       - Progress checklist updated (if present)
      * **DO NOT** manually update task tables or footnotes; always delegate to plan-6a for consistency
      * For subtask work, include `--subtask "${SUBTASK_KEY}"` flag in the plan-6a command
 
@@ -201,10 +238,15 @@ $ARGUMENTS
    - If a step cannot proceed without a decision, **STOP** and ask **one focused question**; do not widen scope.
 
 Note:
-- This command executes one dossier at a time (phase or subtask). To proceed, rerun it with the next target when its tasks + brief are ready.
-- Store any ancillary artifacts generated during this work inside `PHASE_DIR` to keep the plan tree organized.
+- **Full Mode**: This command executes one dossier at a time (phase or subtask). To proceed, rerun it with the next target when its tasks + brief are ready.
+- **Simple Mode**: This command executes all tasks in the single inline phase. No phase flag needed.
+- Store any ancillary artifacts generated during this work inside `PHASE_DIR` (Full Mode) or `PLAN_DIR` (Simple Mode) to keep files organized.
 ```
 
 The execution semantics match your existing implementation command, adjusted to consume phase-scoped artifacts and BridgeContext practices.
 
-Next step (when happy): Run **/plan-7-code-review --phase "<Phase N: Title>" --plan "<PLAN_PATH>"**.
+**Next step (when happy):**
+
+**Full Mode**: Run **/plan-7-code-review --phase "<Phase N: Title>" --plan "<PLAN_PATH>"**
+
+**Simple Mode**: Run **/plan-7-code-review --plan "<PLAN_PATH>"** (no --phase needed)

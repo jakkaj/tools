@@ -12,6 +12,8 @@ Create or update the feature **spec** from a natural-language description (WHAT/
 User input:
 
 $ARGUMENTS
+# Optional flag:
+# --simple    # Pre-set Mode: Simple (user can skip mode question in plan-2-clarify)
 
 1) Determine the feature slug from user input and check for existing plan folder:
    - Generate slug from feature description
@@ -35,6 +37,9 @@ $ARGUMENTS
 2) Ensure PLAN_DIR exists (create only if not already present).
 3) Populate SPEC_FILE with these sections (use Markdown headings):
    - `# <Feature Title>`
+   - **Mode header** (if --simple flag provided):
+     * Add `**Mode**: Simple` immediately after title
+     * This pre-sets mode so plan-2-clarify can skip Q1 (mode selection)
    - `## Research Context` (if research exists) – brief summary of key findings:
      * Components affected: [from research]
      * Critical dependencies: [from research]

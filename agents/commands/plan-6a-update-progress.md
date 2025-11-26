@@ -63,13 +63,14 @@ User input:
 
 $ARGUMENTS
 # Expected flags:
-# --phase "<Phase N: Title>"
+# --phase "<Phase N: Title>"   # Required for Full Mode, ignored for Simple Mode
 # --plan "<abs path to docs/plans/<ordinal>-<slug>/<slug>-plan.md>"
-# --task "<Task ID>"           # plan table ID (e.g., "2.3") or subtask ID (e.g., "ST002")
+# --task "<Task ID>"           # plan table ID (e.g., "T001") or subtask ID (e.g., "ST002")
 # --status "completed|in_progress|blocked"
 # --changes "List of modified elements with their types"
-# Optional flag:
+# Optional flags:
 # --subtask "<ORD-subtask-slug>"  # target subtask dossier (e.g., "003-subtask-bulk-import-fixtures")
+# --inline                        # Simple Mode: update inline task table in plan (no separate dossier)
 
 ## PHASE A: Resolve Paths & Load Current State
 
@@ -79,12 +80,26 @@ Resolve all file paths before starting updates:
 
 - **PLAN** = provided --plan path
 - **PLAN_DIR** = dirname(PLAN)
+- **INLINE_MODE** = true if `--inline` flag provided (Simple Mode)
+
+**If INLINE_MODE = true (Simple Mode):**
+- **TARGET_DOC** = PLAN itself (the plan file contains the inline task table)
+- **TASK_LOG** = `${PLAN_DIR}/execution.log.md` (sibling to plan)
+- **PHASE_DIR** = PLAN_DIR (no separate phase directory)
+- Task IDs use `T###` format (from inline `### Tasks` table under `## Implementation`)
+- Skip PHASE_HEADING/PHASE_SLUG resolution (single phase)
+- Updates go to:
+  1. Inline task table in PLAN (§ Implementation > ### Tasks)
+  2. Change Footnotes Ledger in PLAN (§ Change Footnotes Ledger)
+  3. No separate dossier (plan is the single source of truth)
+
+**If INLINE_MODE = false (Full Mode):**
 - **PHASE_HEADING** = `--phase` value; slugify to get `PHASE_SLUG` exactly as plan-5/plan-5a (e.g., "Phase 4: Data Flows" → `phase-4-data-flows`)
   - If `--phase` omitted: infer slug by locating the unique tasks directory containing `tasks.md` or requested `--subtask`
   - Halt if ambiguous (multiple candidates exist)
 - **PHASE_DIR** = `${PLAN_DIR}/tasks/${PHASE_SLUG}`
 
-**Determine target documents:**
+**Determine target documents (Full Mode only):**
 - If `--subtask` NOT provided (phase execution):
   * **TARGET_DOC** = `${PHASE_DIR}/tasks.md` (phase dossier)
   * **TASK_LOG** = `${PHASE_DIR}/execution.log.md`
@@ -97,8 +112,8 @@ Resolve all file paths before starting updates:
   * Task IDs use `ST###` format
 
 **Validation:**
-- Abort if `TARGET_DOC` does not exist
-- Abort if `PLAN` does not exist
+- Abort if `TARGET_DOC` does not exist (for Full Mode) or PLAN does not exist
+- For INLINE_MODE: verify `## Implementation (Single Phase)` section exists in PLAN
 
 ### Step A2: Load Current State (Parallel Readers)
 
@@ -317,14 +332,42 @@ You MUST complete ALL four steps below for every task update. Missing any step =
 
 **Strategy**: Launch 3 updaters in parallel - each handles one step independently.
 
-**Subagent C1: Dossier Updater**
-"Update the dossier task table.
+**Subagent C1: Dossier/Inline Task Updater**
+"Update the task table (dossier or inline).
 
-**Location:** `${TARGET_DOC}` (either `tasks.md` or subtask file)
+**Location:** `${TARGET_DOC}`
+- Full Mode: `tasks.md` or subtask file
+- Simple Mode (INLINE_MODE): PLAN itself (`## Implementation (Single Phase)` > `### Tasks`)
 
 **Task**: Update the relevant task row to mirror the new status:
 
-#### For Phase Dossier (`tasks.md`):
+#### For Simple Mode (INLINE_MODE = true):
+
+1. Locate the `T###` row in the inline tasks table under `## Implementation (Single Phase)` > `### Tasks`
+2. Update the `Status` glyph:
+   - `[ ]` = pending (not started)
+   - `[~]` = in_progress (currently working)
+   - `[x]` = completed (done)
+   - `[!]` = blocked (cannot proceed)
+3. Update `Notes` column:
+   - Add log anchor reference: `log#task-t001-setup`
+   - Add footnote tag: `[^N]` (using next available number from Step A2)
+
+**Example transformation (Simple Mode):**
+
+Before:
+```markdown
+| [ ] | T001 | Setup configuration | 2 | Setup | -- | /abs/path | Config created | |
+```
+
+After:
+```markdown
+| [x] | T001 | Setup configuration | 2 | Setup | -- | /abs/path | Config created | log#task-t001-setup [^1] |
+```
+
+**Note**: In Simple Mode, there is NO separate dossier - the plan's inline task table IS the task source. Skip Subagent C2 (Plan Updater) since there's only one table to update.
+
+#### For Full Mode - Phase Dossier (`tasks.md`):
 
 1. Locate the `T###` row in the dossier tasks table
 2. Update the `Status` glyph:
@@ -349,7 +392,7 @@ After:
 | [x] | T003 | Implement validation | Core | T001 | /abs/path | Tests pass | Supports plan task 2.3 · log#task-23-implement-validation [^3] |
 ```
 
-#### For Subtask Dossier (`ORD-subtask-*.md`):
+#### For Full Mode - Subtask Dossier (`ORD-subtask-*.md`):
 
 1. Locate the `ST###` row in the subtask tasks table
 2. Update the `Status` glyph (same as above)
@@ -371,17 +414,19 @@ After:
 ```
 
 **Report** (confirmation):
-`Dossier task table updated: ${TASK_ID} status set to ${STATUS}, footnote [^${N}] added`
+`Task table updated: ${TASK_ID} status set to ${STATUS}, footnote [^${N}] added`
 "
 
 ---
 
-**Subagent C2: Plan Updater**
+**Subagent C2: Plan Updater** (Full Mode Only)
 "Update the parent plan task table.
+
+**SKIP THIS SUBAGENT IF INLINE_MODE = true** (Simple Mode already updated the plan's inline task table in C1)
 
 **Location:** `${PLAN}` (the main `plan.md` file)
 
-**CRITICAL:** This step is often forgotten. You MUST update the plan.md task table.
+**CRITICAL:** This step is often forgotten in Full Mode. You MUST update the plan.md task table.
 
 Find the plan task table (usually in § 8 Implementation Phases) and update the corresponding row:
 
@@ -438,14 +483,22 @@ Do not leave any column with `-` or empty when marking complete.
 ---
 
 **Subagent C3: Footnote & Progress Updater**
-"Update both footnote ledgers AND the progress checklist.
+"Update footnote ledger(s) AND the progress checklist.
 
-**Locations:**
+**Locations (varies by mode):**
+
+**Full Mode:**
 1. `${PLAN}` § 12 Change Footnotes Ledger
 2. `${TARGET_DOC}` § Phase Footnote Stubs
-3. `${PLAN}` § 11 Progress Checklist
+3. `${PLAN}` § 11 Progress Checklist (if present)
 
-**CRITICAL:** You must update BOTH footnote ledgers with the same `[^N]` number AND update the progress checklist.
+**Simple Mode (INLINE_MODE = true):**
+1. `${PLAN}` § Change Footnotes Ledger (only ONE ledger - plan is the single source)
+2. No dossier stubs to update
+3. Update `### Acceptance Criteria` checkboxes in `## Implementation (Single Phase)` section
+
+**CRITICAL (Full Mode):** You must update BOTH footnote ledgers with the same `[^N]` number.
+**CRITICAL (Simple Mode):** Only ONE ledger exists - update it in the plan.
 
 Parse the `--changes` input to create properly formatted footnotes using the next available footnote number from Step A2.
 

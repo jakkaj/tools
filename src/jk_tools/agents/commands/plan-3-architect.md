@@ -41,6 +41,20 @@ Inputs:
   constitution at `docs/rules-idioms-architecture/constitution.md` (if present),
   today {{TODAY}}.
 
+## PHASE 0: Detect Workflow Mode
+
+**FIRST**: Check spec for `**Mode**: Simple` or `**Mode**: Full` in header/metadata.
+
+- If `Mode: Simple` → Use **Simple Mode Output Format** (see below)
+- If `Mode: Full` or not specified → Use **Full Mode Output Format** (standard multi-phase)
+
+**Simple Mode Changes:**
+- Single phase instead of multiple phases
+- Inline task table (plan-5 format) directly in plan
+- Concise findings format (shorter, action-focused)
+- Next step prompts show plan-4/plan-5 as optional
+- Same subagent depth (4 researchers) for thoroughness
+
 ## PHASE 1: Initial Gates & Validation
 
 ### GATE - Clarify
@@ -914,6 +928,112 @@ docs/how/
 - [ ] Peer review completed
 - [ ] Target audience can follow guides successfully
 - [ ] Numbered file structure follows convention
+
+## Simple Mode Output Format
+
+**When spec has `Mode: Simple`**, generate a streamlined single-phase plan:
+
+### Simple Mode Plan Structure
+
+```markdown
+# [Feature Name] Implementation Plan
+
+**Mode**: Simple
+**Plan Version**: 1.0.0
+**Created**: {{TODAY}}
+**Spec**: [link to ./<slug>-spec.md]
+**Status**: DRAFT | READY | IN_PROGRESS | COMPLETE
+
+## Table of Contents
+1. [Executive Summary](#executive-summary)
+2. [Critical Research Findings](#critical-research-findings)
+3. [Implementation](#implementation)
+4. [Change Footnotes Ledger](#change-footnotes-ledger)
+
+## Executive Summary
+[2-3 sentences: Problem, Solution approach, Expected outcome]
+
+## Critical Research Findings (Concise)
+
+**Format for Simple Mode** - Action-focused, one finding per line:
+
+| # | Impact | Finding | Action |
+|---|--------|---------|--------|
+| 01 | Critical | [Title: One-line description] | [What implementation must do] |
+| 02 | High | [Title: One-line description] | [What implementation must do] |
+| 03 | High | [Title: One-line description] | [What implementation must do] |
+| ... | ... | ... | ... |
+
+**Note**: Still generate 15-20+ findings via 4 subagents, but present in concise table format.
+
+## Implementation (Single Phase)
+
+**Objective**: [One sentence goal]
+
+**Testing Approach**: [From spec - Lightweight/Manual/TDD/TAD/Hybrid]
+**Mock Usage**: [From spec - Avoid/Targeted/Liberal]
+
+### Tasks
+
+| Status | ID | Task | CS | Type | Dependencies | Absolute Path(s) | Validation | Notes |
+|--------|-----|------|----|------|--------------|------------------|------------|-------|
+| [ ] | T001 | [Task description] | 2 | Setup | -- | /abs/path/to/file | [Success criteria] | |
+| [ ] | T002 | [Task description] | 2 | Core | T001 | /abs/path/to/file | [Success criteria] | |
+| [ ] | T003 | [Task description] | 2 | Core | T001 | /abs/path/to/file | [Success criteria] | |
+| [ ] | T004 | [Task description] | 1 | Test | T002,T003 | /abs/path/to/test | [Success criteria] | |
+
+**Task Table Notes**:
+- Uses same 9-column format as plan-5 dossiers
+- Tasks are detailed enough for direct implementation (no plan-5 expansion needed)
+- Include absolute paths for all files
+- CS scores follow constitution rubric
+
+### Acceptance Criteria
+- [ ] [Criterion 1 - testable/observable]
+- [ ] [Criterion 2 - testable/observable]
+- [ ] [Criterion 3 - testable/observable]
+
+### Risks
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| [Risk] | Low/Med/High | Low/Med/High | [Mitigation] |
+
+## Change Footnotes Ledger
+
+[^1]: [To be added during implementation via plan-6a]
+...
+
+---
+
+**Next steps:**
+- **Ready to implement**: `/plan-6-implement-phase --plan "<path>"`
+- **Optional validation**: `/plan-4-complete-the-plan` (recommended for CS-3+ tasks)
+- **Optional task expansion**: `/plan-5-phase-tasks-and-brief` (if you want a separate dossier)
+```
+
+### Simple Mode Success Message
+
+```
+✅ Plan created successfully (Simple Mode):
+- Location: [absolute path to plan]
+- Mode: Simple (single phase, inline tasks)
+- Tasks: [count]
+- Next step: Run /plan-6-implement-phase --plan "<path>"
+- Optional: Run /plan-4-complete-the-plan for validation
+```
+
+### Key Differences from Full Mode
+
+| Aspect | Full Mode | Simple Mode |
+|--------|-----------|-------------|
+| Phases | Multiple (3-5 typical) | Single |
+| Task table | High-level (expanded by plan-5) | Detailed inline (plan-5 format) |
+| Findings format | Detailed with code examples | Concise table format |
+| plan-4 | Required | Optional |
+| plan-5 | Required | Optional |
+| Next step | /plan-4-complete-the-plan | /plan-6-implement-phase |
+
+---
 
 ## Style & Formatting Rules
 
