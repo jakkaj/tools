@@ -110,6 +110,20 @@ If FlowSpace is available, first query:
 - Map data transformations with node IDs
 - Identify configuration and initialization
 
+**External Research Detection**:
+Flag knowledge gaps that require external research when you encounter:
+- Questions about current best practices (2024+) vs what code implements
+- Industry standards, compliance, or security patterns not documented in code
+- Performance optimization strategies beyond what's implemented
+- Architectural decisions where "why" isn't clear from code
+- Technology comparisons the codebase doesn't address
+- Recent changes to libraries/frameworks the code depends on
+
+For each gap found, note:
+- Topic: [brief title]
+- Why: [why code can't answer this]
+- Context: [relevant code findings that led to this question]
+
 **Output**: 8-10 findings numbered IA-01 through IA-10:
 ```markdown
 ### Finding IA-01: Main Entry Point
@@ -120,9 +134,10 @@ If FlowSpace is available, first query:
 **Description**: [What this does]
 **Code Example**: [Show actual code]
 **Flow**: [How execution proceeds from here]
+**External Research Gap** (if applicable): [Topic needing external research]
 ```
 
-Return complete findings list."
+Return complete findings list including any external research gaps identified."
 
 **Subagent 2: Dependency Cartographer (FlowSpace)**
 "Create comprehensive dependency map for [RESEARCH_TOPIC].
@@ -136,7 +151,9 @@ Return complete findings list."
 - Identify database/storage interactions
 - Trace configuration dependencies
 
-**Output**: 8-10 findings numbered DC-01 through DC-10 with dependency graphs and node IDs."
+**External Research Detection**: (Same criteria as Subagent 1)
+
+**Output**: 8-10 findings numbered DC-01 through DC-10 with dependency graphs, node IDs, and any external research gaps."
 
 **Subagent 3: Pattern & Convention Scout (FlowSpace)**
 "Identify design patterns and conventions in [RESEARCH_TOPIC].
@@ -150,7 +167,9 @@ Return complete findings list."
 - Naming conventions and code organization
 - Architectural patterns (MVC, Clean, Hexagonal)
 
-**Output**: 8-10 findings numbered PS-01 through PS-10 with pattern examples and node IDs."
+**External Research Detection**: (Same criteria as Subagent 1)
+
+**Output**: 8-10 findings numbered PS-01 through PS-10 with pattern examples, node IDs, and any external research gaps."
 
 **Subagent 4: Quality & Testing Investigator (FlowSpace)**
 "Analyze quality and testing aspects of [RESEARCH_TOPIC].
@@ -164,7 +183,9 @@ Return complete findings list."
 - Known bugs, limitations, tech debt
 - Code quality indicators
 
-**Output**: 8-10 findings numbered QT-01 through QT-10 with metrics and test references."
+**External Research Detection**: (Same criteria as Subagent 1)
+
+**Output**: 8-10 findings numbered QT-01 through QT-10 with metrics, test references, and any external research gaps."
 
 **Subagent 5: Interface & Contract Analyst (FlowSpace)**
 "Document all interfaces and contracts for [RESEARCH_TOPIC].
@@ -178,7 +199,9 @@ Return complete findings list."
 - Integration protocols and formats
 - Backward compatibility commitments
 
-**Output**: 8-10 findings numbered IC-01 through IC-10 with contract details and node IDs."
+**External Research Detection**: (Same criteria as Subagent 1)
+
+**Output**: 8-10 findings numbered IC-01 through IC-10 with contract details, node IDs, and any external research gaps."
 
 **Subagent 6: Documentation & Evolution Historian (FlowSpace)**
 "Gather documentation and historical context for [RESEARCH_TOPIC].
@@ -192,7 +215,9 @@ Return complete findings list."
 - Configuration documentation
 - Migration and evolution history
 
-**Output**: 8-10 findings numbered DE-01 through DE-10 with documentation references."
+**External Research Detection**: (Same criteria as Subagent 1)
+
+**Output**: 8-10 findings numbered DE-01 through DE-10 with documentation references and any external research gaps."
 
 #### Subagent Prompts (Standard Mode - when FlowSpace unavailable)
 
@@ -210,9 +235,23 @@ Return complete findings list."
 - Document algorithms by examining implementation
 - Map data flow by following function calls
 
-**Output**: 8-10 findings numbered IA-01 through IA-10 with file:line references."
+**External Research Detection**:
+Flag knowledge gaps that require external research when you encounter:
+- Questions about current best practices (2024+) vs what code implements
+- Industry standards, compliance, or security patterns not documented in code
+- Performance optimization strategies beyond what's implemented
+- Architectural decisions where "why" isn't clear from code
+- Technology comparisons the codebase doesn't address
+- Recent changes to libraries/frameworks the code depends on
 
-[Similar adaptations for other 5 subagents using Glob/Grep/Read instead of FlowSpace]
+For each gap found, note:
+- Topic: [brief title]
+- Why: [why code can't answer this]
+- Context: [relevant code findings that led to this question]
+
+**Output**: 8-10 findings numbered IA-01 through IA-10 with file:line references and any external research gaps."
+
+[Similar adaptations for other 5 subagents using Glob/Grep/Read instead of FlowSpace, all including External Research Detection]
 
 **Wait for All Subagents**: Block until all 6 subagents complete.
 
@@ -225,6 +264,17 @@ After all subagents complete:
 3. **Prioritize**: Order by impact (Critical → High → Medium → Low)
 4. **Validate**: Ensure all findings have code references
 5. **Synthesize**: Create coherent narrative of how system works
+6. **Identify External Research Opportunities**: Review all findings for:
+   - Knowledge gaps flagged by subagents
+   - Questions where code shows "what" but not "why this approach"
+   - References to external standards/practices not documented
+   - Technology decisions that may benefit from current best practices review
+
+   For each opportunity, generate a ready-to-use `/deepresearch` prompt including:
+   - Clear problem definition tied to codebase findings
+   - Technology stack context from discovered code
+   - Specific research questions
+   - Integration considerations for this codebase
 
 ### 5) Generate Research Report
 
@@ -432,6 +482,40 @@ Designed for modification:
 2. [Suggested improvement]
 3. [Risk assessment]
 
+## External Research Opportunities
+
+During codebase exploration, the following knowledge gaps were identified that cannot be answered by reading more code. These require external research using tools like Perplexity Deep Research, ChatGPT, or similar.
+
+[If no gaps identified: "No external research gaps identified during codebase exploration."]
+
+### Research Opportunity 1: [Topic Title]
+
+**Why Needed**: [1-2 sentences explaining what gap this fills]
+**Impact on Plan**: [How this affects the upcoming work]
+**Source Findings**: [Which subagent findings led to this - e.g., IA-03, DC-07]
+
+**Ready-to-use prompt:**
+```
+/deepresearch "[Full structured prompt following deepresearch format:
+- Clear problem definition tied to codebase findings
+- Technology stack context
+- Specific research questions
+- Integration considerations]"
+```
+
+**Results location**: Save results to `docs/plans/<ordinal>-<slug>/external-research/[topic-slug].md`
+
+### Research Opportunity 2: [Topic Title]
+[Same structure...]
+
+---
+
+**After External Research:**
+- To conduct external research: Run the `/deepresearch` commands above, then either:
+  - Paste results back to this conversation, OR
+  - Save to `external-research/` folder in the plan directory
+- To skip and proceed: Run `/plan-1b-specify "[feature]"` (unresolved opportunities will be noted as a soft warning)
+
 ## Appendix: File Inventory
 
 ### Core Files
@@ -447,10 +531,19 @@ Designed for modification:
 
 ## Next Steps
 
-[Based on mode]
+[Based on mode and external research opportunities]
+
+**If External Research Opportunities identified:**
+1. Run `/deepresearch` prompts above (copy-paste ready)
+2. Save results to `external-research/` folder OR paste back to conversation
+3. Then proceed to specification
+
+**If no external research needed (or skipping):**
 - Research-Only: Review findings and decide on action
-- Pre-Plan: Run `/plan-1-specify "[feature]"` to create specification
+- Pre-Plan: Run `/plan-1b-specify "[feature]"` to create specification
 - Plan-Associated: Continue with plan phases
+
+Note: Unresolved research opportunities will be flagged in `/plan-1b-specify` output.
 
 ---
 
@@ -471,8 +564,17 @@ Designed for modification:
 - Plan folder: [Created new | Using existing]
 - Components analyzed: [N] files
 - Critical findings: [Count]
+- External research opportunities: [Count] identified
 - FlowSpace mode: [Yes/No]
-- Next step: Run /plan-1b-specify "[feature description]"
+
+[If external research opportunities > 0:]
+📚 External Research Suggested:
+  1. [Topic 1] - run /deepresearch prompt in report
+  2. [Topic 2] - run /deepresearch prompt in report
+  Save results to: external-research/[topic-slug].md
+
+- Next step (with research): Run /deepresearch prompts, then /plan-1b-specify
+- Next step (skip research): Run /plan-1b-specify "[feature description]"
 ```
 
 ## Error Handling
@@ -497,13 +599,16 @@ Designed for modification:
 ✅ **Tool-adaptive**: Uses FlowSpace when available, standard tools when not
 ✅ **Clear output**: Easy to understand research report
 ✅ **Integration-ready**: Works with or without planning workflow
+✅ **Research gaps identified**: External research opportunities with ready-to-use /deepresearch prompts
 
 ## Integration with Other Commands
 
 ### With plan-1b-specify
 - Checks for research-dossier.md in plan folder
+- Checks for external-research/*.md files with /deepresearch results
 - Incorporates findings into specification
 - References critical discoveries
+- Soft warning if external research opportunities were not addressed
 
 ### With plan-3-architect
 - If research exists, reduces redundant discovery

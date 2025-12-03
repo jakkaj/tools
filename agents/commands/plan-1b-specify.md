@@ -29,10 +29,28 @@ $ARGUMENTS
      * Note critical findings and modification considerations
      * Use research to inform complexity scoring
      * Reference key discoveries in relevant spec sections
+     * Check for "## External Research Opportunities" section
      * Add note: "📚 This specification incorporates findings from research-dossier.md"
    - If no research exists:
      * Add note: "ℹ️ Consider running `/plan-1a-explore` for deeper codebase understanding"
    - Also check `docs/research/` for recent (< 24 hours) research on similar topics
+
+1b) Check for external research results:
+   - If `${PLAN_DIR}/external-research/` directory exists:
+     * Read all .md files within (these contain /deepresearch results)
+     * Incorporate findings into relevant spec sections (Goals, Risks, Complexity, etc.)
+     * Track which files were incorporated
+   - Compare external research results against opportunities in research-dossier.md:
+     * UNRESOLVED_OPPORTUNITIES = opportunities listed but no matching external-research/*.md file
+   - **Soft Warning** (if UNRESOLVED_OPPORTUNITIES > 0):
+     * Add warning at top of spec after mode header:
+       ```
+       ⚠️ **Unresolved Research Opportunities**
+       The following external research topics were identified in research-dossier.md but not addressed:
+       - [Topic 1]: [Brief description]
+       - [Topic 2]: [Brief description]
+       Consider running `/deepresearch` prompts before finalizing architecture.
+       ```
 
 2) Ensure PLAN_DIR exists (create only if not already present).
 3) Populate SPEC_FILE with these sections (use Markdown headings):
@@ -73,6 +91,14 @@ $ARGUMENTS
      * Decision Drivers: [constraints/NFRs that push an architectural choice]
      * Candidate Alternatives: [A, B, C (one-line summaries)]
      * Stakeholders: [roles/names if known]
+   - `## External Research` (if external-research/*.md files exist):
+     * **Incorporated**: [List of external-research/*.md files used]
+     * **Key Findings**: [Summary of external research insights that informed this spec]
+     * **Applied To**: [Which spec sections benefited from external research]
+   - `## Unresolved Research` (if UNRESOLVED_OPPORTUNITIES > 0):
+     * **Topics**: [List from research-dossier.md External Research Opportunities not yet addressed]
+     * **Impact**: [How this uncertainty affects the spec]
+     * **Recommendation**: Consider addressing before architecture phase (plan-3)
    If `templates/spec-template.md` exists, you may reference it for wording, but this command must succeed without it.
 4) For unknowns, embed `[NEEDS CLARIFICATION: ...]` markers within the appropriate section.
 5) Write spec to SPEC_FILE and report branch + path.
