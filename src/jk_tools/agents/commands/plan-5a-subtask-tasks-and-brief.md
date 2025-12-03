@@ -44,6 +44,32 @@ T003 blocked—need realistic test fixtures before validation logic can be teste
 
 ---
 
+## Executive Briefing
+
+### Purpose
+This subtask creates realistic test fixtures for the bulk import API so that
+T003 (validation implementation) can be tested against production-like data.
+
+### What We're Building
+A fixture generator that produces:
+- 50 valid bulk import JSON payloads with realistic field values
+- 10 edge-case payloads (empty arrays, oversized batches, malformed records)
+- Schema validation helpers for fixture integrity checks
+
+### Unblocks
+- T003: Implement validation logic (currently blocked on missing test data)
+
+### Example
+**Generated fixture** (`tests/fixtures/bulk/valid_001.json`):
+```json
+{
+  "items": [{"id": 1, "name": "Widget A", "price": 29.99}, ...],
+  "metadata": {"source": "test", "generated": "2024-01-15"}
+}
+```
+
+---
+
 ## Tasks
 
 | Status | ID    | Task                          | CS | Type  | Dependencies | Absolute Path(s)                    | Validation              | Notes           |
@@ -53,29 +79,7 @@ T003 blocked—need realistic test fixtures before validation logic can be teste
 | [ ]    | ST003 | Generate 50 test fixtures     | 1  | Core  | ST002        | /abs/path/tests/fixtures/bulk/*.json| Files exist, valid      | –               |
 
 ## Alignment Brief
-
-### Objective
-Unblock T003 by providing realistic bulk API fixtures for validation testing.
-
-### Non-Goals
-❌ NOT doing in this subtask:
-- Actual validation implementation (that's T003)
-- Performance testing of fixtures
-- Edge case fixtures (happy path only)
-
-### Test Plan
-- `test_fixture_generator_produces_valid_json`
-- `test_generated_fixtures_match_api_schema`
-
-### Ready Check
-- [ ] Parent task T003 identified and linked
-- [ ] Subtask scope stays within phase acceptance criteria
-
-## After Subtask Completion
-
-1. Record completion in parent execution log
-2. Update T003 status: `[!]` → `[ ]` (unblock)
-3. Resume: `/plan-6-implement-phase --phase "Phase 2: Core Implementation" --plan "..."`
+...
 ```
 
 ### When to Use Subtasks vs New Phase
@@ -177,6 +181,35 @@ $ARGUMENTS
      ---
      ```
      Replace `<placeholders>` with actual values derived from PLAN, PHASE_HEADING, and parent task linkage identified in step 3.
+   - `## Executive Briefing` section that explains **what this subtask will accomplish and why** in human-readable form. This is NOT about how the dossier was generated—it's about the actual work. Include:
+     * **Purpose**: 2-3 sentence summary of what this subtask delivers and why it matters
+     * **What We're Building**: Concrete description of the component/fixture/capability being added
+     * **Unblocks**: What parent task(s) this enables
+     * **Example** (when applicable): A before/after or input/output example
+
+     Example Executive Briefing:
+     ```markdown
+     ## Executive Briefing
+
+     ### Purpose
+     This subtask creates realistic test fixtures for the bulk import API so that
+     T003 (validation implementation) can be tested against production-like data.
+
+     ### What We're Building
+     A fixture generator that produces:
+     - 50 valid bulk import JSON payloads
+     - 10 edge-case payloads (empty, oversized, malformed)
+     - Schema validation helpers
+
+     ### Unblocks
+     - T003: Implement validation logic (currently blocked on missing test data)
+
+     ### Example
+     **Generated fixture**: `tests/fixtures/bulk/valid_001.json`
+     ```json
+     { "items": [...50 records...], "metadata": { "source": "test" } }
+     ```
+     ```
    - `## Tasks` table using canonical columns
      | Status | ID | Task | CS | Type | Dependencies | Absolute Path(s) | Validation | Notes |
      * Use IDs `ST001`, `ST002`, … (serial, reflect mapping to parent T-ID in Notes like "Supports T003 (footnote captured during plan-6)").

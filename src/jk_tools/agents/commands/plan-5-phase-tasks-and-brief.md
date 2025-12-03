@@ -32,6 +32,28 @@ OUTPUT:
 **Plan**: [feature-x-plan.md](../feature-x-plan.md)
 **Date**: 2024-01-15
 
+## Executive Briefing
+
+### Purpose
+This phase implements the core API endpoint that enables clients to submit
+and retrieve processed data. It's the foundation for all user-facing operations.
+
+### What We're Building
+A REST API endpoint (`POST /api/v1/process`) that:
+- Accepts JSON payloads with validation
+- Processes data through the transformation pipeline
+- Returns structured results with status codes
+
+### User Value
+Users can programmatically submit data and receive processed results,
+enabling automation and integration with external systems.
+
+### Example
+**Request**: `POST /api/v1/process { "input": "raw data" }`
+**Response**: `{ "status": "success", "result": "processed data", "id": "abc123" }`
+
+---
+
 ## Tasks
 
 | Status | ID   | Task                              | CS  | Type | Dependencies | Absolute Path(s)              | Validation                    | Subtasks | Notes              |
@@ -41,38 +63,8 @@ OUTPUT:
 | [ ]    | T003 | Implement API endpoint            | 3   | Core | T002         | /abs/path/src/api/endpoint.py | Test passes, returns 200      | –        | Per Critical Disc 01|
 
 ## Alignment Brief
-
-### Prior Phases Review
-(Phase 1 deliverables, lessons learned, dependencies exported...)
-
-### Objective
-- Implement the core API endpoint per acceptance criteria AC-2, AC-3
-
-### Non-Goals
-❌ NOT doing in this phase:
-- Performance optimization (defer to Phase 4)
-- Advanced error messages (generic OK for now)
-
-### Visual Aids
-(Mermaid flow + sequence diagrams)
-
-### Test Plan
-- `test_api_returns_valid_response` – happy path
-- `test_api_handles_missing_input` – error case
-
-### Ready Check
-- [ ] All tasks have absolute paths
-- [ ] Critical findings addressed
-- [ ] ADR constraints mapped (N/A if none)
+...
 ```
-
-### Key Transformations
-
-| Plan-3 Task                    | Plan-5 Expansion                                      |
-|--------------------------------|-------------------------------------------------------|
-| `2.1: Implement API`           | T001 (Setup), T002 (Test), T003 (Core), T004 (Verify) |
-| High-level success criteria    | Specific, measurable validation per task              |
-| Implicit file paths            | Explicit absolute paths required                      |
 
 ---
 
@@ -254,6 +246,35 @@ $ARGUMENTS
 
 6) Write a single combined artifact `PHASE_DIR/tasks.md` containing:
    - Phase metadata (title, slug, links to SPEC and PLAN, today {{TODAY}}).
+   - `## Executive Briefing` section at the TOP that explains **what this phase will accomplish and why** in human-readable form. This is NOT about how the dossier was generated—it's about the actual work to be done. Include:
+     * **Purpose**: 2-3 sentence summary of what this phase delivers and why it matters
+     * **What We're Building**: Concrete description of the feature/component/capability being added
+     * **User Value**: How this benefits the end user or system
+     * **Example** (when applicable): A before/after or input/output example showing the change in behavior
+
+     Example Executive Briefing:
+     ```markdown
+     ## Executive Briefing
+
+     ### Purpose
+     This phase implements the rate-time-quantity converter that transforms user input
+     into normalized calculation units. Without this, the calculator cannot process
+     mixed-unit inputs like "5 hours at $120/day".
+
+     ### What We're Building
+     A `RateTimeQuantityConverter` class that:
+     - Parses rate expressions (e.g., "$50/hour", "100/day")
+     - Normalizes time units to a common base (minutes)
+     - Handles quantity multipliers and validates input ranges
+
+     ### User Value
+     Users can enter rates in any time unit and the calculator automatically converts
+     them for accurate billing calculations.
+
+     ### Example
+     **Input**: "Work 3.5 hours at $480/day rate"
+     **Normalized**: { rate_per_minute: 1.0, duration_minutes: 210, total: 210.00 }
+     ```
    - `## Tasks` section that renders the table exactly as defined above (Status checkbox first, then ID, Task, CS, Type, Dependencies, Absolute Path(s), Validation, Subtasks, Notes) with numbered items (T001...), complexity scores, dependencies, and validation checklist coverage.
    - `## Alignment Brief` section with:
      * **Prior Phases Review** (if not Phase 1):
