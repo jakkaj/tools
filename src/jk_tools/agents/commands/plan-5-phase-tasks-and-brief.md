@@ -6,6 +6,76 @@ Please deep think / ultrathink as this is a complex task.
 
 # plan-5-phase-tasks-and-brief
 
+## Executive Briefing
+
+**What this command does**: Generates a detailed implementation dossier (`tasks.md`) for a single phase, transforming high-level plan tasks into executable work items with full context.
+
+**When to use**: After plan-3 has created the architectural plan with phases. Run once per phase, in order.
+
+### Input → Output
+
+```
+INPUT:
+  --phase "Phase 2: Core Implementation"
+  --plan "/abs/path/docs/plans/3-feature-x/feature-x-plan.md"
+
+OUTPUT:
+  docs/plans/3-feature-x/tasks/phase-2-core-implementation/tasks.md
+```
+
+### Sample Output Structure
+
+```markdown
+# Phase 2: Core Implementation – Tasks & Alignment Brief
+
+**Spec**: [feature-x-spec.md](../feature-x-spec.md)
+**Plan**: [feature-x-plan.md](../feature-x-plan.md)
+**Date**: 2024-01-15
+
+## Tasks
+
+| Status | ID   | Task                              | CS  | Type | Dependencies | Absolute Path(s)              | Validation                    | Subtasks | Notes              |
+|--------|------|-----------------------------------|-----|------|--------------|-------------------------------|-------------------------------|----------|--------------------|
+| [ ]    | T001 | Review existing handler structure | 1   | Setup| –            | /abs/path/src/handlers/       | Documented in brief           | –        | –                  |
+| [ ]    | T002 | Write failing test for new API    | 2   | Test | T001         | /abs/path/tests/test_api.py   | Test fails with expected msg  | –        | –                  |
+| [ ]    | T003 | Implement API endpoint            | 3   | Core | T002         | /abs/path/src/api/endpoint.py | Test passes, returns 200      | –        | Per Critical Disc 01|
+
+## Alignment Brief
+
+### Prior Phases Review
+(Phase 1 deliverables, lessons learned, dependencies exported...)
+
+### Objective
+- Implement the core API endpoint per acceptance criteria AC-2, AC-3
+
+### Non-Goals
+❌ NOT doing in this phase:
+- Performance optimization (defer to Phase 4)
+- Advanced error messages (generic OK for now)
+
+### Visual Aids
+(Mermaid flow + sequence diagrams)
+
+### Test Plan
+- `test_api_returns_valid_response` – happy path
+- `test_api_handles_missing_input` – error case
+
+### Ready Check
+- [ ] All tasks have absolute paths
+- [ ] Critical findings addressed
+- [ ] ADR constraints mapped (N/A if none)
+```
+
+### Key Transformations
+
+| Plan-3 Task                    | Plan-5 Expansion                                      |
+|--------------------------------|-------------------------------------------------------|
+| `2.1: Implement API`           | T001 (Setup), T002 (Test), T003 (Core), T004 (Verify) |
+| High-level success criteria    | Specific, measurable validation per task              |
+| Implicit file paths            | Explicit absolute paths required                      |
+
+---
+
 **One phase at a time.** First use a **subagent to thoroughly review the previous phase** (if not Phase 1) including execution log, main plan, and critical findings. Then generate an actionable **tasks + alignment brief dossier** (`tasks.md`) for the chosen phase, plus the supporting directory structure, and stop before implementation. This merges your previous "tasks" generation with the pre-implementation walkthrough, scoped strictly to **one** phase. Treat the dossier as the shared contract between the human sponsor and the coding agent: lean on visual aids (e.g., Mermaid flow + sequence diagrams) to cement a cohesive understanding before touching code.
 
 ---
@@ -140,7 +210,6 @@ $ARGUMENTS
      * Tests-first (contract/integration/unit) -> MUST FAIL initially
      * Core changes for this phase only
      * Integration & Polish limited to this phase
-     * [P] allowed **only** when tasks touch different files; same file => sequential
      * Every task includes **absolute paths**.
 
    **Example transformation (showing how Critical Findings affect task breakdown):**
@@ -157,18 +226,17 @@ $ARGUMENTS
    | 2.2 | [ ] | Add rename logic during copy | Files saved as `.prompt.md` | - | |
 
    Plan-5 output (for tasks.md) - EXPANDED with Critical Finding applied:
-   | [ ] | T001 | Review existing copy loop in agents.sh | Setup | – | /abs/path/to/install/agents.sh | Understand extension handling | Serial (shared file) |
-   | [ ] | T002 | Implement copy loop for command files to Copilot global dir | Core | T001 | /abs/path/to/install/agents.sh | All .md files copied | Serial (shared file) |
-   | [ ] | T003 | Add .prompt.md extension during copy (per Critical Discovery 01) | Core | T002 | /abs/path/to/install/agents.sh | Files end with .prompt.md | Addresses Copilot discovery requirement (footnote captured during plan-6) |
-   | [ ] | T004 | Write test verifying .prompt.md extension requirement | Test | T003 | /abs/path/to/tests/test_copilot_extensions.sh | Test confirms all files have .prompt.md | [P] eligible (new test file) |
-   | [ ] | T005 | Add validation that source .md files exist before copy | Core | T002 | /abs/path/to/install/agents.sh | Error handling for missing sources | Serial (shared file) |
+   | [ ] | T001 | Review existing copy loop in agents.sh | Setup | – | /abs/path/to/install/agents.sh | Understand extension handling | – |
+   | [ ] | T002 | Implement copy loop for command files to Copilot global dir | Core | T001 | /abs/path/to/install/agents.sh | All .md files copied | – |
+   | [ ] | T003 | Add .prompt.md extension during copy (per Critical Discovery 01) | Core | T002 | /abs/path/to/install/agents.sh | Files end with .prompt.md | Per Critical Discovery 01 |
+   | [ ] | T004 | Write test verifying .prompt.md extension requirement | Test | T003 | /abs/path/to/tests/test_copilot_extensions.sh | Test confirms all files have .prompt.md | – |
+   | [ ] | T005 | Add validation that source .md files exist before copy | Core | T002 | /abs/path/to/install/agents.sh | Error handling for missing sources | – |
    ```
 
    Notice how the Critical Finding:
    - Changed task T003 to explicitly reference the finding
    - Added task T004 to validate the finding's requirement
    - Informed the validation criteria (must end with .prompt.md)
-   - Ensured traceability without pre-emptive footnote tags
    ```
 
    **Canonical tasks table layout** (all dossiers MUST follow this column order):
@@ -182,11 +250,11 @@ $ARGUMENTS
    - `Absolute Path(s)` must list every impacted file or directory using absolute paths (REQUIRED - no relative paths).
    - `Validation` captures how acceptance or readiness will be confirmed.
    - `Subtasks` lists spawned subtask dossiers (e.g., "001-subtask-fixtures, 003-subtask-bulk") or "–" for none. Updated by plan-5a when subtask is created.
-   - `Notes` include [P] guidance and contextual references, but defer `[^N]` footnote tags until plan-6 updates the ledger.
+   - `Notes` include contextual references (e.g., ADR IDs, Critical Finding refs), but defer `[^N]` footnote tags until plan-6 updates the ledger.
 
 6) Write a single combined artifact `PHASE_DIR/tasks.md` containing:
    - Phase metadata (title, slug, links to SPEC and PLAN, today {{TODAY}}).
-   - `## Tasks` section that renders the table exactly as defined above (Status checkbox first, then ID, Task, CS, Type, Dependencies, Absolute Path(s), Validation, Subtasks, Notes) with numbered items (T001...), complexity scores, dependencies, [P] guidance, and validation checklist coverage.
+   - `## Tasks` section that renders the table exactly as defined above (Status checkbox first, then ID, Task, CS, Type, Dependencies, Absolute Path(s), Validation, Subtasks, Notes) with numbered items (T001...), complexity scores, dependencies, and validation checklist coverage.
    - `## Alignment Brief` section with:
      * **Prior Phases Review** (if not Phase 1):
        - Include the complete cross-phase synthesis from step 1a here

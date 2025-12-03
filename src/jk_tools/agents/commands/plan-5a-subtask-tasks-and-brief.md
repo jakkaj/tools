@@ -6,6 +6,90 @@ Please deep think / ultrathink as this is a nuanced extension of plan-5 outputs.
 
 # plan-5a-subtask-tasks-and-brief
 
+## Executive Briefing
+
+**What this command does**: Creates a focused subtask dossier when mid-phase work needs its own structured planning—without creating a new phase or modifying the main plan.
+
+**When to use**: During phase implementation when you discover a task needs deeper breakdown, or when a blocker requires separate tracked work that feeds back into the parent phase.
+
+### Input → Output
+
+```
+INPUT:
+  --plan "/abs/path/docs/plans/3-feature-x/feature-x-plan.md"
+  --phase "Phase 2: Core Implementation"        # optional if only one active phase
+  "Generate integration fixtures for bulk API"  # positional: subtask summary
+
+OUTPUT:
+  docs/plans/3-feature-x/tasks/phase-2-core-implementation/001-subtask-generate-integration-fixtures.md
+
+  + Updates parent tasks.md (links subtask in Subtasks column)
+  + Updates plan.md (adds entry to Subtasks Registry)
+```
+
+### Sample Output Structure
+
+```markdown
+# Subtask 001: Generate Integration Fixtures for Bulk API
+
+**Parent Plan:** [feature-x-plan.md](../../feature-x-plan.md)
+**Parent Phase:** Phase 2: Core Implementation
+**Parent Task(s):** [T003: Implement validation](../tasks.md#task-t003)
+**Created:** 2024-01-15
+
+## Parent Context
+
+**Why This Subtask:**
+T003 blocked—need realistic test fixtures before validation logic can be tested.
+
+---
+
+## Tasks
+
+| Status | ID    | Task                          | CS | Type  | Dependencies | Absolute Path(s)                    | Validation              | Notes           |
+|--------|-------|-------------------------------|----|----- -|--------------|-------------------------------------|-------------------------|-----------------|
+| [ ]    | ST001 | Analyze bulk API response     | 1  | Setup | –            | /abs/path/docs/api-spec.md          | Structure documented    | Supports T003   |
+| [ ]    | ST002 | Create fixture generator      | 2  | Core  | ST001        | /abs/path/tests/fixtures/bulk_gen.py| Generates valid JSON    | –               |
+| [ ]    | ST003 | Generate 50 test fixtures     | 1  | Core  | ST002        | /abs/path/tests/fixtures/bulk/*.json| Files exist, valid      | –               |
+
+## Alignment Brief
+
+### Objective
+Unblock T003 by providing realistic bulk API fixtures for validation testing.
+
+### Non-Goals
+❌ NOT doing in this subtask:
+- Actual validation implementation (that's T003)
+- Performance testing of fixtures
+- Edge case fixtures (happy path only)
+
+### Test Plan
+- `test_fixture_generator_produces_valid_json`
+- `test_generated_fixtures_match_api_schema`
+
+### Ready Check
+- [ ] Parent task T003 identified and linked
+- [ ] Subtask scope stays within phase acceptance criteria
+
+## After Subtask Completion
+
+1. Record completion in parent execution log
+2. Update T003 status: `[!]` → `[ ]` (unblock)
+3. Resume: `/plan-6-implement-phase --phase "Phase 2: Core Implementation" --plan "..."`
+```
+
+### When to Use Subtasks vs New Phase
+
+| Scenario                                    | Use Subtask (5a) | Use New Phase (plan-3) |
+|---------------------------------------------|------------------|------------------------|
+| Task blocked, needs focused breakdown       | ✅               | ❌                     |
+| Work stays within current phase scope       | ✅               | ❌                     |
+| Adds new acceptance criteria                | ❌               | ✅                     |
+| Requires architectural changes              | ❌               | ✅                     |
+| Multiple team members need coordination     | ❌               | ✅                     |
+
+---
+
 Generate an actionable **subtask dossier** alongside the parent phase's `tasks.md`. Use this when a request needs structured planning but stays within an approved phase. Produce a self-contained markdown file named `PHASE_DIR/<ordinal>-subtask-<slug>.md` and stop before any implementation.
 
 ---
@@ -99,7 +183,7 @@ $ARGUMENTS
      * `CS` (Complexity Score 1-5) is required for each subtask using constitution rubric (CS-1=trivial, CS-2=small, CS-3=medium, CS-4=large, CS-5=epic).
      * Dependencies reference other ST IDs (and optionally parent T-IDs in Notes).
      * Absolute paths remain mandatory (absolute); include parent dossier paths if reused.
-     * Notes capture context (e.g., parent T-ID, [P] guidance) without adding `[^N]` footnote tags; plan-6 will append ledger references after implementation.
+     * Notes capture context (e.g., parent T-ID, Critical Finding refs) without adding `[^N]` footnote tags; plan-6 will append ledger references after implementation.
    - `## Alignment Brief` tailored to the subtask:
      * Objective recap referencing parent phase goal + targeted parent tasks.
      * Checklist derived from parent acceptance criteria, highlighting deltas introduced by this subtask.
@@ -158,7 +242,7 @@ $ARGUMENTS
 5) Safeguards & consistency:
    - Do **not** duplicate tasks already captured in `tasks.md`; instead refine them into ST tasks or note shared dependencies.
    - Respect BridgeContext patterns, repo rules, and mock preferences identical to plan-5 (cite `docs/rules-idioms-architecture/*`).
-   - Highlight any cross-file parallelism opportunities with `[P]` in Notes, consistent with parent dossier policy.
+   - Ensure Notes column captures contextual references (parent T-IDs, Critical Finding refs) for traceability.
    - Ensure the Ready Check and commands reference invoking `/plan-6-implement-phase` with `--subtask ${ORD}-subtask-${SUBTASK_SLUG}`.
    - Do **not** touch code or update logs; stop after writing `${SUBTASK_FILE}`.
 
