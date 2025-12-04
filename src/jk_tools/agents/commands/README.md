@@ -96,6 +96,7 @@ graph TD
     P1B --> P2["plan-2-clarify<br/>Answer ≤8 questions"]
     P2 --> P3["plan-3-architect<br/>Generate plan"]
 
+    P2 -.-> P2B["plan-2b-prep-issue<br/>External tracking (optional)"]
     P3 -.-> P3A["plan-3a-adr<br/>Optional ADRs"]
     P3A -.-> P3
 
@@ -124,6 +125,7 @@ graph TD
     P7 -->|REQUEST_CHANGES| P6
 
     style P0 fill:#e1f5fe
+    style P2B fill:#fff3e0
     style P3A fill:#fff3e0
     style P4 fill:#fff3e0
     style P5A fill:#fff3e0
@@ -554,6 +556,28 @@ file:<file_path>
 - Minimum 3 POS codes, 3 NEG codes
 - 2+ alternatives with rejection reasons
 - Strict code format (POS-001, NEG-002, etc.)
+
+---
+
+### /plan-2b-prep-issue
+**Purpose**: Generate structured issue text from specs and plans for external tracking
+
+**When to use**:
+- After spec and clarification complete
+- When syncing to GitHub, GitLab, Jira, or Azure DevOps
+- Before or after plan-3-architect
+
+**Inputs**:
+```bash
+/plan-2b-prep-issue --spec "path/to/spec.md"
+# Optional: --phase "Phase 1" to generate phase-specific issue
+# Optional: --type feature|story|task for issue format
+```
+
+**Creates**:
+- `docs/plans/<ordinal>-<slug>/issues/feature-<slug>.md` - Issue text
+- Includes acceptance criteria, testing strategy, non-goals
+- Ready-to-copy format for issue trackers
 
 ---
 
