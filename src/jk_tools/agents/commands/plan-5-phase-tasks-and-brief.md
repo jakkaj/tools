@@ -89,7 +89,7 @@ enabling automation and integration with external systems.
 - ✅ CS-5 (epic): 10-12 complexity points
 
 **Rubric factors** (each scored 0-2): Scope, Interconnections, Dependencies, Novelty, Fragility, Testing
-Reference: `docs/rules-idioms-architecture/constitution.md` § 9
+Reference: `docs/project-rules/constitution.md` § 9
 
 **Before outputting tasks.md, validate**: No time language present? All task estimates use CS 1-5 only?
 
@@ -336,7 +336,7 @@ $ARGUMENTS
      ```
 
 Rules & Stack Patterns:
-- Follow `docs/rules-idioms-architecture/{rules.md, idioms.md}` (TDD, tests-as-docs; apply the mock usage preference captured in the spec; use real data when required). :contentReference[oaicite:13]{index=13}
+- Follow `docs/project-rules/{rules.md, idioms.md}` (TDD, tests-as-docs; apply the mock usage preference captured in the spec; use real data when required). :contentReference[oaicite:13]{index=13}
 - Apply BridgeContext patterns when relevant: bounded `vscode.RelativePattern`, remote-safe `vscode.Uri`, Python debugging via `module: 'pytest'` with `--no-cov`. :contentReference[oaicite:14]{index=14}
 
 STOP: Do **not** edit code. Output the combined `PHASE_DIR/tasks.md` and wait for human **GO**.

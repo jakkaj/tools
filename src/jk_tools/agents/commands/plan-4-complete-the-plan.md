@@ -9,7 +9,7 @@ Please deep think / ultrathink as this is a complex task.
 Verify the plan's **readiness**: TOC, TDD order, tests-as-docs, mock usage consistent with the spec, real data expectations, absolute paths, and acceptance criteria. This command stays read-only and provides a recommendation—teams may proceed once the plan is READY **or** after explicitly accepting any gaps.
 
 ```md
-Inputs: PLAN_PATH, SPEC_PATH (co-located as `<plan-dir>/<slug>-spec.md>`), rules at `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}`, optional constitution.
+Inputs: PLAN_PATH, SPEC_PATH (co-located as `<plan-dir>/<slug>-spec.md>`), rules at `docs/project-rules/{rules.md, idioms.md, architecture.md}`, optional constitution.
 
 **IMPORTANT**: This command uses **parallel subagent validation** for comprehensive plan readiness assessment.
 
@@ -102,15 +102,15 @@ Inputs: PLAN_PATH, SPEC_PATH (co-located as `<plan-dir>/<slug>-spec.md>`), rules
 
 **Read**:
 - `${PLAN_PATH}` (entire plan)
-- `docs/rules-idioms-architecture/rules.md`
-- `docs/rules-idioms-architecture/idioms.md`
-- `docs/rules-idioms-architecture/architecture.md`
-- `docs/rules-idioms-architecture/constitution.md` (if exists)
+- `docs/project-rules/rules.md`
+- `docs/project-rules/idioms.md`
+- `docs/project-rules/architecture.md`
+- `docs/project-rules/constitution.md` (if exists)
 
 **Check**:
 - Plan respects rules.md (coding standards, testing requirements, tooling, CI)
-- Follows idioms.md (directory conventions, naming patterns, file organization)
-- Aligns with architecture.md (layer boundaries, allowed dependencies, integration contracts)
+- Follows docs/project-rules/idioms.md (directory conventions, naming patterns, file organization)
+- Aligns with docs/project-rules/architecture.md (layer boundaries, allowed dependencies, integration contracts)
 - Deviation ledger present if violating constitution principles (with justification + mitigation)
 - BridgeContext patterns (if VS Code/TypeScript work): vscode.Uri, bounded searches, pytest module debug
 

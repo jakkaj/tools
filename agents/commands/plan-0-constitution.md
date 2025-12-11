@@ -15,10 +15,11 @@ User input:
 
 $ARGUMENTS
 
-You are updating the project constitution at `docs/rules/constitution.md` **and** keeping the canonical doctrine files in sync:
-- `docs/rules-idioms-architecture/rules.md`        (Rules – normative MUST/SHOULD statements)
-- `docs/rules-idioms-architecture/idioms.md`        (Idioms – recurring patterns and examples)
-- `docs/rules-idioms-architecture/architecture.md`  (Architecture – structure, boundaries, interaction contracts)
+You are updating the project doctrine files in `docs/project-rules/`:
+- `docs/project-rules/constitution.md`  (Constitution – guiding principles and governance)
+- `docs/project-rules/rules.md`         (Rules – normative MUST/SHOULD statements)
+- `docs/project-rules/idioms.md`        (Idioms – recurring patterns and examples)
+- `docs/project-rules/architecture.md`  (Architecture – structure, boundaries, interaction contracts)
 
 If any document uses placeholder tokens like `[ALL_CAPS_IDENTIFIER]`, your responsibility is to gather the values, fill or intentionally defer them, and keep all three files mutually consistent. Downstream templates or command prompts may reference these files; when they exist, update them last so they reflect the newly agreed doctrine.
 
@@ -27,10 +28,10 @@ If any document uses placeholder tokens like `[ALL_CAPS_IDENTIFIER]`, your respo
 1) Resolve repository paths and detect mode
    - If your environment supplies a repository metadata helper (e.g., a prerequisites script defined in command front matter), run it once and parse the returned JSON. Otherwise derive values from the current working directory.
    - Set constants:
-     CONST = `docs/rules-idioms-architecture/constitution.md`
-     RULES = `docs/rules-idioms-architecture/rules.md`
-     IDIOMS = `docs/rules-idioms-architecture/idioms.md`
-     ARCH  = `docs/rules-idioms-architecture/architecture.md`
+     CONST = `docs/project-rules/constitution.md`
+     RULES = `docs/project-rules/rules.md`
+     IDIOMS = `docs/project-rules/idioms.md`
+     ARCH  = `docs/project-rules/architecture.md`
      TMPL  = `templates/`  # Optional helper content if present
    - Ensure parent directories exist; create them atomically when missing.
 
@@ -136,7 +137,7 @@ Include amendment date as ISO 8601."
      * Final version number and Sync Impact Report data
      * Merge strategy per file with preservation instructions
 
-4) Draft **docs/rules/constitution.md** (re-entrancy aware)
+4) Draft **docs/project-rules/constitution.md** (re-entrancy aware)
    **For CREATE MODE**:
    - Replace every placeholder. Standard sections:
      * Header with Title, Version, Ratification date, Last amended date
@@ -409,8 +410,8 @@ The following **must** be enforced across Constitution -> Rules & Idioms -> Plan
 
 --------------------------------
 ## Acceptance Criteria (for this command)
-- `docs/rules/constitution.md` is fully populated, versioned, and includes a Sync Impact Report.
-- `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}` exist (or are created/updated) and reflect the same doctrine without contradictory guidance.
+- `docs/project-rules/constitution.md` is fully populated, versioned, and includes a Sync Impact Report.
+- `docs/project-rules/{rules.md, idioms.md, architecture.md}` exist (or are created/updated) and reflect the same doctrine without contradictory guidance.
 - **For UPDATE MODE**: All user customizations are preserved, no content is lost.
 - **For CREATE MODE**: Files include protective markers for future customizations.
 - Backups are created before updates (stored in `.constitution-backup/` with timestamp).
@@ -428,10 +429,10 @@ The following **must** be enforced across Constitution -> Rules & Idioms -> Plan
 
 Canonical paths enforced by this command
 
-- Constitution: `docs/rules/constitution.md`
-- Rules: `docs/rules-idioms-architecture/rules.md`
-- Idioms: `docs/rules-idioms-architecture/idioms.md`
-- Architecture: `docs/rules-idioms-architecture/architecture.md`
+- Constitution: `docs/project-rules/constitution.md`
+- Rules: `docs/project-rules/rules.md`
+- Idioms: `docs/project-rules/idioms.md`
+- Architecture: `docs/project-rules/architecture.md`
 - Templates directory: `templates/`
 
 Run this command once per project (or whenever the guiding principles change) before executing planning or implementation phases.

@@ -164,7 +164,7 @@ Four commands, done.
 
 | Command | What it does | Creates |
 |---------|--------------|---------|
-| `/plan-0` | Set project constitution, rules, idioms | `docs/rules-idioms-architecture/` |
+| `/plan-0` | Set project constitution, rules, idioms | `docs/project-rules/` |
 | `/plan-1a` | Research existing code *(optional)* | `research-dossier.md` |
 | `/plan-1b` | Write feature specification | `<slug>-spec.md` |
 | `/plan-2` | Answer clarifying questions | Updates spec |
@@ -408,7 +408,7 @@ After a full workflow, your plan folder looks like:
 
 ```
 docs/
-├── rules-idioms-architecture/
+├── project-rules/
 │   ├── constitution.md
 │   ├── rules.md
 │   ├── idioms.md

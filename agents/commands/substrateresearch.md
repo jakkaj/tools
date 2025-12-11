@@ -43,7 +43,7 @@ Notes on usage of the MCP server
 	1.	Phases → Tasks → Checklists (see sample below).
 	2.	Success Criteria for each task and for the overall project.
 	3.	No mocks—tests must use real pipeline data via tests/utils/pipeline_helpers.py.
-	4.	Follow @/docs/rules-idioms-architecture/{rules.md, idioms.md}. Apply strict TDD: write failing test → implement → pass.
+	4.	Follow @/docs/project-rules/{rules.md, idioms.md}. Apply strict TDD: write failing test → implement → pass.
 	5.	Prepend an overview section summarizing every phase and its benefits.
 	6.	Use meaningful filenames (<topic>-plan.md, not just “plan.md”).
 	7.	Make no assumptions about prior context—explain everything the implementer will need.

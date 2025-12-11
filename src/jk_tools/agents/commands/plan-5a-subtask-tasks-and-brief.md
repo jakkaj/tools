@@ -115,7 +115,7 @@ Generate an actionable **subtask dossier** alongside the parent phase's `tasks.m
 - ✅ CS-5 (epic): 10-12 complexity points
 
 **Rubric factors** (each scored 0-2): Scope, Interconnections, Dependencies, Novelty, Fragility, Testing
-Reference: `docs/rules-idioms-architecture/constitution.md` § 9
+Reference: `docs/project-rules/constitution.md` § 9
 
 **Before outputting subtask dossier, validate**: No time language present? All subtask estimates use CS 1-5 only?
 
@@ -274,7 +274,7 @@ $ARGUMENTS
 
 5) Safeguards & consistency:
    - Do **not** duplicate tasks already captured in `tasks.md`; instead refine them into ST tasks or note shared dependencies.
-   - Respect BridgeContext patterns, repo rules, and mock preferences identical to plan-5 (cite `docs/rules-idioms-architecture/*`).
+   - Respect BridgeContext patterns, repo rules, and mock preferences identical to plan-5 (cite `docs/project-rules/*`).
    - Ensure Notes column captures contextual references (parent T-IDs, Critical Finding refs) for traceability.
    - Ensure the Ready Check and commands reference invoking `/plan-6-implement-phase` with `--subtask ${ORD}-subtask-${SUBTASK_SLUG}`.
    - Do **not** touch code or update logs; stop after writing `${SUBTASK_FILE}`.

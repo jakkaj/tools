@@ -34,7 +34,7 @@ $ARGUMENTS
 **Pre-flight checks:**
 1. Abort if `--spec` missing. Read spec (entire file).
 2. If `--plan` exists, read for references only.
-3. If doctrine files exist (`docs/rules-idioms-architecture/{constitution.md, rules.md, idioms.md, architecture.md}`), load for alignment cues.
+3. If doctrine files exist (`docs/project-rules/{constitution.md, rules.md, idioms.md, architecture.md}`), load for alignment cues.
 4. Compute ADR dir = `docs/adr/` (mkdir -p if needed). Scan for `adr-*.md`.
 5. **Idempotency check**:
    - Normalize `--title` or derived title → `[title-slug]`
@@ -62,8 +62,8 @@ Launch 4 specialized research subagents (single message with 4 Task tool calls):
 "Read and extract constraints from doctrine files.
 
 **Tasks**:
-- Read docs/rules-idioms-architecture/constitution.md if present
-- Read docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md} if present
+- Read docs/project-rules/constitution.md if present
+- Read docs/project-rules/{rules.md, idioms.md, architecture.md} if present
 - Extract architectural principles that affect this decision
 - Identify guardrails and constraints
 

@@ -151,10 +151,10 @@ graph TD
 ```
 
 **Creates**:
-- `docs/rules-idioms-architecture/constitution.md` - Main constitution with versioning
-- `docs/rules-idioms-architecture/rules.md` - Enforceable MUST/SHOULD statements
-- `docs/rules-idioms-architecture/idioms.md` - Recurring patterns
-- `docs/rules-idioms-architecture/architecture.md` - System boundaries
+- `docs/project-rules/constitution.md` - Main constitution with versioning
+- `docs/project-rules/rules.md` - Enforceable MUST/SHOULD statements
+- `docs/project-rules/idioms.md` - Recurring patterns
+- `docs/project-rules/architecture.md` - System boundaries
 
 **Next**: `/plan-1a-explore` (optional research) or `/plan-1b-specify`
 
@@ -784,7 +784,7 @@ Set during clarification:
 
 ```mermaid
 graph TD
-    P0["plan-0-constitution"] --> D0["Creates:<br/>docs/rules-idioms-architecture/<br/>constitution.md, rules.md,<br/>idioms.md, architecture.md"]
+    P0["plan-0-constitution"] --> D0["Creates:<br/>docs/project-rules/<br/>constitution.md, rules.md,<br/>idioms.md, architecture.md"]
 
     P1B["plan-1b-specify"] --> D1["Creates:<br/>docs/plans/001-feature/"]
     D1 --> F1["feature-spec.md"]
@@ -810,7 +810,7 @@ graph TD
 
 ```
 docs/
-├── rules-idioms-architecture/
+├── project-rules/
 │   ├── constitution.md                 # Project constitution
 │   ├── rules.md                        # Enforceable standards
 │   ├── idioms.md                       # Patterns and conventions

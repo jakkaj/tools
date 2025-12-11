@@ -577,6 +577,23 @@ Note: Unresolved research opportunities will be flagged in `/plan-1b-specify` ou
 - Next step (skip research): Run /plan-1b-specify "[feature description]"
 ```
 
+## CRITICAL: STOP AND WAIT
+
+**THIS IS A READ-ONLY RESEARCH COMMAND.** After outputting the research report:
+
+1. **DO NOT** proceed to `/plan-1b-specify` or any other command
+2. **DO NOT** make any code changes or create additional files
+3. **DO NOT** start implementing recommendations
+4. **STOP** and wait for the user to provide instructions
+
+The research is complete. The user will decide what to do next:
+- Run `/deepresearch` for external knowledge gaps
+- Run `/plan-1b-specify` to create a specification
+- Ask follow-up questions
+- Take a different action entirely
+
+**Your job is done. Wait for user input.**
+
 ## Error Handling
 
 ### Common Errors
@@ -600,6 +617,7 @@ Note: Unresolved research opportunities will be flagged in `/plan-1b-specify` ou
 ✅ **Clear output**: Easy to understand research report
 ✅ **Integration-ready**: Works with or without planning workflow
 ✅ **Research gaps identified**: External research opportunities with ready-to-use /deepresearch prompts
+✅ **Stops after output**: Does NOT proceed to other commands or actions without user instruction
 
 ## Integration with Other Commands
 

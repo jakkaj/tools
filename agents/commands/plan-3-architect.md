@@ -27,7 +27,7 @@ Generate a **comprehensive, phase-based implementation plan** with detailed task
 - ✅ CS-5 (epic): 10-12 complexity points
 
 **Rubric factors** (each scored 0-2): Scope, Interconnections, Dependencies, Novelty, Fragility, Testing
-Reference: `docs/rules-idioms-architecture/constitution.md` § 9
+Reference: `docs/project-rules/constitution.md` § 9
 
 **Before outputting the plan, validate**: No time language present? All estimates use CS 1-5 only?
 
@@ -37,8 +37,8 @@ Reference: `docs/rules-idioms-architecture/constitution.md` § 9
 Inputs:
   FEATURE_SPEC = `docs/plans/<ordinal>-<slug>/<slug>-spec.md` (co-located with plan),
   PLAN_PATH (absolute; MUST match `docs/plans/<ordinal>-<slug>/<slug>-plan.md`),
-  rules at `docs/rules-idioms-architecture/{rules.md, idioms.md, architecture.md}`,
-  constitution at `docs/rules-idioms-architecture/constitution.md` (if present),
+  rules at `docs/project-rules/{rules.md, idioms.md, architecture.md}`,
+  constitution at `docs/project-rules/constitution.md` (if present),
   today {{TODAY}}.
 
 ## PHASE 0: Detect Workflow Mode
@@ -63,14 +63,14 @@ Inputs:
 - User can explicitly override with --skip-clarify flag
 
 ### GATE - Constitution
-- Validate plan against docs/rules-idioms-architecture/constitution.md if present
+- Validate plan against docs/project-rules/constitution.md if present
 - Document any necessary deviations in deviation ledger:
 
 | Principle Violated | Why Needed | Simpler Alternative Rejected | Risk Mitigation |
 |-------------------|------------|------------------------------|-----------------|
 
 ### GATE - Architecture
-- Validate against `docs/rules-idioms-architecture/architecture.md`
+- Validate against `docs/project-rules/architecture.md`
 - Check for layer-boundary violations (LFL/LSL/Graph/etc.)
 - Verify language-agnostic GraphBuilder compliance
 - Document any architectural exceptions with justification
@@ -251,7 +251,7 @@ Launch **2 specialized subagents** focusing on implementation planning:
 // ✅ RESPECTS BOUNDARY - [Why this follows architectural rules]
 [good code example]
 ​```
-**Reference**: [Link to architecture.md, constitution.md, dependency docs]
+**Reference**: [Link to docs/project-rules/architecture.md, constitution.md, dependency docs]
 ```
 "
 

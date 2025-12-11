@@ -82,7 +82,7 @@ The planning workflow separates **what** you want to build from **how** you'll b
 
 **Now bring in technology** (`/plan-3`). With requirements locked down, the architect phase designs the implementation. It analyzes the codebase, identifies patterns to follow, and breaks the work into phases. Each phase has clear acceptance criteria. If major design decisions need documenting, `/plan-3a` creates an ADR.
 
-**Execute phase by phase** (`/plan-5` → `/plan-6` → `/plan-7`). For each phase: generate detailed tasks, implement them with your chosen testing approach, then review. Progress is tracked automatically. If something gets complex mid-phase, `/plan-5a` lets you break it down further without losing context.
+**For each phase** (`/plan-5` → `/plan-6` → `/plan-7`). For each phase: generate detailed tasks (/5), implement them with your chosen testing approach (/6), then review (/7). Progress is tracked automatically. If something gets complex mid-phase, `/plan-5a` lets you break it down further without losing context (take a detour and then come back).
 
 The result: traceable, well-tested code with clear documentation of why decisions were made.
 
@@ -164,7 +164,7 @@ Four commands, done.
 
 | Command | What it does | Creates |
 |---------|--------------|---------|
-| `/plan-0` | Set project constitution, rules, idioms | `docs/rules-idioms-architecture/` |
+| `/plan-0` | Set project constitution, rules, idioms | `docs/project-rules/` |
 | `/plan-1a` | Research existing code *(optional)* | `research-dossier.md` |
 | `/plan-1b` | Write feature specification | `<slug>-spec.md` |
 | `/plan-2` | Answer clarifying questions | Updates spec |
@@ -408,7 +408,7 @@ After a full workflow, your plan folder looks like:
 
 ```
 docs/
-├── rules-idioms-architecture/
+├── project-rules/
 │   ├── constitution.md
 │   ├── rules.md
 │   ├── idioms.md

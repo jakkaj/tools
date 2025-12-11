@@ -610,8 +610,8 @@ This step runs **after** Step 3a (depends on link validation data) but can run i
 
    **Inputs:**
    - PLAN (entire plan document)
-   - docs/rules-idioms-architecture/rules.md (if exists)
-   - docs/rules-idioms-architecture/idioms.md (if exists)
+   - docs/project-rules/rules.md (if exists)
+   - docs/project-rules/idioms.md (if exists)
    - Diff hunks for all files (focus on TS/Python code)
 
    **Validation Checks:**
@@ -1066,7 +1066,7 @@ This step runs **after** Step 3a (depends on link validation data) but can run i
    **Inputs to Reviewers:**
    - Unified diff from step 1 (either --diff-file or computed range)
    - Plan context (PLAN, PHASE_DOC) for rules/requirements awareness
-   - Rules/idioms from `docs/rules-idioms-architecture/` if available
+   - Rules/idioms from `docs/project-rules/` if available
 
    **Execution:**
    Run all 5 reviewers **in parallel** (concurrent subagent prompts), then synthesize. Total wall time should be ~1 reviewer duration, not 5x sequential.
