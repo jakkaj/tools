@@ -95,7 +95,13 @@ jk-tools-setup --dev-mode .
 
 ## The flow
 
-## The planning journey, told as a story (decoupled from the commands)
+> **Important: This describes execution mechanics, not the full picture**
+>
+> The workflow below is deliberately focused on the *mechanics* of building software: how to move from idea through specification, planning, implementation, and review. It produces traceable artifacts, enforces quality gates, and maintains provenance—but **the graph ends at merge**. It does not address what happens after code ships: production telemetry, business outcomes, customer impact, or whether the work actually moved the needle. A spec can be perfectly executed through this flow and still deliver zero value if it solved the wrong problem, or if nobody measured whether the hypothesis was validated. The SPACE framework (Forsgren et al.) explicitly warns against collapsing "success" into execution metrics alone—activity is not impact, and throughput is not value.
+>
+> The bigger picture requires treating every spec as a **measurable hypothesis** with explicit outcome metrics, guardrails, and a feedback loop that extends into production. It requires companion metrics to prevent local optimization (speed without stability, throughput without maintainability). It requires measuring developer satisfaction and flow state, not just delivery velocity. It requires understanding that in bureaucratic cultures, measurement becomes surveillance and people hide information—so the *culture* around measurement matters as much as the metrics themselves. Frameworks like ESSP and Accelerate provide the scaffolding for this: leading vs. lagging indicators, the four DORA metrics, the importance of small batches and visible work-in-progress, and the recognition that the "fuzzy front end" (problem identification through specification) is part of the value stream, not separate from it. This workflow is a foundation—but foundations without outcomes are just process theatre.
+
+## The planning journey
 
 A spec-driven workflow is, at its core, a disciplined way to separate **what/why** from **how**, avoiding "solutioneering" into the wrong outcome. A good flow makes that separation explicit: research and specification first, clarification next, architecture and phased planning after, then implementation with traceability, and finally review gates.
 
@@ -119,7 +125,7 @@ Being precise about what doctrine actually means in practice is critical. The co
 * architecture guardrails and anti-patterns,
 * and change governance (who can change doctrine, what evidence is required). 
 
-A subtle but powerful element baked into this design: the constitution is **re-entrant** and preserves user customizations when updated (using explicit user-content markers). That matters because doctrine is living—teams learn—and a good system doesn't punish learning by overwriting hard-won local context.
+A subtle but powerful element baked into this design: the constitution needs to be kept fresh and considered **re-entrant** so it preserves user customizations when updated (using explicit user-content markers). That matters because doctrine is living—teams learn—and a good system doesn't punish learning by overwriting hard-won local context.
 
 **Why this chapter matters in SDD:**
 This is where "agent drift" is prevented. These are the invariant constraints that make every later artifact more trustworthy.
