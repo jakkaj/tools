@@ -6,6 +6,28 @@ description: Implement exactly one approved phase or subtask using the testing a
 
 Implement **exactly** one approved phase or subtask using the **testing approach specified in the plan** (Full TDD, Lightweight, Manual, or Hybrid) with the relevant **tasks + alignment brief** dossier; emit diffs and evidence. (No global analyze step.)
 
+---
+
+## 📝 CRITICAL: LOG DISCOVERIES AS YOU GO
+
+**Throughout implementation, capture discoveries in TWO places:**
+
+1. **Execution Log** (`execution.log.md`) — Detailed narrative with context
+2. **Discoveries Table** (`## Discoveries & Learnings` in tasks.md or plan file) — Structured, searchable record
+
+**Log IMMEDIATELY when you encounter**:
+- 🔴 Something **doesn't work as expected** — What happened? What did you try?
+- 🔍 You need **external research** — What did you search? What did you learn?
+- 🛠️ You hit a **trouble spot** — How did you resolve it?
+- ⚠️ You discover a **gotcha or edge case** — Document it for future phases
+- 🎯 You make a **decision** — Why this approach over alternatives?
+- 💳 You introduce **technical debt** — What shortcut? Why? Future fix needed?
+- 💡 You gain an **insight** — Something future you should know
+
+**Why this matters**: Your future self will thank you. Powerful tooling can surface these discoveries later across the entire codebase history.
+
+---
+
 ```md
 User input:
 
@@ -232,6 +254,16 @@ $ARGUMENTS
        ```
      * Also update Subtasks Registry in PLAN: locate the subtask row and change status from `[ ] Pending` to `[x] Complete`.
    - Update the `## Evidence Artifacts` section in `PHASE_DOC` with links to the log and any newly produced evidence (store artifacts inside `PHASE_DIR`).
+   - **Update `## Discoveries & Learnings`** in PHASE_DOC (or PLAN for Simple Mode):
+     * Add a row for EACH discovery encountered during implementation
+     * Use the table format: `| Date | Task | Type | Discovery | Resolution | References |`
+     * Types: `gotcha` | `research-needed` | `unexpected-behavior` | `workaround` | `decision` | `debt` | `insight`
+     * Include cross-reference to EXEC_LOG entry in References column
+     * **Do this AS YOU GO** — don't wait until end of phase
+     * Example row:
+       ```
+       | 2024-01-15 | T003 | unexpected-behavior | API returns 404 for valid IDs when cache is stale | Added cache invalidation on write | log#task-t003-api-fix |
+       ```
    - If executing a subtask, also review the parent phase dossier to ensure cross-references (e.g., Ready Check, supporting tasks) remain accurate.
 
 5) Halt on ambiguity:

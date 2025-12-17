@@ -64,11 +64,41 @@ enabling automation and integration with external systems.
 
 ## Alignment Brief
 ...
+
+## Discoveries & Learnings
+
+_Populated during implementation by plan-6. Log anything of interest to your future self._
+
+| Date | Task | Type | Discovery | Resolution | References |
+|------|------|------|-----------|------------|------------|
+| | | | | | |
+
+**Types**: `gotcha` | `research-needed` | `unexpected-behavior` | `workaround` | `decision` | `debt` | `insight`
 ```
 
 ---
 
 **One phase at a time.** First use a **subagent to thoroughly review the previous phase** (if not Phase 1) including execution log, main plan, and critical findings. Then generate an actionable **tasks + alignment brief dossier** (`tasks.md`) for the chosen phase, plus the supporting directory structure, and stop before implementation. This merges your previous "tasks" generation with the pre-implementation walkthrough, scoped strictly to **one** phase. Treat the dossier as the shared contract between the human sponsor and the coding agent: lean on visual aids (e.g., Mermaid flow + sequence diagrams) to cement a cohesive understanding before touching code.
+
+---
+
+## 📝 CRITICAL REQUIREMENT: LOG DISCOVERIES & LEARNINGS
+
+**During implementation, you MUST log discoveries to TWO places:**
+
+1. **Execution Log** (`execution.log.md`) — Detailed narrative of what happened
+2. **Discoveries Table** (bottom of `tasks.md` or plan file for Simple Mode) — Structured, searchable record
+
+**What to log** (anything of interest to your future self):
+- 🔴 Things that **didn't work as expected**
+- 🔍 External **research that was required** (and what you learned)
+- 🛠️ Implementation **troubles and how they were resolved**
+- ⚠️ **Gotchas and edge cases** discovered
+- 🎯 **Decisions made** during implementation (and why)
+- 💳 **Technical debt introduced** (and justification)
+- 💡 **Insights** that future phases should know about
+
+**Why this matters**: Powerful tooling can surface these discoveries later. Your future self (and teammates) will thank you.
 
 ---
 
@@ -323,9 +353,34 @@ $ARGUMENTS
        - [ ] ADR constraints mapped to tasks (IDs noted in Notes column) - N/A if no ADRs exist
    - `## Phase Footnote Stubs` section: include the heading and an empty table shell (or explicit note) so plan-6 can add entries post-implementation; do **not** create footnote tags or stubs during planning.
    - `## Evidence Artifacts` describing where implementation will write the execution log (`PHASE_DIR/execution.log.md`) and any supporting files.
+   - `## Discoveries & Learnings` section with empty table shell for plan-6 to populate during implementation. This captures gotchas, research, unexpected behaviors, decisions, and insights for future reference. Include the following structure:
+
+     ```markdown
+     ## Discoveries & Learnings
+
+     _Populated during implementation by plan-6. Log anything of interest to your future self._
+
+     | Date | Task | Type | Discovery | Resolution | References |
+     |------|------|------|-----------|------------|------------|
+     | | | | | | |
+
+     **Types**: `gotcha` | `research-needed` | `unexpected-behavior` | `workaround` | `decision` | `debt` | `insight`
+
+     **What to log**:
+     - Things that didn't work as expected
+     - External research that was required
+     - Implementation troubles and how they were resolved
+     - Gotchas and edge cases discovered
+     - Decisions made during implementation
+     - Technical debt introduced (and why)
+     - Insights that future phases should know about
+
+     _See also: `execution.log.md` for detailed narrative._
+     ```
 
 7) Capture a short directory layout at the end of `PHASE_DIR/tasks.md` so future phases know where to place logs and ancillary evidence inside `PHASE_DIR`.
    - Note that Plan 6 writes `execution.log.md` and any other evidence directly into `PHASE_DIR`.
+   - **Simple Mode Note**: For Simple Mode plans (inline tasks in plan file), the `## Discoveries & Learnings` section goes at the bottom of the plan file itself, and `execution.log.md` is created as a sibling to the plan file in `PLAN_DIR`.
    - Example (adjust as files accumulate):
      ```
      docs/plans/2-feature-x/

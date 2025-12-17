@@ -94,7 +94,7 @@ If FlowSpace is available, first query:
 
 **IMPORTANT**: Use **parallel subagent execution** for comprehensive and efficient research.
 
-**Strategy**: Launch 6 specialized subagents in a single message with 6 Task tool calls.
+**Strategy**: Launch 7 specialized subagents in a single message with 7 Task tool calls.
 
 #### Subagent Prompts (FlowSpace Mode)
 
@@ -219,6 +219,62 @@ Return complete findings list including any external research gaps identified."
 
 **Output**: 8-10 findings numbered DE-01 through DE-10 with documentation references and any external research gaps."
 
+**Subagent 7: Prior Learnings Scout (FlowSpace or Standard)**
+"Search for prior discoveries and learnings that may be relevant to [RESEARCH_TOPIC].
+
+**CRITICAL**: This subagent mines institutional knowledge from previous implementations. These learnings are gold - they capture gotchas, unexpected behaviors, workarounds, and insights that your future self left for you.
+
+**If FlowSpace is available**: Use FlowSpace MCP to search for 'Discoveries & Learnings' sections and their contents.
+
+**If FlowSpace unavailable**: Use standard tools:
+- Grep for `## Discoveries & Learnings` in `docs/plans/`
+- Read matching files to extract discovery tables
+- Also search execution logs for patterns like `gotcha`, `unexpected`, `workaround`, `research-needed`
+
+**Search Locations**:
+1. `docs/plans/*/tasks/*/tasks.md` - Phase dossiers (Full Mode)
+2. `docs/plans/*/*.md` - Plan files (Simple Mode may have inline discoveries)
+3. `docs/plans/*/tasks/*/execution.log.md` - Execution logs with detailed context
+
+**Tasks**:
+- Find ALL `## Discoveries & Learnings` sections across prior plans
+- Extract discoveries relevant to [RESEARCH_TOPIC]:
+  * Match by keywords, technologies, patterns, file paths
+  * Prioritize: `gotcha`, `unexpected-behavior`, `workaround`, `decision` types
+- For each relevant discovery, capture:
+  * Original discovery text
+  * Resolution (how it was handled)
+  * Source (which plan/phase it came from)
+  * Why it might apply to current research
+- Also scan execution logs for inline learnings (search for 'learned', 'discovered', 'gotcha', 'unexpected', 'note to self')
+
+**Output**: 5-15 findings numbered PL-01 through PL-15:
+```markdown
+### Finding PL-01: [Discovery Title from Original]
+**Source**: docs/plans/003-auth-upgrade/tasks/phase-2/tasks.md
+**Original Type**: gotcha | unexpected-behavior | workaround | decision | debt | insight
+**Original Task**: T007 - Implement token refresh
+**Date Discovered**: 2024-01-15
+
+**Original Discovery**:
+> [Exact text from the discovery table]
+
+**Original Resolution**:
+> [How they resolved it]
+
+**Relevance to Current Research**:
+[Why this matters for [RESEARCH_TOPIC] - e.g., same API, similar pattern, related component]
+
+**Actionable Insight**:
+[What the current research/implementation should do with this knowledge]
+```
+
+**If no relevant prior learnings found**:
+Report 'No prior learnings found related to [RESEARCH_TOPIC]' but still document:
+- How many Discoveries & Learnings sections were scanned
+- Topics covered by existing discoveries (for reference)
+- Suggestion to check execution logs manually if topic is novel"
+
 #### Subagent Prompts (Standard Mode - when FlowSpace unavailable)
 
 **Subagent 1: Implementation Archaeologist (Standard)**
@@ -253,18 +309,45 @@ For each gap found, note:
 
 [Similar adaptations for other 5 subagents using Glob/Grep/Read instead of FlowSpace, all including External Research Detection]
 
-**Wait for All Subagents**: Block until all 6 subagents complete.
+**Subagent 7: Prior Learnings Scout (Standard)**
+"Search for prior discoveries and learnings that may be relevant to [RESEARCH_TOPIC].
+
+**CRITICAL**: This subagent mines institutional knowledge from previous implementations. These learnings are gold.
+
+**Use standard tools**:
+- Grep for `## Discoveries & Learnings` in `docs/plans/`
+- Glob for `docs/plans/*/tasks/*/tasks.md` and `docs/plans/*/*.md`
+- Read matching files to extract discovery tables
+- Also Grep execution logs for 'gotcha', 'unexpected', 'workaround', 'learned', 'discovered'
+
+**Search Locations**:
+1. `docs/plans/*/tasks/*/tasks.md` - Phase dossiers
+2. `docs/plans/*/*.md` - Plan files (Simple Mode)
+3. `docs/plans/*/tasks/*/execution.log.md` - Execution logs
+
+**Tasks**:
+- Find ALL `## Discoveries & Learnings` sections
+- Extract discoveries relevant to [RESEARCH_TOPIC] by keyword/technology/pattern matching
+- Prioritize: `gotcha`, `unexpected-behavior`, `workaround`, `decision` types
+- Capture original discovery, resolution, source, and relevance
+
+**Output**: 5-15 findings numbered PL-01 through PL-15 with source references and actionable insights.
+
+**If no relevant prior learnings found**: Report scan coverage and topics found (for reference)."
+
+**Wait for All Subagents**: Block until all 7 subagents complete.
 
 ### 4) Synthesize Research Findings
 
 After all subagents complete:
 
-1. **Collect All Findings**: Gather ~50-60 findings from all subagents
+1. **Collect All Findings**: Gather ~55-75 findings from all 7 subagents (including Prior Learnings)
 2. **Deduplicate**: Merge overlapping discoveries (note sources)
 3. **Prioritize**: Order by impact (Critical → High → Medium → Low)
 4. **Validate**: Ensure all findings have code references
-5. **Synthesize**: Create coherent narrative of how system works
-6. **Identify External Research Opportunities**: Review all findings for:
+5. **Surface Prior Learnings**: Highlight PL-## findings prominently - these are institutional knowledge that prevents repeating past mistakes
+6. **Synthesize**: Create coherent narrative of how system works
+7. **Identify External Research Opportunities**: Review all findings for:
    - Knowledge gaps flagged by subagents
    - Questions where code shows "what" but not "why this approach"
    - References to external standards/practices not documented
@@ -308,6 +391,7 @@ Create comprehensive research document with this structure:
 - **Dependencies**: [X internal, Y external]
 - **Test Coverage**: [Percentage or qualitative]
 - **Complexity**: [High/Medium/Low assessment]
+- **Prior Learnings**: [N relevant discoveries from previous implementations]
 
 ## How It Currently Works
 
@@ -440,6 +524,46 @@ Designed for modification:
    - Pattern: [Expected approach]
    - Example: [How others have extended]
 
+## Prior Learnings (From Previous Implementations)
+
+**IMPORTANT**: These are discoveries from previous work in this codebase. They represent institutional knowledge - gotchas, unexpected behaviors, and insights that past implementations uncovered. **Pay attention to these.**
+
+[If no relevant prior learnings found:]
+> No prior learnings found directly related to [RESEARCH_TOPIC].
+> Scanned [N] Discoveries & Learnings sections across [M] plans.
+> Existing discovery topics: [list for reference]
+
+[If prior learnings found:]
+
+### 📚 Prior Learning PL-01: [Title]
+**Source**: [docs/plans/XXX/tasks/phase-N/tasks.md]
+**Original Type**: [gotcha | unexpected-behavior | workaround | decision | debt | insight]
+**Original Task**: [T### - Task name]
+**Date**: [When discovered]
+
+**What They Found**:
+> [Original discovery text]
+
+**How They Resolved It**:
+> [Original resolution]
+
+**Why This Matters Now**:
+[Explanation of relevance to current research]
+
+**Action for Current Work**:
+[Specific recommendation based on this learning]
+
+---
+
+[Continue for all relevant prior learnings]
+
+### Prior Learnings Summary
+
+| ID | Type | Source Plan | Key Insight | Action |
+|----|------|-------------|-------------|--------|
+| PL-01 | [type] | [plan] | [one-liner] | [what to do] |
+| PL-02 | [type] | [plan] | [one-liner] | [what to do] |
+
 ## Critical Discoveries
 
 ### 🚨 Critical Finding 01: [Title]
@@ -564,6 +688,7 @@ Note: Unresolved research opportunities will be flagged in `/plan-1b-specify` ou
 - Plan folder: [Created new | Using existing]
 - Components analyzed: [N] files
 - Critical findings: [Count]
+- Prior learnings surfaced: [Count] from previous implementations
 - External research opportunities: [Count] identified
 - FlowSpace mode: [Yes/No]
 
