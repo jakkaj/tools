@@ -60,16 +60,18 @@ enabling automation and integration with external systems.
 Implement the core API endpoint as specified in the plan acceptance criteria.
 
 ### Goals
-✅ Create POST /api/v1/process endpoint
-✅ Accept and validate JSON payloads
-✅ Process data through transformation pipeline
-✅ Return structured results with appropriate status codes
+
+- ✅ Create POST /api/v1/process endpoint
+- ✅ Accept and validate JSON payloads
+- ✅ Process data through transformation pipeline
+- ✅ Return structured results with appropriate status codes
 
 ### Non-Goals
-❌ Authentication/authorization (Phase 3)
-❌ Rate limiting (Phase 4)
-❌ Caching layer (not needed for MVP)
-❌ Batch processing (single requests only)
+
+- ❌ Authentication/authorization (Phase 3)
+- ❌ Rate limiting (Phase 4)
+- ❌ Caching layer (not needed for MVP)
+- ❌ Batch processing (single requests only)
 
 ---
 
@@ -386,16 +388,18 @@ $ARGUMENTS
        Implement the rate-time-quantity converter as specified in the plan.
 
        ### Goals
-       ✅ Parse rate expressions in multiple formats
-       ✅ Normalize all time units to minutes
-       ✅ Validate input ranges and handle edge cases
-       ✅ Return structured result with rate_per_minute, duration, total
+
+       - ✅ Parse rate expressions in multiple formats
+       - ✅ Normalize all time units to minutes
+       - ✅ Validate input ranges and handle edge cases
+       - ✅ Return structured result with rate_per_minute, duration, total
 
        ### Non-Goals
-       ❌ Performance optimization (defer to Phase 5)
-       ❌ User-facing error messages (using generic messages for now)
-       ❌ Support for currency conversion (out of scope)
-       ❌ Caching of parsed results (not needed yet)
+
+       - ❌ Performance optimization (defer to Phase 5)
+       - ❌ User-facing error messages (using generic messages for now)
+       - ❌ Support for currency conversion (out of scope)
+       - ❌ Caching of parsed results (not needed yet)
        ```
    - `## Architecture Map` section that provides a **visual component diagram** showing all system elements being modified. This diagram uses color-coded status tracking that updates as implementation progresses:
 

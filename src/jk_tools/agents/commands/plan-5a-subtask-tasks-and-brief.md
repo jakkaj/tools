@@ -76,15 +76,17 @@ A fixture generator that produces:
 Generate realistic test fixtures so T003 (validation implementation) can be tested against production-like data.
 
 ### Goals
-✅ Analyze bulk API response structure
-✅ Create reusable fixture generator
-✅ Generate 50 valid + 10 edge-case fixtures
-✅ Unblock T003 validation work
+
+- ✅ Analyze bulk API response structure
+- ✅ Create reusable fixture generator
+- ✅ Generate 50 valid + 10 edge-case fixtures
+- ✅ Unblock T003 validation work
 
 ### Non-Goals
-❌ Production data migration (out of scope)
-❌ Performance benchmarking of fixtures (not needed)
-❌ Fixture versioning system (overkill for this subtask)
+
+- ❌ Production data migration (out of scope)
+- ❌ Performance benchmarking of fixtures (not needed)
+- ❌ Fixture versioning system (overkill for this subtask)
 
 ---
 
@@ -322,13 +324,15 @@ $ARGUMENTS
      Generate realistic test fixtures so T003 can be tested against production-like data.
 
      ### Goals
-     ✅ Analyze bulk API response structure
-     ✅ Create reusable fixture generator
-     ✅ Generate 50 valid + 10 edge-case fixtures
+
+     - ✅ Analyze bulk API response structure
+     - ✅ Create reusable fixture generator
+     - ✅ Generate 50 valid + 10 edge-case fixtures
 
      ### Non-Goals
-     ❌ Production data migration (out of scope)
-     ❌ Performance benchmarking (not needed)
+
+     - ❌ Production data migration (out of scope)
+     - ❌ Performance benchmarking (not needed)
      ```
 
    - `## Architecture Map` section showing the scoped system architecture for this subtask:
