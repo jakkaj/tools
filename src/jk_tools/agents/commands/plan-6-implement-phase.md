@@ -28,46 +28,108 @@ Implement **exactly** one approved phase or subtask using the **testing approach
 
 ---
 
-## ✅ CRITICAL: INCREMENTAL LOGGING & TASK COMPLETION
+## 🛑 MANDATORY: UPDATE PROGRESS AFTER EVERY SINGLE TASK
 
-**DO NOT batch updates at the end. After EACH task:**
-
-1. **Write to execution log IMMEDIATELY** — Before moving to the next task
-2. **Check off the task in tasks.md** — Change `[ ]` to `[x]` (or `[~]` if in-progress)
-3. **Update Architecture Map diagram** — Task node: grey → orange → green (or red if blocked)
-4. **Update discoveries table** — If you learned something, log it NOW
-
-**Per-Task Cycle:**
 ```
-Start Task T001
-  ↓
-🎨 UPDATE Architecture Map: T001 node → orange (:::inprogress)
-  ↓
-Implement/Test
-  ↓
-✏️ WRITE to execution.log.md (what you did, evidence, outcomes)
-  ↓
-☑️ UPDATE tasks.md: [ ] T001 → [x] T001
-  ↓
-🎨 UPDATE Architecture Map: T001 node → green (:::completed) + ✓
-                           + File nodes touched → green
-  ↓
-📝 LOG any discoveries to Discoveries & Learnings table
-  ↓
-Move to Task T002
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  ⛔ HARD STOP: YOU MUST UPDATE 4 THINGS BEFORE MOVING TO THE NEXT TASK ⛔    ┃
+┃                                                                              ┃
+┃  After completing EACH task, you MUST make these 4 edits IMMEDIATELY:        ┃
+┃                                                                              ┃
+┃  1. ☑️ Tasks Table         — Change [ ] to [x] (or [~] for in-progress)      ┃
+┃  2. 🎨 Architecture Map    — Change :::pending to :::completed, add ✓        ┃
+┃  3. 📊 Task-to-Component   — Change ⬜ Pending to ✅ Complete                  ┃
+┃  4. 📝 Execution Log       — Append task entry with evidence                 ┃
+┃                                                                              ┃
+┃  DO NOT START THE NEXT TASK until all 4 updates are done.                    ┃
+┃  This is NON-NEGOTIABLE. No exceptions. No batching at the end.              ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
 
-**Why incremental:**
+### Per-Task Update Cycle (MANDATORY)
+
+**BEFORE starting a task** — Mark it in-progress:
+
+```markdown
+# 1. Tasks Table: [ ] → [~]
+FIND:   | [ ] | T001 | Review existing middleware...
+CHANGE: | [~] | T001 | Review existing middleware...
+
+# 2. Architecture Map: :::pending → :::inprogress
+FIND:   T001["T001: Review existing middleware"]:::pending
+CHANGE: T001["T001: Review existing middleware"]:::inprogress
+
+# 3. Task-to-Component Mapping: ⬜ → 🟧
+FIND:   | T001 | ... | ⬜ Pending | ...
+CHANGE: | T001 | ... | 🟧 In Progress | ...
+```
+
+**AFTER completing a task** — Mark it done:
+
+```markdown
+# 1. Tasks Table: [~] → [x]
+FIND:   | [~] | T001 | Review existing middleware...
+CHANGE: | [x] | T001 | Review existing middleware...
+
+# 2. Architecture Map: :::inprogress → :::completed + add ✓
+FIND:   T001["T001: Review existing middleware"]:::inprogress
+CHANGE: T001["T001: Review existing middleware ✓"]:::completed
+
+# 3. Task-to-Component Mapping: 🟧 → ✅
+FIND:   | T001 | ... | 🟧 In Progress | ...
+CHANGE: | T001 | ... | ✅ Complete | ...
+
+# 4. File nodes in Architecture Map: Also mark green
+FIND:   F1["/src/middleware/index.py"]:::pending
+CHANGE: F1["/src/middleware/index.py ✓"]:::completed
+
+# 5. Append to execution.log.md:
+## Task T001: Review existing middleware
+**Started**: 2025-01-15 10:30
+**Status**: ✅ Complete
+
+### What I Did
+[Description]
+
+### Evidence
+[Test output, results]
+
+**Completed**: 2025-01-15 10:45
+---
+```
+
+**IF task is BLOCKED** — Mark it blocked:
+
+```markdown
+# Tasks Table: [ ] → [!]
+FIND:   | [ ] | T003 | Implement JWT middleware...
+CHANGE: | [!] | T003 | Implement JWT middleware...
+
+# Architecture Map: → :::blocked + add ⚠
+FIND:   T003["T003: Implement JWT middleware"]:::pending
+CHANGE: T003["T003: Implement JWT middleware ⚠"]:::blocked
+
+# Task-to-Component Mapping: → 🔴
+FIND:   | T003 | ... | ⬜ Pending | ...
+CHANGE: | T003 | ... | 🔴 Blocked | [reason in comment]
+```
+
+### Status Reference
+
+| Status | Tasks Table | Diagram Class | Task-to-Component | Color |
+|--------|------------|---------------|-------------------|-------|
+| Pending | `[ ]` | `:::pending` | ⬜ Pending | Grey #9E9E9E |
+| In Progress | `[~]` | `:::inprogress` | 🟧 In Progress | Orange #FF9800 |
+| Completed | `[x]` | `:::completed` | ✅ Complete | Green #4CAF50 |
+| Blocked | `[!]` | `:::blocked` | 🔴 Blocked | Red #F44336 |
+
+### Why This Is Mandatory
+
 - If interrupted, progress is preserved
-- Teammate can see real-time status
+- Teammates can see real-time status
 - Discoveries are captured while fresh
 - No risk of forgetting to log at end
-
-**Status markers:**
-- `[ ]` = Pending (not started)
-- `[~]` = In Progress (actively working)
-- `[x]` = Completed
-- `[!]` = Blocked (document reason in Notes or log)
+- **Visual diagram becomes useless if not updated**
 
 ---
 
@@ -200,19 +262,35 @@ $ARGUMENTS
 3) Execution (adapt to Testing Strategy):
    - Follow task order and dependencies listed in `PHASE_DOC`; [P] only for disjoint file sets (respect ST/T scopes).
 
-   **⚠️ AFTER COMPLETING EACH TASK** (before starting the next):
-   a) **Mark task in-progress**: Update `[ ]` → `[~]` in PHASE_DOC when you START the task
-      **+ Update Architecture Map**: Change task node from `:::pending` to `:::inprogress` (orange)
-   b) **Write to execution log**: Append task entry to EXEC_LOG with what you did, evidence, outcomes
-   c) **Mark task complete**: Update `[~]` → `[x]` in PHASE_DOC when DONE
-      **+ Update Architecture Map**: Change task node from `:::inprogress` to `:::completed` (green), add ✓ to label
-      **+ Update file nodes**: All file nodes touched by this task also go `:::completed` (green)
-   d) **Log discoveries**: If anything unexpected happened, add row to `## Discoveries & Learnings`
-      **+ If blocked**: Change task node to `:::blocked` (red), add ⚠ to label
-   e) **Update Task-to-Component Mapping table**: Update Status column (⬜ → 🟧 → ✅ or 🔴)
-   f) **Only then**: Move to next task
+   ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+   ┃ 🛑 STOP! RE-READ "MANDATORY: UPDATE PROGRESS" SECTION ABOVE 🛑    ┃
+   ┃                                                                    ┃
+   ┃ After EACH task you MUST update 4 locations before proceeding:    ┃
+   ┃   1. Tasks Table checkbox                                          ┃
+   ┃   2. Architecture Map diagram node + file nodes                    ┃
+   ┃   3. Task-to-Component Mapping status                              ┃
+   ┃   4. Execution log entry                                           ┃
+   ┃                                                                    ┃
+   ┃ See above for EXACT find/change patterns. NO EXCEPTIONS.           ┃
+   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-   This is NOT optional. Do NOT batch these at the end. Each task = immediate log + checkbox + diagram update.
+   **Per-Task Checklist (use this EVERY time):**
+   ```
+   STARTING T00X:
+   [ ] Changed Tasks Table: [ ] → [~]
+   [ ] Changed Architecture Map: T00X node → :::inprogress
+   [ ] Changed Task-to-Component: ⬜ → 🟧
+
+   COMPLETING T00X:
+   [ ] Changed Tasks Table: [~] → [x]
+   [ ] Changed Architecture Map: T00X node → :::completed, added ✓
+   [ ] Changed Architecture Map: File nodes → :::completed, added ✓
+   [ ] Changed Task-to-Component: 🟧 → ✅
+   [ ] Appended entry to execution.log.md
+   [ ] Added any discoveries to Discoveries & Learnings table
+
+   ✓ ALL DONE → Proceed to next task
+   ```
 
    **For Full TDD**:
      - After each RED-GREEN-REFACTOR cycle: record Test -> expected fail excerpt -> code change summary -> pass excerpt -> refactor note

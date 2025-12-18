@@ -133,6 +133,8 @@ flowchart TD
 
 ### Task-to-Component Mapping
 
+<!-- Status: ⬜ Pending | 🟧 In Progress | ✅ Complete | 🔴 Blocked -->
+
 | Task | Component(s) | Files | Status | Comment |
 |------|-------------|-------|--------|---------|
 | ST001 | API Analysis | /docs/api-spec.md | ⬜ Pending | Understand existing patterns before modifying |
@@ -384,6 +386,8 @@ $ARGUMENTS
      ```
 
      ### Task-to-Component Mapping
+
+     <!-- Status: ⬜ Pending | 🟧 In Progress | ✅ Complete | 🔴 Blocked -->
 
      | Task | Component(s) | Files | Status | Comment |
      |------|-------------|-------|--------|---------|
