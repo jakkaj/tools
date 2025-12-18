@@ -70,16 +70,95 @@ A fixture generator that produces:
 
 ---
 
+## Objectives & Scope
+
+### Objective
+Generate realistic test fixtures so T003 (validation implementation) can be tested against production-like data.
+
+### Goals
+✅ Analyze bulk API response structure
+✅ Create reusable fixture generator
+✅ Generate 50 valid + 10 edge-case fixtures
+✅ Unblock T003 validation work
+
+### Non-Goals
+❌ Production data migration (out of scope)
+❌ Performance benchmarking of fixtures (not needed)
+❌ Fixture versioning system (overkill for this subtask)
+
+---
+
+## Architecture Map
+
+### Component Diagram
+<!-- Status: grey=pending, orange=in-progress, green=completed, red=blocked -->
+<!-- Updated by plan-6 during implementation -->
+
+```mermaid
+flowchart TD
+    classDef pending fill:#9E9E9E,stroke:#757575,color:#fff
+    classDef inprogress fill:#FF9800,stroke:#F57C00,color:#fff
+    classDef completed fill:#4CAF50,stroke:#388E3C,color:#fff
+    classDef blocked fill:#F44336,stroke:#D32F2F,color:#fff
+
+    style Parent fill:#F5F5F5,stroke:#E0E0E0
+    style Subtask fill:#F5F5F5,stroke:#E0E0E0
+    style Files fill:#F5F5F5,stroke:#E0E0E0
+
+    subgraph Parent["Parent Context"]
+        T003["T003: Implement validation (BLOCKED)"]:::blocked
+    end
+
+    subgraph Subtask["Subtask 001: Generate Fixtures"]
+        ST001["ST001: Analyze API"]:::pending
+        ST002["ST002: Create generator"]:::pending
+        ST003["ST003: Generate fixtures"]:::pending
+
+        ST001 --> ST002 --> ST003
+    end
+
+    subgraph Files["Files"]
+        F1["/docs/api-spec.md"]:::pending
+        F2["/tests/fixtures/bulk_gen.py"]:::pending
+        F3["/tests/fixtures/bulk/*.json"]:::pending
+    end
+
+    ST001 -.-> F1
+    ST002 -.-> F2
+    ST003 -.-> F3
+    ST003 -.->|unblocks| T003
+```
+
+### Task-to-Component Mapping
+
+| Task | Component(s) | Files | Status | Comment |
+|------|-------------|-------|--------|---------|
+| ST001 | API Analysis | /docs/api-spec.md | ⬜ Pending | Understand existing patterns before modifying |
+| ST002 | Generator | /tests/fixtures/bulk_gen.py | ⬜ Pending | Create fixture generation tool |
+| ST003 | Fixtures | /tests/fixtures/bulk/*.json | ⬜ Pending | Generate test data files |
+
+---
+
 ## Tasks
 
-| Status | ID    | Task                          | CS | Type  | Dependencies | Absolute Path(s)                    | Validation              | Notes           |
-|--------|-------|-------------------------------|----|----- -|--------------|-------------------------------------|-------------------------|-----------------|
-| [ ]    | ST001 | Analyze bulk API response     | 1  | Setup | –            | /abs/path/docs/api-spec.md          | Structure documented    | Supports T003   |
-| [ ]    | ST002 | Create fixture generator      | 2  | Core  | ST001        | /abs/path/tests/fixtures/bulk_gen.py| Generates valid JSON    | –               |
-| [ ]    | ST003 | Generate 50 test fixtures     | 1  | Core  | ST002        | /abs/path/tests/fixtures/bulk/*.json| Files exist, valid      | –               |
+| Status | ID    | Task                          | CS | Type  | Dependencies | Absolute Path(s)                    | Validation              | Subtasks | Notes           |
+|--------|-------|-------------------------------|----|----- -|--------------|-------------------------------------|-------------------------|----------|-----------------|
+| [ ]    | ST001 | Analyze bulk API response     | 1  | Setup | –            | /abs/path/docs/api-spec.md          | Structure documented    | –        | Supports T003   |
+| [ ]    | ST002 | Create fixture generator      | 2  | Core  | ST001        | /abs/path/tests/fixtures/bulk_gen.py| Generates valid JSON    | –        | –               |
+| [ ]    | ST003 | Generate 50 test fixtures     | 1  | Core  | ST002        | /abs/path/tests/fixtures/bulk/*.json| Files exist, valid      | –        | –               |
 
 ## Alignment Brief
 ...
+
+## Discoveries & Learnings
+
+_Populated during implementation by plan-6. Log anything of interest to your future self._
+
+| Date | Task | Type | Discovery | Resolution | References |
+|------|------|------|-----------|------------|------------|
+| | | | | | |
+
+**Types**: `gotcha` | `research-needed` | `unexpected-behavior` | `workaround` | `decision` | `debt` | `insight`
 ```
 
 ### When to Use Subtasks vs New Phase
@@ -95,6 +174,26 @@ A fixture generator that produces:
 ---
 
 Generate an actionable **subtask dossier** alongside the parent phase's `tasks.md`. Use this when a request needs structured planning but stays within an approved phase. Produce a self-contained markdown file named `PHASE_DIR/<ordinal>-subtask-<slug>.md` and stop before any implementation.
+
+---
+
+## 📝 CRITICAL REQUIREMENT: LOG DISCOVERIES & LEARNINGS
+
+**During implementation, you MUST log discoveries to TWO places:**
+
+1. **Execution Log** (`execution.log.md`) — Detailed narrative of what happened
+2. **Discoveries Table** (bottom of subtask dossier) — Structured, searchable record
+
+**What to log** (anything of interest to your future self):
+- 🔴 Things that **didn't work as expected**
+- 🔍 External **research that was required** (and what you learned)
+- 🛠️ Implementation **troubles and how they were resolved**
+- ⚠️ **Gotchas and edge cases** discovered
+- 🎯 **Decisions made** during implementation (and why)
+- 💳 **Technical debt introduced** (and justification)
+- 💡 **Insights** that future phases should know about
+
+**Why this matters**: Powerful tooling can surface these discoveries later. Your future self (and teammates) will thank you.
 
 ---
 
@@ -210,17 +309,100 @@ $ARGUMENTS
      { "items": [...50 records...], "metadata": { "source": "test" } }
      ```
      ```
+   - `## Objectives & Scope` section (same structure as plan-5) that sets clear boundaries for the subtask:
+     * **Objective**: Recap what this subtask will accomplish, tied to unblocking the parent task
+     * **Goals**: Bullet list of what this subtask WILL deliver (✅ prefix)
+     * **Non-Goals**: What this subtask is NOT doing (❌ prefix) - prevents scope creep
+
+     Example:
+     ```markdown
+     ## Objectives & Scope
+
+     ### Objective
+     Generate realistic test fixtures so T003 can be tested against production-like data.
+
+     ### Goals
+     ✅ Analyze bulk API response structure
+     ✅ Create reusable fixture generator
+     ✅ Generate 50 valid + 10 edge-case fixtures
+
+     ### Non-Goals
+     ❌ Production data migration (out of scope)
+     ❌ Performance benchmarking (not needed)
+     ```
+
+   - `## Architecture Map` section showing the scoped system architecture for this subtask:
+     * Shows relationship between subtask work and parent task(s)
+     * Uses ST### node IDs for subtask tasks
+     * Includes parent task node(s) in "Parent Context" subgraph
+     * Shows "unblocks" edge from final subtask to parent task
+     * ALL nodes start as `:::pending` (grey) — plan-6 updates colors during execution
+     * Uses same color classes as plan-5: pending (grey), inprogress (orange), completed (green), blocked (red)
+
+     Example structure:
+     ```markdown
+     ## Architecture Map
+
+     ### Component Diagram
+     <!-- Updated by plan-6 during implementation -->
+
+     ```mermaid
+     flowchart TD
+         classDef pending fill:#9E9E9E,stroke:#757575,color:#fff
+         classDef inprogress fill:#FF9800,stroke:#F57C00,color:#fff
+         classDef completed fill:#4CAF50,stroke:#388E3C,color:#fff
+         classDef blocked fill:#F44336,stroke:#D32F2F,color:#fff
+
+         style Parent fill:#F5F5F5,stroke:#E0E0E0
+         style Subtask fill:#F5F5F5,stroke:#E0E0E0
+         style Files fill:#F5F5F5,stroke:#E0E0E0
+
+         subgraph Parent["Parent Context"]
+             T003["T003: Implement validation (BLOCKED)"]:::blocked
+         end
+
+         subgraph Subtask["Subtask: [Summary]"]
+             ST001["ST001: [Task]"]:::pending
+             ST002["ST002: [Task]"]:::pending
+             ST003["ST003: [Task]"]:::pending
+
+             ST001 --> ST002 --> ST003
+         end
+
+         subgraph Files["Files"]
+             F1["[file1]"]:::pending
+             F2["[file2]"]:::pending
+         end
+
+         ST001 -.-> F1
+         ST002 -.-> F2
+         ST003 -.->|unblocks| T003
+     ```
+
+     ### Task-to-Component Mapping
+
+     | Task | Component(s) | Files | Status | Comment |
+     |------|-------------|-------|--------|---------|
+     | ST001 | ... | ... | ⬜ Pending | [one-liner about what this task does] |
+     ```
+
    - `## Tasks` table using canonical columns
-     | Status | ID | Task | CS | Type | Dependencies | Absolute Path(s) | Validation | Notes |
+     | Status | ID | Task | CS | Type | Dependencies | Absolute Path(s) | Validation | Subtasks | Notes |
      * Use IDs `ST001`, `ST002`, … (serial, reflect mapping to parent T-ID in Notes like "Supports T003 (footnote captured during plan-6)").
-     * `CS` (Complexity Score 1-5) is required for each subtask using constitution rubric (CS-1=trivial, CS-2=small, CS-3=medium, CS-4=large, CS-5=epic).
+     * `CS` (Complexity Score 1-5) is required for each subtask using constitution rubric (CS-1=trivial, CS-2=small, CS-3=medium, CS-4=large, CS-5=epic). Score each subtask using S,I,D,N,F,T factors (0-2 each).
      * Dependencies reference other ST IDs (and optionally parent T-IDs in Notes).
      * Absolute paths remain mandatory (absolute); include parent dossier paths if reused.
+     * `Subtasks` column is always "–" for subtask dossiers (no recursive sub-subtasking).
      * Notes capture context (e.g., parent T-ID, Critical Finding refs) without adding `[^N]` footnote tags; plan-6 will append ledger references after implementation.
    - `## Alignment Brief` tailored to the subtask:
      * Objective recap referencing parent phase goal + targeted parent tasks.
      * Checklist derived from parent acceptance criteria, highlighting deltas introduced by this subtask.
      * **Critical Findings Affecting This Subtask**: cite relevant discoveries (same structure as plan-5).
+     * **ADR Decision Constraints** (if ADRs exist):
+       - List each relevant ADR: `ADR-NNNN: [Title] – [Decision one-liner]`
+       - Note specific constraints from the ADR that affect this subtask
+       - Map constraints to specific subtasks: "Constrains: [items]; Addressed by: [ST00X, ST00Y]"
+       - Tag affected subtask rows in the Notes column with "Per ADR-NNNN"
      * Invariants/guardrails inherited from parent + any new subtasks constraints.
      * Inputs to read (files, specs, existing artifacts).
      * Visual aids: at least one Mermaid flow diagram + one sequence diagram focusing on this subtask slice; condense actors to keep clarity while aligning with parent diagrams.
@@ -233,6 +415,31 @@ $ARGUMENTS
    - `## Evidence Artifacts` describing:
      * `execution.log.md` path = `${ORD}-subtask-${SUBTASK_SLUG}.execution.log.md`.
      * Any directories/files for artifacts (tests, fixtures, diagrams exports, etc.).
+   - `## Discoveries & Learnings` section with empty table shell for plan-6 to populate during implementation. This captures gotchas, research, unexpected behaviors, decisions, and insights for future reference. Include the following structure:
+
+     ```markdown
+     ## Discoveries & Learnings
+
+     _Populated during implementation by plan-6. Log anything of interest to your future self._
+
+     | Date | Task | Type | Discovery | Resolution | References |
+     |------|------|------|-----------|------------|------------|
+     | | | | | | |
+
+     **Types**: `gotcha` | `research-needed` | `unexpected-behavior` | `workaround` | `decision` | `debt` | `insight`
+
+     **What to log**:
+     - Things that didn't work as expected
+     - External research that was required
+     - Implementation troubles and how they were resolved
+     - Gotchas and edge cases discovered
+     - Decisions made during implementation
+     - Technical debt introduced (and why)
+     - Insights that future phases should know about
+
+     _See also: `execution.log.md` for detailed narrative._
+     ```
+
    - `## After Subtask Completion` section providing resumption guidance:
      ```markdown
      ## After Subtask Completion

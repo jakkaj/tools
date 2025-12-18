@@ -28,6 +28,49 @@ Implement **exactly** one approved phase or subtask using the **testing approach
 
 ---
 
+## ✅ CRITICAL: INCREMENTAL LOGGING & TASK COMPLETION
+
+**DO NOT batch updates at the end. After EACH task:**
+
+1. **Write to execution log IMMEDIATELY** — Before moving to the next task
+2. **Check off the task in tasks.md** — Change `[ ]` to `[x]` (or `[~]` if in-progress)
+3. **Update Architecture Map diagram** — Task node: grey → orange → green (or red if blocked)
+4. **Update discoveries table** — If you learned something, log it NOW
+
+**Per-Task Cycle:**
+```
+Start Task T001
+  ↓
+🎨 UPDATE Architecture Map: T001 node → orange (:::inprogress)
+  ↓
+Implement/Test
+  ↓
+✏️ WRITE to execution.log.md (what you did, evidence, outcomes)
+  ↓
+☑️ UPDATE tasks.md: [ ] T001 → [x] T001
+  ↓
+🎨 UPDATE Architecture Map: T001 node → green (:::completed) + ✓
+                           + File nodes touched → green
+  ↓
+📝 LOG any discoveries to Discoveries & Learnings table
+  ↓
+Move to Task T002
+```
+
+**Why incremental:**
+- If interrupted, progress is preserved
+- Teammate can see real-time status
+- Discoveries are captured while fresh
+- No risk of forgetting to log at end
+
+**Status markers:**
+- `[ ]` = Pending (not started)
+- `[~]` = In Progress (actively working)
+- `[x]` = Completed
+- `[!]` = Blocked (document reason in Notes or log)
+
+---
+
 ```md
 User input:
 
@@ -157,6 +200,20 @@ $ARGUMENTS
 3) Execution (adapt to Testing Strategy):
    - Follow task order and dependencies listed in `PHASE_DOC`; [P] only for disjoint file sets (respect ST/T scopes).
 
+   **⚠️ AFTER COMPLETING EACH TASK** (before starting the next):
+   a) **Mark task in-progress**: Update `[ ]` → `[~]` in PHASE_DOC when you START the task
+      **+ Update Architecture Map**: Change task node from `:::pending` to `:::inprogress` (orange)
+   b) **Write to execution log**: Append task entry to EXEC_LOG with what you did, evidence, outcomes
+   c) **Mark task complete**: Update `[~]` → `[x]` in PHASE_DOC when DONE
+      **+ Update Architecture Map**: Change task node from `:::inprogress` to `:::completed` (green), add ✓ to label
+      **+ Update file nodes**: All file nodes touched by this task also go `:::completed` (green)
+   d) **Log discoveries**: If anything unexpected happened, add row to `## Discoveries & Learnings`
+      **+ If blocked**: Change task node to `:::blocked` (red), add ⚠ to label
+   e) **Update Task-to-Component Mapping table**: Update Status column (⬜ → 🟧 → ✅ or 🔴)
+   f) **Only then**: Move to next task
+
+   This is NOT optional. Do NOT batch these at the end. Each task = immediate log + checkbox + diagram update.
+
    **For Full TDD**:
      - After each RED-GREEN-REFACTOR cycle: record Test -> expected fail excerpt -> code change summary -> pass excerpt -> refactor note
 
@@ -180,6 +237,30 @@ $ARGUMENTS
 
 4) Output (format adapts to Testing Strategy):
    - **Execution Log** -> write to `EXEC_LOG` (phase log or subtask-specific log):
+
+     **⚠️ WRITE INCREMENTALLY** — Append to EXEC_LOG after EACH task, not at the end:
+     ```markdown
+     ## Task T001: [Task Title]
+     **Started**: [timestamp]
+     **Status**: ✅ Complete | 🔄 In Progress | ❌ Blocked
+
+     ### What I Did
+     [Brief description of implementation/changes]
+
+     ### Evidence
+     [Test output, command results, screenshots]
+
+     ### Files Changed
+     - `path/to/file.py` — [what changed]
+
+     ### Discoveries (if any)
+     - [gotcha/insight/decision logged]
+
+     **Completed**: [timestamp]
+     ---
+     ```
+
+     Format by testing approach:
      * Full TDD: Concise per RED-GREEN-REFACTOR cycle entries (include dossier task ID and plan task ID in metadata - see plan-6a log format)
      * TAD: Scratch exploration notes, promotion decisions with heuristic rationale, Test Doc blocks, learning notes (include task IDs)
      * Lightweight: Per-task validation test results and key verification points (include task IDs)

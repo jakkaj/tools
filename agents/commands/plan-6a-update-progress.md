@@ -46,11 +46,11 @@ This command is structured to prevent the common failure mode of forgetting to u
   - Create backlinks to plan and dossier
   - Checkpoint: Verify log written before proceeding
 
-- **Phase C**: Atomic 3-Location Update ⚠️ **ALL STEPS REQUIRED**
+- **Phase C**: Atomic 3-Location Update + Diagram ⚠️ **ALL STEPS REQUIRED**
   - **Step C1**: Update dossier task table (tasks.md or subtask file)
   - **Step C2**: Update plan task table (plan.md § 8) ← Often forgotten!
-  - **Step C3**: Update BOTH footnote ledgers (plan.md § 12 + dossier stubs)
-  - **Step C4**: Update progress checklist (plan.md § 11)
+  - **Step C3**: Update BOTH footnote ledgers (plan.md § 12 + dossier stubs) + progress checklist
+  - **Step C4**: Update Architecture Map diagram (if exists) — task/file node colors
   - Each step has a checkpoint to verify completion
 
 - **Phase D**: Validation & Output
@@ -724,7 +724,85 @@ Overall Progress: 1.75/4 phases (44%)
 
 **Wait for the 3 updater subagents YOU just launched**: Block until all 3 subagents complete (C1: Dossier, C2: Plan, C3: Footnotes+Progress).
 
-✋ **CHECKPOINT C**: Confirm ALL THREE locations updated (dossier table, plan table, both footnote ledgers + progress checklist) before proceeding to validation.
+✋ **CHECKPOINT C**: Confirm ALL THREE locations updated (dossier table, plan table, both footnote ledgers + progress checklist) before proceeding to diagram update.
+
+---
+
+### Step C4: Update Architecture Map Diagram
+
+**Subagent C4: Architecture Map Updater** (if Architecture Map exists in TARGET_DOC)
+"Update the Architecture Map diagram to reflect task status changes.
+
+**Location:** `## Architecture Map` section in `${TARGET_DOC}` (or PLAN for Simple Mode)
+
+**Skip if**: No `## Architecture Map` section exists in the document.
+
+**Task**: Find and update Mermaid node styling for the completed/in-progress/blocked task:
+
+#### Status → Diagram Class Mapping:
+
+| --status value | Mermaid Class | Color | Node Label Update |
+|----------------|---------------|-------|-------------------|
+| `in_progress` | `:::inprogress` | Orange #FF9800 | (no change) |
+| `completed` | `:::completed` | Green #4CAF50 | Add ` ✓` to label |
+| `blocked` | `:::blocked` | Red #F44336 | Add ` ⚠` to label |
+
+#### Update Steps:
+
+1. **Find the task node** in the Mermaid diagram:
+   - Search for node with ID matching `${TASK_ID}` (e.g., `T003` or `ST002`)
+   - Pattern: `T003[\"T003: Task description\"]:::pending`
+
+2. **Update the node class**:
+   - Change `:::pending` → `:::inprogress` (if --status in_progress)
+   - Change `:::pending` or `:::inprogress` → `:::completed` (if --status completed)
+   - Change any class → `:::blocked` (if --status blocked)
+
+3. **Update node label** (for completed/blocked):
+   - Completed: `T003[\"T003: Task description\"]` → `T003[\"T003: Task description ✓\"]`
+   - Blocked: `T003[\"T003: Task description\"]` → `T003[\"T003: Task description ⚠\"]`
+
+4. **Update file nodes touched by this task**:
+   - Parse `--changes` flag for file paths
+   - Find corresponding file nodes (F1, F2, etc.)
+   - Update their class to match task status (all file nodes update together)
+
+5. **Update Task-to-Component Mapping table**:
+   - Find row for `${TASK_ID}`
+   - Update Status column:
+     * `⬜ Pending` → `🟧 In Progress` (if --status in_progress)
+     * `⬜ Pending` or `🟧 In Progress` → `✅ Complete` (if --status completed)
+     * Any → `🔴 Blocked` (if --status blocked)
+   - Update Comment column with brief status note:
+     * In Progress: what's currently being worked on
+     * Completed: brief summary of what was done
+     * Blocked: reason for the block
+
+#### Example Transformation:
+
+**Before** (task T003 starting):
+```mermaid
+    T003[\"T003: Implement endpoint\"]:::pending
+    F3[\"/src/api/endpoint.py\"]:::pending
+```
+
+**After** (--status in_progress):
+```mermaid
+    T003[\"T003: Implement endpoint\"]:::inprogress
+    F3[\"/src/api/endpoint.py\"]:::pending
+```
+
+**After** (--status completed):
+```mermaid
+    T003[\"T003: Implement endpoint ✓\"]:::completed
+    F3[\"/src/api/endpoint.py ✓\"]:::completed
+```
+
+**Report** (confirmation):
+`Architecture Map updated: ${TASK_ID} ${OLD_STATUS} → ${NEW_STATUS} (${COLOR}). File nodes updated: ${FILE_COUNT}`
+"
+
+✋ **CHECKPOINT C4**: If Architecture Map exists, confirm diagram nodes updated to match task status.
 
 ---
 
@@ -816,11 +894,48 @@ Overall Progress: 1.75/4 phases (44%)
 ```
 "
 
-**Wait for the 3 validator subagents YOU just launched**: Block until all 3 subagents complete.
+**Subagent D4: Diagram Validator** (if Architecture Map exists)
+"Verify Architecture Map diagram status matches task table status.
+
+**Skip if**: No `## Architecture Map` section exists in TARGET_DOC.
+
+**Read**:
+- `${TARGET_DOC}` § Architecture Map (Mermaid diagram)
+- `${TARGET_DOC}` § Tasks (task table statuses)
+- `${TARGET_DOC}` § Task-to-Component Mapping table
+
+**Check**:
+- Task table status matches diagram node class:
+  * `[x]` in table → `:::completed` in diagram
+  * `[~]` in table → `:::inprogress` in diagram
+  * `[!]` in table → `:::blocked` in diagram
+  * `[ ]` in table → `:::pending` in diagram
+- Task-to-Component Mapping Status column matches diagram:
+  * `✅ Complete` → `:::completed`
+  * `🟧 In Progress` → `:::inprogress`
+  * `🔴 Blocked` → `:::blocked`
+  * `⬜ Pending` → `:::pending`
+- Completed tasks have ✓ in their node label
+- Blocked tasks have ⚠ in their node label
+
+**Report** (JSON):
+```json
+{
+  \"violations\": [
+    {\"severity\": \"HIGH\", \"task\": \"T003\", \"table_status\": \"[x]\", \"diagram_class\": \":::inprogress\", \"issue\": \"Diagram not updated\", \"fix\": \"Change T003 node to :::completed\"},
+    {\"severity\": \"MEDIUM\", \"task\": \"T003\", \"issue\": \"Completed task missing ✓ in label\", \"fix\": \"Add ✓ to node label\"},
+    ...
+  ],
+  \"diagram_synchronized\": true/false
+}
+```
+"
+
+**Wait for the 4 validator subagents YOU just launched**: Block until all 4 subagents complete (D1-D3 always, D4 if diagram exists).
 
 **Synthesize Validation Results**:
 After all validators complete:
-1. Collect all violations from D1, D2, D3
+1. Collect all violations from D1, D2, D3, D4
 2. Determine overall status:
    - If **ZERO violations**: Proceed to Step D3 (Success Output)
    - If **ANY violations**: Display detailed error report and ABORT

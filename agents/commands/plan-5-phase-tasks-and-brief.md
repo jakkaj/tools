@@ -54,6 +54,70 @@ enabling automation and integration with external systems.
 
 ---
 
+## Objectives & Scope
+
+### Objective
+Implement the core API endpoint as specified in the plan acceptance criteria.
+
+### Goals
+✅ Create POST /api/v1/process endpoint
+✅ Accept and validate JSON payloads
+✅ Process data through transformation pipeline
+✅ Return structured results with appropriate status codes
+
+### Non-Goals
+❌ Authentication/authorization (Phase 3)
+❌ Rate limiting (Phase 4)
+❌ Caching layer (not needed for MVP)
+❌ Batch processing (single requests only)
+
+---
+
+## Architecture Map
+
+### Component Diagram
+<!-- Status: grey=pending, orange=in-progress, green=completed, red=blocked -->
+<!-- Updated by plan-6 during implementation -->
+
+```mermaid
+flowchart TD
+    classDef pending fill:#9E9E9E,stroke:#757575,color:#fff
+    classDef inprogress fill:#FF9800,stroke:#F57C00,color:#fff
+    classDef completed fill:#4CAF50,stroke:#388E3C,color:#fff
+    classDef blocked fill:#F44336,stroke:#D32F2F,color:#fff
+
+    style Phase fill:#F5F5F5,stroke:#E0E0E0
+    style Files fill:#F5F5F5,stroke:#E0E0E0
+
+    subgraph Phase["Phase 2: Core Implementation"]
+        T001["T001: Review handlers"]:::pending
+        T002["T002: Write failing test"]:::pending
+        T003["T003: Implement endpoint"]:::pending
+
+        T001 --> T002 --> T003
+    end
+
+    subgraph Files["Files"]
+        F1["/src/handlers/base.py"]:::pending
+        F2["/tests/test_api.py"]:::pending
+        F3["/src/api/endpoint.py"]:::pending
+    end
+
+    T001 -.-> F1
+    T002 -.-> F2
+    T003 -.-> F3
+```
+
+### Task-to-Component Mapping
+
+| Task | Component(s) | Files | Status | Comment |
+|------|-------------|-------|--------|---------|
+| T001 | Handler Review | /src/handlers/ | ⬜ Pending | Understand existing patterns before modifying |
+| T002 | Test Suite | /tests/test_api.py | ⬜ Pending | TDD: write failing test first |
+| T003 | API Endpoint | /src/api/endpoint.py | ⬜ Pending | Core implementation to make tests pass |
+
+---
+
 ## Tasks
 
 | Status | ID   | Task                              | CS  | Type | Dependencies | Absolute Path(s)              | Validation                    | Subtasks | Notes              |
@@ -305,6 +369,104 @@ $ARGUMENTS
      **Input**: "Work 3.5 hours at $480/day rate"
      **Normalized**: { rate_per_minute: 1.0, duration_minutes: 210, total: 210.00 }
      ```
+   - `## Objectives & Scope` section (BEFORE Tasks) that sets clear boundaries:
+     * **Objective**: Recap the phase objective tied to PLAN acceptance criteria. Include behavior checklist items that must be satisfied.
+     * **Goals**: Bullet list of what this phase WILL deliver (derived from plan)
+     * **Non-Goals (Scope Boundaries)**: Explicitly call out what this phase is **NOT** doing to prevent scope creep and keep implementation focused. Include:
+       - Features/functionality deliberately excluded from this phase (but might be in future phases)
+       - Edge cases or scenarios being deferred
+       - Optimizations or polish that can wait
+       - Refactoring or cleanup not required for acceptance
+       - Alternative approaches explicitly rejected and why
+       Example format:
+       ```markdown
+       ## Objectives & Scope
+
+       ### Objective
+       Implement the rate-time-quantity converter as specified in the plan.
+
+       ### Goals
+       ✅ Parse rate expressions in multiple formats
+       ✅ Normalize all time units to minutes
+       ✅ Validate input ranges and handle edge cases
+       ✅ Return structured result with rate_per_minute, duration, total
+
+       ### Non-Goals
+       ❌ Performance optimization (defer to Phase 5)
+       ❌ User-facing error messages (using generic messages for now)
+       ❌ Support for currency conversion (out of scope)
+       ❌ Caching of parsed results (not needed yet)
+       ```
+   - `## Architecture Map` section that provides a **visual component diagram** showing all system elements being modified. This diagram uses color-coded status tracking that updates as implementation progresses:
+
+     **Status Colors**:
+     - Grey (`:::pending`) = Not started
+     - Orange (`:::inprogress`) = Actively working
+     - Green (`:::completed`) = Done
+     - Red (`:::blocked`) = Issues/blocked
+
+     **Generation Rules**:
+     1. Create a node for each task (T001, T002, T003...)
+     2. Create a node for each file/directory from the Absolute Path(s) column
+     3. Draw solid edges based on Dependencies column (task → task)
+     4. Draw dotted edges from tasks to files they touch (task -.-> file)
+     5. Use subgraphs to group related components (e.g., "Core", "Tests", "Config")
+     6. ALL nodes start as `:::pending` (grey) — plan-6 updates colors during execution
+
+     **Required structure**:
+     ```markdown
+     ## Architecture Map
+
+     ### Component Diagram
+     <!-- Status: grey=pending, orange=in-progress, green=completed, red=blocked -->
+     <!-- Updated by plan-6 during implementation -->
+
+     ```mermaid
+     flowchart TD
+         classDef pending fill:#9E9E9E,stroke:#757575,color:#fff
+         classDef inprogress fill:#FF9800,stroke:#F57C00,color:#fff
+         classDef completed fill:#4CAF50,stroke:#388E3C,color:#fff
+         classDef blocked fill:#F44336,stroke:#D32F2F,color:#fff
+
+         style Phase fill:#F5F5F5,stroke:#E0E0E0
+         style Files fill:#F5F5F5,stroke:#E0E0E0
+
+         subgraph Phase["Phase N: [Title]"]
+             T001["T001: [Task description]"]:::pending
+             T002["T002: [Task description]"]:::pending
+             T003["T003: [Task description]"]:::pending
+
+             T001 --> T002
+             T002 --> T003
+         end
+
+         subgraph Files["Files"]
+             F1["/path/to/file1.py"]:::pending
+             F2["/path/to/file2.py"]:::pending
+             F3["/path/to/test_file.py"]:::pending
+         end
+
+         T001 -.-> F1
+         T002 -.-> F2
+         T003 -.-> F3
+     ```
+
+     ### Task-to-Component Mapping
+
+     | Task | Component(s) | Files | Status | Comment |
+     |------|-------------|-------|--------|---------|
+     | T001 | [Component] | [paths] | ⬜ Pending | [one-liner about what this task does] |
+     | T002 | [Component] | [paths] | ⬜ Pending | [one-liner about what this task does] |
+     | T003 | [Component] | [paths] | ⬜ Pending | [one-liner about what this task does] |
+     ```
+
+     **Key principles**:
+     - Diagram should show the **complete system architecture** for this phase
+     - Every file/component touched must have a node
+     - Individual test files get their own nodes (not grouped)
+     - When a task completes, ALL file nodes it touches update together
+     - Task-centric layout: tasks are primary, files are secondary
+
    - `## Tasks` section that renders the table exactly as defined above (Status checkbox first, then ID, Task, CS, Type, Dependencies, Absolute Path(s), Validation, Subtasks, Notes) with numbered items (T001...), complexity scores, dependencies, and validation checklist coverage.
    - `## Alignment Brief` section with:
      * **Prior Phases Review** (if not Phase 1):
@@ -321,21 +483,6 @@ $ARGUMENTS
        - Include deep links to all prior phase execution logs for critical decisions
        - Reference specific footnotes from plan § 12 that affected architecture or design across phases
        - This section provides essential context for understanding the complete landscape of what exists and what the current phase builds upon
-     * Objective recap + behavior checklist (tie to PLAN acceptance criteria)
-     * **Non-Goals (Scope Boundaries)**: Explicitly call out what this phase is **NOT** doing to prevent scope creep and keep implementation focused. Include:
-       - Features/functionality deliberately excluded from this phase (but might be in future phases)
-       - Edge cases or scenarios being deferred
-       - Optimizations or polish that can wait
-       - Refactoring or cleanup not required for acceptance
-       - Alternative approaches explicitly rejected and why
-       Example format:
-       ```
-       ❌ NOT doing in this phase:
-       - Performance optimization (defer to Phase 5)
-       - User-facing error messages (using generic messages for now)
-       - Migration of legacy data (Phase 3 handles only new data)
-       - Advanced caching (simple in-memory cache sufficient for now)
-       ```
      * **Critical Findings Affecting This Phase**: List relevant discoveries from plan § 3 that impact this phase's implementation. For each, briefly note: the finding title, what it constrains/requires, and which tasks address it.
      * **ADR Decision Constraints** (if ADRs exist):
        - List each relevant ADR: `ADR-NNNN: [Title] – [Decision one-liner]`
