@@ -12,6 +12,12 @@ Analyze upstream changes from main and generate a comprehensive merge plan docum
 
 **Why**: When you've been working on a feature branch for days or weeks, main has moved on. Other developers merged their completed plans. You need a systematic way to understand what changed, ensure your work is compatible, and merge safely without regressions.
 
+> **Safety First**: Before running this command, consider creating a backup branch:
+> ```bash
+> git branch backup-$(date +%Y%m%d)-before-merge
+> ```
+> This gives you a clean restore point if anything goes wrong during the merge process.
+
 ---
 
 ```md
