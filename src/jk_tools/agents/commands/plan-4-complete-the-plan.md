@@ -6,7 +6,7 @@ Please deep think / ultrathink as this is a complex task.
 
 # plan-4-complete-the-plan
 
-Verify the plan's **readiness**: TOC, TDD order, tests-as-docs, mock usage consistent with the spec, real data expectations, absolute paths, and acceptance criteria. This command stays read-only and provides a recommendation—teams may proceed once the plan is READY **or** after explicitly accepting any gaps.
+Verify the plan's **readiness**: TOC, TDD order, tests-as-docs, mock usage consistent with the spec, real data expectations, relative paths (for cross-machine portability), and acceptance criteria. This command stays read-only and provides a recommendation—teams may proceed once the plan is READY **or** after explicitly accepting any gaps.
 
 ```md
 Inputs: PLAN_PATH, SPEC_PATH (co-located as `<plan-dir>/<slug>-spec.md>`), rules at `docs/project-rules/{rules.md, idioms.md, architecture.md}`, optional constitution.
@@ -24,7 +24,7 @@ Inputs: PLAN_PATH, SPEC_PATH (co-located as `<plan-dir>/<slug>-spec.md>`), rules
 
 **Check**:
 - TOC present with all major sections linked
-- Absolute paths used throughout (no relative paths like ../config)
+- Relative paths used throughout for portability (no absolute paths like /Users/username/... or C:\Users\...)
 - No assumed prior context (plan is self-contained)
 - Proper heading hierarchy (# → ## → ###)
 - All cross-references resolve correctly
@@ -175,7 +175,7 @@ After all validators complete:
 
 | Severity | Validator | Issue | Fix |
 |----------|-----------|-------|-----|
-| HIGH | Structure | Relative paths in Phase 2 | Use absolute paths |
+| HIGH | Structure | Absolute paths in Phase 2 | Use relative paths for cross-machine portability |
 | HIGH | Testing | TDD order violated in Phase 2 | Reorder tasks (tests first) |
 | MEDIUM | Completeness | Success criteria vague in Task 2.3 | Make measurable |
 | ... | ... | ... | ... |
