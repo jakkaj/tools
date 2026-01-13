@@ -77,18 +77,40 @@ def determine_plan_folder(plan_name):
 ```python
 # Pseudo-code for detection
 try:
-    # Try calling a FlowSpace tool
-    call_tool("mcp__flowspace__get_status") or
-    call_tool("mcp__flowspace__search_nodes", {"query": "test"})
+    # Try calling tree() with minimal params - fast and reliable
+    flowspace.tree(pattern=".", max_depth=1)
     FLOWSPACE_AVAILABLE = True
     print("✅ FlowSpace MCP detected - using enhanced exploration")
 except:
     FLOWSPACE_AVAILABLE = False
     print("ℹ️ FlowSpace not available - using standard tools")
+    print("To install: uvx --from git+https://github.com/AI-Substrate/flow_squared fs2 install")
+    print("Then run: fs2 init && fs2 scan (requires user configuration)")
+    print("See: https://github.com/AI-Substrate/flow_squared/blob/main/README.md")
 ```
 
-If FlowSpace is available, first query:
-"Use FlowSpace MCP to look up documentation on how to search properly with FlowSpace for comprehensive codebase exploration."
+If FlowSpace is available, use these tools for enhanced exploration:
+- `tree(pattern, max_depth, detail)` - Navigate codebase structure hierarchically
+- `search(pattern, mode, limit, include, exclude)` - Find code by text, regex, or semantic meaning
+- `get_node(node_id, detail)` - Retrieve full source code for a specific node
+
+**Recommended workflow**:
+1. Start with `tree(pattern=".", max_depth=1)` to see top-level structure
+2. Use `search(pattern="concept", mode="semantic")` for conceptual discovery
+3. Use `get_node(node_id)` to read full source after finding relevant nodes
+
+### 2a) FlowSpace API Discovery (Runtime)
+
+**IMPORTANT**: FlowSpace is actively developed. Before relying on static documentation, probe the API at runtime to discover current capabilities.
+
+**Discovery steps**:
+1. **Probe each FlowSpace tool** with minimal then maximal parameters
+2. **Discover available features** - what fields, modes, and options exist?
+3. **Check for new tools** - are there capabilities beyond tree/search/get_node?
+4. **Note useful metadata** - AI summaries, language detection, relevance scores, etc.
+5. **Use discovered capabilities** in the exploration that follows
+
+This ensures agents always use the best available FlowSpace capabilities, even if this command was written before new features were added.
 
 ### 3) Launch Parallel Research Subagents
 
@@ -101,7 +123,10 @@ If FlowSpace is available, first query:
 **Subagent 1: Implementation Archaeologist (FlowSpace)**
 "Map the complete implementation landscape of [RESEARCH_TOPIC].
 
-**If FlowSpace is available**: Use FlowSpace MCP tools as documented by FlowSpace for searching and exploring code.
+**If FlowSpace is available**: Use FlowSpace MCP tools:
+- `tree(pattern="ClassName")` to find specific classes/functions
+- `search(pattern="concept", mode="semantic")` for conceptual search
+- `get_node(node_id)` to retrieve full source code
 
 **Tasks**:
 - Find all entry points (APIs, commands, event handlers)
@@ -142,7 +167,10 @@ Return complete findings list including any external research gaps identified."
 **Subagent 2: Dependency Cartographer (FlowSpace)**
 "Create comprehensive dependency map for [RESEARCH_TOPIC].
 
-**If FlowSpace is available**: Use FlowSpace MCP tools as documented by FlowSpace for dependency analysis.
+**If FlowSpace is available**: Use FlowSpace MCP tools:
+- `tree(pattern="ClassName")` to find specific classes/functions
+- `search(pattern="concept", mode="semantic")` for conceptual search
+- `get_node(node_id)` to retrieve full source code
 
 **Tasks**:
 - Map what [RESEARCH_TOPIC] depends on (imports, calls)
@@ -158,7 +186,10 @@ Return complete findings list including any external research gaps identified."
 **Subagent 3: Pattern & Convention Scout (FlowSpace)**
 "Identify design patterns and conventions in [RESEARCH_TOPIC].
 
-**If FlowSpace is available**: Use FlowSpace MCP tools as documented by FlowSpace for pattern discovery.
+**If FlowSpace is available**: Use FlowSpace MCP tools:
+- `tree(pattern="ClassName")` to find specific classes/functions
+- `search(pattern="concept", mode="semantic")` for conceptual search
+- `get_node(node_id)` to retrieve full source code
 
 **Tasks**:
 - Design patterns used (Factory, Observer, Repository, etc.)
@@ -174,7 +205,10 @@ Return complete findings list including any external research gaps identified."
 **Subagent 4: Quality & Testing Investigator (FlowSpace)**
 "Analyze quality and testing aspects of [RESEARCH_TOPIC].
 
-**If FlowSpace is available**: Use FlowSpace MCP tools as documented by FlowSpace for test discovery.
+**If FlowSpace is available**: Use FlowSpace MCP tools:
+- `tree(pattern="ClassName")` to find specific classes/functions
+- `search(pattern="concept", mode="semantic")` for conceptual search
+- `get_node(node_id)` to retrieve full source code
 
 **Tasks**:
 - Current test coverage (unit, integration, e2e)
@@ -190,7 +224,10 @@ Return complete findings list including any external research gaps identified."
 **Subagent 5: Interface & Contract Analyst (FlowSpace)**
 "Document all interfaces and contracts for [RESEARCH_TOPIC].
 
-**If FlowSpace is available**: Use FlowSpace MCP tools as documented by FlowSpace for interface discovery.
+**If FlowSpace is available**: Use FlowSpace MCP tools:
+- `tree(pattern="ClassName")` to find specific classes/functions
+- `search(pattern="concept", mode="semantic")` for conceptual search
+- `get_node(node_id)` to retrieve full source code
 
 **Tasks**:
 - Public API signatures and endpoints
@@ -206,7 +243,10 @@ Return complete findings list including any external research gaps identified."
 **Subagent 6: Documentation & Evolution Historian (FlowSpace)**
 "Gather documentation and historical context for [RESEARCH_TOPIC].
 
-**If FlowSpace is available**: Use FlowSpace MCP tools as documented by FlowSpace for documentation discovery.
+**If FlowSpace is available**: Use FlowSpace MCP tools:
+- `tree(pattern="ClassName")` to find specific classes/functions
+- `search(pattern="concept", mode="semantic")` for conceptual search
+- `get_node(node_id)` to retrieve full source code
 
 **Tasks**:
 - Existing documentation (README, docs, wikis)

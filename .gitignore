@@ -45,3 +45,4 @@ MANIFEST
 venv/
 ENV/
 env/
+.fs2/graph.pickle

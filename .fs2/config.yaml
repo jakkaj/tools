@@ -1,0 +1,16 @@
+# fs2 configuration file
+# See docs/how/scanning.md for all options
+
+scan:
+  # Directories to scan (relative to project root)
+  scan_paths:
+    - "."
+
+  # Respect .gitignore patterns
+  respect_gitignore: true
+
+  # Maximum file size to parse (in KB)
+  max_file_size_kb: 500
+
+  # Follow symbolic links
+  follow_symlinks: false
