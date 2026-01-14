@@ -405,7 +405,7 @@ This step runs **after** Step 3a (depends on link validation data) but can run i
 
    **IMPORTANT**: This step uses **parallel subagent validation** for approach-specific testing doctrine compliance and universal pattern checks.
 
-   **Strategy**: Launch 3-4 validators simultaneously (based on Testing Approach), one per validation domain. Each validator focuses on specific compliance rules, then results are synthesized into unified doctrine findings.
+   **Strategy**: Launch 4-5 validators simultaneously (based on Testing Approach), one per validation domain. Each validator focuses on specific compliance rules, then results are synthesized into unified doctrine findings. Validators include: TDD (conditional), TAD (conditional), Mock Usage (conditional), BridgeContext & Universal (always), and Plan Compliance (always).
 
    **4a) Extract Testing Approach** from step 2:
    - Read Testing Approach: Full TDD | TAD | Lightweight | Manual | Hybrid
@@ -706,6 +706,107 @@ This step runs **after** Step 3a (depends on link validation data) but can run i
 
    If no violations found, return {\"findings\": [], \"violations_count\": 0, \"compliance_score\": \"PASS\"}."
 
+   **Subagent 5: Plan Compliance Validator** (always runs)
+   "You are a Plan Compliance Auditor. Validate that implementation matches the approved plan tasks, ADR constraints, and project rules/idioms.
+
+   **Inputs:**
+   - PLAN (plan.md with task table)
+   - PHASE_DOC (tasks.md dossier or inline plan tasks for Simple Mode)
+   - DIFF (unified diff of changes)
+   - docs/adr/*.md (if exists)
+   - docs/project-rules/rules.md (if exists)
+   - docs/project-rules/idioms.md (if exists)
+
+   **Validation Checks:**
+
+   1. **Task Implementation Verification**:
+      - Parse task table to extract: Task ID, Description, Target Files, Acceptance Criteria
+      - For each task (T001, T002, etc.):
+        * Locate corresponding diff hunks by target file path in Absolute Path(s) column
+        * Assess whether diff implements the described behavior in Task column
+        * Compare task's Validation column criteria against observable changes in diff
+        * Check if acceptance criteria from plan are satisfied
+      - Status per task:
+        * **PASS**: Implementation clearly matches task description and acceptance criteria
+        * **FAIL**: Implementation missing, incomplete, or contradicts task description
+        * **N/A**: Task marked deferred, out-of-scope, or status is not [ ] or [x]
+      - **Severity**: HIGH if task FAIL (missing/wrong implementation), MEDIUM if partial implementation
+
+   2. **ADR Compliance** (if docs/adr/*.md exists):
+      - Load each ADR file in docs/adr/
+      - Extract Decision and Consequences sections
+      - For each ADR constraint:
+        * Check if diff changes violate the architectural decision
+        * Look for patterns that contradict stated consequences
+      - **Severity**: HIGH if ADR constraint violated
+      - Skip this check gracefully if docs/adr/ directory doesn't exist
+
+   3. **Rules/Idioms Compliance** (if docs/project-rules/ exists):
+      - Load rules.md and idioms.md from docs/project-rules/
+      - Extract conventions and requirements (naming, patterns, prohibited practices)
+      - For each rule/idiom:
+        * Check if diff changes violate documented conventions
+        * Look for naming violations, pattern mismatches, prohibited code patterns
+      - **Severity**: HIGH for rule violations, MEDIUM for idiom violations
+      - Skip this check gracefully if docs/project-rules/ directory doesn't exist
+
+   4. **Scope Creep Detection** (implementation went off-track):
+      - **Unexpected Files**: Compare files in diff against all Absolute Path(s) in task table
+        * Flag files modified that appear in NO task's target paths
+        * Exception: Test files for tasks that specify "write tests" are expected
+        * Exception: Config files explicitly mentioned in plan acceptance criteria
+        * **Severity**: MEDIUM if unexpected file is minor (config, docs), HIGH if unexpected code file
+      - **Excessive Changes**: For each task's target file, assess if changes go beyond task scope
+        * Compare diff hunks against task description - did implementation do MORE than asked?
+        * Flag "while I was in there" refactoring not mentioned in task
+        * Flag feature additions beyond task acceptance criteria
+        * Flag unrelated bug fixes or improvements bundled in
+        * **Severity**: MEDIUM for minor scope expansion, HIGH for significant unplanned work
+      - **Unplanned Functionality**: Look for new capabilities not in any task
+        * New public APIs/functions not mentioned in plan
+        * New configuration options not specified
+        * New dependencies added without task justification
+        * **Severity**: HIGH if adds user-facing functionality, MEDIUM if internal-only
+      - **Gold Plating**: Detect over-engineering beyond requirements
+        * Abstraction layers not required by plan
+        * Premature optimization not in scope
+        * Extra error handling beyond acceptance criteria
+        * **Severity**: LOW for minor gold plating, MEDIUM if adds maintenance burden
+      - For each scope creep finding, note:
+        * What was expected (from plan)
+        * What was actually done (from diff)
+        * Whether this needs discussion or should be reverted
+
+   **Report** (JSON format):
+   ```json
+   {
+     \"findings\": [
+       {\"id\": \"PLAN-001\", \"severity\": \"HIGH\", \"type\": \"missing_implementation\", \"task_id\": \"T003\", \"issue\": \"Task not implemented\", \"expected\": \"Add email validation per task description\", \"actual\": \"No validation code in diff for target file\", \"fix\": \"Implement email validation in specified file\"},
+       {\"id\": \"PLAN-002\", \"severity\": \"HIGH\", \"type\": \"adr_violation\", \"adr\": \"ADR-0003\", \"issue\": \"ADR constraint violated\", \"constraint\": \"Use Repository pattern for data access\", \"violation\": \"Direct database calls in service layer\", \"fix\": \"Refactor to use Repository pattern per ADR-0003\"},
+       {\"id\": \"PLAN-003\", \"severity\": \"MEDIUM\", \"type\": \"idiom_violation\", \"rule\": \"idioms.md\", \"issue\": \"Naming convention violated\", \"expected\": \"snake_case for functions\", \"actual\": \"camelCase used in new functions\", \"fix\": \"Rename functions to follow snake_case idiom\"},
+       {\"id\": \"PLAN-004\", \"severity\": \"HIGH\", \"type\": \"scope_creep\", \"category\": \"unexpected_file\", \"file\": \"src/utils/helpers.py\", \"issue\": \"File modified but not in any task target paths\", \"expected\": \"Only modify files listed in task table\", \"actual\": \"Added new utility functions\", \"fix\": \"Either add task for this work or revert changes\"},
+       {\"id\": \"PLAN-005\", \"severity\": \"MEDIUM\", \"type\": \"scope_creep\", \"category\": \"excessive_changes\", \"task_id\": \"T002\", \"file\": \"src/validators.py\", \"issue\": \"Changes exceed task scope\", \"expected\": \"Add email validation only\", \"actual\": \"Also refactored phone validation and added address validation\", \"fix\": \"Split into separate tasks or revert unplanned work\"},
+       {\"id\": \"PLAN-006\", \"severity\": \"MEDIUM\", \"type\": \"scope_creep\", \"category\": \"gold_plating\", \"task_id\": \"T001\", \"issue\": \"Over-engineering beyond requirements\", \"expected\": \"Simple config loader\", \"actual\": \"Added plugin system, hot-reload, and validation framework\", \"fix\": \"Consider if complexity is justified or simplify\"}
+     ],
+     \"task_compliance\": {
+       \"T001\": \"PASS\",
+       \"T002\": \"PASS\",
+       \"T003\": \"FAIL\",
+       \"T004\": \"N/A - deferred\"
+     },
+     \"scope_creep_summary\": {
+       \"unexpected_files\": [\"src/utils/helpers.py\"],
+       \"excessive_changes_tasks\": [\"T002\"],
+       \"gold_plating_tasks\": [\"T001\"],
+       \"unplanned_functionality\": []
+     },
+     \"violations_count\": 6,
+     \"compliance_score\": \"PASS|FAIL\"
+   }
+   ```
+
+   If no violations found, return {\"findings\": [], \"task_compliance\": {...all PASS...}, \"scope_creep_summary\": {\"unexpected_files\": [], \"excessive_changes_tasks\": [], \"gold_plating_tasks\": [], \"unplanned_functionality\": []}, \"violations_count\": 0, \"compliance_score\": \"PASS\"}."
+
    **Wait for All Validators**: Block until all applicable subagents complete their validation.
 
    **4c) Synthesize subagent results**:
@@ -717,6 +818,7 @@ This step runs **after** Step 3a (depends on link validation data) but can run i
       - TAD-001, TAD-002, ... (from TAD Validator)
       - MOCK-001, MOCK-002, ... (from Mock Usage Validator)
       - UNI-001, UNI-002, ... (from BridgeContext & Universal Validator)
+      - PLAN-001, PLAN-002, ... (from Plan Compliance Validator)
    3. **Deduplicate** overlapping issues (keep highest severity if same file:lines)
    4. **Aggregate severity counts**: CRITICAL, HIGH, MEDIUM, LOW
    5. **Calculate doctrine compliance score**:
