@@ -5,7 +5,7 @@
 #
 # Usage: agents.sh [OPTIONS]
 #   --clear-mcp: Clear all existing MCP servers before installing new ones
-#   --commands-local <clis>: Install commands locally (comma-separated: claude,opencode,ghcp,codex)
+#   --commands-local <clis>: Install commands locally (comma-separated: claude,opencode,ghcp,codex,copilot-cli)
 #   --local-dir <path>: Target directory for local commands (default: current directory)
 #   --no-auto-sudo: Disable automatic sudo retry on permission errors
 
@@ -72,6 +72,10 @@ TARGET_DIR="${HOME}/.claude/commands"
 OPENCODE_DIR="${HOME}/.config/opencode/command"
 CODEX_DIR="${HOME}/.codex/prompts"
 COPILOT_GLOBAL_DIR="${HOME}/.config/github-copilot/prompts"
+# Copilot CLI (distinct from VS Code Copilot extension)
+COPILOT_CLI_DIR="${XDG_CONFIG_HOME:-$HOME}/.copilot"
+COPILOT_CLI_AGENTS_DIR="${COPILOT_CLI_DIR}/agents"
+COPILOT_CLI_MCP_CONFIG="${COPILOT_CLI_DIR}/mcp-config.json"
 SYSTEM_NAME="$(uname -s)"
 
 if [[ "${SYSTEM_NAME}" == "Darwin" ]]; then
@@ -174,7 +178,10 @@ EOF
     mkdir_with_retry "$(dirname "${vscode_user_config}")"
     mkdir_with_retry "$(dirname "${vscode_project_config}")"
 
-    python3 - "$mcp_source" "$opencode_global" "$opencode_project" "$claude_global" "$codex_global" "$vscode_user_config" "$vscode_project_config" "$openrouter_key" "$perplexity_key" "$perplexity_model" "$CLEAR_MCP" <<'PYTHON'
+    local copilot_cli_mcp="${COPILOT_CLI_MCP_CONFIG}"
+    mkdir_with_retry "$(dirname "${copilot_cli_mcp}")"
+
+    python3 - "$mcp_source" "$opencode_global" "$opencode_project" "$claude_global" "$codex_global" "$vscode_user_config" "$vscode_project_config" "$openrouter_key" "$perplexity_key" "$perplexity_model" "$CLEAR_MCP" "$copilot_cli_mcp" <<'PYTHON'
 import json
 import sys
 from pathlib import Path
@@ -365,6 +372,7 @@ openrouter_key = sys.argv[8] if len(sys.argv) > 8 else ""
 perplexity_key = sys.argv[9] if len(sys.argv) > 9 else ""
 perplexity_model = sys.argv[10] if len(sys.argv) > 10 else "sonar"
 clear_mcp = sys.argv[11].lower() == "true" if len(sys.argv) > 11 else False
+copilot_cli_mcp_path = Path(sys.argv[12]) if len(sys.argv) > 12 else None
 
 servers_text = source_path.read_text(encoding="utf-8")
 if openrouter_key:
@@ -382,6 +390,11 @@ codex_config = load_toml_file(codex_global_path)
 vscode_user_config = load_json(vscode_user_path)
 vscode_project_config = load_json(vscode_project_path)
 
+# Load existing Copilot CLI MCP config (for merge)
+copilot_cli_config = {}
+if copilot_cli_mcp_path:
+    copilot_cli_config = load_json(copilot_cli_mcp_path)
+
 # Clear existing MCP sections if --clear-mcp flag is set
 if clear_mcp:
     print("[Clear MCP] Removing all existing MCP servers before installing new ones")
@@ -391,6 +404,7 @@ if clear_mcp:
     codex_config.pop("mcp_servers", None)
     vscode_user_config.pop("mcpServers", None)
     vscode_project_config.pop("mcpServers", None)
+    copilot_cli_config.pop("mcpServers", None)
 
 opencode_global_mcp = opencode_global.setdefault("mcp", {})
 opencode_project_mcp = opencode_project.setdefault("mcp", {})
@@ -398,6 +412,7 @@ claude_global_servers = claude_global_config.setdefault("mcpServers", {})
 codex_servers = codex_config.setdefault("mcp_servers", {})
 vscode_user_servers = vscode_user_config.setdefault("mcpServers", {})
 vscode_project_servers = vscode_project_config.setdefault("mcpServers", {})
+copilot_cli_servers = copilot_cli_config.setdefault("mcpServers", {})
 
 for name, config in servers.items():
     if not isinstance(config, dict):
@@ -462,6 +477,17 @@ for name, config in servers.items():
     vscode_user_servers[name] = dict(vscode_entry)
     vscode_project_servers[name] = dict(vscode_entry)
 
+    # Copilot CLI requires "type": "local" and mandatory "tools": ["*"]
+    copilot_cli_entry = {
+        "type": "local",  # Copilot CLI uses "local" (not "stdio")
+        "command": config.get("command"),
+        "args": config.get("args", []),
+        "tools": ["*"],  # REQUIRED for Copilot CLI
+    }
+    if environment and isinstance(environment, dict):
+        copilot_cli_entry["env"] = environment
+    copilot_cli_servers[name] = copilot_cli_entry
+
 # Always create backups before writing (with ISO timestamps)
 create_backup(opencode_global_path)
 create_backup(opencode_project_path)
@@ -469,6 +495,8 @@ create_backup(claude_global_path)
 create_backup(codex_global_path)
 create_backup(vscode_user_path)
 create_backup(vscode_project_path)
+if copilot_cli_mcp_path:
+    create_backup(copilot_cli_mcp_path)
 
 # Write updated configurations
 write_json(opencode_global_path, opencode_global)
@@ -477,6 +505,9 @@ write_json(claude_global_path, claude_global_config)
 write_toml_file(codex_global_path, codex_config)
 write_json(vscode_user_path, vscode_user_config)
 write_json(vscode_project_path, vscode_project_config)
+if copilot_cli_mcp_path:
+    write_json(copilot_cli_mcp_path, copilot_cli_config)
+    print(f"[✓] Copilot CLI MCP config written: {copilot_cli_mcp_path}")
 
 PYTHON
     return $?
@@ -567,6 +598,69 @@ install_local_commands() {
         echo ""
     fi
 
+    # Copilot CLI
+    if [[ "$cli_list" == *"copilot-cli"* ]]; then
+        local copilot_cli_local_dir="${target_dir}/.copilot/agents"
+        mkdir_with_retry "${copilot_cli_local_dir}"
+        print_status "Installing Copilot CLI agents to ${copilot_cli_local_dir}"
+
+        # Use Python to generate agent files with YAML frontmatter
+        python3 - "${SOURCE_DIR}" "${copilot_cli_local_dir}" <<'COPILOT_CLI_LOCAL_PYTHON'
+import sys
+import re
+from pathlib import Path
+
+def extract_frontmatter(content: str) -> tuple[dict, str]:
+    """Extract YAML frontmatter and return (frontmatter_dict, content_without_frontmatter)."""
+    frontmatter = {}
+    content_without_fm = content
+    fm_match = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
+    if fm_match:
+        fm_text = fm_match.group(1)
+        content_without_fm = content[fm_match.end():]
+        for line in fm_text.split('\n'):
+            if ':' in line:
+                key, _, value = line.partition(':')
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                if key and value:
+                    frontmatter[key] = value
+    return frontmatter, content_without_fm
+
+def generate_copilot_cli_agent(source_path: Path, dest_path: Path) -> bool:
+    skip_files = {'README.md', 'GETTING-STARTED.md', 'changes.md', 'codebase.md'}
+    if source_path.name in skip_files:
+        return False
+    content = source_path.read_text(encoding='utf-8')
+    existing_fm, content_without_fm = extract_frontmatter(content)
+    name = source_path.stem.lower().replace(' ', '-')
+    description = existing_fm.get('description', f"Command: {name}")
+    new_frontmatter = f'''---
+name: "{name}"
+description: "{description}"
+tools:
+  - "*"
+---
+
+'''
+    dest_path.write_text(new_frontmatter + content_without_fm.lstrip(), encoding='utf-8')
+    return True
+
+source_dir = Path(sys.argv[1])
+dest_dir = Path(sys.argv[2])
+count = 0
+for source_file in sorted(source_dir.glob('*.md')):
+    dest_file = dest_dir / source_file.name
+    if generate_copilot_cli_agent(source_file, dest_file):
+        print(f"  [↻] {source_file.name}")
+        count += 1
+COPILOT_CLI_LOCAL_PYTHON
+
+        copilot_cli_local_count=$(find "${copilot_cli_local_dir}" -maxdepth 1 -type f -name "*.md" | wc -l | tr -d ' ')
+        print_success "Installed ${copilot_cli_local_count} agents to ${copilot_cli_local_dir}"
+        echo ""
+    fi
+
     # Codex (warn not supported)
     if [[ "$cli_list" == *"codex"* ]]; then
         echo ""
@@ -595,6 +689,10 @@ install_local_commands() {
     fi
     if [[ "$cli_list" == *"ghcp"* ]]; then
         echo "  ${target_dir}/.github/prompts/ (${file_count} .prompt.md files)"
+    fi
+    if [[ "$cli_list" == *"copilot-cli"* ]]; then
+        local copilot_cli_local_count=$(find "${target_dir}/.copilot/agents" -maxdepth 1 -type f -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
+        echo "  ${target_dir}/.copilot/agents/ (${copilot_cli_local_count} agent files with YAML frontmatter)"
     fi
     echo ""
     print_status "Tip: Commit these directories to version control to share with team"
@@ -725,7 +823,27 @@ main() {
         print_status "Copilot global directory already exists: ${COPILOT_GLOBAL_DIR}"
     fi
 
-    
+    # Copilot CLI directories (distinct from VS Code Copilot extension)
+    if [ ! -d "${COPILOT_CLI_DIR}" ]; then
+        if mkdir_with_retry "${COPILOT_CLI_DIR}"; then
+            print_success "Created Copilot CLI directory: ${COPILOT_CLI_DIR}"
+        else
+            print_error "Could not create Copilot CLI directory: ${COPILOT_CLI_DIR} (continuing)"
+        fi
+    else
+        print_status "Copilot CLI directory already exists: ${COPILOT_CLI_DIR}"
+    fi
+
+    if [ ! -d "${COPILOT_CLI_AGENTS_DIR}" ]; then
+        if mkdir_with_retry "${COPILOT_CLI_AGENTS_DIR}"; then
+            print_success "Created Copilot CLI agents directory: ${COPILOT_CLI_AGENTS_DIR}"
+        else
+            print_error "Could not create Copilot CLI agents directory: ${COPILOT_CLI_AGENTS_DIR} (continuing)"
+        fi
+    else
+        print_status "Copilot CLI agents directory already exists: ${COPILOT_CLI_AGENTS_DIR}"
+    fi
+
     # Count files to copy
     file_count=$(find "${SOURCE_DIR}" -maxdepth 1 -name "*.md" -type f | wc -l | tr -d ' ')
 
@@ -774,6 +892,89 @@ main() {
                 fi
             done
         fi
+    fi
+
+    # Generate Copilot CLI agent files with YAML frontmatter
+    echo ""
+    print_status "Generating Copilot CLI agents with YAML frontmatter..."
+    copilot_cli_agent_count=0
+    python3 - "${SOURCE_DIR}" "${COPILOT_CLI_AGENTS_DIR}" <<'COPILOT_CLI_AGENT_PYTHON'
+import sys
+import re
+from pathlib import Path
+
+def extract_frontmatter(content: str) -> tuple[dict, str]:
+    """Extract YAML frontmatter and return (frontmatter_dict, content_without_frontmatter)."""
+    frontmatter = {}
+    content_without_fm = content
+
+    # Check for YAML frontmatter (---\n...\n---)
+    fm_match = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
+    if fm_match:
+        fm_text = fm_match.group(1)
+        content_without_fm = content[fm_match.end():]
+
+        # Simple YAML parsing for common fields
+        for line in fm_text.split('\n'):
+            if ':' in line:
+                key, _, value = line.partition(':')
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                if key and value:
+                    frontmatter[key] = value
+
+    return frontmatter, content_without_fm
+
+def generate_copilot_cli_agent(source_path: Path, dest_path: Path) -> bool:
+    """Generate Copilot CLI agent file with proper YAML frontmatter."""
+    # Skip documentation files
+    skip_files = {'README.md', 'GETTING-STARTED.md', 'changes.md', 'codebase.md'}
+    if source_path.name in skip_files:
+        return False
+
+    content = source_path.read_text(encoding='utf-8')
+    existing_fm, content_without_fm = extract_frontmatter(content)
+
+    # Generate name from filename
+    name = source_path.stem.lower().replace(' ', '-')
+
+    # Get description from existing frontmatter or generate from filename
+    description = existing_fm.get('description', f"Command: {name}")
+
+    # Build new frontmatter for Copilot CLI (requires name, description, tools)
+    new_frontmatter = f'''---
+name: "{name}"
+description: "{description}"
+tools:
+  - "*"
+---
+
+'''
+
+    # Write agent file
+    dest_path.write_text(new_frontmatter + content_without_fm.lstrip(), encoding='utf-8')
+    return True
+
+source_dir = Path(sys.argv[1])
+dest_dir = Path(sys.argv[2])
+
+count = 0
+for source_file in sorted(source_dir.glob('*.md')):
+    dest_file = dest_dir / source_file.name
+    if generate_copilot_cli_agent(source_file, dest_file):
+        print(f"  [↻ Copilot CLI] {source_file.name}")
+        count += 1
+
+print(f"COPILOT_CLI_COUNT={count}")
+COPILOT_CLI_AGENT_PYTHON
+
+    copilot_cli_agent_count=$(find "${COPILOT_CLI_AGENTS_DIR}" -maxdepth 1 -type f -name "*.md" | wc -l | tr -d ' ')
+    # Expected count excludes 4 documentation files
+    expected_count=$((file_count - 4))
+    if [ "${copilot_cli_agent_count}" -ge "${expected_count}" ]; then
+        echo "[✓ Idempotent] Copilot CLI agents generated (${copilot_cli_agent_count} agents)"
+    else
+        print_warning "[Idempotent] Copilot CLI agent count lower than expected (${copilot_cli_agent_count} vs ${expected_count})"
     fi
 
     echo ""

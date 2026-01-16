@@ -11,5 +11,13 @@
       "PERPLEXITY_API_KEY": "${PERPLEXITY_API_KEY}",
       "PERPLEXITY_TIMEOUT_MS": "2000000"
     }
+  },
+  "flowspace": {
+    "type": "local",
+    "enabled": true,
+    "command": "fs2",
+    "args": [
+      "mcp"
+    ]
   }
 }
