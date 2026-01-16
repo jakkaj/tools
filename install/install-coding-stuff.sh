@@ -35,6 +35,59 @@ print_warning() {
     echo -e "${YELLOW}[!]${RESET} $1"
 }
 
+print_verbose() {
+    if [ "$VERBOSE" = true ]; then
+        echo -e "${BOLD}[VERBOSE]${RESET} $1"
+    fi
+}
+
+# Run a command with verbose output and timing
+run_cmd() {
+    local desc="$1"
+    shift
+    local cmd=("$@")
+
+    if [ "$VERBOSE" = true ]; then
+        echo -e "${BOLD}[VERBOSE]${RESET} Running: ${cmd[*]}"
+        local start_time=$(date +%s)
+    fi
+
+    if [ "$VERBOSE" = true ]; then
+        # Show output in real-time when verbose
+        "${cmd[@]}"
+        local exit_code=$?
+        local end_time=$(date +%s)
+        local duration=$((end_time - start_time))
+        echo -e "${BOLD}[VERBOSE]${RESET} Completed in ${duration}s (exit code: $exit_code)"
+        return $exit_code
+    else
+        # Suppress output when not verbose
+        "${cmd[@]}" >/dev/null 2>&1
+        return $?
+    fi
+}
+
+# Run a piped command (curl | bash) with verbose output
+run_pipe_cmd() {
+    local desc="$1"
+    local url="$2"
+    local interpreter="${3:-bash}"
+
+    if [ "$VERBOSE" = true ]; then
+        echo -e "${BOLD}[VERBOSE]${RESET} Downloading and executing: $url"
+        local start_time=$(date +%s)
+        curl -fsSL "$url" | $interpreter
+        local exit_code=$?
+        local end_time=$(date +%s)
+        local duration=$((end_time - start_time))
+        echo -e "${BOLD}[VERBOSE]${RESET} Completed in ${duration}s (exit code: $exit_code)"
+        return $exit_code
+    else
+        curl -fsSL "$url" 2>/dev/null | $interpreter
+        return $?
+    fi
+}
+
 detect_os() {
     case "$(uname -s)" in
         Linux*)     OS="Linux";;
@@ -156,22 +209,29 @@ check_prerequisites() {
 
 install_node() {
     print_status "Installing Node.js..."
+    print_verbose "Package manager: $PKG_MANAGER"
 
     if [[ "$PKG_MANAGER" == "brew" ]]; then
-        brew install node
+        print_verbose "Using Homebrew to install Node.js"
+        run_cmd "brew install node" brew install node
     elif [[ "$PKG_MANAGER" == "apt" ]]; then
         # Install Node.js 20.x from NodeSource
-        curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-        sudo apt-get install -y nodejs
+        print_verbose "Setting up NodeSource repository for Node.js 20.x"
+        run_pipe_cmd "NodeSource setup" "https://deb.nodesource.com/setup_20.x" "sudo -E bash -"
+        print_verbose "Installing nodejs package"
+        run_cmd "apt-get install nodejs" sudo apt-get install -y nodejs
     elif [[ "$PKG_MANAGER" == "dnf" ]] || [[ "$PKG_MANAGER" == "yum" ]]; then
-        curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
-        sudo $PKG_MANAGER install -y nodejs
+        print_verbose "Setting up NodeSource repository for Node.js 20.x (RPM)"
+        run_pipe_cmd "NodeSource setup" "https://rpm.nodesource.com/setup_20.x" "sudo bash -"
+        run_cmd "install nodejs" sudo $PKG_MANAGER install -y nodejs
     else
         # Fallback to fnm (Fast Node Manager)
         print_status "Installing Node.js via fnm..."
-        curl -fsSL https://fnm.vercel.app/install | bash
+        print_verbose "Downloading fnm installer"
+        run_pipe_cmd "fnm installer" "https://fnm.vercel.app/install" "bash"
         export PATH="$HOME/.local/share/fnm:$PATH"
         eval "$(fnm env)"
+        print_verbose "Installing Node.js 20 via fnm"
         fnm install 20
         fnm use 20
         fnm default 20
@@ -306,13 +366,15 @@ check_opencode() {
 
 install_opencode() {
     print_status "Installing OpenCode..."
+    print_verbose "Attempting official installer first"
 
     # Try curl installer first (recommended)
-    if curl -fsSL https://opencode.ai/install 2>/dev/null | bash; then
+    if run_pipe_cmd "OpenCode installer" "https://opencode.ai/install" "bash"; then
         print_success "OpenCode installed via official installer"
     elif check_command npm; then
         print_status "Installer failed, trying npm..."
-        if npm install -g opencode-ai; then
+        print_verbose "Running: npm install -g opencode-ai"
+        if run_cmd "npm install opencode" npm install -g opencode-ai; then
             print_success "OpenCode installed via npm"
         else
             print_error "OpenCode installation failed"
@@ -320,7 +382,7 @@ install_opencode() {
         fi
     elif [[ "$PKG_MANAGER" == "brew" ]]; then
         print_status "Trying Homebrew installation..."
-        if brew install sst/tap/opencode; then
+        if run_cmd "brew install opencode" brew install sst/tap/opencode; then
             print_success "OpenCode installed via Homebrew"
         else
             print_error "OpenCode installation failed"
@@ -389,6 +451,7 @@ install_claude_code() {
     # Try npm first (most reliable)
     if check_command npm; then
         print_status "Installing Claude Code via npm..."
+        print_verbose "Using npm with user-local prefix to avoid permission issues"
 
         # Use user-local install (no sudo needed)
         # This avoids permission issues in containers and restricted environments
@@ -397,18 +460,24 @@ install_claude_code() {
         npm config set prefix "$npm_prefix"
         export PATH="$npm_prefix/bin:$PATH"
 
-        if npm install -g @anthropic-ai/claude-code; then
+        print_verbose "npm prefix set to: $npm_prefix"
+        print_verbose "Running: npm install -g @anthropic-ai/claude-code"
+
+        if run_cmd "npm install claude-code" npm install -g @anthropic-ai/claude-code; then
             print_success "Claude Code CLI installed via npm to $npm_prefix"
 
             # Add to shell config if not already there
             if [ -f "$HOME/.zshrc" ] && ! grep -q ".npm-global/bin" "$HOME/.zshrc" 2>/dev/null; then
                 echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.zshrc"
+                print_verbose "Added npm-global/bin to .zshrc"
             elif [ -f "$HOME/.bashrc" ] && ! grep -q ".npm-global/bin" "$HOME/.bashrc" 2>/dev/null; then
                 echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bashrc"
+                print_verbose "Added npm-global/bin to .bashrc"
             fi
         else
             print_warning "npm installation failed, trying native installer..."
-            if curl -fsSL https://claude.ai/install.sh 2>/dev/null | bash; then
+            print_verbose "Falling back to claude.ai/install.sh"
+            if run_pipe_cmd "Claude native installer" "https://claude.ai/install.sh" "bash"; then
                 print_success "Claude Code CLI installed via native installer"
             else
                 print_error "Claude Code CLI installation failed"
@@ -418,7 +487,8 @@ install_claude_code() {
     else
         # Try native installer
         print_status "Installing Claude Code via native installer..."
-        if curl -fsSL https://claude.ai/install.sh 2>/dev/null | bash; then
+        print_verbose "npm not found, using native installer"
+        if run_pipe_cmd "Claude native installer" "https://claude.ai/install.sh" "bash"; then
             print_success "Claude Code CLI installed"
         else
             print_error "Claude Code CLI installation failed"
@@ -428,6 +498,7 @@ install_claude_code() {
 
     # Verify installation
     local npm_prefix="$HOME/.npm-global"
+    print_verbose "Verifying Claude CLI installation..."
     if check_command claude || [ -x "$npm_prefix/bin/claude" ]; then
         print_success "Claude Code CLI installation verified"
         print_status "Run 'claude' to start and authenticate"
@@ -452,6 +523,7 @@ install_codex() {
 
     # Check Node.js version for Codex (requires Node 20+)
     local node_version=$(get_node_version)
+    print_verbose "Detected Node.js version: $node_version"
     if ! version_gte "$node_version" "20.0.0"; then
         print_warning "Codex requires Node.js >= 20, but found $node_version"
         print_status "Attempting installation anyway..."
@@ -466,7 +538,10 @@ install_codex() {
         npm config set prefix "$npm_prefix"
         export PATH="$npm_prefix/bin:$PATH"
 
-        if npm install -g @openai/codex 2>/dev/null; then
+        print_verbose "npm prefix set to: $npm_prefix"
+        print_verbose "Running: npm install -g @openai/codex"
+
+        if run_cmd "npm install codex" npm install -g @openai/codex; then
             print_success "Codex CLI installed via npm to ~/.npm-global"
             # Add to shell config if not already there
             if [ -f "$HOME/.zshrc" ] && ! grep -q ".npm-global/bin" "$HOME/.zshrc" 2>/dev/null; then
@@ -480,7 +555,7 @@ install_codex() {
             print_warning "npm installation failed"
             if [[ "$PKG_MANAGER" == "brew" ]]; then
                 print_status "Trying Homebrew installation..."
-                if brew install codex; then
+                if run_cmd "brew install codex" brew install codex; then
                     print_success "Codex CLI installed via Homebrew"
                 else
                     print_error "Codex CLI installation failed"
@@ -495,7 +570,7 @@ install_codex() {
         fi
     elif [[ "$PKG_MANAGER" == "brew" ]]; then
         print_status "Installing Codex via Homebrew..."
-        if brew install codex; then
+        if run_cmd "brew install codex" brew install codex; then
             print_success "Codex CLI installed via Homebrew"
         else
             print_error "Codex CLI installation failed"
@@ -508,6 +583,7 @@ install_codex() {
 
     # Verify installation
     local npm_prefix="$HOME/.npm-global"
+    print_verbose "Verifying Codex CLI installation..."
     if check_command codex || [ -x "$npm_prefix/bin/codex" ]; then
         print_success "Codex CLI installation verified"
         print_status "Run 'codex' to start and authenticate with ChatGPT plan or API key"
@@ -522,16 +598,21 @@ install_codex() {
 main() {
     # Parse command line arguments
     UPDATE_MODE=false
+    VERBOSE=false
     for arg in "$@"; do
         case $arg in
             --update|-u)
                 UPDATE_MODE=true
+                ;;
+            --verbose|-v)
+                VERBOSE=true
                 ;;
             --help|-h)
                 echo "Usage: $0 [OPTIONS]"
                 echo ""
                 echo "Options:"
                 echo "  --update, -u    Update already installed tools to latest versions"
+                echo "  --verbose, -v   Show detailed output and timing for each step"
                 echo "  --help, -h      Show this help message"
                 echo ""
                 exit 0
@@ -548,6 +629,9 @@ main() {
         echo "Mode: UPDATE (will update existing tools)"
     else
         echo "Mode: INSTALL (will skip already installed tools)"
+    fi
+    if [ "$VERBOSE" = true ]; then
+        echo "Verbose: ENABLED (showing detailed output and timing)"
     fi
     echo ""
     echo "This script will install/update:"

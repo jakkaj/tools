@@ -74,6 +74,7 @@ class SetupManager:
         self.clear_mcp = False
         self.commands_local = ""
         self.local_dir = str(Path.cwd())
+        self.verbose = False
 
     def _detect_os(self) -> str:
         """Detect the operating system"""
@@ -306,6 +307,10 @@ class SetupManager:
         # Add --no-auto-sudo flag if requested (for all installers)
         if hasattr(self, 'no_auto_sudo') and self.no_auto_sudo:
             cmd.append("--no-auto-sudo")
+
+        # Add --verbose flag if requested (for all installers that support it)
+        if hasattr(self, 'verbose') and self.verbose:
+            cmd.append("--verbose")
 
         # Run the installer
         returncode, stdout, stderr = self._run_command(cmd, timeout=300)

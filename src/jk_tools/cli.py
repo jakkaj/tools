@@ -64,6 +64,11 @@ Examples:
         metavar="PATH",
         help="Run in development mode using local filesystem at PATH (for contributors)"
     )
+    parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="Show detailed output and timing for each installation step"
+    )
 
     args = parser.parse_args()
 
@@ -72,6 +77,7 @@ Examples:
         manager = SetupManager(resource_root=args.dev_mode)
         manager.clear_mcp = args.clear_mcp
         manager.commands_local = args.commands_local
+        manager.verbose = args.verbose
         if args.local_dir:
             manager.local_dir = args.local_dir
         manager.run(update_mode=args.update)
