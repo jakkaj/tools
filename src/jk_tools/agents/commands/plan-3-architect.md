@@ -135,14 +135,31 @@ Launch **2 specialized subagents** focusing on implementation planning:
 
 **IMPORTANT**: Use **parallel research subagents** for comprehensive and efficient discovery.
 
-**Strategy**: Launch 4 specialized research subagents (single message with 4 Task tool calls) to maximize discovery breadth and depth. Each subagent focuses on a specific domain, then results are synthesized into numbered discoveries.
+**Strategy**: Launch 4 specialized research subagents (single message with 4 Task tool calls) to maximize discovery breadth and depth. Each subagent focuses on a specific domain, uses `/flowspace-research` for evidence gathering, then analyzes and synthesizes findings.
+
+### FlowSpace Evidence Gathering (Hybrid Approach)
+
+Each subagent follows a 2-phase pattern:
+1. **Evidence Phase**: Use `/flowspace-research` to gather grounded codebase evidence
+2. **Analysis Phase**: Apply domain-specific analysis framework to categorize and synthesize findings
+
+**Fallback**: If FlowSpace unavailable, subagents use Glob/Grep/Read for evidence gathering.
 
 ### Parallel Research Architecture
 
 **Subagent 1: Codebase Pattern Analyst**
 "Discover existing patterns, conventions, and integration points.
 
-**Research Areas**:
+**PHASE 1 - Evidence Gathering** (use /flowspace-research):
+```
+/flowspace-research "design patterns factory singleton observer repository" --limit 8
+/flowspace-research "naming conventions class file function" --limit 8
+/flowspace-research "integration points middleware hooks extension" --limit 8
+```
+If FlowSpace unavailable, use Glob to find similar files and Grep for pattern indicators.
+
+**PHASE 2 - Analysis**:
+Based on evidence gathered, analyze and categorize:
 - Existing similar features/components and their implementation patterns
 - Naming conventions (file naming, class naming, function naming)
 - Directory structures and organization
@@ -157,6 +174,7 @@ Launch **2 specialized subagents** focusing on implementation planning:
 ### Discovery S1-01: [Title]
 **Category**: Pattern | Integration | Convention
 **Impact**: Critical | High | Medium | Low
+**Evidence**: [FlowSpace node_id or file:line reference from evidence phase]
 **What**: [Concise description]
 **Why It Matters**: [How this affects implementation]
 **Example**:
@@ -174,7 +192,16 @@ Launch **2 specialized subagents** focusing on implementation planning:
 **Subagent 2: Technical Investigator**
 "Identify technical constraints, API limitations, and framework-specific gotchas.
 
-**Research Areas**:
+**PHASE 1 - Evidence Gathering** (use /flowspace-research):
+```
+/flowspace-research "API constraints rate limits quotas version" --limit 8
+/flowspace-research "framework gotchas known bugs performance bottleneck" --limit 8
+/flowspace-research "security validation input sanitization requirements" --limit 8
+```
+If FlowSpace unavailable, use Grep to search for error handling, validation patterns, and constraint documentation.
+
+**PHASE 2 - Analysis**:
+Based on evidence gathered, identify and root-cause:
 - API limitations (rate limits, quotas, restrictions, version compatibility)
 - Framework gotchas (known bugs, common mistakes, performance bottlenecks)
 - Technical constraints (memory/CPU limits, query limits, file system limitations)
@@ -187,6 +214,7 @@ Launch **2 specialized subagents** focusing on implementation planning:
 ### Discovery S2-01: [Title]
 **Category**: API Limit | Framework Gotcha | Constraint
 **Impact**: Critical | High | Medium | Low
+**Evidence**: [FlowSpace node_id or file:line reference from evidence phase]
 **Problem**: [What doesn't work as expected or limitation exists]
 **Root Cause**: [Why this limitation exists]
 **Solution**: [How to work around it]
@@ -205,7 +233,16 @@ Launch **2 specialized subagents** focusing on implementation planning:
 **Subagent 3: Discovery Documenter**
 "Analyze spec for ambiguities, implications, and edge cases.
 
-**Research Areas**:
+**PHASE 1 - Evidence Gathering** (use /flowspace-research):
+```
+/flowspace-research "error handling edge cases null empty validation" --limit 8
+/flowspace-research "backward compatibility migration data schema" --limit 8
+/flowspace-research "concurrent access race condition async" --limit 8
+```
+If FlowSpace unavailable, use Grep to find existing error handling and edge case patterns.
+
+**PHASE 2 - Analysis**:
+Based on evidence gathered and spec analysis, identify:
 - Spec ambiguities (unclear or underspecified requirements)
 - Implementation implications (performance, data migration, backward compatibility, security)
 - Edge cases and error scenarios (empty/null input, concurrent access, network failures)
@@ -217,6 +254,7 @@ Launch **2 specialized subagents** focusing on implementation planning:
 ### Discovery S3-01: [Title]
 **Category**: Ambiguity | Implication | Edge Case
 **Impact**: Critical | High | Medium | Low
+**Evidence**: [FlowSpace node_id or file:line showing existing handling]
 **Spec Reference**: [Quote relevant spec section]
 **Issue**: [What is unclear, implication, or edge case]
 **Design Decision Required**: [What choice must be made]
@@ -228,7 +266,16 @@ Launch **2 specialized subagents** focusing on implementation planning:
 **Subagent 4: Dependency Mapper**
 "Map module dependencies, architectural boundaries, and cross-cutting concerns.
 
-**Research Areas**:
+**PHASE 1 - Evidence Gathering** (use /flowspace-research):
+```
+/flowspace-research "import dependency module requires" --limit 8
+/flowspace-research "layer boundary domain service repository" --limit 8
+/flowspace-research "logging auth caching metrics configuration cross-cutting" --limit 8
+```
+If FlowSpace unavailable, use Grep to find import statements and architectural patterns.
+
+**PHASE 2 - Analysis**:
+Based on evidence gathered, map and document:
 - Module dependencies (what feature depends on, what depends on it)
 - Architectural boundaries (layers, domains, cross-boundary communication)
 - Cross-cutting concerns (logging, error handling, auth, caching, metrics, config)
@@ -240,6 +287,7 @@ Launch **2 specialized subagents** focusing on implementation planning:
 ### Discovery S4-01: [Title]
 **Category**: Dependency | Boundary | Cross-Cutting Concern
 **Impact**: Critical | High | Medium | Low
+**Evidence**: [FlowSpace node_id or file:line showing dependency/boundary]
 **What**: [Describe dependency/boundary/concern]
 **Architectural Context**: [How this fits into system architecture]
 **Design Constraint**: [What this means for implementation]

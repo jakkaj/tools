@@ -344,11 +344,12 @@ git merge-tree ${ANCESTOR} HEAD ${TARGET} -- ${FILE}
 - YOUR_CHANGES = [summary of your changes]
 - UPSTREAM_CHANGES = [summary of each upstream plan's changes]
 
-**Analysis:**
+**PHASE 1 - Candidate Generation (always runs):**
+
 For each concept/component:
 1. Check if you modified it (any file)
 2. Check if upstream modified it (any file)
-3. If both, assess semantic compatibility
+3. If both, flag as candidate semantic conflict
 
 **Semantic conflict indicators:**
 - Same API modified with different signatures
@@ -356,21 +357,40 @@ For each concept/component:
 - Same service with different behavior assumptions
 - Same configuration with conflicting values
 
+**PHASE 2 - FlowSpace Verification (optional, if available):**
+
+If FlowSpace MCP is available AND candidate conflicts were found:
+```
+For each candidate conflict:
+  /flowspace-research "[component name]" --limit 3
+
+  If results found:
+    - Extract actual code signatures/definitions
+    - Verify conflict is real (not false positive from summary analysis)
+    - Record node_ids for merge plan evidence
+  Else:
+    - Mark as "cannot verify in codebase"
+```
+
+If FlowSpace unavailable: Skip Phase 2, output summary-based conflicts only.
+
 **Output:**
 ```markdown
 ### Semantic Conflicts
 
 **Potential Semantic Conflicts Found**: [N]
+**FlowSpace Verification**: [Enabled | Skipped - FlowSpace unavailable]
 
-| Component/Concept | Your Assumption | Upstream Reality | Risk Level | Requires Review |
-|-------------------|-----------------|------------------|------------|-----------------|
-| User.email field | Added validation | Added new format | High | Yes |
-| PaymentService API | Uses v1 endpoint | Migrated to v2 | Critical | Yes |
+| Component/Concept | Your Assumption | Upstream Reality | Risk Level | Verified | Node ID |
+|-------------------|-----------------|------------------|------------|----------|---------|
+| User.email field | Added validation | Added new format | High | ✓ | class:src/models/user.py:User |
+| PaymentService API | Uses v1 endpoint | Migrated to v2 | Critical | ✓ | callable:src/services/payment.py:process |
 
 **Reasoning Chain** (for each conflict):
 1. [Conflict]: [description]
    - Your code at [file:line]: [what you assume]
    - Upstream code at [file:line]: [what they changed]
+   - FlowSpace Evidence: [node_id if verified, "N/A" if skipped]
    - Risk: [why this is a problem]
    - Verification: [how to test this works]
 ```
@@ -379,6 +399,7 @@ For each concept/component:
 - Only flag conflicts with specific file:line evidence
 - Confidence < 80%: flag for human review, do not assert as definite conflict
 - Never invent code or assume changes not visible in diffs
+- FlowSpace verification increases confidence but doesn't guarantee correctness
 "
 
 ### Subagent R1: Regression Risk Analyst
