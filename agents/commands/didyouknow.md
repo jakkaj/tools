@@ -143,61 +143,127 @@ If analyzing a plan or tasks document that includes CS (Complexity Score) rating
 
 **CRITICAL**: Before presenting options, verify them against the actual codebase. This grounds your recommendations in code reality rather than assumptions.
 
-**Launch 5 Parallel Verification Subagents** (one per insight):
+#### 2.5a) FlowSpace Detection
 
-After selecting the 5 insights and drafting initial options, launch verification subagents in a **single message with 5 Task tool calls** to verify each insight's options against the codebase.
+First, detect FlowSpace MCP availability to select the optimal verification approach:
 
-**Subagent Template for Each Insight:**
+```python
+# Pseudo-code for detection
+try:
+    # Fast, minimal probe
+    flowspace.tree(pattern=".", max_depth=1)
+    FLOWSPACE_AVAILABLE = True
+    print("✅ FlowSpace MCP detected - using /flowspace-research agents")
+except:
+    FLOWSPACE_AVAILABLE = False
+    print("ℹ️ FlowSpace not available - using standard Explore agents")
+```
+
+#### 2.5b) Launch 5 Parallel Verification Subagents
+
+After selecting the 5 insights and drafting initial options, launch verification subagents in a **single message with 5 Task tool calls**.
+
+---
+
+**IF FLOWSPACE IS AVAILABLE**: Use `/flowspace-research` as the subagent
+
+For each insight, invoke the flowspace-research skill with targeted queries:
 
 ```
-"Verify insight [N] and its proposed options against the actual codebase.
+For Insight [N], launch Task tool with:
+  subagent_type: "general-purpose"
+  prompt: "Use /flowspace-research to verify insight [N].
 
-**Insight**: [The insight statement you identified]
-**Proposed Options**:
-- Option A: [description]
-- Option B: [description]
-- Option C: [description]
+    INSIGHT: [The insight statement]
+    PROPOSED OPTIONS:
+    - Option A: [description]
+    - Option B: [description]
+    - Option C: [description]
 
-**If FlowSpace is available**: Use FlowSpace MCP tools:
-- tree(pattern='...') to find relevant classes/functions
-- search(pattern='...', mode='semantic') for conceptual search
-- get_node(node_id) for full source code
+    VERIFICATION QUERIES TO RUN (use /flowspace-research for each):
 
-**Verification Tasks**:
+    1. Feasibility check for Option A:
+       /flowspace-research '[key concept from Option A]' --scope 'src/' --limit 5
 
-1. **Feasibility Check**: Can each option actually be implemented?
-   - What existing code supports/blocks each option?
-   - What dependencies would each option require?
-   - Are there architectural constraints?
+    2. Feasibility check for Option B:
+       /flowspace-research '[key concept from Option B]' --scope 'src/' --limit 5
 
-2. **Pattern Discovery**: Are there existing implementations of similar solutions?
-   - How do similar features handle this problem?
-   - What patterns should be followed for consistency?
-   - Any prior learnings from docs/plans/ that apply?
+    3. Pattern discovery for similar implementations:
+       /flowspace-research '[pattern keyword]' --mode concept --limit 5
 
-3. **Constraint Identification**: What constraints affect the options?
-   - API limitations, framework constraints, architecture boundaries
-   - Security, performance, or scalability concerns
-   - Existing conventions that must be followed
+    4. Constraint search (if relevant):
+       /flowspace-research '[constraint topic]' --exclude 'test' --limit 3
 
-4. **Evidence Gathering**: Collect concrete code references
-   - File paths and line numbers
-   - FlowSpace node IDs where available
-   - Brief code snippets showing relevant patterns
+    For each query result:
+    - Identify code that SUPPORTS or BLOCKS each option
+    - Note patterns that should be followed
+    - Flag constraints affecting feasibility
 
-**Output Format** - Return 3-5 verification findings:
+    REQUIRED OUTPUT FORMAT:
 
-### Verification V[N]-01: [Finding Title]
-**Option Affected**: [A/B/C/All]
-**Type**: Feasibility | Pattern | Constraint | Evidence
-**Finding**: [What was discovered]
-**Code Reference**: [file:line or node_id]
-**Impact on Options**:
-- Option A: [How this affects Option A]
-- Option B: [How this affects Option B]
-- Option C: [How this affects Option C]
-**Recommendation Adjustment**: [If the preferred recommendation should change based on this finding]
-"
+    ### Verification V[N]-01: [Finding Title]
+    **Option Affected**: [A/B/C/All]
+    **Type**: Feasibility | Pattern | Constraint | Evidence
+    **Finding**: [What was discovered]
+    **Code Reference**: [node_id from FlowSpace or file:line]
+    **Impact on Options**:
+    - Option A: [How this affects Option A]
+    - Option B: [How this affects Option B]
+    - Option C: [How this affects Option C]
+    **Recommendation Adjustment**: [If preferred recommendation should change]
+
+    Return 3-5 verification findings."
+```
+
+---
+
+**IF FLOWSPACE IS NOT AVAILABLE**: Use standard Explore subagents
+
+```
+For Insight [N], launch Task tool with:
+  subagent_type: "Explore"
+  prompt: "Verify insight [N] and its proposed options against the codebase.
+
+    INSIGHT: [The insight statement]
+    PROPOSED OPTIONS:
+    - Option A: [description]
+    - Option B: [description]
+    - Option C: [description]
+
+    Use Glob, Grep, and Read tools to:
+
+    1. **Feasibility Check**: Can each option actually be implemented?
+       - Search for existing code that supports/blocks each option
+       - Identify dependencies each option would require
+       - Find architectural constraints
+
+    2. **Pattern Discovery**: Are there similar implementations?
+       - Search for how similar features handle this problem
+       - Find patterns that should be followed for consistency
+
+    3. **Constraint Identification**: What constraints affect the options?
+       - API limitations, framework constraints
+       - Security, performance concerns
+       - Existing conventions
+
+    4. **Evidence Gathering**: Collect concrete references
+       - File paths and line numbers
+       - Code snippets showing relevant patterns
+
+    REQUIRED OUTPUT FORMAT:
+
+    ### Verification V[N]-01: [Finding Title]
+    **Option Affected**: [A/B/C/All]
+    **Type**: Feasibility | Pattern | Constraint | Evidence
+    **Finding**: [What was discovered]
+    **Code Reference**: [file:line]
+    **Impact on Options**:
+    - Option A: [How this affects Option A]
+    - Option B: [How this affects Option B]
+    - Option C: [How this affects Option C]
+    **Recommendation Adjustment**: [If preferred recommendation should change]
+
+    Return 3-5 verification findings."
 ```
 
 **Wait for All 5 Verification Subagents** to complete before proceeding.
@@ -214,14 +280,31 @@ After selecting the 5 insights and drafting initial options, launch verification
 4. Add "Verified By" references (V[N]-##) to each option
 
 **Output to User** (before starting conversation):
+
+If FlowSpace available:
 ```
 🔍 Verifying insights against codebase...
+  ✅ FlowSpace detected - using /flowspace-research agents
   [Launching 5 verification subagents in parallel]
-  ✓ Insight 1 verified (X findings)
-  ✓ Insight 2 verified (X findings)
-  ✓ Insight 3 verified (X findings)
-  ✓ Insight 4 verified (X findings)
-  ✓ Insight 5 verified (X findings)
+  ✓ Insight 1 verified (X findings) - via FlowSpace
+  ✓ Insight 2 verified (X findings) - via FlowSpace
+  ✓ Insight 3 verified (X findings) - via FlowSpace
+  ✓ Insight 4 verified (X findings) - via FlowSpace
+  ✓ Insight 5 verified (X findings) - via FlowSpace
+
+All insights verified. Starting conversation...
+```
+
+If FlowSpace not available:
+```
+🔍 Verifying insights against codebase...
+  ℹ️ FlowSpace not available - using Explore agents
+  [Launching 5 verification subagents in parallel]
+  ✓ Insight 1 verified (X findings) - via Grep/Glob/Read
+  ✓ Insight 2 verified (X findings) - via Grep/Glob/Read
+  ✓ Insight 3 verified (X findings) - via Grep/Glob/Read
+  ✓ Insight 4 verified (X findings) - via Grep/Glob/Read
+  ✓ Insight 5 verified (X findings) - via Grep/Glob/Read
 
 All insights verified. Starting conversation...
 ```
@@ -573,6 +656,7 @@ Let me take a deep look at this OAuth integration plan...
 [Selected 5 critical insights]
 
 🔍 Verifying insights against codebase...
+  ✅ FlowSpace detected - using /flowspace-research agents
   [Launching 5 verification subagents in parallel]
   ✓ Insight 1 verified (4 findings) - Session invalidation patterns found
   ✓ Insight 2 verified (3 findings) - Scope management approaches identified
@@ -580,7 +664,7 @@ Let me take a deep look at this OAuth integration plan...
   ✓ Insight 4 verified (3 findings) - Mobile storage patterns found
   ✓ Insight 5 verified (4 findings) - Audit logging constraints identified
 
-All insights verified. Starting conversation...
+All insights verified (via FlowSpace). Starting conversation...
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
