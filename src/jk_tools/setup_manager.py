@@ -239,6 +239,7 @@ class SetupManager:
             "just.sh",
             "rust.sh",
             "code2prompt.sh",
+            "fs2.sh",       # FlowSpace - install before agents.sh (MCP server depends on it)
             "agents.sh",
             # "opencode.sh",  # Commented out - OpenCode installation disabled
             "claude-code.sh",
