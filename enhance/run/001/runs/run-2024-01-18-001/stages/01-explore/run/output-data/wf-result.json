@@ -1,0 +1,11 @@
+{
+  "status": "success",
+  "completed_at": "2026-01-18T15:30:00+11:00",
+  "stage_id": "01-explore",
+  "error": null,
+  "metrics": {
+    "findings_count": 52,
+    "critical_findings": 2,
+    "flowspace_used": false
+  }
+}

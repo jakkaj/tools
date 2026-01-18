@@ -1,0 +1,7 @@
+#!/bin/bash
+# Validate workflow stage outputs against JSON schemas
+# Usage: ./validate <stage_dir> [--verbose]
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+exec uv run --with jsonschema "$SCRIPT_DIR/validate_stage_outputs.py" "$@"

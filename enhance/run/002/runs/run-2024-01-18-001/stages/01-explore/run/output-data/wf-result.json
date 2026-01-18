@@ -1,0 +1,18 @@
+{
+  "status": "success",
+  "completed_at": "2026-01-18T12:00:00Z",
+  "stage_id": "01-explore",
+  "error": null,
+  "metrics": {
+    "findings_count": 58,
+    "critical_findings": 4,
+    "high_findings": 12,
+    "medium_findings": 28,
+    "low_findings": 14,
+    "flowspace_used": true,
+    "subagents_launched": 7,
+    "subagents_completed": 7,
+    "prior_learnings_found": 8,
+    "external_research_opportunities": 2
+  }
+}

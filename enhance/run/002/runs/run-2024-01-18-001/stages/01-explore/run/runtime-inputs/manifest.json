@@ -1,0 +1,41 @@
+{
+  "files_read": [
+    {
+      "path": "enhance/run/002/runs/run-2024-01-18-001/stages/01-explore/prompt/wf.md",
+      "read_at": "2026-01-18T11:30:00Z",
+      "purpose": "Workflow stage entry point instructions"
+    },
+    {
+      "path": "enhance/run/002/runs/run-2024-01-18-001/stages/01-explore/stage-config.json",
+      "read_at": "2026-01-18T11:30:01Z",
+      "purpose": "Stage configuration and output contracts"
+    },
+    {
+      "path": "enhance/run/002/runs/run-2024-01-18-001/stages/01-explore/inputs/user-description.md",
+      "read_at": "2026-01-18T11:30:01Z",
+      "purpose": "Research query input - authentication system investigation"
+    },
+    {
+      "path": "enhance/run/002/runs/run-2024-01-18-001/stages/01-explore/prompt/main.md",
+      "read_at": "2026-01-18T11:30:01Z",
+      "purpose": "Main stage instructions for research execution"
+    },
+    {
+      "path": "enhance/run/002/runs/run-2024-01-18-001/stages/01-explore/schemas/wf-result.schema.json",
+      "read_at": "2026-01-18T11:30:02Z",
+      "purpose": "Output schema for workflow result"
+    },
+    {
+      "path": "enhance/run/002/runs/run-2024-01-18-001/stages/01-explore/schemas/findings.schema.json",
+      "read_at": "2026-01-18T11:30:02Z",
+      "purpose": "Output schema for findings data"
+    },
+    {
+      "path": "enhance/run/002/runs/run-2024-01-18-001/stages/01-explore/schemas/manifest.schema.json",
+      "read_at": "2026-01-18T11:30:02Z",
+      "purpose": "Output schema for runtime manifest"
+    }
+  ],
+  "codebase_files_examined": 85,
+  "flowspace_queries": 42
+}

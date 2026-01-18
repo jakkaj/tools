@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "manifest.schema.json",
+  "title": "Runtime Inputs Manifest",
+  "description": "Log of files actually read during stage execution.",
+  "type": "object",
+  "required": ["files_read"],
+  "properties": {
+    "files_read": {
+      "type": "array",
+      "description": "List of files read during execution",
+      "items": {
+        "type": "object",
+        "required": ["path", "read_at", "purpose"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Relative path to file read"
+          },
+          "read_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO-8601 timestamp when file was read"
+          },
+          "purpose": {
+            "type": "string",
+            "description": "Why this file was read"
+          }
+        }
+      }
+    },
+    "codebase_files_examined": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Count of codebase files examined during research"
+    },
+    "flowspace_queries": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Count of FlowSpace MCP queries made"
+    }
+  }
+}
