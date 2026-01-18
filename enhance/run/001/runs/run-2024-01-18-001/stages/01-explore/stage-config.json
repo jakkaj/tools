@@ -1,0 +1,52 @@
+{
+  "stage": {
+    "id": "01-explore",
+    "name": "Codebase Research",
+    "description": "Deep-dive research into existing codebase functionality to understand how things work before planning changes."
+  },
+  "inputs": {
+    "required": [
+      {
+        "name": "user-description.md",
+        "path": "inputs/user-description.md",
+        "description": "User-provided research query or feature description to investigate"
+      }
+    ],
+    "optional": []
+  },
+  "outputs": {
+    "files": [
+      {
+        "name": "research-dossier.md",
+        "path": "run/output-files/research-dossier.md",
+        "description": "Comprehensive research report with findings, dependencies, patterns, and recommendations"
+      }
+    ],
+    "data": [
+      {
+        "name": "wf-result.json",
+        "path": "run/output-data/wf-result.json",
+        "description": "Stage execution status and metadata",
+        "required": true
+      },
+      {
+        "name": "findings.json",
+        "path": "run/output-data/findings.json",
+        "description": "Structured findings data for downstream stage consumption",
+        "required": true
+      }
+    ],
+    "runtime": [
+      {
+        "name": "manifest.json",
+        "path": "run/runtime-inputs/manifest.json",
+        "description": "Log of files actually read during stage execution",
+        "required": true
+      }
+    ]
+  },
+  "prompt": {
+    "entry": "prompt/wf.md",
+    "main": "prompt/main.md"
+  }
+}

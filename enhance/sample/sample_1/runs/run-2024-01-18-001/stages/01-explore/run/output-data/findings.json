@@ -1,0 +1,92 @@
+{
+  "findings": [
+    {
+      "id": "IA-01",
+      "category": "implementation",
+      "impact": "critical",
+      "title": "Token Storage in Redis",
+      "summary": "Refresh tokens stored in Redis with user ID as key; token rotation depends on Redis availability"
+    },
+    {
+      "id": "IA-02",
+      "category": "implementation",
+      "impact": "high",
+      "title": "JWT Token Generation",
+      "summary": "Uses RS256 algorithm with private key from environment; 15min access, 7d refresh expiry"
+    },
+    {
+      "id": "DC-01",
+      "category": "dependency",
+      "impact": "high",
+      "title": "External Auth Provider Integration",
+      "summary": "OAuth2 flow implemented for Google and GitHub; extensible provider pattern exists"
+    },
+    {
+      "id": "DC-02",
+      "category": "dependency",
+      "impact": "medium",
+      "title": "Database User Store",
+      "summary": "User credentials in PostgreSQL users table; bcrypt for password hashing"
+    },
+    {
+      "id": "PS-01",
+      "category": "pattern",
+      "impact": "medium",
+      "title": "Middleware Chain Pattern",
+      "summary": "Auth middleware follows chain-of-responsibility; can add MFA check in chain"
+    },
+    {
+      "id": "QT-01",
+      "category": "quality",
+      "impact": "medium",
+      "title": "Test Coverage Gap",
+      "summary": "Token refresh flow has 45% coverage; edge cases around expiry not tested"
+    },
+    {
+      "id": "IC-01",
+      "category": "interface",
+      "impact": "high",
+      "title": "Auth API Contract",
+      "summary": "POST /api/auth/login expects {email, password}, returns {access_token, refresh_token}"
+    },
+    {
+      "id": "DE-01",
+      "category": "documentation",
+      "impact": "low",
+      "title": "Auth Flow Diagram",
+      "summary": "Sequence diagram in docs/auth-flow.md shows complete login/refresh cycle"
+    },
+    {
+      "id": "PL-01",
+      "category": "prior_learning",
+      "impact": "critical",
+      "title": "Token Rotation Race Condition",
+      "summary": "Previous impl discovered race condition when multiple clients refresh simultaneously; resolved with Redis SETNX"
+    },
+    {
+      "id": "PL-02",
+      "category": "prior_learning",
+      "impact": "high",
+      "title": "Session Invalidation on Password Change",
+      "summary": "Must invalidate all refresh tokens when user changes password; implemented via token version field"
+    }
+  ],
+  "summary": {
+    "total": 42,
+    "by_impact": {
+      "critical": 3,
+      "high": 12,
+      "medium": 18,
+      "low": 9
+    },
+    "by_category": {
+      "implementation": 10,
+      "dependency": 8,
+      "pattern": 6,
+      "quality": 5,
+      "interface": 7,
+      "documentation": 4,
+      "prior_learning": 2
+    }
+  }
+}
