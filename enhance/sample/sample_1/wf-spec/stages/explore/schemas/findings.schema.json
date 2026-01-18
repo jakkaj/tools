@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "findings.schema.json",
+  "title": "Research Findings",
+  "description": "Structured findings from codebase exploration. Stage-specific to 01-explore.",
+  "type": "object",
+  "required": ["findings", "summary"],
+  "properties": {
+    "findings": {
+      "type": "array",
+      "description": "List of research findings",
+      "items": {
+        "type": "object",
+        "required": ["id", "category", "impact", "title", "summary"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Z]{2}-[0-9]{2}$",
+            "description": "Finding ID (e.g., IA-01, DC-03, PL-01)"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "implementation",
+              "dependency",
+              "pattern",
+              "quality",
+              "interface",
+              "documentation",
+              "prior_learning"
+            ],
+            "description": "Finding category based on subagent source"
+          },
+          "impact": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"],
+            "description": "Impact level of the finding"
+          },
+          "title": {
+            "type": "string",
+            "description": "Short descriptive title"
+          },
+          "summary": {
+            "type": "string",
+            "description": "One-line summary of the finding"
+          },
+          "node_id": {
+            "type": "string",
+            "description": "FlowSpace node ID if available (e.g., method:path:name)"
+          },
+          "references": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "File:line references to relevant code"
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total", "by_impact", "by_category"],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total number of findings"
+        },
+        "by_impact": {
+          "type": "object",
+          "properties": {
+            "critical": { "type": "integer", "minimum": 0 },
+            "high": { "type": "integer", "minimum": 0 },
+            "medium": { "type": "integer", "minimum": 0 },
+            "low": { "type": "integer", "minimum": 0 }
+          },
+          "description": "Count of findings by impact level"
+        },
+        "by_category": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 },
+          "description": "Count of findings by category"
+        }
+      }
+    }
+  }
+}

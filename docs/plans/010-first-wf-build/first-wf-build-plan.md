@@ -83,26 +83,26 @@
 
 | Status | ID | Task | CS | Type | Dependencies | Path(s) | Validation | Notes |
 |--------|-----|------|----|------|--------------|---------|------------|-------|
-| [ ] | 1.1 | Create wf-spec directory structure | 1 | Setup | -- | `enhance/sample/sample_1/wf-spec/` | All directories exist per A.1 | mkdir -p for all paths |
-| [ ] | 1.2 | Create wf.yaml workflow definition | 2 | Setup | 1.1 | `enhance/sample/sample_1/wf-spec/wf.yaml` | YAML parses; content matches A.2 exactly | **Single source of truth** - all stage definitions inline |
-| [ ] | 1.3 | Create shared wf.md bootstrap template | 1 | Setup | 1.1 | `enhance/sample/sample_1/wf-spec/templates/wf.md` | Content matches A.4 exactly | Shared prompt for all stages |
-| [ ] | 1.4 | Create shared wf-result.schema.json | 1 | Setup | 1.1 | `enhance/sample/sample_1/wf-spec/schemas/wf-result.schema.json` | Valid JSON Schema; matches A.5 | Required output for all stages |
-| [ ] | 1.4b | Create wf.schema.json for wf.yaml validation | 1 | Setup | 1.1 | `enhance/sample/sample_1/wf-spec/schemas/wf.schema.json` | Valid JSON Schema; matches A.3 | Enables immediate wf.yaml validation |
-| [ ] | 1.5 | Copy explore stage assets from existing 01-explore | 2 | Setup | 1.1 | Source: `enhance/sample/sample_1/runs/run-2024-01-18-001/stages/01-explore/` → Target: `enhance/sample/sample_1/wf-spec/stages/explore/` | prompt/main.md, schemas/ present | Copy prompts and schemas only (config is in wf.yaml) |
-| [ ] | 1.6 | Create explore-metrics.schema.json | 2 | Setup | 1.5 | `enhance/sample/sample_1/wf-spec/stages/explore/schemas/explore-metrics.schema.json` | Valid JSON Schema; matches A.5c | Nested data for parameter extraction |
-| [ ] | 1.7 | Create specify spec-metadata.schema.json | 2 | Setup | 1.2 | `enhance/sample/sample_1/wf-spec/stages/specify/schemas/spec-metadata.schema.json` | Valid JSON Schema; matches A.6 | Output schema for specify |
-| [ ] | 1.8 | Copy read-files.schema.json to specify | 1 | Setup | 1.5 | `enhance/sample/sample_1/wf-spec/stages/specify/schemas/read-files.schema.json` | Identical to explore's manifest schema | Runtime tracking schema |
-| [ ] | 1.9 | Transform /plan-1b-specify.md to main.md | 2 | Setup | 1.2 | Source: `agents/commands/plan-1b-specify.md` → Target: `enhance/sample/sample_1/wf-spec/stages/specify/prompt/main.md` | Content matches A.7; no $ARGUMENTS, no command refs; HAS sections: "External Research", "Unresolved Research", "Phases (for CS-4+" | Remove command infra; restore research tracking |
-| [ ] | 1.10 | Verify wf-spec completeness | 1 | Test | 1.1-1.9 | -- | All files exist; all JSON/YAML parses; structure matches A.1 | Manual verification |
+| [x] | 1.1 | Create wf-spec directory structure | 1 | Setup | -- | `enhance/sample/sample_1/wf-spec/` | All directories exist per A.1 | mkdir -p for all paths [^1] |
+| [x] | 1.2 | Create wf.yaml workflow definition | 2 | Setup | 1.1 | `enhance/sample/sample_1/wf-spec/wf.yaml` | YAML parses; content matches A.2 exactly | **Single source of truth** [^2] |
+| [x] | 1.3 | Create shared wf.md bootstrap template | 1 | Setup | 1.1 | `enhance/sample/sample_1/wf-spec/templates/wf.md` | Content matches A.4 exactly | Shared prompt [^3] |
+| [x] | 1.4 | Create shared wf-result.schema.json | 1 | Setup | 1.1 | `enhance/sample/sample_1/wf-spec/schemas/wf-result.schema.json` | Valid JSON Schema; matches A.5 | Required output schema [^4] |
+| [x] | 1.4b | Create wf.schema.json for wf.yaml validation | 1 | Setup | 1.1 | `enhance/sample/sample_1/wf-spec/schemas/wf.schema.json` | Valid JSON Schema; matches A.3 | Enables validation [^5] |
+| [x] | 1.5 | Copy explore stage assets from existing 01-explore | 2 | Setup | 1.1 | Source: `enhance/sample/sample_1/runs/run-2024-01-18-001/stages/01-explore/` → Target: `enhance/sample/sample_1/wf-spec/stages/explore/` | prompt/main.md, schemas/ present | Copy + update refs [^6] |
+| [x] | 1.6 | Create explore-metrics.schema.json | 2 | Setup | 1.5 | `enhance/sample/sample_1/wf-spec/stages/explore/schemas/explore-metrics.schema.json` | Valid JSON Schema; matches A.5c | Parameter extraction [^7] |
+| [x] | 1.7 | Create specify spec-metadata.schema.json | 2 | Setup | 1.2 | `enhance/sample/sample_1/wf-spec/stages/specify/schemas/spec-metadata.schema.json` | Valid JSON Schema; matches A.6 | Output schema [^8] |
+| [x] | 1.8 | Copy read-files.schema.json to specify | 1 | Setup | 1.5 | `enhance/sample/sample_1/wf-spec/stages/specify/schemas/read-files.schema.json` | Identical to explore's manifest schema | Runtime tracking [^9] |
+| [x] | 1.9 | Transform /plan-1b-specify.md to main.md | 2 | Setup | 1.2 | Source: `agents/commands/plan-1b-specify.md` → Target: `enhance/sample/sample_1/wf-spec/stages/specify/prompt/main.md` | Content matches A.7; no $ARGUMENTS, no command refs; HAS sections: "External Research", "Unresolved Research", "Phases (for CS-4+" | Transform + Stage Context [^10] |
+| [x] | 1.10 | Verify wf-spec completeness | 1 | Test | 1.1-1.9 | -- | All files exist; all JSON/YAML parses; structure matches A.1 | Manual verification [^11] |
 
 ### Phase 1 Acceptance Criteria
 
-- [ ] **P1-AC-01**: wf-spec folder structure matches Appendix A.1 exactly
-- [ ] **P1-AC-02**: wf.yaml content matches A.2; declares explore → specify with parameters
-- [ ] **P1-AC-03**: All schemas are valid JSON Schema (test with jsonschema library)
-- [ ] **P1-AC-03b**: wf.yaml validates against wf.schema.json (self-documenting wf-spec)
-- [ ] **P1-AC-04**: specify/prompt/main.md has no `$ARGUMENTS`, `--simple`, or `/plan-*` references
-- [ ] **P1-AC-05**: explore-metrics.schema.json matches A.5c with nested structure for parameter queries
+- [x] **P1-AC-01**: wf-spec folder structure matches Appendix A.1 exactly
+- [x] **P1-AC-02**: wf.yaml content matches A.2; declares explore → specify with parameters
+- [x] **P1-AC-03**: All schemas are valid JSON Schema (test with jsonschema library)
+- [x] **P1-AC-03b**: wf.yaml validates against wf.schema.json (self-documenting wf-spec)
+- [x] **P1-AC-04**: specify/prompt/main.md has no `$ARGUMENTS`, `--simple`, or `/plan-*` references
+- [x] **P1-AC-05**: explore-metrics.schema.json matches A.5c with nested structure for parameter queries
 
 ---
 
@@ -1885,9 +1885,41 @@ enhance/sample/sample_1/test-fixtures/
 
 ## Change Footnotes Ledger
 
-[^1]: [To be added during implementation via plan-6a]
-[^2]: [To be added during implementation via plan-6a]
-[^3]: [To be added during implementation via plan-6a]
+[^1]: Phase 1 Task 1.1 - Created wf-spec directory structure
+  - `file:enhance/sample/sample_1/wf-spec/`
+
+[^2]: Phase 1 Task 1.2 - Created wf.yaml workflow definition
+  - `file:enhance/sample/sample_1/wf-spec/wf.yaml`
+
+[^3]: Phase 1 Task 1.3 - Created wf.md bootstrap template
+  - `file:enhance/sample/sample_1/wf-spec/templates/wf.md`
+
+[^4]: Phase 1 Task 1.4 - Created wf-result.schema.json
+  - `file:enhance/sample/sample_1/wf-spec/schemas/wf-result.schema.json`
+
+[^5]: Phase 1 Task 1.4b - Created wf.schema.json
+  - `file:enhance/sample/sample_1/wf-spec/schemas/wf.schema.json`
+
+[^6]: Phase 1 Task 1.5 - Copied explore stage assets
+  - `file:enhance/sample/sample_1/wf-spec/stages/explore/prompt/main.md`
+  - `file:enhance/sample/sample_1/wf-spec/stages/explore/schemas/findings.schema.json`
+  - `file:enhance/sample/sample_1/wf-spec/stages/explore/schemas/read-files.schema.json`
+
+[^7]: Phase 1 Task 1.6 - Created explore-metrics.schema.json
+  - `file:enhance/sample/sample_1/wf-spec/stages/explore/schemas/explore-metrics.schema.json`
+
+[^8]: Phase 1 Task 1.7 - Created spec-metadata.schema.json
+  - `file:enhance/sample/sample_1/wf-spec/stages/specify/schemas/spec-metadata.schema.json`
+
+[^9]: Phase 1 Task 1.8 - Copied read-files.schema.json to specify
+  - `file:enhance/sample/sample_1/wf-spec/stages/specify/schemas/read-files.schema.json`
+
+[^10]: Phase 1 Task 1.9 - Transformed specify main.md with Stage Context
+  - `file:enhance/sample/sample_1/wf-spec/stages/specify/prompt/main.md`
+
+[^11]: Phase 1 Task 1.10 - Verified wf-spec completeness
+  - All files parse correctly (YAML, JSON)
+  - wf.yaml validates against wf.schema.json
 
 ---
 

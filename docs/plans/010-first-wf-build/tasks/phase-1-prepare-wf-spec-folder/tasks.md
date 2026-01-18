@@ -99,17 +99,17 @@ flowchart TD
     style Specify fill:#F3E5F5,stroke:#7B1FA2
 
     subgraph Phase["Phase 1: Prepare wf-spec Folder"]
-        T001["T001: Create directory structure"]:::pending
-        T002["T002: Create wf.yaml"]:::pending
-        T003["T003: Create wf.md template"]:::pending
-        T004["T004: Create wf-result.schema.json"]:::pending
-        T004b["T004b: Create wf.schema.json"]:::pending
-        T005["T005: Copy explore assets"]:::pending
-        T006["T006: Create explore-metrics.schema.json"]:::pending
-        T007["T007: Create spec-metadata.schema.json"]:::pending
-        T008["T008: Copy read-files.schema to specify"]:::pending
-        T009["T009: Transform specify main.md"]:::pending
-        T010["T010: Verify completeness"]:::pending
+        T001["T001: Create directory structure ✓"]:::completed
+        T002["T002: Create wf.yaml ✓"]:::completed
+        T003["T003: Create wf.md template ✓"]:::completed
+        T004["T004: Create wf-result.schema.json ✓"]:::completed
+        T004b["T004b: Create wf.schema.json ✓"]:::completed
+        T005["T005: Copy explore assets ✓"]:::completed
+        T006["T006: Create explore-metrics.schema.json ✓"]:::completed
+        T007["T007: Create spec-metadata.schema.json ✓"]:::completed
+        T008["T008: Copy read-files.schema to specify ✓"]:::completed
+        T009["T009: Transform specify main.md ✓"]:::completed
+        T010["T010: Verify completeness ✓"]:::completed
 
         T001 --> T002
         T001 --> T003
@@ -131,29 +131,29 @@ flowchart TD
     end
 
     subgraph WfSpec["wf-spec Root"]
-        F_wfyaml["wf.yaml"]:::pending
+        F_wfyaml["wf.yaml ✓"]:::completed
     end
 
     subgraph Templates["templates/"]
-        F_wfmd["wf.md"]:::pending
+        F_wfmd["wf.md ✓"]:::completed
     end
 
     subgraph Schemas["schemas/"]
-        F_wfresult["wf-result.schema.json"]:::pending
-        F_wfschema["wf.schema.json"]:::pending
+        F_wfresult["wf-result.schema.json ✓"]:::completed
+        F_wfschema["wf.schema.json ✓"]:::completed
     end
 
     subgraph Explore["stages/explore/"]
-        F_explore_main["prompt/main.md"]:::pending
-        F_findings["schemas/findings.schema.json"]:::pending
-        F_metrics["schemas/explore-metrics.schema.json"]:::pending
-        F_manifest_e["schemas/read-files.schema.json"]:::pending
+        F_explore_main["prompt/main.md ✓"]:::completed
+        F_findings["schemas/findings.schema.json ✓"]:::completed
+        F_metrics["schemas/explore-metrics.schema.json ✓"]:::completed
+        F_manifest_e["schemas/read-files.schema.json ✓"]:::completed
     end
 
     subgraph Specify["stages/specify/"]
-        F_specify_main["prompt/main.md"]:::pending
-        F_specmeta["schemas/spec-metadata.schema.json"]:::pending
-        F_manifest_s["schemas/read-files.schema.json"]:::pending
+        F_specify_main["prompt/main.md ✓"]:::completed
+        F_specmeta["schemas/spec-metadata.schema.json ✓"]:::completed
+        F_manifest_s["schemas/read-files.schema.json ✓"]:::completed
     end
 
     T001 -.-> F_wfyaml
@@ -176,17 +176,17 @@ flowchart TD
 
 | Task | Component(s) | Files | Status | Comment |
 |------|-------------|-------|--------|---------|
-| T001 | Directory Structure | wf-spec/, templates/, schemas/, stages/ | ⬜ Pending | mkdir -p for all paths per A.1 |
-| T002 | Workflow Definition | wf.yaml | ⬜ Pending | Single source of truth per A.2 |
-| T003 | Shared Template | templates/wf.md | ⬜ Pending | Bootstrap prompt per A.4 |
-| T004 | Shared Schema | schemas/wf-result.schema.json | ⬜ Pending | Result schema per A.5 |
-| T004b | Workflow Schema | schemas/wf.schema.json | ⬜ Pending | Validates wf.yaml; enables immediate validation |
-| T005 | Explore Stage | stages/explore/prompt/, schemas/ | ⬜ Pending | Copy main.md + findings.schema; CREATE read-files.schema from A.5b |
-| T006 | Parameter Demo | stages/explore/schemas/explore-metrics.schema.json | ⬜ Pending | New schema per A.5c |
-| T007 | Specify Schema | stages/specify/schemas/spec-metadata.schema.json | ⬜ Pending | Output schema per A.6 |
-| T008 | Read-files Schema Copy | stages/specify/schemas/read-files.schema.json | ⬜ Pending | Copy from explore (cross-cutting) |
-| T009 | Specify Prompt | stages/specify/prompt/main.md | ⬜ Pending | Transform /plan-1b-specify.md per A.7 |
-| T010 | Verification | All files | ⬜ Pending | Parse YAML/JSON, check structure |
+| T001 | Directory Structure | wf-spec/, templates/, schemas/, stages/ | ✅ Complete | mkdir -p for all paths per A.1 |
+| T002 | Workflow Definition | wf.yaml | ✅ Complete | Single source of truth per A.2 |
+| T003 | Shared Template | templates/wf.md | ✅ Complete | Bootstrap prompt per A.4 |
+| T004 | Shared Schema | schemas/wf-result.schema.json | ✅ Complete | Result schema per A.5 |
+| T004b | Workflow Schema | schemas/wf.schema.json | ✅ Complete | Validates wf.yaml; enables immediate validation |
+| T005 | Explore Stage | stages/explore/prompt/, schemas/ | ✅ Complete | Copy main.md + findings.schema; CREATE read-files.schema from A.5b |
+| T006 | Parameter Demo | stages/explore/schemas/explore-metrics.schema.json | ✅ Complete | New schema per A.5c |
+| T007 | Specify Schema | stages/specify/schemas/spec-metadata.schema.json | ✅ Complete | Output schema per A.6 |
+| T008 | Read-files Schema Copy | stages/specify/schemas/read-files.schema.json | ✅ Complete | Copy from explore (cross-cutting) |
+| T009 | Specify Prompt | stages/specify/prompt/main.md | ✅ Complete | Transform /plan-1b-specify.md per A.7 |
+| T010 | Verification | All files | ✅ Complete | Parse YAML/JSON, check structure |
 
 ---
 
@@ -194,17 +194,17 @@ flowchart TD
 
 | Status | ID | Task | CS | Type | Dependencies | Absolute Path(s) | Validation | Subtasks | Notes |
 |--------|------|------|----|------|--------------|------------------|------------|----------|-------|
-| [ ] | T001 | Create wf-spec directory structure | 1 | Setup | – | `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/`, `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/templates/`, `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/schemas/`, `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/explore/prompt/`, `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/explore/schemas/`, `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/specify/prompt/`, `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/specify/schemas/` | All directories exist; `ls -R` shows structure matching A.1 | – | mkdir -p for all paths |
-| [ ] | T002 | Create wf.yaml workflow definition | 2 | Setup | T001 | `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/wf.yaml` | YAML parses without error; content matches A.2 exactly including stages, inputs, outputs, parameters, output_parameters | – | **Single source of truth** - all stage definitions inline |
-| [ ] | T003 | Create shared wf.md bootstrap template | 1 | Setup | T001 | `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/templates/wf.md` | Content matches A.4 exactly; valid markdown | – | Shared prompt copied to each stage |
-| [ ] | T004 | Create shared wf-result.schema.json | 1 | Setup | T001 | `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/schemas/wf-result.schema.json` | Valid JSON Schema; matches A.5 exactly | – | Required output schema for all stages |
-| [ ] | T004b | Create wf.schema.json for wf.yaml validation | 1 | Setup | T001 | `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/schemas/wf.schema.json` | Valid JSON Schema; matches A.3 exactly; can validate wf.yaml | – | Enables immediate wf.yaml validation; self-documenting wf-spec |
-| [ ] | T005 | Copy explore stage assets from existing 01-explore | 2 | Setup | T001 | Source: `/Users/jordanknight/github/tools/enhance/sample/sample_1/runs/run-2024-01-18-001/stages/01-explore/` → Target: `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/explore/` | prompt/main.md exists; schemas/findings.schema.json exists; schemas/read-files.schema.json exists | – | Copy: prompt/main.md, schemas/findings.schema.json; CREATE read-files.schema.json from A.5b (don't copy old manifest.schema.json); **After copy**: update main.md line 1 "01-explore" → "explore", line 7 ".json" → ".yaml" |
-| [ ] | T006 | Create explore-metrics.schema.json | 2 | Setup | T005 | `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/explore/schemas/explore-metrics.schema.json` | Valid JSON Schema; matches A.5c exactly; supports nested queries for parameters | – | Nested data for parameter extraction demo |
-| [ ] | T007 | Create specify spec-metadata.schema.json | 2 | Setup | T002 | `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/specify/schemas/spec-metadata.schema.json` | Valid JSON Schema; matches A.6 exactly | – | Output schema for specify stage |
-| [ ] | T008 | Copy read-files.schema.json to specify | 1 | Setup | T005 | Source: `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/explore/schemas/read-files.schema.json` → Target: `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/specify/schemas/read-files.schema.json` | Files are identical; specify has read-files schema | – | Runtime read tracking schema (cross-cutting) |
-| [ ] | T009 | Transform /plan-1b-specify.md to main.md | 2 | Setup | T002 | Source: `/Users/jordanknight/github/tools/agents/commands/plan-1b-specify.md` → Target: `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/specify/prompt/main.md` | Content matches A.7; no `$ARGUMENTS`; no `--simple`; no `/plan-*` refs; HAS sections: "External Research", "Unresolved Research", "Phases (for CS-4+" | – | Remove command infra; restore research tracking |
-| [ ] | T010 | Verify wf-spec completeness | 1 | Test | T001-T009 | `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/` | All files exist per A.1; all JSON parses; all YAML parses; structure complete | – | Manual verification |
+| [x] | T001 | Create wf-spec directory structure | 1 | Setup | – | `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/`, `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/templates/`, `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/schemas/`, `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/explore/prompt/`, `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/explore/schemas/`, `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/specify/prompt/`, `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/specify/schemas/` | All directories exist; `ls -R` shows structure matching A.1 | – | mkdir -p for all paths |
+| [x] | T002 | Create wf.yaml workflow definition | 2 | Setup | T001 | `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/wf.yaml` | YAML parses without error; content matches A.2 exactly including stages, inputs, outputs, parameters, output_parameters | – | **Single source of truth** - all stage definitions inline |
+| [x] | T003 | Create shared wf.md bootstrap template | 1 | Setup | T001 | `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/templates/wf.md` | Content matches A.4 exactly; valid markdown | – | Shared prompt copied to each stage |
+| [x] | T004 | Create shared wf-result.schema.json | 1 | Setup | T001 | `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/schemas/wf-result.schema.json` | Valid JSON Schema; matches A.5 exactly | – | Required output schema for all stages |
+| [x] | T004b | Create wf.schema.json for wf.yaml validation | 1 | Setup | T001 | `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/schemas/wf.schema.json` | Valid JSON Schema; matches A.3 exactly; can validate wf.yaml | – | Enables immediate wf.yaml validation; self-documenting wf-spec |
+| [x] | T005 | Copy explore stage assets from existing 01-explore | 2 | Setup | T001 | Source: `/Users/jordanknight/github/tools/enhance/sample/sample_1/runs/run-2024-01-18-001/stages/01-explore/` → Target: `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/explore/` | prompt/main.md exists; schemas/findings.schema.json exists; schemas/read-files.schema.json exists | – | Copy: prompt/main.md, schemas/findings.schema.json; CREATE read-files.schema.json from A.5b (don't copy old manifest.schema.json); **After copy**: update main.md line 1 "01-explore" → "explore", line 7 ".json" → ".yaml" |
+| [x] | T006 | Create explore-metrics.schema.json | 2 | Setup | T005 | `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/explore/schemas/explore-metrics.schema.json` | Valid JSON Schema; matches A.5c exactly; supports nested queries for parameters | – | Nested data for parameter extraction demo |
+| [x] | T007 | Create specify spec-metadata.schema.json | 2 | Setup | T002 | `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/specify/schemas/spec-metadata.schema.json` | Valid JSON Schema; matches A.6 exactly | – | Output schema for specify stage |
+| [x] | T008 | Copy read-files.schema.json to specify | 1 | Setup | T005 | Source: `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/explore/schemas/read-files.schema.json` → Target: `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/specify/schemas/read-files.schema.json` | Files are identical; specify has read-files schema | – | Runtime read tracking schema (cross-cutting) |
+| [x] | T009 | Transform /plan-1b-specify.md to main.md | 2 | Setup | T002 | Source: `/Users/jordanknight/github/tools/agents/commands/plan-1b-specify.md` → Target: `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/stages/specify/prompt/main.md` | Content matches A.7; no `$ARGUMENTS`; no `--simple`; no `/plan-*` refs; HAS sections: "External Research", "Unresolved Research", "Phases (for CS-4+" | – | Remove command infra; restore research tracking |
+| [x] | T010 | Verify wf-spec completeness | 1 | Test | T001-T009 | `/Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/` | All files exist per A.1; all JSON parses; all YAML parses; structure complete | – | Manual verification |
 
 ---
 
@@ -424,7 +424,17 @@ grep -q "Phases (for CS-4+" stages/specify/prompt/main.md && echo "PASS: Has Pha
 
 | Footnote | Task | Change Description | Date |
 |----------|------|-------------------|------|
-| | | | |
+| [^1] | T001 | Created wf-spec directory structure | 2026-01-18 |
+| [^2] | T002 | Created wf.yaml workflow definition | 2026-01-18 |
+| [^3] | T003 | Created wf.md bootstrap template | 2026-01-18 |
+| [^4] | T004 | Created wf-result.schema.json | 2026-01-18 |
+| [^5] | T004b | Created wf.schema.json | 2026-01-18 |
+| [^6] | T005 | Copied explore stage assets | 2026-01-18 |
+| [^7] | T006 | Created explore-metrics.schema.json | 2026-01-18 |
+| [^8] | T007 | Created spec-metadata.schema.json | 2026-01-18 |
+| [^9] | T008 | Copied read-files.schema.json to specify | 2026-01-18 |
+| [^10] | T009 | Transformed specify main.md with Stage Context | 2026-01-18 |
+| [^11] | T010 | Verified wf-spec completeness | 2026-01-18 |
 
 _Populated by plan-6 during implementation._
 

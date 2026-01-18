@@ -1,0 +1,165 @@
+# Workflow Definition for explore-and-specify pipeline
+# Schema: ./schemas/wf.schema.json
+
+version: "1.0"
+
+metadata:
+  name: "explore-specify"
+  description: "Two-stage workflow: research codebase, then create feature specification"
+  author: "chainglass"
+
+stages:
+  # ============================================================
+  # STAGE: explore
+  # ============================================================
+  - id: "explore"
+    name: "Codebase Research"
+    description: "Deep-dive research into existing codebase functionality"
+
+    inputs:
+      required:
+        - name: "user-description.md"
+          path: "inputs/user-description.md"
+          description: "User-provided research query or feature description"
+      optional: []
+
+    outputs:
+      files:
+        - name: "research-dossier.md"
+          path: "run/output-files/research-dossier.md"
+          description: "Comprehensive research report"
+      data:
+        - name: "wf-result.json"
+          path: "run/output-data/wf-result.json"
+          schema: "schemas/wf-result.schema.json"
+          description: "Stage execution status"
+          required: true
+        - name: "findings.json"
+          path: "run/output-data/findings.json"
+          schema: "schemas/findings.schema.json"
+          description: "Structured findings for downstream consumption"
+          required: true
+        - name: "explore-metrics.json"
+          path: "run/output-data/explore-metrics.json"
+          schema: "schemas/explore-metrics.schema.json"
+          description: "Nested metrics data for parameter extraction demo"
+          required: true
+
+    # Output parameters published by this stage for downstream consumption
+    # Stage writes these to run/output-data/output-params.json at completion
+    output_parameters:
+      - name: "total_findings"
+        description: "Total number of findings discovered"
+        source: "run/output-data/explore-metrics.json"
+        query: "summary.total_findings"
+      - name: "critical_count"
+        description: "Count of critical findings"
+        source: "run/output-data/explore-metrics.json"
+        query: "summary.by_impact.critical"
+      - name: "top_component"
+        description: "Most affected component name"
+        source: "run/output-data/explore-metrics.json"
+        query: "components[0].name"
+      - name: "complexity_score"
+        description: "Suggested complexity score"
+        source: "run/output-data/explore-metrics.json"
+        query: "recommendations.complexity.suggested_score"
+
+    prompt:
+      entry: "prompt/wf.md"
+      main: "prompt/main.md"
+
+  # ============================================================
+  # STAGE: specify
+  # ============================================================
+  - id: "specify"
+    name: "Feature Specification"
+    description: "Create feature specification from research findings"
+
+    inputs:
+      required:
+        - name: "research-dossier.md"
+          path: "inputs/research-dossier.md"
+          description: "Research report from explore stage"
+          from_stage: "explore"
+          source: "run/output-files/research-dossier.md"
+        - name: "findings.json"
+          path: "inputs/findings.json"
+          description: "Structured findings from explore stage"
+          from_stage: "explore"
+          source: "run/output-data/findings.json"
+      optional:
+        - name: "user-description.md"
+          path: "inputs/user-description.md"
+          description: "Optional additional context from user"
+
+    # Parameters from prior stage's published output_parameters
+    # References by name - no need to know internal JSON structure
+    parameters:
+      - name: "total_findings"
+        description: "Number of findings from explore stage"
+        from_stage: "explore"
+        output_parameter: "total_findings"
+      - name: "critical_count"
+        description: "Count of critical findings"
+        from_stage: "explore"
+        output_parameter: "critical_count"
+      - name: "top_component"
+        description: "Most affected component name"
+        from_stage: "explore"
+        output_parameter: "top_component"
+      - name: "complexity_score"
+        description: "Suggested complexity score"
+        from_stage: "explore"
+        output_parameter: "complexity_score"
+
+    outputs:
+      files:
+        - name: "spec.md"
+          path: "run/output-files/spec.md"
+          description: "Feature specification document"
+      data:
+        - name: "wf-result.json"
+          path: "run/output-data/wf-result.json"
+          schema: "schemas/wf-result.schema.json"
+          description: "Stage execution status"
+          required: true
+        - name: "spec-metadata.json"
+          path: "run/output-data/spec-metadata.json"
+          schema: "schemas/spec-metadata.schema.json"
+          description: "Structured specification metadata"
+          required: true
+
+    # Output parameters published by this stage for downstream consumption
+    output_parameters:
+      - name: "complexity_score"
+        description: "Final complexity score (CS-1 through CS-5)"
+        source: "run/output-data/spec-metadata.json"
+        query: "complexity.score"
+      - name: "complexity_total"
+        description: "Total complexity points (0-12)"
+        source: "run/output-data/spec-metadata.json"
+        query: "complexity.total"
+      - name: "unresolved_research_count"
+        description: "Number of unresolved research topics"
+        source: "run/output-data/spec-metadata.json"
+        query: "research.unresolved_count"
+      - name: "goals_count"
+        description: "Number of goals defined"
+        source: "run/output-data/spec-metadata.json"
+        query: "goals.length"
+      - name: "phases"
+        description: "Suggested phases for CS-4+ features (null if CS-1 to CS-3)"
+        source: "run/output-data/spec-metadata.json"
+        query: "complexity.phases"
+
+    prompt:
+      entry: "prompt/wf.md"
+      main: "prompt/main.md"
+
+# Shared resources copied to each stage during compose
+shared_templates:
+  - source: "templates/wf.md"
+    target: "prompt/wf.md"
+  - source: "schemas/wf-result.schema.json"
+    target: "schemas/wf-result.schema.json"

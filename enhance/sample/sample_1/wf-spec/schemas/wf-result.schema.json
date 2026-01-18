@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wf-result.schema.json",
+  "title": "Workflow Stage Result",
+  "description": "Stage execution status and metadata. Required output for all stages.",
+  "type": "object",
+  "required": ["status", "completed_at", "stage_id", "error", "metrics"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["success", "failure", "partial"],
+      "description": "Stage completion status"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp of completion"
+    },
+    "stage_id": {
+      "type": "string",
+      "description": "Stage identifier from wf.yaml"
+    },
+    "error": {
+      "type": ["string", "null"],
+      "description": "Error message if status != success, otherwise null"
+    },
+    "metrics": {
+      "type": "object",
+      "description": "Stage-specific metrics",
+      "additionalProperties": true
+    }
+  }
+}
