@@ -23,7 +23,7 @@
    - [A.3 wf.schema.json - Schema for wf.yaml](#a3-wfschemajson---schema-for-wfyaml-validation)
    - [A.4 wf.md - Shared Bootstrap Prompt](#a4-wfmd---shared-bootstrap-prompt-template)
    - [A.5 wf-result.schema.json - Shared Result Schema](#a5-wf-resultschemajson---shared-result-schema)
-   - [A.5b manifest.schema.json - File Operations Log](#a5b-manifestschemajson---file-operations-log-required-for-all-stages)
+   - [A.5b read-files.schema.json - Runtime Read Tracking](#a5b-read-filesschemajson---runtime-read-tracking)
    - [A.5c explore-metrics.schema.json - Parameter Extraction Demo](#a5c-explore-metricsschemajson---nested-data-for-parameter-extraction)
    - [A.5d output-params.schema.json - Published Output Parameters](#a5d-output-paramsschemajson---published-output-parameters)
    - [A.6 spec-metadata.schema.json](#a6-spec-metadataschemajson---specify-output-schema)
@@ -63,7 +63,7 @@
 | 07 | High | **Shared templates: wf.md + wf-result.schema.json** - Copied to each stage during compose | Store in wf-spec/templates/ and wf-spec/schemas/; copy during compose |
 | 08 | High | **validate_stage_outputs.py reuse** - Existing validator at enhance/tools/ | Create Python wrapper in CLI; avoid subprocess; use same output format |
 | 09 | High | **Stage IDs are slugs** - Order defined in wf.yaml, not prefix numbers | Use "explore", "specify" as IDs; wf.yaml declares execution order |
-| 10 | Medium | **Multiple outputs required (PL-12)** - wf-result.json + findings.json + manifest.json | Validate all declared outputs exist before marking stage complete |
+| 10 | Medium | **Multiple outputs required (PL-12)** - wf-result.json + findings.json + read-files.json | Validate all declared outputs exist before marking stage complete |
 | 11 | Medium | **Prompt transformation pattern (PL-03)** - Remove YAML frontmatter, argument parsing, STOP AND WAIT | Apply consistent pattern to 02-specify transformation |
 | 12 | Medium | **Idempotent compose (AC-07)** - Running twice produces identical output | Use deterministic ordering; only timestamps may differ in wf-run.json |
 | 13 | Medium | **typer for CLI (user decision)** - Overrides PL-01 argparse pattern | Use typer with type hints; auto-generated help |
@@ -87,11 +87,12 @@
 | [ ] | 1.2 | Create wf.yaml workflow definition | 2 | Setup | 1.1 | `enhance/sample/sample_1/wf-spec/wf.yaml` | YAML parses; content matches A.2 exactly | **Single source of truth** - all stage definitions inline |
 | [ ] | 1.3 | Create shared wf.md bootstrap template | 1 | Setup | 1.1 | `enhance/sample/sample_1/wf-spec/templates/wf.md` | Content matches A.4 exactly | Shared prompt for all stages |
 | [ ] | 1.4 | Create shared wf-result.schema.json | 1 | Setup | 1.1 | `enhance/sample/sample_1/wf-spec/schemas/wf-result.schema.json` | Valid JSON Schema; matches A.5 | Required output for all stages |
+| [ ] | 1.4b | Create wf.schema.json for wf.yaml validation | 1 | Setup | 1.1 | `enhance/sample/sample_1/wf-spec/schemas/wf.schema.json` | Valid JSON Schema; matches A.3 | Enables immediate wf.yaml validation |
 | [ ] | 1.5 | Copy explore stage assets from existing 01-explore | 2 | Setup | 1.1 | Source: `enhance/sample/sample_1/runs/run-2024-01-18-001/stages/01-explore/` → Target: `enhance/sample/sample_1/wf-spec/stages/explore/` | prompt/main.md, schemas/ present | Copy prompts and schemas only (config is in wf.yaml) |
 | [ ] | 1.6 | Create explore-metrics.schema.json | 2 | Setup | 1.5 | `enhance/sample/sample_1/wf-spec/stages/explore/schemas/explore-metrics.schema.json` | Valid JSON Schema; matches A.5c | Nested data for parameter extraction |
 | [ ] | 1.7 | Create specify spec-metadata.schema.json | 2 | Setup | 1.2 | `enhance/sample/sample_1/wf-spec/stages/specify/schemas/spec-metadata.schema.json` | Valid JSON Schema; matches A.6 | Output schema for specify |
-| [ ] | 1.8 | Copy manifest.schema.json to specify | 1 | Setup | 1.5 | `enhance/sample/sample_1/wf-spec/stages/specify/schemas/manifest.schema.json` | Identical to explore's manifest schema | Runtime tracking schema |
-| [ ] | 1.9 | Transform /plan-1b-specify.md to main.md | 2 | Setup | 1.2 | Source: `agents/commands/plan-1b-specify.md` → Target: `enhance/sample/sample_1/wf-spec/stages/specify/prompt/main.md` | Content matches A.7; no $ARGUMENTS, no command refs | Remove ~50 lines of command infra |
+| [ ] | 1.8 | Copy read-files.schema.json to specify | 1 | Setup | 1.5 | `enhance/sample/sample_1/wf-spec/stages/specify/schemas/read-files.schema.json` | Identical to explore's manifest schema | Runtime tracking schema |
+| [ ] | 1.9 | Transform /plan-1b-specify.md to main.md | 2 | Setup | 1.2 | Source: `agents/commands/plan-1b-specify.md` → Target: `enhance/sample/sample_1/wf-spec/stages/specify/prompt/main.md` | Content matches A.7; no $ARGUMENTS, no command refs; HAS sections: "External Research", "Unresolved Research", "Phases (for CS-4+" | Remove command infra; restore research tracking |
 | [ ] | 1.10 | Verify wf-spec completeness | 1 | Test | 1.1-1.9 | -- | All files exist; all JSON/YAML parses; structure matches A.1 | Manual verification |
 
 ### Phase 1 Acceptance Criteria
@@ -99,6 +100,7 @@
 - [ ] **P1-AC-01**: wf-spec folder structure matches Appendix A.1 exactly
 - [ ] **P1-AC-02**: wf.yaml content matches A.2; declares explore → specify with parameters
 - [ ] **P1-AC-03**: All schemas are valid JSON Schema (test with jsonschema library)
+- [ ] **P1-AC-03b**: wf.yaml validates against wf.schema.json (self-documenting wf-spec)
 - [ ] **P1-AC-04**: specify/prompt/main.md has no `$ARGUMENTS`, `--simple`, or `/plan-*` references
 - [ ] **P1-AC-05**: explore-metrics.schema.json matches A.5c with nested structure for parameter queries
 
@@ -268,13 +270,13 @@ enhance/sample/sample_1/wf-spec/
     │   └── schemas/
     │       ├── findings.schema.json        # Output schema
     │       ├── explore-metrics.schema.json # Nested data for parameter extraction (A.5c)
-    │       └── manifest.schema.json        # Runtime tracking schema
+    │       └── read-files.schema.json        # Runtime tracking schema
     └── specify/
         ├── prompt/
         │   └── main.md               # Transformed from /plan-1b-specify.md (A.8)
         └── schemas/
             ├── spec-metadata.schema.json  # Output schema (A.7)
-            └── manifest.schema.json       # Runtime tracking schema
+            └── read-files.schema.json       # Runtime tracking schema
 ```
 
 **Note**: No `stage-config.json` in wf-spec - stage definitions live in `wf.yaml`. During compose, each stage's config is extracted to `stage-config.yaml` in the run folder.
@@ -417,6 +419,29 @@ stages:
           schema: "schemas/spec-metadata.schema.json"
           description: "Structured specification metadata"
           required: true
+
+    # Output parameters published by this stage for downstream consumption
+    output_parameters:
+      - name: "complexity_score"
+        description: "Final complexity score (CS-1 through CS-5)"
+        source: "run/output-data/spec-metadata.json"
+        query: "complexity.score"
+      - name: "complexity_total"
+        description: "Total complexity points (0-12)"
+        source: "run/output-data/spec-metadata.json"
+        query: "complexity.total"
+      - name: "unresolved_research_count"
+        description: "Number of unresolved research topics"
+        source: "run/output-data/spec-metadata.json"
+        query: "research.unresolved_count"
+      - name: "goals_count"
+        description: "Number of goals defined"
+        source: "run/output-data/spec-metadata.json"
+        query: "goals.length"
+      - name: "phases"
+        description: "Suggested phases for CS-4+ features (null if CS-1 to CS-3)"
+        source: "run/output-data/spec-metadata.json"
+        query: "complexity.phases"
 
     prompt:
       entry: "prompt/wf.md"
@@ -639,7 +664,14 @@ All outputs go under `../run/`:
   - Any other structured data outputs
 
 - **Runtime Tracking**: `../run/runtime-inputs/`
-  - Record what files you actually read during execution
+  - Write `read-files.json` **as you work** (not just at the end)
+  - Log every file you READ from the codebase or inputs
+  - This creates an audit trail: "what inputs influenced this stage's outputs"
+  - See `../schemas/read-files.schema.json` for the format
+  - Example entry (append each time you read a file):
+    ```json
+    {"path": "/abs/path/to/file.py", "timestamp": "2026-01-18T10:02:00Z", "purpose": "Examine auth logic", "lines": "all"}
+    ```
 
 ## Stage Completion
 
@@ -702,20 +734,24 @@ Each output declared in `stage-config.yaml` has a corresponding JSON Schema in `
 }
 ```
 
-### A.5b manifest.schema.json - File Operations Log (Required for All Stages)
+### A.5b read-files.schema.json - Runtime Read Tracking
 
-**File**: `enhance/sample/sample_1/wf-spec/stages/explore/schemas/manifest.schema.json` (copied to each stage)
+**File**: `enhance/sample/sample_1/wf-spec/stages/explore/schemas/read-files.schema.json` (copied to each stage)
 
-Every stage must write a `manifest.json` that logs all file operations performed during execution. This is mandatory for audit, debugging, and reproducibility.
+Every stage must write a `read-files.json` that logs **what files the agent read** during execution. This creates an audit trail of "what inputs influenced this stage's outputs."
+
+**Why reads only?** File writes, updates, and deletions are tracked by git. The value of read-files.json is knowing what the agent actually consumed—which codebase files, which inputs, which configs influenced the stage's reasoning.
+
+**Write as you go**: Agents should append to read-files.json each time they read a file, not batch it at the end. This ensures the audit trail is preserved even if the stage fails mid-execution.
 
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "manifest.schema.json",
-  "title": "Stage File Operations Manifest",
-  "description": "Mandatory log of all file operations performed during stage execution",
+  "$id": "read-files.schema.json",
+  "title": "Stage Runtime Read Log",
+  "description": "Log of files read during stage execution - tracks what inputs influenced the stage's outputs",
   "type": "object",
-  "required": ["stage_id", "operations"],
+  "required": ["stage_id", "reads"],
   "properties": {
     "stage_id": {
       "type": "string",
@@ -726,80 +762,56 @@ Every stage must write a `manifest.json` that logs all file operations performed
       "format": "date-time",
       "description": "When stage execution started"
     },
-    "completed_at": {
-      "type": "string",
-      "format": "date-time",
-      "description": "When stage execution completed"
-    },
-    "operations": {
+    "reads": {
       "type": "array",
-      "description": "All file operations in chronological order",
+      "description": "Files read in chronological order - append as you go",
       "items": {
         "type": "object",
-        "required": ["op", "path", "timestamp"],
+        "required": ["path", "timestamp"],
         "properties": {
-          "op": {
-            "type": "string",
-            "enum": ["read", "write", "update", "delete", "create"],
-            "description": "Operation type"
-          },
           "path": {
             "type": "string",
-            "description": "File path (relative to stage root or absolute for codebase files)"
+            "description": "Absolute path to the file read"
           },
           "timestamp": {
             "type": "string",
             "format": "date-time",
-            "description": "When operation occurred"
+            "description": "When the file was read"
           },
           "purpose": {
             "type": "string",
-            "description": "Why this operation was performed"
+            "description": "Why this file was read (brief context)"
           },
-          "bytes": {
-            "type": "integer",
-            "description": "File size in bytes (for write/create operations)"
+          "lines": {
+            "type": "string",
+            "description": "Line range if partial read (e.g., '1-50', 'all')"
           }
         }
       }
     },
-    "summary": {
-      "type": "object",
-      "description": "Operation counts by type",
-      "properties": {
-        "read": {"type": "integer"},
-        "write": {"type": "integer"},
-        "update": {"type": "integer"},
-        "delete": {"type": "integer"},
-        "create": {"type": "integer"}
-      }
+    "total_reads": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total count of files read"
     }
   }
 }
 ```
 
-**Example manifest.json**:
+**Example read-files.json**:
 
 ```json
 {
   "stage_id": "explore",
   "started_at": "2026-01-18T10:00:00Z",
-  "completed_at": "2026-01-18T10:15:00Z",
-  "operations": [
-    {"op": "read", "path": "inputs/user-description.md", "timestamp": "2026-01-18T10:00:01Z", "purpose": "Load user query"},
-    {"op": "read", "path": "/abs/path/to/src/auth/login.py", "timestamp": "2026-01-18T10:02:00Z", "purpose": "Examine auth implementation"},
-    {"op": "read", "path": "/abs/path/to/src/auth/session.py", "timestamp": "2026-01-18T10:03:00Z", "purpose": "Examine session handling"},
-    {"op": "create", "path": "run/output-files/research-dossier.md", "timestamp": "2026-01-18T10:10:00Z", "purpose": "Write research report", "bytes": 15420},
-    {"op": "create", "path": "run/output-data/findings.json", "timestamp": "2026-01-18T10:12:00Z", "purpose": "Write structured findings", "bytes": 8230},
-    {"op": "create", "path": "run/output-data/wf-result.json", "timestamp": "2026-01-18T10:14:00Z", "purpose": "Write stage completion status", "bytes": 312}
+  "reads": [
+    {"path": "inputs/user-description.md", "timestamp": "2026-01-18T10:00:01Z", "purpose": "Load user query", "lines": "all"},
+    {"path": "/Users/dev/project/src/auth/login.py", "timestamp": "2026-01-18T10:02:00Z", "purpose": "Examine auth implementation", "lines": "all"},
+    {"path": "/Users/dev/project/src/auth/session.py", "timestamp": "2026-01-18T10:03:00Z", "purpose": "Examine session handling", "lines": "1-150"},
+    {"path": "/Users/dev/project/src/auth/tokens.py", "timestamp": "2026-01-18T10:04:30Z", "purpose": "Understand token refresh logic", "lines": "45-120"},
+    {"path": "/Users/dev/project/tests/test_auth.py", "timestamp": "2026-01-18T10:06:00Z", "purpose": "Check existing test patterns", "lines": "all"}
   ],
-  "summary": {
-    "read": 3,
-    "write": 0,
-    "update": 0,
-    "delete": 0,
-    "create": 3
-  }
+  "total_reads": 5
 }
 ```
 
@@ -1010,12 +1022,18 @@ Written by `chainglass validate` when a stage has `output_parameters` declared a
     },
     "complexity": {
       "type": "object",
-      "required": ["score", "breakdown"],
+      "required": ["score", "total", "breakdown"],
       "properties": {
         "score": {
           "type": "string",
           "pattern": "^CS-[1-5]$",
           "description": "Complexity score CS-1 through CS-5"
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 12,
+          "description": "Total complexity points (S+I+D+N+F+T)"
         },
         "breakdown": {
           "type": "object",
@@ -1034,6 +1052,11 @@ Written by `chainglass validate` when a stage has `output_parameters` declared a
           "minimum": 0,
           "maximum": 1,
           "description": "Confidence in complexity assessment"
+        },
+        "phases": {
+          "type": ["array", "null"],
+          "items": {"type": "string"},
+          "description": "Suggested phases for CS-4+ features (null if CS-1 to CS-3)"
         }
       }
     },
@@ -1095,14 +1118,32 @@ Written by `chainglass validate` when a stage has `output_parameters` declared a
       "type": "array",
       "items": {"type": "string"}
     },
-    "research_incorporated": {
-      "type": "boolean",
-      "description": "Whether research-dossier.md findings were incorporated"
-    },
-    "findings_count": {
-      "type": "integer",
-      "minimum": 0,
-      "description": "Number of findings from research incorporated"
+    "research": {
+      "type": "object",
+      "required": ["findings_incorporated", "unresolved_count"],
+      "properties": {
+        "findings_incorporated": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of findings from research-dossier.md incorporated"
+        },
+        "external_research_used": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "List of external research sources incorporated"
+        },
+        "unresolved_topics": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Research opportunities identified but not addressed"
+        },
+        "unresolved_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of unresolved research topics"
+        }
+      },
+      "description": "Research incorporation tracking"
     }
   }
 }
@@ -1119,6 +1160,9 @@ This is the transformation of `/plan-1b-specify.md`. Key changes:
 - **REMOVED**: References to other commands (`/plan-2-clarify`, `/plan-1a-explore`)
 - **KEPT**: Core specification structure and content requirements
 - **ADDED**: Stage-aware input/output references
+- **RESTORED**: External Research section (tracks what external research was used)
+- **RESTORED**: Unresolved Research section (flags gaps before architecture phase)
+- **RESTORED**: Phases field for CS-4+ features (rollout/rollback planning)
 
 ```markdown
 # Feature Specification Stage
@@ -1138,7 +1182,7 @@ Write these files:
 - `../run/output-files/spec.md` - The feature specification document
 - `../run/output-data/spec-metadata.json` - Structured metadata (see schema)
 - `../run/output-data/wf-result.json` - Stage completion status
-- `../run/runtime-inputs/manifest.json` - Files you read during execution
+- `../run/runtime-inputs/read-files.json` - Files you read during execution
 
 ## Specification Structure
 
@@ -1183,11 +1227,13 @@ Total = S+I+D+N+F+T → CS mapping: 0-2=CS-1, 3-4=CS-2, 5-7=CS-3, 8-9=CS-4, 10-1
 
 Include:
 - **Score**: CS-{1-5}
+- **Total**: Sum of all dimension scores (0-12)
 - **Breakdown**: S=X, I=X, D=X, N=X, F=X, T=X
 - **Confidence**: 0.00-1.00
 - **Assumptions**: List assumptions made
 - **Dependencies**: External blockers
 - **Risks**: Complexity-related risks
+- **Phases** (CS-4+ only): Suggested implementation phases with feature flags and rollback plan
 
 ### 7. Acceptance Criteria
 Numbered, testable scenarios:
@@ -1210,6 +1256,32 @@ If architectural decisions are implied:
 - Candidate Alternatives (A, B, C)
 - Stakeholders
 
+### 11. External Research (if applicable)
+If `research-dossier.md` references external research that was incorporated:
+- **Incorporated**: List external research sources used (from research-dossier.md)
+- **Key Findings**: Summary of external insights that informed this spec
+- **Applied To**: Which spec sections benefited
+
+### 12. Unresolved Research (if applicable)
+If `research-dossier.md` identified external research opportunities that weren't addressed:
+- **Topics**: List unresolved opportunities from research-dossier.md
+- **Impact**: How this uncertainty affects the spec
+- **Recommendation**: "Consider addressing before architecture phase"
+
+⚠️ If unresolved research exists, add a warning banner after the title:
+```markdown
+⚠️ **Unresolved Research Opportunities**
+The following external research topics were identified but not addressed:
+- [Topic 1]: [Brief description]
+Consider running external research before finalizing architecture.
+```
+
+### 13. Phases (for CS-4+ only)
+If complexity score is CS-4 or CS-5, include:
+- **Suggested Phases**: High-level breakdown of implementation phases
+- **Feature Flags**: Required feature flags for staged rollout
+- **Rollback Plan**: How to safely rollback if issues arise
+
 ## Structured Output
 
 Also write `spec-metadata.json` with the structured data. See `../schemas/spec-metadata.schema.json` for the required format.
@@ -1222,15 +1294,21 @@ Example:
   "mode": "simple",
   "complexity": {
     "score": "CS-3",
+    "total": 5,
     "breakdown": {"S": 1, "I": 1, "D": 1, "N": 1, "F": 0, "T": 1},
-    "confidence": 0.85
+    "confidence": 0.85,
+    "phases": null
   },
   "goals": ["Create compose command", "Create prepare-wf-stage command"],
   "acceptance_criteria": [
     {"id": "AC-01", "description": "compose creates run folder", "testable": true}
   ],
-  "research_incorporated": true,
-  "findings_count": 15
+  "research": {
+    "findings_incorporated": 15,
+    "external_research_used": ["API best practices 2024"],
+    "unresolved_topics": [],
+    "unresolved_count": 0
+  }
 }
 ```
 
@@ -1262,7 +1340,7 @@ Write `wf-result.json`:
 }
 ```
 
-Write `manifest.json` listing all files you read.
+Ensure `read-files.json` is complete (you've been writing to it as you read files).
 ```
 
 ### A.8 Run Folder Structure (Compose Output)
@@ -1287,7 +1365,7 @@ run/run-2026-01-18-001/
     │   │   ├── wf-result.schema.json      # Copied from shared schemas/
     │   │   ├── findings.schema.json       # Copied from stages/explore/schemas/
     │   │   ├── explore-metrics.schema.json # Copied from stages/explore/schemas/
-    │   │   └── manifest.schema.json       # Copied from stages/explore/schemas/
+    │   │   └── read-files.schema.json       # Copied from stages/explore/schemas/
     │   └── stage-config.yaml         # EXTRACTED from wf.yaml during compose
     └── specify/
         ├── inputs/
@@ -1303,7 +1381,7 @@ run/run-2026-01-18-001/
         ├── schemas/
         │   ├── wf-result.schema.json     # Copied from shared schemas/
         │   ├── spec-metadata.schema.json # Copied from stages/specify/schemas/
-        │   └── manifest.schema.json      # Copied from stages/specify/schemas/
+        │   └── read-files.schema.json      # Copied from stages/specify/schemas/
         └── stage-config.yaml         # EXTRACTED from wf.yaml during compose
 ```
 
@@ -1651,9 +1729,9 @@ def validate_stage(stage_dir: Path) -> ValidationResult:
     {"check": "file_exists", "path": "run/output-data/findings.json", "status": "PASS"},
     {"check": "file_not_empty", "path": "run/output-data/findings.json", "status": "PASS"},
     {"check": "schema_valid", "path": "run/output-data/findings.json", "schema": "schemas/findings.schema.json", "status": "PASS"},
-    {"check": "file_exists", "path": "run/runtime-inputs/manifest.json", "status": "PASS"},
-    {"check": "file_not_empty", "path": "run/runtime-inputs/manifest.json", "status": "PASS"},
-    {"check": "schema_valid", "path": "run/runtime-inputs/manifest.json", "schema": "schemas/manifest.schema.json", "status": "PASS"}
+    {"check": "file_exists", "path": "run/runtime-inputs/read-files.json", "status": "PASS"},
+    {"check": "file_not_empty", "path": "run/runtime-inputs/read-files.json", "status": "PASS"},
+    {"check": "schema_valid", "path": "run/runtime-inputs/read-files.json", "schema": "schemas/read-files.schema.json", "status": "PASS"}
   ],
   "output_params_written": true,
   "output_params": {
@@ -1694,12 +1772,12 @@ def validate_stage(stage_dir: Path) -> ValidationResult:
     },
     {
       "check": "schema_valid",
-      "path": "run/runtime-inputs/manifest.json",
-      "schema": "schemas/manifest.schema.json",
+      "path": "run/runtime-inputs/read-files.json",
+      "schema": "schemas/read-files.schema.json",
       "status": "FAIL",
       "message": "Schema validation failed: 'files_read' is a required property",
       "json_path": "",
-      "action": "Fix the JSON structure. Error at '': 'files_read' is a required property. See schemas/manifest.schema.json for required format."
+      "action": "Fix the JSON structure. Error at '': 'files_read' is a required property. See schemas/read-files.schema.json for required format."
     }
   ],
   "summary": "Stage 'explore': 2 checks passed, 3 errors"
@@ -1716,9 +1794,9 @@ def validate_stage(stage_dir: Path) -> ValidationResult:
 │    └─ MISSING: Write this file before completing the stage. │
 │  ✗ run/output-data/findings.json                            │
 │    └─ EMPTY: Write content to this file.                    │
-│  ✗ run/runtime-inputs/manifest.json                         │
+│  ✗ run/runtime-inputs/read-files.json                         │
 │    └─ SCHEMA: 'files_read' is a required property           │
-│       Action: See schemas/manifest.schema.json              │
+│       Action: See schemas/read-files.schema.json              │
 │                                                              │
 │  Result: FAIL (2 passed, 3 errors)                          │
 ╰──────────────────────────────────────────────────────────────╯
@@ -1741,11 +1819,11 @@ enhance/sample/sample_1/test-fixtures/
 │   │   │   ├── wf-result.json          # Valid, schema-compliant
 │   │   │   └── findings.json           # Valid, schema-compliant
 │   │   └── runtime-inputs/
-│   │       └── manifest.json           # Valid, schema-compliant
+│   │       └── read-files.json           # Valid, schema-compliant
 │   └── schemas/
 │       ├── wf-result.schema.json
 │       ├── findings.schema.json
-│       └── manifest.schema.json
+│       └── read-files.schema.json
 │
 └── invalid-stage/                # Deliberately broken stage
     ├── stage-config.yaml         # Same as valid-stage
@@ -1756,7 +1834,7 @@ enhance/sample/sample_1/test-fixtures/
     │   │   ├── wf-result.json          # Empty file (0 bytes)
     │   │   └── findings.json           # Invalid JSON structure
     │   └── runtime-inputs/
-    │       └── (empty - manifest.json missing)
+    │       └── (empty - read-files.json missing)
     └── schemas/
         └── (same as valid-stage)
 ```
@@ -1793,9 +1871,9 @@ enhance/sample/sample_1/test-fixtures/
     },
     {
       "check": "file_exists",
-      "path": "run/runtime-inputs/manifest.json",
+      "path": "run/runtime-inputs/read-files.json",
       "status": "FAIL",
-      "message": "Missing required output: run/runtime-inputs/manifest.json",
+      "message": "Missing required output: run/runtime-inputs/read-files.json",
       "action": "Write this file before completing the stage."
     }
   ],
