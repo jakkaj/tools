@@ -115,25 +115,29 @@
 
 ### Tasks
 
-| Status | ID | Task | CS | Type | Dependencies | Path(s) | Validation | Notes |
-|--------|-----|------|----|------|--------------|---------|------------|-------|
-| [ ] | 2.1 | Create chainglass module structure | 1 | Setup | -- | `enhance/src/chainglass/__init__.py` | Can `import chainglass` | Empty init |
-| [ ] | 2.2 | Create pyproject.toml with dependencies | 1 | Setup | 2.1 | `enhance/pyproject.toml` | `pip install -e .` succeeds | typer, PyYAML, jsonschema |
-| [ ] | 2.3 | Define wf.schema.json in chainglass | 2 | Setup | 2.1 | `enhance/src/chainglass/schemas/wf.schema.json` | Schema matches A.3 exactly | For validating wf.yaml |
-| [ ] | 2.4 | Implement YAML parser module | 2 | Core | 2.3 | `enhance/src/chainglass/parser.py` | Loads wf.yaml; validates against schema; returns dict | PyYAML + jsonschema |
-| [ ] | 2.5 | Implement composer module | 3 | Core | 2.4 | `enhance/src/chainglass/composer.py` | Creates run folder per A.10 algorithm | Core compose logic |
-| [ ] | 2.6 | Implement compose CLI command | 2 | Core | 2.1, 2.5 | `enhance/src/chainglass/cli.py` | `chainglass compose --help` works | typer command |
-| [ ] | 2.7 | Implement idempotent compose | 1 | Core | 2.5 | `enhance/src/chainglass/composer.py` | Running twice produces identical output | Deterministic ordering |
-| [ ] | 2.8 | Manual test: compose creates correct structure | 1 | Test | 2.6 | -- | Output matches A.8 exactly | Verify all dirs, files, copies |
+| Status | ID | Task | CS | Type | Dependencies | Path(s) | Validation | Log | Notes |
+|--------|-----|------|----|------|--------------|---------|------------|-----|-------|
+| [x] | 2.1 | Create chainglass module structure | 1 | Setup | -- | `enhance/src/chainglass/__init__.py` | Can `import chainglass` | [📋](tasks/phase-2-implement-compose-command/execution.log.md#task-t001-create-chainglass-module-structure) | Complete [^12] |
+| [x] | 2.2 | Create pyproject.toml with dependencies | 1 | Setup | 2.1 | `enhance/pyproject.toml` | `pip install -e .` succeeds | [📋](tasks/phase-2-implement-compose-command/execution.log.md#task-t002-create-pyproject-toml-with-dependencies) | Complete [^12] |
+| ~~N/A~~ | ~~2.3~~ | ~~Define wf.schema.json in chainglass~~ | -- | -- | -- | -- | -- | -- | REMOVED: Schema read from wf-spec at runtime |
+| [x] | 2.4 | Implement YAML parser module | 2 | Core | 2.1 | `enhance/src/chainglass/parser.py` | Loads wf.yaml; validates against schema; returns dict | [📋](tasks/phase-2-implement-compose-command/execution.log.md#task-t004-implement-yaml-parser-module) | Complete [^13] |
+| [x] | 2.4b | Implement wf-spec validator module | 2 | Core | 2.4 | `enhance/src/chainglass/validator.py` | Two-phase validation (fail-fast + collect-all) | [📋](tasks/phase-2-implement-compose-command/execution.log.md#task-t004b-implement-wf-spec-validator-module) | Complete [^14] |
+| [x] | 2.5 | Implement composer module | 3 | Core | 2.4b | `enhance/src/chainglass/composer.py` | Creates run folder per A.10 algorithm | [📋](tasks/phase-2-implement-compose-command/execution.log.md#task-t005-implement-composer-module) | Complete [^15] |
+| [x] | 2.6 | Implement compose CLI command | 2 | Core | 2.5 | `enhance/src/chainglass/cli.py` | `chainglass compose --help` works | [📋](tasks/phase-2-implement-compose-command/execution.log.md#task-t006-implement-compose-cli-command) | Complete [^16] |
+| [x] | 2.7 | Implement idempotent compose | 1 | Core | 2.5 | `enhance/src/chainglass/composer.py` | Running twice produces identical output | [📋](tasks/phase-2-implement-compose-command/execution.log.md#task-t007-implement-idempotent-compose) | Complete [^15] |
+| [x] | 2.8 | Manual test: compose creates correct structure | 1 | Test | 2.6 | -- | Output matches A.8 exactly | [📋](tasks/phase-2-implement-compose-command/execution.log.md#task-t008-manual-test-compose-creates-correct-structure) | Complete |
+| [x] | 2.9 | Manual test: actionable error messages | 1 | Test | 2.6 | -- | Errors show what's missing + how to fix | [📋](tasks/phase-2-implement-compose-command/execution.log.md#task-t009-manual-test-compose-fails-with-actionable-errors) | Complete |
 
 ### Phase 2 Acceptance Criteria
 
-- [ ] **P2-AC-01**: `chainglass compose ./wf-spec --output ./run` creates run folder matching A.8
-- [ ] **P2-AC-02**: wf-run.json created with content per A.9
-- [ ] **P2-AC-03**: Shared templates (wf.md, wf-result.schema.json) copied to each stage
-- [ ] **P2-AC-04**: Stage-specific files (stage-config.yaml extracted, main.md, schemas) copied correctly
-- [ ] **P2-AC-05**: Empty output directories created (run/output-files/, run/output-data/, run/runtime-inputs/)
-- [ ] **P2-AC-06**: Compose is idempotent (AC-07 from spec)
+- [x] **P2-AC-01**: `chainglass compose ./wf-spec --output ./run` creates run folder matching A.8
+- [x] **P2-AC-02**: wf-run.json created with content per A.9
+- [x] **P2-AC-03**: Shared templates (wf.md, wf-result.schema.json) copied to each stage
+- [x] **P2-AC-04**: Stage-specific files (stage-config.yaml extracted, main.md, schemas) copied correctly
+- [x] **P2-AC-05**: Empty output directories created (run/output-files/, run/output-data/, run/runtime-inputs/)
+- [x] **P2-AC-06**: Compose is idempotent (AC-07 from spec)
+- [x] **P2-AC-07**: Two-phase validation with fail-fast + collect-all errors
+- [x] **P2-AC-08**: Actionable error messages with "Action:" guidance
 
 ---
 
@@ -1920,6 +1924,36 @@ enhance/sample/sample_1/test-fixtures/
 [^11]: Phase 1 Task 1.10 - Verified wf-spec completeness
   - All files parse correctly (YAML, JSON)
   - wf.yaml validates against wf.schema.json
+
+[^12]: Phase 2 Tasks 2.1-2.2 - Created chainglass package structure
+  - `file:enhance/src/chainglass/__init__.py`
+  - `file:enhance/pyproject.toml`
+
+[^13]: Phase 2 Task 2.4 - Implemented YAML parser module
+  - `file:enhance/src/chainglass/parser.py`
+  - `function:enhance/src/chainglass/parser.py:parse_workflow`
+  - `class:enhance/src/chainglass/parser.py:WorkflowParseError`
+
+[^14]: Phase 2 Task 2.4b - Implemented wf-spec validator module
+  - `file:enhance/src/chainglass/validator.py`
+  - `function:enhance/src/chainglass/validator.py:validate_wf_spec`
+  - `function:enhance/src/chainglass/validator.py:validate_or_raise`
+  - `class:enhance/src/chainglass/validator.py:ValidationResult`
+  - `class:enhance/src/chainglass/validator.py:ValidationError`
+
+[^15]: Phase 2 Tasks 2.5, 2.7 - Implemented composer module with idempotency
+  - `file:enhance/src/chainglass/composer.py`
+  - `function:enhance/src/chainglass/composer.py:compose`
+  - `function:enhance/src/chainglass/composer.py:_create_run_folder`
+  - `function:enhance/src/chainglass/composer.py:_write_wf_run_json`
+  - `function:enhance/src/chainglass/composer.py:_compose_stage`
+  - `function:enhance/src/chainglass/composer.py:_write_stage_config`
+  - `class:enhance/src/chainglass/composer.py:CompositionError`
+
+[^16]: Phase 2 Task 2.6 - Implemented compose CLI command
+  - `file:enhance/src/chainglass/cli.py`
+  - `function:enhance/src/chainglass/cli.py:compose_cmd`
+  - `function:enhance/src/chainglass/cli.py:version_callback`
 
 ---
 

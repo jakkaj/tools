@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "chainglass"
+version = "0.1.0"
+description = "Workflow Composer CLI - Transform wf-spec folders into executable run directories"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    { name = "chainglass", email = "chainglass@example.com" }
+]
+dependencies = [
+    "typer[all]>=0.9.0",
+    "pyyaml>=6.0",
+    "jsonschema>=4.0",
+]
+
+[project.scripts]
+chainglass = "chainglass.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/chainglass"]

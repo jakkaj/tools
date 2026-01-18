@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spec-metadata.schema.json",
+  "title": "Feature Specification Metadata",
+  "description": "Structured metadata from the specification stage",
+  "type": "object",
+  "required": ["feature_name", "slug", "complexity", "goals", "acceptance_criteria"],
+  "properties": {
+    "feature_name": {
+      "type": "string",
+      "minLength": 3,
+      "description": "Human-readable feature title"
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "URL-safe feature identifier"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["simple", "full"],
+      "description": "Workflow mode (simple = single phase, full = multi-phase)"
+    },
+    "complexity": {
+      "type": "object",
+      "required": ["score", "total", "breakdown"],
+      "properties": {
+        "score": {
+          "type": "string",
+          "pattern": "^CS-[1-5]$",
+          "description": "Complexity score CS-1 through CS-5"
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 12,
+          "description": "Total complexity points (S+I+D+N+F+T)"
+        },
+        "breakdown": {
+          "type": "object",
+          "properties": {
+            "S": {"type": "integer", "minimum": 0, "maximum": 2},
+            "I": {"type": "integer", "minimum": 0, "maximum": 2},
+            "D": {"type": "integer", "minimum": 0, "maximum": 2},
+            "N": {"type": "integer", "minimum": 0, "maximum": 2},
+            "F": {"type": "integer", "minimum": 0, "maximum": 2},
+            "T": {"type": "integer", "minimum": 0, "maximum": 2}
+          },
+          "description": "Individual dimension scores"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Confidence in complexity assessment"
+        },
+        "phases": {
+          "type": ["array", "null"],
+          "items": {"type": "string"},
+          "description": "Suggested phases for CS-4+ features (null if CS-1 to CS-3)"
+        }
+      }
+    },
+    "goals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 10
+      },
+      "description": "List of feature goals"
+    },
+    "non_goals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Explicitly out-of-scope items"
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "description"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^AC-[0-9]{2}$"
+          },
+          "description": {
+            "type": "string"
+          },
+          "testable": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "description": "Numbered acceptance criteria"
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {"type": "string"},
+          "likelihood": {"type": "string", "enum": ["low", "medium", "high"]},
+          "impact": {"type": "string", "enum": ["low", "medium", "high"]},
+          "mitigation": {"type": "string"}
+        }
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "open_questions": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "research": {
+      "type": "object",
+      "required": ["findings_incorporated", "unresolved_count"],
+      "properties": {
+        "findings_incorporated": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of findings from research-dossier.md incorporated"
+        },
+        "external_research_used": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "List of external research sources incorporated"
+        },
+        "unresolved_topics": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Research opportunities identified but not addressed"
+        },
+        "unresolved_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Count of unresolved research topics"
+        }
+      },
+      "description": "Research incorporation tracking"
+    }
+  }
+}

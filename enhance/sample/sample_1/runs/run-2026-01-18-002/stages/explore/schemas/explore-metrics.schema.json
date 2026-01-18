@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "explore-metrics.schema.json",
+  "title": "Explore Stage Metrics",
+  "description": "Nested metrics data that downstream stages can query via parameters",
+  "type": "object",
+  "required": ["summary", "components", "recommendations"],
+  "properties": {
+    "summary": {
+      "type": "object",
+      "required": ["total_findings", "by_impact"],
+      "properties": {
+        "total_findings": {"type": "integer", "minimum": 0},
+        "by_impact": {
+          "type": "object",
+          "properties": {
+            "critical": {"type": "integer"},
+            "high": {"type": "integer"},
+            "medium": {"type": "integer"},
+            "low": {"type": "integer"}
+          }
+        },
+        "by_category": {
+          "type": "object",
+          "additionalProperties": {"type": "integer"}
+        }
+      }
+    },
+    "components": {
+      "type": "array",
+      "description": "Components examined, sorted by impact",
+      "items": {
+        "type": "object",
+        "required": ["name", "findings_count"],
+        "properties": {
+          "name": {"type": "string"},
+          "path": {"type": "string"},
+          "findings_count": {"type": "integer"},
+          "risk_level": {"type": "string", "enum": ["low", "medium", "high"]}
+        }
+      }
+    },
+    "recommendations": {
+      "type": "object",
+      "properties": {
+        "complexity": {
+          "type": "object",
+          "properties": {
+            "suggested_score": {"type": "string", "pattern": "^CS-[1-5]$"},
+            "rationale": {"type": "string"}
+          }
+        },
+        "next_steps": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    }
+  }
+}

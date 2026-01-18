@@ -1,0 +1,80 @@
+# Extracted from wf.yaml during compose
+# Source: /Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/wf.yaml
+# Stage: specify
+
+id: specify
+name: Feature Specification
+description: Create feature specification from research findings
+inputs:
+  required:
+  - name: research-dossier.md
+    path: inputs/research-dossier.md
+    description: Research report from explore stage
+    from_stage: explore
+    source: run/output-files/research-dossier.md
+  - name: findings.json
+    path: inputs/findings.json
+    description: Structured findings from explore stage
+    from_stage: explore
+    source: run/output-data/findings.json
+  optional:
+  - name: user-description.md
+    path: inputs/user-description.md
+    description: Optional additional context from user
+outputs:
+  files:
+  - name: spec.md
+    path: run/output-files/spec.md
+    description: Feature specification document
+  data:
+  - name: wf-result.json
+    path: run/output-data/wf-result.json
+    schema: schemas/wf-result.schema.json
+    description: Stage execution status
+    required: true
+  - name: spec-metadata.json
+    path: run/output-data/spec-metadata.json
+    schema: schemas/spec-metadata.schema.json
+    description: Structured specification metadata
+    required: true
+prompt:
+  entry: prompt/wf.md
+  main: prompt/main.md
+parameters:
+- name: total_findings
+  description: Number of findings from explore stage
+  from_stage: explore
+  output_parameter: total_findings
+- name: critical_count
+  description: Count of critical findings
+  from_stage: explore
+  output_parameter: critical_count
+- name: top_component
+  description: Most affected component name
+  from_stage: explore
+  output_parameter: top_component
+- name: complexity_score
+  description: Suggested complexity score
+  from_stage: explore
+  output_parameter: complexity_score
+output_parameters:
+- name: complexity_score
+  description: Final complexity score (CS-1 through CS-5)
+  source: run/output-data/spec-metadata.json
+  query: complexity.score
+- name: complexity_total
+  description: Total complexity points (0-12)
+  source: run/output-data/spec-metadata.json
+  query: complexity.total
+- name: unresolved_research_count
+  description: Number of unresolved research topics
+  source: run/output-data/spec-metadata.json
+  query: research.unresolved_count
+- name: goals_count
+  description: Number of goals defined
+  source: run/output-data/spec-metadata.json
+  query: goals.length
+- name: phases
+  description: Suggested phases for CS-4+ features (null if CS-1 to CS-3)
+  source: run/output-data/spec-metadata.json
+  query: complexity.phases
