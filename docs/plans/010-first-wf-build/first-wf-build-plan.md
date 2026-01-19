@@ -34,7 +34,8 @@
    - [A.11 prepare-wf-stage Algorithm](#a11-prepare-wf-stage-algorithm)
    - [A.12 Validate Algorithm](#a12-validate-algorithm)
    - [A.13 Test Fixtures for Phase 4](#a13-test-fixtures-for-phase-4)
-8. [Change Footnotes Ledger](#change-footnotes-ledger)
+8. [Subtasks Registry](#subtasks-registry)
+9. [Change Footnotes Ledger](#change-footnotes-ledger)
 
 ---
 
@@ -1887,6 +1888,16 @@ enhance/sample/sample_1/test-fixtures/
 
 ---
 
+## Subtasks Registry
+
+Mid-implementation detours requiring structured tracking.
+
+| ID | Created | Phase | Parent Task | Reason | Status | Dossier |
+|----|---------|-------|-------------|--------|--------|---------|
+| 001-subtask-preflight-command | 2026-01-19 | Phase 4: Implement validate Command | Phase 4 complete | Add preflight command for pre-execution input validation; update wf.md | [x] Complete | [Link](tasks/phase-4-implement-validate-command/001-subtask-preflight-command.md) [^24] |
+
+---
+
 ## Change Footnotes Ledger
 
 [^1]: Phase 1 Task 1.1 - Created wf-spec directory structure
@@ -1992,6 +2003,16 @@ enhance/sample/sample_1/test-fixtures/
 
 [^23]: Phase 4 - Refactored Stage.finalize() to delegate to validate_stage()
   - `method:enhance/src/chainglass/stage.py:Stage.finalize`
+
+[^24]: Subtask 001-subtask-preflight-command Complete - Added preflight command for pre-execution input validation
+  - `file:enhance/src/chainglass/preflight.py` (new module)
+  - `class:enhance/src/chainglass/preflight.py:PreflightCheck`
+  - `class:enhance/src/chainglass/preflight.py:PreflightResult`
+  - `function:enhance/src/chainglass/preflight.py:preflight`
+  - `function:enhance/src/chainglass/cli.py:preflight_cmd`
+  - `file:enhance/sample/sample_1/wf-spec/templates/wf.md` (added preflight as step 0)
+  - Key decisions: DYK-01 (two-phase validation), DYK-02 (preflight reads config internally), DYK-03 (comprehensive from_stage testing), DYK-04 (include descriptions in errors), DYK-05 (no Stage class import)
+  - See: [Subtask Execution Log](tasks/phase-4-implement-validate-command/001-subtask-preflight-command.execution.log.md)
 
 ---
 

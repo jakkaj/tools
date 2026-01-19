@@ -560,6 +560,16 @@ uv run python -c "from chainglass.validator import validate_stage, StageValidati
 
 ---
 
+## Subtasks
+
+This phase has been extended with the following subtasks:
+
+| ID | Summary | Status | Dossier |
+|----|---------|--------|---------|
+| 001-subtask-preflight-command | Implement preflight command for pre-execution input validation; update wf.md | [ ] Pending | [001-subtask-preflight-command.md](./001-subtask-preflight-command.md) |
+
+---
+
 ## Phase Footnote Stubs
 
 | Footnote | Task(s) | Node ID(s) | Notes |
@@ -625,6 +635,8 @@ docs/plans/010-first-wf-build/
     │   ├── tasks.md
     │   └── execution.log.md
     └── phase-4-implement-validate-command/
-        ├── tasks.md           # This file
-        └── execution.log.md   # Created by /plan-6
+        ├── tasks.md                                    # This file
+        ├── execution.log.md                            # Created by /plan-6
+        ├── 001-subtask-preflight-command.md            # Subtask dossier
+        └── 001-subtask-preflight-command.execution.log.md  # Subtask log (created by /plan-6)
 ```

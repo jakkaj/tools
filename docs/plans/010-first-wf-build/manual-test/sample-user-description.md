@@ -1,0 +1,1 @@
+We are doing some toy research to test this workflow. Use 2 subagents to find out some random information about this codebase then complete the wf as instructed. KISS, don't go overboard as this is just a test.

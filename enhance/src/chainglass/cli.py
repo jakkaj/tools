@@ -6,6 +6,7 @@ import typer
 
 from chainglass import __version__
 from chainglass.composer import CompositionError, compose
+from chainglass.preflight import preflight
 from chainglass.preparer import prepare_wf_stage
 from chainglass.stage import Stage
 from chainglass.validator import ValidationError, validate_stage
@@ -192,6 +193,70 @@ def validate_cmd(
         for error in result.errors:
             typer.echo(f"  {error.check.upper()}: {error.path}", err=True)
             typer.echo(f"    Action: {error.action}", err=True)
+        passed = len(result.checks)
+        failed = len(result.errors)
+        typer.echo(f"Result: FAIL ({passed} passed, {failed} errors)", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command(name="preflight")
+def preflight_cmd(
+    stage_id: str = typer.Argument(
+        ...,
+        help="Stage ID to preflight check (e.g., 'explore')",
+    ),
+    run_dir: Path = typer.Option(
+        ...,
+        "--run-dir",
+        "-r",
+        help="Path to run directory containing stages/",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+    ),
+) -> None:
+    """Validate stage inputs before LLM execution.
+
+    Checks all required inputs exist, validates source stages are finalized
+    (for inputs with from_stage), and verifies parameters can be resolved.
+
+    Designed to be called by an LLM before starting stage work to verify
+    prerequisites are met. Provides actionable error messages telling you
+    exactly what to fix before proceeding.
+
+    Example:
+        chainglass preflight explore --run-dir ./run/run-2026-01-18-001
+    """
+    stage_path = run_dir / "stages" / stage_id
+
+    if not stage_path.exists():
+        typer.echo(
+            f"Stage folder not found: {stage_path}\n"
+            f"Action: Verify stage_id is correct and run compose first.",
+            err=True,
+        )
+        raise typer.Exit(code=1)
+
+    result = preflight(stage_path)
+
+    if result.status == "pass":
+        typer.echo(f"Preflight: {stage_id}")
+        if result.checks:
+            typer.echo("Checks passed:")
+            for check in result.checks:
+                if check.name:
+                    typer.echo(f"  {check.path} ({check.name})")
+                else:
+                    typer.echo(f"  {check.path}")
+        passed = len(result.checks)
+        typer.echo(f"Result: PASS ({passed} checks, 0 errors)")
+    else:
+        typer.echo("Preflight failed:", err=True)
+        for error in result.errors:
+            typer.echo(f"  {error.check.upper()}: {error.path}", err=True)
+            if error.action:
+                typer.echo(f"    Action: {error.action}", err=True)
         passed = len(result.checks)
         failed = len(result.errors)
         typer.echo(f"Result: FAIL ({passed} passed, {failed} errors)", err=True)

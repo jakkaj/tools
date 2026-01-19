@@ -4,6 +4,27 @@ You are executing a **workflow stage**. This means you are operating within a st
 
 ## Before You Begin
 
+0. **Preflight check** (verify stage is ready to execute):
+   ```bash
+   uv run chainglass preflight <stage_id> --run-dir <path_to_run_folder>
+   ```
+
+   Example (if you're in the prompt folder):
+   ```bash
+   uv run chainglass preflight explore --run-dir ../../
+   ```
+
+   **What it checks**:
+   - Stage configuration is valid
+   - Prompt files exist (wf.md, main.md)
+   - Required input files exist and are non-empty
+   - Source stages are finalized (for inputs from upstream stages)
+   - Parameters can be resolved from upstream outputs
+
+   **If preflight fails**: **STOP IMMEDIATELY.** Do not attempt to work around the error or find alternatives. Report the exact error to the user and wait for them to fix it. The preflight errors are actionable - they tell the user exactly what's missing. Do not proceed until preflight passes.
+
+   **On success**: All prerequisites are met - proceed to step 1.
+
 1. **Read the stage configuration**: `../stage-config.yaml`
    - This defines what inputs are available to you
    - This defines what outputs you must produce
@@ -20,6 +41,7 @@ You are executing a **workflow stage**. This means you are operating within a st
 ## Your Workflow
 
 ```
+0. Run preflight                 → Verify prerequisites
 1. Read ../stage-config.yaml     → Understand the contract
 2. Read ../inputs/*              → Get your inputs
 3. Read ./main.md                → Get your instructions
@@ -56,12 +78,12 @@ When your work is complete:
 2. Write `wf-result.json` with completion status
 3. **Validate your stage outputs**:
    ```bash
-   chainglass validate <stage_id> --run-dir <path_to_run_folder>
+   uv run chainglass validate <stage_id> --run-dir <path_to_run_folder>
    ```
 
    Example (if you're in the prompt folder):
    ```bash
-   chainglass validate explore --run-dir ../../
+   uv run chainglass validate explore --run-dir ../../
    ```
 
    **What it checks**:
@@ -82,4 +104,4 @@ Each output declared in `stage-config.yaml` has a corresponding JSON Schema in `
 
 ---
 
-**Now**: Read `../stage-config.yaml`, then `../inputs/*`, then return here and proceed to `main.md`.
+**Now**: Run `uv run chainglass preflight <stage_id> --run-dir ../../` first. On success, read `../stage-config.yaml`, then `../inputs/*`, then return here and proceed to `main.md`.
