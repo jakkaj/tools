@@ -46,3 +46,6 @@ venv/
 ENV/
 env/
 .fs2/graph.pickle
+
+
+enhance/sample/sample_1/runs/*

@@ -155,24 +155,24 @@
 
 | Status | ID | Task | CS | Type | Dependencies | Path(s) | Validation | Notes |
 |--------|-----|------|----|------|--------------|---------|------------|-------|
-| [ ] | 3.1 | Implement preparer module | 2 | Core | Phase 2 | `enhance/src/chainglass/preparer.py` | Copies files per A.11 algorithm | Handles inputs and parameters |
-| [ ] | 3.2 | Implement prepare-wf-stage CLI command | 2 | Core | 3.1 | `enhance/src/chainglass/cli.py` | `chainglass prepare-wf-stage --help` works | typer command with --dry-run option |
-| [ ] | 3.3 | Implement JSON query resolver | 2 | Core | 3.1 | `enhance/src/chainglass/preparer.py` | Resolves dot notation and array index queries | `summary.total` and `items[0].name` |
-| [ ] | 3.4 | Implement parameter extraction | 2 | Core | 3.3 | `enhance/src/chainglass/preparer.py` | Queries prior stage JSON, writes params.json | Per A.11 algorithm |
-| [ ] | 3.5 | Implement --dry-run validation | 1 | Core | 3.1 | `enhance/src/chainglass/preparer.py` | Validates inputs and parameters without writing | Stage readiness check |
-| [ ] | 3.6 | Handle missing inputs/params | 1 | Core | 3.1 | `enhance/src/chainglass/preparer.py` | Actionable error with from_stage and expected path | "Complete stage 'explore' first" |
-| [ ] | 3.7 | Manual test: prepare copies files and resolves params | 1 | Test | 3.2 | -- | Files copied, params.json written | Per A.2 and A.11 |
-| [ ] | 3.8 | Manual test: --dry-run validates without writing | 1 | Test | 3.5 | -- | Returns "ready" status, nothing written | Validates stage readiness |
+| [x] | 3.1 | Implement preparer module | 2 | Core | Phase 2 | `enhance/src/chainglass/preparer.py` | Copies files per A.11 algorithm | Handles inputs and parameters [^17] [^18] |
+| [x] | 3.2 | Implement prepare-wf-stage CLI command | 2 | Core | 3.1 | `enhance/src/chainglass/cli.py` | `chainglass prepare-wf-stage --help` works | typer command with --dry-run option [^19] |
+| [x] | 3.3 | Implement JSON query resolver | 2 | Core | 3.1 | `enhance/src/chainglass/stage.py` | Resolves dot notation and array index queries | `summary.total` and `items[0].name` [^17] |
+| [x] | 3.4 | Implement parameter extraction | 2 | Core | 3.3 | `enhance/src/chainglass/preparer.py` | Queries prior stage JSON, writes params.json | Per A.11 algorithm [^18] |
+| [x] | 3.5 | Implement --dry-run validation | 1 | Core | 3.1 | `enhance/src/chainglass/preparer.py` | Validates inputs and parameters without writing | Stage readiness check [^18] |
+| [x] | 3.6 | Handle missing inputs/params | 1 | Core | 3.1 | `enhance/src/chainglass/preparer.py` | Actionable error with from_stage and expected path | "Complete stage 'explore' first" [^18] |
+| [x] | 3.7 | Manual test: prepare copies files and resolves params | 1 | Test | 3.2 | -- | Files copied, params.json written | Per A.2 and A.11 |
+| [x] | 3.8 | Manual test: --dry-run validates without writing | 1 | Test | 3.5 | -- | Returns "ready" status, nothing written | Validates stage readiness |
 
 ### Phase 3 Acceptance Criteria
 
-- [ ] **P3-AC-01**: `chainglass prepare-wf-stage specify --run-dir ./run/001` copies inputs and resolves parameters
-- [ ] **P3-AC-02**: Inputs with `from_stage` are copied to stage's inputs/ folder
-- [ ] **P3-AC-03**: Parameters are resolved by querying prior stage JSON outputs
-- [ ] **P3-AC-04**: Resolved parameters written to `inputs/params.json`
-- [ ] **P3-AC-05**: Query syntax supports dot notation (`summary.total`) and array index (`items[0].name`)
-- [ ] **P3-AC-06**: `--dry-run` validates all inputs and parameters without copying/writing
-- [ ] **P3-AC-07**: Blocked status with actionable error if required input/parameter source missing
+- [x] **P3-AC-01**: `chainglass prepare-wf-stage specify --run-dir ./run/001` copies inputs and resolves parameters
+- [x] **P3-AC-02**: Inputs with `from_stage` are copied to stage's inputs/ folder
+- [x] **P3-AC-03**: Parameters are resolved by querying prior stage JSON outputs
+- [x] **P3-AC-04**: Resolved parameters written to `inputs/params.json`
+- [x] **P3-AC-05**: Query syntax supports dot notation (`summary.total`) and array index (`items[0].name`)
+- [x] **P3-AC-06**: `--dry-run` validates all inputs and parameters without copying/writing
+- [x] **P3-AC-07**: Blocked status with actionable error if required input/parameter source missing
 
 ---
 
@@ -1954,6 +1954,28 @@ enhance/sample/sample_1/test-fixtures/
   - `file:enhance/src/chainglass/cli.py`
   - `function:enhance/src/chainglass/cli.py:compose_cmd`
   - `function:enhance/src/chainglass/cli.py:version_callback`
+
+[^17]: Phase 3 Tasks 3.1, 3.3 - Created Stage class with lazy loading and query resolver
+  - `file:enhance/src/chainglass/stage.py`
+  - `class:enhance/src/chainglass/stage.py:Stage`
+  - `function:enhance/src/chainglass/stage.py:resolve_query`
+  - `class:enhance/src/chainglass/stage.py:ValidationResult`
+  - `class:enhance/src/chainglass/stage.py:FinalizeResult`
+  - `method:enhance/src/chainglass/stage.py:Stage.validate`
+  - `method:enhance/src/chainglass/stage.py:Stage.finalize`
+  - `method:enhance/src/chainglass/stage.py:Stage.get_output_params`
+  - `method:enhance/src/chainglass/stage.py:Stage.get_output_data`
+  - `method:enhance/src/chainglass/stage.py:Stage.get_output_file`
+  - `method:enhance/src/chainglass/stage.py:Stage.query_output`
+
+[^18]: Phase 3 Tasks 3.1, 3.4, 3.5, 3.6 - Created preparer module
+  - `file:enhance/src/chainglass/preparer.py`
+  - `class:enhance/src/chainglass/preparer.py:PrepareResult`
+  - `function:enhance/src/chainglass/preparer.py:prepare_wf_stage`
+
+[^19]: Phase 3 Task 3.2 - Added finalize and prepare-wf-stage CLI commands
+  - `function:enhance/src/chainglass/cli.py:finalize_cmd`
+  - `function:enhance/src/chainglass/cli.py:prepare_wf_stage_cmd`
 
 ---
 
