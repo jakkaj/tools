@@ -54,10 +54,26 @@ When your work is complete:
 
 1. Ensure all declared outputs in `stage-config.yaml` are written
 2. Write `wf-result.json` with completion status
-3. Run `chainglass validate` on this stage
-   - Validates all outputs exist and conform to schemas
-   - If `output_parameters` are declared, extracts and writes `output-params.json`
-   - These values become available to downstream stages by name
+3. **Validate your stage outputs**:
+   ```bash
+   chainglass validate <stage_id> --run-dir <path_to_run_folder>
+   ```
+
+   Example (if you're in the prompt folder):
+   ```bash
+   chainglass validate explore --run-dir ../../
+   ```
+
+   **What it checks**:
+   - All required output files exist
+   - No output files are empty (0 bytes)
+   - JSON outputs conform to their declared schemas
+   - Output parameters can be extracted
+
+   **If validation fails**: Fix the reported errors before proceeding. The error messages are actionable - they tell you exactly what's missing or malformed. Re-run validate after each fix until you get `PASS`.
+
+   **On success**: Validation writes `output-params.json` with extracted parameters that become available to downstream stages by name.
+
 4. Stop and wait - the workflow system handles what comes next
 
 ## Output Schemas
