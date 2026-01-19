@@ -1,0 +1,13 @@
+{
+  "summary": {
+    "total_findings": 15,
+    "by_impact": {"critical": 2, "high": 5, "medium": 6, "low": 2}
+  },
+  "components": [
+    {"name": "auth/session.py", "findings_count": 5, "risk_level": "high"},
+    {"name": "api/handlers.py", "findings_count": 3, "risk_level": "medium"}
+  ],
+  "recommendations": {
+    "complexity": {"suggested_score": "CS-3", "rationale": "Multiple components affected"}
+  }
+}

@@ -1,13 +1,24 @@
-"""Validator for wf-spec folder completeness.
+"""Validator for wf-spec folder completeness and stage output validation.
 
-Implements two-phase validation:
+Implements two-phase validation for wf-spec:
 - Phase 1 (Fail-Fast): YAML structure validation - exit early if broken
 - Phase 2 (Collect-All): File existence checks - collect ALL errors
+
+Also implements stage output validation per A.12 algorithm:
+- File presence checks for required outputs
+- Empty file detection (0-byte files)
+- JSON Schema validation using Draft202012
+- Output parameter extraction
 """
 
+import json
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
+
+import jsonschema
+import yaml
 
 from chainglass.parser import WorkflowParseError, parse_workflow
 
@@ -19,6 +30,60 @@ class ValidationResult:
     valid: bool
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
+
+
+# =============================================================================
+# Stage Validation Types (A.12 Algorithm)
+# =============================================================================
+
+
+@dataclass
+class StageValidationCheck:
+    """A single validation check result per A.12 output format."""
+
+    check: str  # "file_exists", "file_not_empty", "schema_valid"
+    path: str  # Relative path to the file being checked
+    status: Literal["PASS", "FAIL"]
+    message: str | None = None  # Error message (only for FAIL)
+    action: str | None = None  # Actionable fix instruction (only for FAIL)
+    schema: str | None = None  # Schema path (only for schema_valid checks)
+    json_path: str | None = None  # JSON path to error (only for schema errors)
+
+
+@dataclass
+class StageValidationResult:
+    """Result of stage output validation per A.12 output format.
+
+    This is designed for LLM consumption with actionable error messages.
+    """
+
+    status: Literal["pass", "fail"]
+    stage_id: str
+    checks: list[StageValidationCheck] = field(default_factory=list)
+    errors: list[StageValidationCheck] = field(default_factory=list)
+    output_params_written: bool = False
+    output_params: dict[str, Any] = field(default_factory=dict)
+    summary: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to JSON-serializable dict per A.12 output format."""
+        result: dict[str, Any] = {
+            "status": self.status,
+            "stage_id": self.stage_id,
+            "checks": [
+                {k: v for k, v in c.__dict__.items() if v is not None}
+                for c in self.checks
+            ],
+            "errors": [
+                {k: v for k, v in e.__dict__.items() if v is not None}
+                for e in self.errors
+            ],
+            "summary": self.summary,
+        }
+        if self.output_params_written:
+            result["output_params_written"] = True
+            result["output_params"] = self.output_params
+        return result
 
 
 class ValidationError(Exception):
@@ -170,3 +235,288 @@ def validate_or_raise(wf_spec_path: Path) -> dict[str, Any]:
 
     # Re-parse to get workflow dict (validation already passed)
     return parse_workflow(wf_spec_path)
+
+
+# =============================================================================
+# Stage Output Validation (A.12 Algorithm)
+# =============================================================================
+
+
+def validate_stage(stage_path: Path) -> StageValidationResult:
+    """Validate stage outputs per A.12 algorithm.
+
+    This function is designed to be called by an LLM at the end of stage
+    execution to verify completion. It provides actionable error messages.
+
+    Steps (per A.12):
+    1. Load stage-config.yaml
+    2. For each output in files, data, runtime:
+       - Check file exists (if required)
+       - Check file is not empty
+       - Validate against schema (if declared)
+    3. If validation passes, extract output_parameters
+    4. Write output-params.json on success
+    5. Generate summary
+
+    Args:
+        stage_path: Path to stage folder (e.g., "run/stages/explore")
+
+    Returns:
+        StageValidationResult with status, checks, errors, and output_params
+    """
+    # Import here to avoid circular import
+    from chainglass.stage import resolve_query
+
+    stage_path = Path(stage_path).resolve()
+
+    # Load stage-config.yaml
+    config_path = stage_path / "stage-config.yaml"
+    if not config_path.exists():
+        return StageValidationResult(
+            status="fail",
+            stage_id=stage_path.name,
+            errors=[
+                StageValidationCheck(
+                    check="config_exists",
+                    path="stage-config.yaml",
+                    status="FAIL",
+                    message="stage-config.yaml not found",
+                    action="Run 'chainglass compose' first to create the stage structure.",
+                )
+            ],
+            summary=f"Stage '{stage_path.name}': 0 checks passed, 1 error",
+        )
+
+    config = yaml.safe_load(config_path.read_text()) or {}
+    stage_id = config.get("id", stage_path.name)
+
+    result = StageValidationResult(status="pass", stage_id=stage_id)
+
+    # Validate outputs from all categories: files, data, runtime
+    outputs_config = config.get("outputs", {})
+
+    # Category: files
+    for output in outputs_config.get("files", []):
+        _validate_output_file(stage_path, output, result, has_schema=False)
+
+    # Category: data
+    for output in outputs_config.get("data", []):
+        is_required = output.get("required", True)
+        _validate_output_file(
+            stage_path, output, result, has_schema=True, required=is_required
+        )
+
+    # Category: runtime (if present in config)
+    for output in outputs_config.get("runtime", []):
+        is_required = output.get("required", False)  # Runtime often optional
+        _validate_output_file(
+            stage_path, output, result, has_schema=True, required=is_required
+        )
+
+    # Extract output_parameters if validation passed
+    if result.status == "pass":
+        output_params = config.get("output_parameters", [])
+        if output_params:
+            extracted = {}
+            for param in output_params:
+                source_path = stage_path / param["source"]
+                # Security: validate source path is within stage
+                if not source_path.resolve().is_relative_to(stage_path):
+                    continue  # Skip malicious source
+                if source_path.exists():
+                    try:
+                        data = json.loads(source_path.read_text())
+                        value = resolve_query(data, param["query"])
+                        if value is not None:
+                            extracted[param["name"]] = value
+                    except (json.JSONDecodeError, KeyError):
+                        pass  # Already validated, shouldn't happen
+
+            if extracted:
+                # Write output-params.json
+                output_params_path = (
+                    stage_path / "run" / "output-data" / "output-params.json"
+                )
+                output_params_path.parent.mkdir(parents=True, exist_ok=True)
+                output_params_data = {
+                    "stage_id": stage_id,
+                    "published_at": datetime.now(timezone.utc).isoformat(),
+                    "parameters": extracted,
+                }
+                output_params_path.write_text(json.dumps(output_params_data, indent=2))
+                result.output_params_written = True
+                result.output_params = extracted
+
+    # Generate summary
+    passed = len(result.checks)
+    failed = len(result.errors)
+    if result.output_params_written:
+        param_count = len(result.output_params)
+        result.summary = f"Stage '{stage_id}': {passed} checks passed, {failed} errors, {param_count} output_parameters published"
+    else:
+        result.summary = f"Stage '{stage_id}': {passed} checks passed, {failed} errors"
+
+    return result
+
+
+def _validate_output_file(
+    stage_path: Path,
+    output: dict,
+    result: StageValidationResult,
+    has_schema: bool,
+    required: bool = True,
+) -> None:
+    """Validate a single output file per A.12 checks.
+
+    Modifies result in-place, adding checks and errors.
+
+    Args:
+        stage_path: Path to stage folder
+        output: Output definition dict with path, schema (optional)
+        result: StageValidationResult to update
+        has_schema: Whether this output type can have schemas
+        required: Whether the file is required
+    """
+    output_path = stage_path / output["path"]
+    rel_path = output["path"]
+
+    # Security: Check for path traversal
+    if not output_path.resolve().is_relative_to(stage_path):
+        result.status = "fail"
+        result.errors.append(
+            StageValidationCheck(
+                check="path_security",
+                path=rel_path,
+                status="FAIL",
+                message="Invalid path: escapes stage directory",
+                action="Remove '..' or absolute path components from output path in stage-config.yaml.",
+            )
+        )
+        return  # Skip further checks for this file
+
+    # Check 1: File exists
+    if not output_path.exists():
+        if required:
+            result.status = "fail"
+            result.errors.append(
+                StageValidationCheck(
+                    check="file_exists",
+                    path=rel_path,
+                    status="FAIL",
+                    message=f"Missing required output: {rel_path}",
+                    action="Write this file before completing the stage.",
+                )
+            )
+        return  # Skip further checks if file missing
+
+    result.checks.append(
+        StageValidationCheck(check="file_exists", path=rel_path, status="PASS")
+    )
+
+    # Check 2: File is not empty
+    if output_path.stat().st_size == 0:
+        result.status = "fail"
+        result.errors.append(
+            StageValidationCheck(
+                check="file_not_empty",
+                path=rel_path,
+                status="FAIL",
+                message=f"Output file is empty: {rel_path}",
+                action="Write content to this file.",
+            )
+        )
+        return  # Skip schema check if empty
+
+    result.checks.append(
+        StageValidationCheck(check="file_not_empty", path=rel_path, status="PASS")
+    )
+
+    # Check 3: Schema validation (if schema declared)
+    if has_schema and "schema" in output:
+        schema_ref = output["schema"]
+        schema_path = stage_path / schema_ref
+
+        # Security: Check for path traversal on schema
+        if not schema_path.resolve().is_relative_to(stage_path):
+            result.status = "fail"
+            result.errors.append(
+                StageValidationCheck(
+                    check="schema_security",
+                    path=rel_path,
+                    schema=schema_ref,
+                    status="FAIL",
+                    message="Invalid schema path: escapes stage directory",
+                    action="Remove '..' or absolute path components from schema path in stage-config.yaml.",
+                )
+            )
+            return
+
+        if not schema_path.exists():
+            result.status = "fail"
+            result.errors.append(
+                StageValidationCheck(
+                    check="schema_valid",
+                    path=rel_path,
+                    schema=schema_ref,
+                    status="FAIL",
+                    message=f"Schema file not found: {schema_ref}",
+                    action=f"Create the schema file at {schema_ref}.",
+                )
+            )
+            return
+
+        # Load schema first (separate error handling)
+        try:
+            schema = json.loads(schema_path.read_text())
+        except json.JSONDecodeError as e:
+            result.status = "fail"
+            result.errors.append(
+                StageValidationCheck(
+                    check="schema_valid",
+                    path=rel_path,
+                    schema=schema_ref,
+                    status="FAIL",
+                    message=f"Schema file contains invalid JSON: {e.msg}",
+                    action=f"Fix JSON syntax in schema file: {schema_ref}",
+                )
+            )
+            return
+
+        # Then load and validate data
+        try:
+            data = json.loads(output_path.read_text())
+            jsonschema.validate(data, schema)
+            result.checks.append(
+                StageValidationCheck(
+                    check="schema_valid",
+                    path=rel_path,
+                    schema=schema_ref,
+                    status="PASS",
+                )
+            )
+        except json.JSONDecodeError as e:
+            result.status = "fail"
+            result.errors.append(
+                StageValidationCheck(
+                    check="schema_valid",
+                    path=rel_path,
+                    schema=schema_ref,
+                    status="FAIL",
+                    message=f"Invalid JSON in data file: {e.msg}",
+                    action="Fix the JSON syntax error in the data file.",
+                )
+            )
+        except jsonschema.ValidationError as e:
+            result.status = "fail"
+            json_path_str = ".".join(str(p) for p in e.absolute_path) or ""
+            result.errors.append(
+                StageValidationCheck(
+                    check="schema_valid",
+                    path=rel_path,
+                    schema=schema_ref,
+                    status="FAIL",
+                    message=f"Schema validation failed: {e.message}",
+                    json_path=json_path_str,
+                    action=f"Fix the JSON structure. Error at '{json_path_str}': {e.message}. See {schema_ref} for required format.",
+                )
+            )

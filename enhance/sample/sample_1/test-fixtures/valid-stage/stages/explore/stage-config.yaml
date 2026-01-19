@@ -1,0 +1,54 @@
+# Extracted from wf.yaml during compose
+# Source: /Users/jordanknight/github/tools/enhance/sample/sample_1/wf-spec/wf.yaml
+# Stage: explore
+
+id: explore
+name: Codebase Research
+description: Deep-dive research into existing codebase functionality
+inputs:
+  required:
+  - name: user-description.md
+    path: inputs/user-description.md
+    description: User-provided research query or feature description
+  optional: []
+outputs:
+  files:
+  - name: research-dossier.md
+    path: run/output-files/research-dossier.md
+    description: Comprehensive research report
+  data:
+  - name: wf-result.json
+    path: run/output-data/wf-result.json
+    schema: schemas/wf-result.schema.json
+    description: Stage execution status
+    required: true
+  - name: findings.json
+    path: run/output-data/findings.json
+    schema: schemas/findings.schema.json
+    description: Structured findings for downstream consumption
+    required: true
+  - name: explore-metrics.json
+    path: run/output-data/explore-metrics.json
+    schema: schemas/explore-metrics.schema.json
+    description: Nested metrics data for parameter extraction demo
+    required: true
+prompt:
+  entry: prompt/wf.md
+  main: prompt/main.md
+output_parameters:
+- name: total_findings
+  description: Total number of findings discovered
+  source: run/output-data/explore-metrics.json
+  query: summary.total_findings
+- name: critical_count
+  description: Count of critical findings
+  source: run/output-data/explore-metrics.json
+  query: summary.by_impact.critical
+- name: top_component
+  description: Most affected component name
+  source: run/output-data/explore-metrics.json
+  query: components[0].name
+- name: complexity_score
+  description: Suggested complexity score
+  source: run/output-data/explore-metrics.json
+  query: recommendations.complexity.suggested_score

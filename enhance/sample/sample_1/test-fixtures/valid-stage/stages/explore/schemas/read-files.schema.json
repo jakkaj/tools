@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "read-files.schema.json",
+  "title": "Stage Runtime Read Log",
+  "description": "Log of files read during stage execution - tracks what inputs influenced the stage's outputs",
+  "type": "object",
+  "required": ["stage_id", "reads"],
+  "properties": {
+    "stage_id": {
+      "type": "string",
+      "description": "Stage identifier"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When stage execution started"
+    },
+    "reads": {
+      "type": "array",
+      "description": "Files read in chronological order - append as you go",
+      "items": {
+        "type": "object",
+        "required": ["path", "timestamp"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Absolute path to the file read"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the file was read"
+          },
+          "purpose": {
+            "type": "string",
+            "description": "Why this file was read (brief context)"
+          },
+          "lines": {
+            "type": "string",
+            "description": "Line range if partial read (e.g., '1-50', 'all')"
+          }
+        }
+      }
+    },
+    "total_reads": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total count of files read"
+    }
+  }
+}

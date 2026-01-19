@@ -8,7 +8,7 @@ from chainglass import __version__
 from chainglass.composer import CompositionError, compose
 from chainglass.preparer import prepare_wf_stage
 from chainglass.stage import Stage
-from chainglass.validator import ValidationError
+from chainglass.validator import ValidationError, validate_stage
 
 app = typer.Typer(
     name="chainglass",
@@ -129,6 +129,72 @@ def finalize_cmd(
         typer.echo("Finalization failed:\n", err=True)
         for error in result.errors:
             typer.echo(f"  {error}\n", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command(name="validate")
+def validate_cmd(
+    stage_id: str = typer.Argument(
+        ...,
+        help="Stage ID to validate (e.g., 'explore')",
+    ),
+    run_dir: Path = typer.Option(
+        ...,
+        "--run-dir",
+        "-r",
+        help="Path to run directory containing stages/",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+    ),
+) -> None:
+    """Validate stage outputs after LLM execution.
+
+    Checks all required outputs exist, validates JSON files against schemas,
+    extracts output parameters, and writes output-params.json on success.
+
+    Designed to be called by an LLM at the end of stage execution to verify
+    completion. Provides actionable error messages telling you exactly what to fix.
+
+    Example:
+        chainglass validate explore --run-dir ./run/run-2026-01-18-001
+    """
+    stage_path = run_dir / "stages" / stage_id
+
+    if not stage_path.exists():
+        typer.echo(
+            f"Stage folder not found: {stage_path}\n"
+            f"Action: Verify stage_id is correct and run compose first.",
+            err=True,
+        )
+        raise typer.Exit(code=1)
+
+    result = validate_stage(stage_path)
+
+    if result.status == "pass":
+        typer.echo(f"Validated: {stage_id}")
+        if result.checks:
+            typer.echo("Checks passed:")
+            for check in result.checks:
+                if check.schema:
+                    typer.echo(f"  {check.path} (schema valid)")
+                else:
+                    typer.echo(f"  {check.path}")
+        if result.output_params_written:
+            typer.echo("Output parameters published:")
+            for key, value in result.output_params.items():
+                typer.echo(f"  {key}: {value}")
+        passed = len(result.checks)
+        typer.echo(f"Result: PASS ({passed} checks, 0 errors)")
+    else:
+        typer.echo("Validation failed:", err=True)
+        for error in result.errors:
+            typer.echo(f"  {error.check.upper()}: {error.path}", err=True)
+            typer.echo(f"    Action: {error.action}", err=True)
+        passed = len(result.checks)
+        failed = len(result.errors)
+        typer.echo(f"Result: FAIL ({passed} passed, {failed} errors)", err=True)
         raise typer.Exit(code=1)
 
 

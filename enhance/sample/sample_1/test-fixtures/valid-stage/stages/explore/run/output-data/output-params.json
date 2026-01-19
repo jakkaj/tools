@@ -1,0 +1,10 @@
+{
+  "stage_id": "explore",
+  "published_at": "2026-01-19T05:31:48.519598+00:00",
+  "parameters": {
+    "total_findings": 15,
+    "critical_count": 2,
+    "top_component": "auth/session.py",
+    "complexity_score": "CS-3"
+  }
+}

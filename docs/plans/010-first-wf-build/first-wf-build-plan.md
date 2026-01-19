@@ -185,28 +185,28 @@
 
 ### Tasks
 
-| Status | ID | Task | CS | Type | Dependencies | Path(s) | Validation | Notes |
-|--------|-----|------|----|------|--------------|---------|------------|-------|
-| [ ] | 4.1 | Implement validator module | 3 | Core | Phase 2 | `enhance/src/chainglass/validator.py` | Validates per A.12 algorithm | Core validation logic |
-| [ ] | 4.2 | Implement file presence check | 1 | Core | 4.1 | `enhance/src/chainglass/validator.py` | Detects missing required output files | Per stage-config.yaml outputs |
-| [ ] | 4.3 | Implement empty file check | 1 | Core | 4.1 | `enhance/src/chainglass/validator.py` | Detects empty (0-byte) output files | Files must have content |
-| [ ] | 4.4 | Implement schema validation | 2 | Core | 4.1 | `enhance/src/chainglass/validator.py` | Validates JSON outputs against declared schemas | jsonschema Draft202012 |
-| [ ] | 4.5 | Implement output_parameter extraction | 2 | Core | 4.4 | `enhance/src/chainglass/validator.py` | Extracts output_parameters and writes output-params.json | Uses same query resolver as preparer |
-| [ ] | 4.6 | Implement LLM-friendly error formatting | 2 | Core | 4.1-4.5 | `enhance/src/chainglass/validator.py` | Errors are actionable with fix instructions | See A.12 output format |
-| [ ] | 4.7 | Implement validate CLI command | 2 | Core | 4.1 | `enhance/src/chainglass/cli.py` | `chainglass validate --help` works | typer command |
-| [ ] | 4.8 | Manual test: validate passes on valid stage | 1 | Test | 4.7 | Test fixture: `enhance/sample/sample_1/runs/run-2024-01-18-001/stages/01-explore/` (existing valid stage) | Returns success with summary | Verify all outputs present |
-| [ ] | 4.9 | Manual test: validate extracts output_parameters | 1 | Test | 4.7 | -- | output-params.json written with correct values | Verify parameter extraction |
-| [ ] | 4.10 | Manual test: validate fails with actionable errors | 1 | Test | 4.7 | Test fixture: Create `enhance/sample/sample_1/test-fixtures/invalid-stage/` with missing/empty/invalid files | Returns failure with specific fix instructions | See A.13 for fixture structure |
+| Status | ID | Task | CS | Type | Dependencies | Path(s) | Validation | Log | Notes |
+|--------|-----|------|----|------|--------------|---------|------------|-----|-------|
+| [x] | 4.1 | Implement validator module | 3 | Core | Phase 2 | `enhance/src/chainglass/validator.py` | Validates per A.12 algorithm | [📋](tasks/phase-4-implement-validate-command/execution.log.md#task-t001-t006-core-validation-implementation) | Complete [^20] |
+| [x] | 4.2 | Implement file presence check | 1 | Core | 4.1 | `enhance/src/chainglass/validator.py` | Detects missing required output files | [📋](tasks/phase-4-implement-validate-command/execution.log.md#task-t001-t006-core-validation-implementation) | Complete [^20] |
+| [x] | 4.3 | Implement empty file check | 1 | Core | 4.1 | `enhance/src/chainglass/validator.py` | Detects empty (0-byte) output files | [📋](tasks/phase-4-implement-validate-command/execution.log.md#task-t001-t006-core-validation-implementation) | Complete [^20] |
+| [x] | 4.4 | Implement schema validation | 2 | Core | 4.1 | `enhance/src/chainglass/validator.py` | Validates JSON outputs against declared schemas | [📋](tasks/phase-4-implement-validate-command/execution.log.md#task-t001-t006-core-validation-implementation) | Complete [^20] |
+| [x] | 4.5 | Implement output_parameter extraction | 2 | Core | 4.4 | `enhance/src/chainglass/validator.py` | Extracts output_parameters and writes output-params.json | [📋](tasks/phase-4-implement-validate-command/execution.log.md#task-t001-t006-core-validation-implementation) | Complete [^20] |
+| [x] | 4.6 | Implement LLM-friendly error formatting | 2 | Core | 4.1-4.5 | `enhance/src/chainglass/validator.py` | Errors are actionable with fix instructions | [📋](tasks/phase-4-implement-validate-command/execution.log.md#task-t001-t006-core-validation-implementation) | Complete [^20] |
+| [x] | 4.7 | Implement validate CLI command | 2 | Core | 4.1 | `enhance/src/chainglass/cli.py` | `chainglass validate --help` works | [📋](tasks/phase-4-implement-validate-command/execution.log.md#task-t007-implement-validate-cli-command) | Complete [^21] |
+| [x] | 4.8 | Manual test: validate passes on valid stage | 1 | Test | 4.7 | `enhance/sample/sample_1/test-fixtures/valid-stage/` | Returns success with summary | [📋](tasks/phase-4-implement-validate-command/execution.log.md#task-t010-t012-manual-testing) | Complete [^22] |
+| [x] | 4.9 | Manual test: validate extracts output_parameters | 1 | Test | 4.7 | -- | output-params.json written with correct values | [📋](tasks/phase-4-implement-validate-command/execution.log.md#task-t010-t012-manual-testing) | Complete [^22] |
+| [x] | 4.10 | Manual test: validate fails with actionable errors | 1 | Test | 4.7 | `enhance/sample/sample_1/test-fixtures/invalid-stage/` | Returns failure with specific fix instructions | [📋](tasks/phase-4-implement-validate-command/execution.log.md#task-t010-t012-manual-testing) | Complete [^22] |
 
 ### Phase 4 Acceptance Criteria
 
-- [ ] **P4-AC-01**: `chainglass validate ./run/001/stages/explore` validates all declared outputs
-- [ ] **P4-AC-02**: Detects and reports missing required files with message: `FAIL: Missing required output: {path}. Action: Write this file before completing the stage.`
-- [ ] **P4-AC-03**: Detects and reports empty files with message: `FAIL: Output file is empty: {path}. Action: Write content to this file.`
-- [ ] **P4-AC-04**: Detects and reports schema violations with message: `FAIL: Schema validation failed for {path}. Error: {jsonschema error}. Action: Fix the JSON structure per {schema_path}.`
-- [ ] **P4-AC-05**: If `output_parameters` declared, extracts values and writes `run/output-data/output-params.json`
-- [ ] **P4-AC-06**: Returns structured result: `{"status": "pass"|"fail", "stage_id": "...", "checks": [...], "output_params_written": bool, "errors": [...], "summary": "..."}`
-- [ ] **P4-AC-07**: Exit code 0 on pass, 1 on fail
+- [x] **P4-AC-01**: `chainglass validate ./run/001/stages/explore` validates all declared outputs
+- [x] **P4-AC-02**: Detects and reports missing required files with message: `FAIL: Missing required output: {path}. Action: Write this file before completing the stage.`
+- [x] **P4-AC-03**: Detects and reports empty files with message: `FAIL: Output file is empty: {path}. Action: Write content to this file.`
+- [x] **P4-AC-04**: Detects and reports schema violations with message: `FAIL: Schema validation failed for {path}. Error: {jsonschema error}. Action: Fix the JSON structure per {schema_path}.`
+- [x] **P4-AC-05**: If `output_parameters` declared, extracts values and writes `run/output-data/output-params.json`
+- [x] **P4-AC-06**: Returns structured result: `{"status": "pass"|"fail", "stage_id": "...", "checks": [...], "output_params_written": bool, "errors": [...], "summary": "..."}`
+- [x] **P4-AC-07**: Exit code 0 on pass, 1 on fail
 
 ---
 
@@ -1976,6 +1976,22 @@ enhance/sample/sample_1/test-fixtures/
 [^19]: Phase 3 Task 3.2 - Added finalize and prepare-wf-stage CLI commands
   - `function:enhance/src/chainglass/cli.py:finalize_cmd`
   - `function:enhance/src/chainglass/cli.py:prepare_wf_stage_cmd`
+
+[^20]: Phase 4 Tasks 4.1-4.6 - Core validation implementation per A.12 algorithm
+  - `class:enhance/src/chainglass/validator.py:StageValidationCheck`
+  - `class:enhance/src/chainglass/validator.py:StageValidationResult`
+  - `function:enhance/src/chainglass/validator.py:validate_stage`
+  - `function:enhance/src/chainglass/validator.py:_validate_output_file`
+
+[^21]: Phase 4 Task 4.7 - Implemented validate CLI command
+  - `function:enhance/src/chainglass/cli.py:validate_cmd`
+
+[^22]: Phase 4 Tasks 4.8-4.10 - Created test fixtures per A.13
+  - `file:enhance/sample/sample_1/test-fixtures/valid-stage/`
+  - `file:enhance/sample/sample_1/test-fixtures/invalid-stage/`
+
+[^23]: Phase 4 - Refactored Stage.finalize() to delegate to validate_stage()
+  - `method:enhance/src/chainglass/stage.py:Stage.finalize`
 
 ---
 

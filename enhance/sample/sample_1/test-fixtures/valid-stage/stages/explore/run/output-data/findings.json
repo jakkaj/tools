@@ -1,0 +1,30 @@
+{
+  "findings": [
+    {
+      "id": "IA-01",
+      "category": "implementation",
+      "impact": "high",
+      "title": "Auth refactoring needed",
+      "summary": "Authentication module requires refactoring for better separation of concerns"
+    },
+    {
+      "id": "IA-02",
+      "category": "implementation",
+      "impact": "medium",
+      "title": "Session edge cases",
+      "summary": "Session handling has edge cases when tokens expire mid-request"
+    }
+  ],
+  "summary": {
+    "total": 2,
+    "by_impact": {
+      "critical": 0,
+      "high": 1,
+      "medium": 1,
+      "low": 0
+    },
+    "by_category": {
+      "implementation": 2
+    }
+  }
+}

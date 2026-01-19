@@ -140,7 +140,10 @@ class Stage:
         if self._config is None:
             config_path = self.path / "stage-config.yaml"
             try:
-                self._config = yaml.safe_load(config_path.read_text())
+                loaded = yaml.safe_load(config_path.read_text())
+                if loaded is None:
+                    raise ValueError(f"stage-config.yaml is empty: {config_path}")
+                self._config = loaded
             except FileNotFoundError:
                 raise ValueError(f"stage-config.yaml not found: {config_path}")
             except yaml.YAMLError as e:
@@ -226,56 +229,39 @@ class Stage:
 
         This is the "official" way to mark a stage as complete after the LLM
         finishes its work. It:
-        1. Runs validate() to check all outputs exist
-        2. Extracts output_parameters using source + query definitions
-        3. Writes extracted parameters to run/output-data/output-params.json
-        4. Updates stage status in wf-run.json to "completed"
+        1. Calls validate_stage() for thorough validation + param extraction
+        2. Updates stage status in wf-run.json to "completed"
 
         Returns:
             FinalizeResult with success=True if finalized, else errors populated.
+
+        Note: Per A.12, validate_stage() handles file existence checks, empty file
+        detection, schema validation, parameter extraction, and writing output-params.json.
+        This method delegates to that shared logic and just handles wf-run.json updates.
         """
-        from datetime import datetime, timezone
+        from chainglass.validator import validate_stage
 
         result = FinalizeResult(success=True)
 
-        # Step 1: Validate outputs exist
-        validation = self.validate()
-        if not validation.valid:
+        # Step 1: Delegate to validate_stage() for thorough validation + param extraction
+        # This writes output-params.json on success (per A.12)
+        validation = validate_stage(self.path)
+
+        if validation.status == "fail":
             result.success = False
-            result.errors = validation.errors
-            return result
-
-        # Step 2: Extract output_parameters
-        parameters: dict[str, Any] = {}
-        for param in self.config.get("output_parameters", []):
-            value = self.query_output(param["source"], param["query"])
-            if value is not None:
-                parameters[param["name"]] = value
-            else:
-                result.success = False
+            # Convert StageValidationCheck errors to string format for FinalizeResult
+            for error in validation.errors:
                 result.errors.append(
-                    f"Cannot extract parameter: {param['name']}\n"
-                    f"  Source: {param['source']}\n"
-                    f"  Query: {param['query']}"
+                    f"{error.check.upper()}: {error.path}\n"
+                    f"  {error.message}\n"
+                    f"  Action: {error.action}"
                 )
-
-        if not result.success:
             return result
 
-        # Step 3: Write output-params.json
-        output_params_path = self.path / "run" / "output-data" / "output-params.json"
-        output_params_path.parent.mkdir(parents=True, exist_ok=True)  # FIX-002
-        output_params_data = {
-            "stage_id": self.stage_id,
-            "published_at": datetime.now(timezone.utc).isoformat(),  # FIX-001
-            "parameters": parameters,
-        }
-        output_params_path.write_text(json.dumps(output_params_data, indent=2))
-
-        # Step 4: Update wf-run.json status
+        # Step 2: Update wf-run.json status
         self._update_wf_run_status("completed")
 
-        result.parameters = parameters
+        result.parameters = validation.output_params
         return result
 
     def _update_wf_run_status(self, status: str) -> None:
@@ -286,7 +272,10 @@ class Stage:
         if not self.wf_run_path.exists():
             return  # Silent no-op if wf-run.json missing
 
-        wf_run = json.loads(self.wf_run_path.read_text())
+        try:
+            wf_run = json.loads(self.wf_run_path.read_text())
+        except json.JSONDecodeError:
+            return  # Silent no-op if wf-run.json is corrupted
         stage_found = False  # FIX-011: Track if stage found
         for stage in wf_run.get("stages", []):
             if stage["id"] == self.stage_id:
