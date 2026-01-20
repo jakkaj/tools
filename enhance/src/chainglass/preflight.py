@@ -434,6 +434,48 @@ def preflight(stage_path: Path) -> PreflightResult:
                     )
                 )
 
+    # =========================================================================
+    # INFORMATIONAL: Accept Status Check (non-blocking)
+    # =========================================================================
+
+    # Check accept.json presence (informational only, does not affect pass/fail)
+    accept_path = stage_path / "run" / "output-data" / "accept.json"
+    if accept_path.exists():
+        # Validate accept.json content
+        try:
+            accept_data = json.loads(accept_path.read_text())
+            accept_state = accept_data.get("state", "unknown")
+            result.checks.append(
+                PreflightCheck(
+                    check="accept_present",
+                    path="run/output-data/accept.json",
+                    status="PASS",
+                    name=f"state={accept_state}",
+                )
+            )
+        except json.JSONDecodeError:
+            # Invalid JSON - report but don't fail (informational)
+            result.checks.append(
+                PreflightCheck(
+                    check="accept_present",
+                    path="run/output-data/accept.json",
+                    status="PASS",
+                    name="invalid JSON",
+                    message="accept.json exists but contains invalid JSON",
+                )
+            )
+    else:
+        # Absent - informational check (does NOT affect overall result)
+        result.checks.append(
+            PreflightCheck(
+                check="accept_present",
+                path="run/output-data/accept.json",
+                status="FAIL",
+                message="accept.json not found - orchestrator has not granted control",
+                name="absent",
+            )
+        )
+
     # Generate summary
     passed = len(result.checks)
     failed = len(result.errors)

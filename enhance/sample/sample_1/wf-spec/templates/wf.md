@@ -98,6 +98,115 @@ When your work is complete:
 
 4. Stop and wait - the workflow system handles what comes next
 
+## Handback Protocol
+
+This protocol tracks control flow between the orchestrator and you (the agent).
+
+### Accept (Orchestrator → Agent)
+
+Before you execute a stage, the orchestrator grants you control by writing `accept.json`:
+
+```json
+{
+  "state": "agent",
+  "timestamp": "2026-01-20T10:02:00Z"
+}
+```
+
+**Checking accept status**: Run preflight or validate - both show accept status:
+```bash
+uv run chainglass preflight <stage_id> --run-dir ../../
+# Output includes: Accept: PRESENT (state=agent) or Accept: ABSENT
+```
+
+**Note**: Accept is informational - commands report its status but don't block on it.
+
+### Handback (Agent → Orchestrator)
+
+When you're done with the stage (success, error, or question), you MUST handback:
+
+### Success Handback
+```json
+{
+  "reason": "success",
+  "description": "Stage completed successfully. All outputs validated."
+}
+```
+
+### Error Handback (with embedded error details)
+```json
+{
+  "reason": "error",
+  "description": "Brief summary of what went wrong",
+  "error": {
+    "code": "<ERROR_CODE>",
+    "message": "Detailed error message",
+    "context": { "optional": "additional context" }
+  }
+}
+```
+
+**Error codes** (use the most specific one):
+- `INPUT_MISSING` - Required input file doesn't exist
+- `INPUT_INVALID` - Input exists but is malformed/unusable
+- `SCHEMA_VIOLATION` - Your output fails schema validation
+- `EXTERNAL_FAILURE` - External service/API failed (not your fault)
+- `PERMISSION_DENIED` - Can't access required resource
+- `RESOURCE_EXHAUSTED` - Hit a limit (tokens, memory, etc.)
+- `INTERNAL_ERROR` - Bug in your logic
+- `TIMEOUT` - Operation took too long
+- `CANCELLED` - User/system cancelled
+- `UNKNOWN` - Can't categorize the error
+
+### Question Handback (need clarification)
+```json
+{
+  "reason": "question",
+  "description": "What clarification do you need from the user?"
+}
+```
+
+### Handback Steps
+
+1. **Write handback.json** to `../run/output-data/handback.json`
+
+2. **Call handback command**:
+   ```bash
+   uv run chainglass handback <stage_id> --run-dir ../../
+   ```
+
+3. **Output**: Command always exits 0. Shows:
+   - Reason and description
+   - Error details (if error)
+   - **State transition**: `State: agent → orchestrator` (if accept.json present)
+   - Timestamps: when accepted, when handed back
+   - JSON output for programmatic use
+
+   ```
+   Handback: explore
+   Reason: success
+   Description: Stage completed successfully.
+   State: agent → orchestrator
+   Accepted at: 2026-01-20T10:02:00Z
+   Handed back: 2026-01-20T10:15:00Z
+   ```
+
+**Always handback** - Even on error, write the handback so the workflow system knows you're done.
+
+### State Files Reference
+
+These files track control flow and stage status:
+
+| File | Purpose | Who Writes | Contains |
+|------|---------|------------|----------|
+| `accept.json` | **Grant control** to agent | Orchestrator | state="agent", timestamp |
+| `handback.json` | **Return control** to orchestrator | Agent | reason, error details, questions |
+| `wf-result.json` | **Stage metadata** | Agent OR orchestrator | status, metrics, timestamps |
+
+Write `handback.json` AND `wf-result.json` when done:
+- `wf-result.json` records what happened to the stage
+- `handback.json` signals why and what's needed next
+
 ## Output Schemas
 
 Each output declared in `stage-config.yaml` has a corresponding JSON Schema in `../schemas/`. Read the schema files to understand the exact structure required for each output.

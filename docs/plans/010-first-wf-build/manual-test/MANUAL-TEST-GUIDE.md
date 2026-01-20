@@ -31,6 +31,7 @@ Run the compose script to create a fresh run folder:
 
 **Expected Output**:
 - Creates `sample/sample_1/runs/run-YYYY-MM-DD-NNN/`
+- Runs `chainglass accept explore` (orchestrator grants control)
 - Outputs the starter prompt with the exact path
 
 **Save the RUN_DIR path** - you'll need it for all subsequent commands.
@@ -92,8 +93,11 @@ Checks passed:
   prompt/wf.md
   prompt/main.md
   inputs/user-description.md (user-description.md)
-Result: PASS (4 checks, 0 errors)
+  run/output-data/accept.json (state=agent)
+Result: PASS (5 checks, 0 errors)
 ```
+
+**Note**: The `accept.json` check shows `state=agent` - this confirms the orchestrator has granted control.
 
 ---
 
@@ -126,6 +130,37 @@ chainglass validate explore --run-dir <RUN_DIR>
 
 **Expected Result**: `PASS` with all outputs present and valid
 
+```
+Validated: explore
+Checks passed:
+  ...
+Accept: PRESENT (state=agent)
+Handback: success
+Result: PASS (11 checks, 0 errors)
+```
+
+---
+
+### Step 1.7: Handback (Agent Returns Control)
+
+After completing work, the agent writes `handback.json` and runs handback:
+
+```bash
+chainglass handback explore --run-dir <RUN_DIR>
+```
+
+**Expected Output**:
+```
+Handback: explore
+Reason: success
+Description: Stage completed successfully. All outputs validated.
+State: agent → orchestrator
+Accepted at: 2026-01-20T10:02:00Z
+Handed back: 2026-01-20T10:15:00Z
+```
+
+**Note**: The state transition shows control returning from agent to orchestrator.
+
 ---
 
 ## Phase 2: Specify Stage
@@ -139,10 +174,12 @@ After the agent completes explore, run the transition script:
 ```
 
 **What This Does**:
+0. `handback explore` - Agent returns control to orchestrator (shows state transition)
 1. `finalize explore` - Extracts output parameters, writes output-params.json
 2. `prepare-wf-stage specify` - Copies inputs from explore outputs
-3. `preflight specify` - Courtesy check (should PASS)
-4. Outputs the prompt for specify stage
+3. `accept specify` - Orchestrator grants control to agent
+4. `preflight specify` - Courtesy check (should PASS, shows accept status)
+5. Outputs the prompt for specify stage
 
 ---
 
@@ -188,6 +225,17 @@ cat <RUN_DIR>/stages/explore/run/output-files/research-dossier.md
 # Specify outputs
 cat <RUN_DIR>/stages/specify/run/output-data/wf-result.json
 cat <RUN_DIR>/stages/specify/run/output-files/feature-spec.md
+```
+
+### State Files (Accept/Handback)
+```bash
+# Explore state files
+cat <RUN_DIR>/stages/explore/run/output-data/accept.json     # state=agent, timestamp
+cat <RUN_DIR>/stages/explore/run/output-data/handback.json   # reason, description
+
+# Specify state files
+cat <RUN_DIR>/stages/specify/run/output-data/accept.json     # state=agent, timestamp
+cat <RUN_DIR>/stages/specify/run/output-data/handback.json   # reason, description
 ```
 
 ### Input Provenance
@@ -236,7 +284,9 @@ cat <RUN_DIR>/wf-run.json
 | Command | Purpose |
 |---------|---------|
 | `chainglass compose <wf-spec> -o <output>` | Create run folder |
-| `chainglass preflight <stage> -r <run-dir>` | Validate inputs |
-| `chainglass validate <stage> -r <run-dir>` | Validate outputs |
+| `chainglass accept <stage> -r <run-dir>` | Grant control to agent (writes accept.json) |
+| `chainglass preflight <stage> -r <run-dir>` | Validate inputs (shows accept status) |
+| `chainglass validate <stage> -r <run-dir>` | Validate outputs (shows accept status) |
+| `chainglass handback <stage> -r <run-dir>` | Return control to orchestrator (shows state transition) |
 | `chainglass finalize <stage> -r <run-dir>` | Extract params, mark complete |
 | `chainglass prepare-wf-stage <stage> -r <run-dir>` | Copy inputs from prior stages |

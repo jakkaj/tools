@@ -56,6 +56,11 @@ echo ""
 echo "RUN_DIR: $RUN_DIR"
 echo ""
 
+# Orchestrator grants control to agent
+echo "Granting control to agent..."
+uv run chainglass accept explore --run-dir "$RUN_DIR"
+echo ""
+
 # Run preflight to verify
 echo "Running preflight check..."
 echo ""

@@ -1895,6 +1895,8 @@ Mid-implementation detours requiring structured tracking.
 | ID | Created | Phase | Parent Task | Reason | Status | Dossier |
 |----|---------|-------|-------------|--------|--------|---------|
 | 001-subtask-preflight-command | 2026-01-19 | Phase 4: Implement validate Command | Phase 4 complete | Add preflight command for pre-execution input validation; update wf.md | [x] Complete | [Link](tasks/phase-4-implement-validate-command/001-subtask-preflight-command.md) [^24] |
+| 002-subtask-error-output-and-handback | 2026-01-19 | Phase 4: Implement validate Command | Phase 4 complete | Add unified handback mechanism with embedded error reporting | [ ] Pending | [Link](tasks/phase-4-implement-validate-command/002-subtask-error-output-and-handback.md) |
+| 003-subtask-filesystem-state-machine | 2026-01-20 | Phase 4: Implement validate Command | 002-subtask | Create filesystem-based state machine for explicit accept/handback control flow | [ ] Pending | [Link](tasks/phase-4-implement-validate-command/003-subtask-filesystem-state-machine.md) |
 
 ---
 

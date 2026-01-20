@@ -31,6 +31,18 @@ echo ""
 echo "RUN_DIR: $RUN_DIR"
 echo ""
 
+# Step 0: Handback explore (agent returns control to orchestrator)
+echo "----------------------------------------------"
+echo "  Step 0: Handback Explore Stage"
+echo "----------------------------------------------"
+echo ""
+echo "Agent returns control to orchestrator..."
+echo "Running: chainglass handback explore --run-dir $RUN_DIR"
+echo ""
+
+uv run chainglass handback explore --run-dir "$RUN_DIR"
+echo ""
+
 # Step 1: Finalize explore
 echo "----------------------------------------------"
 echo "  Step 1: Finalize Explore Stage"
@@ -76,6 +88,15 @@ echo ""
 # Show what was copied
 echo "Inputs available to specify:"
 ls -la "$RUN_DIR/stages/specify/inputs/" 2>/dev/null || echo "(no inputs directory)"
+echo ""
+
+# Step 2.5: Accept specify (orchestrator grants control)
+echo "----------------------------------------------"
+echo "  Step 2.5: Accept Specify Stage"
+echo "----------------------------------------------"
+echo ""
+echo "Orchestrator grants control to agent..."
+uv run chainglass accept specify --run-dir "$RUN_DIR"
 echo ""
 
 # Step 3: Preflight specify (courtesy check)

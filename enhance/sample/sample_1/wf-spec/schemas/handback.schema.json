@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "handback.schema.json",
+  "title": "Handback Output Schema",
+  "description": "Schema for agent-written handback.json files with embedded error details",
+  "type": "object",
+  "required": ["reason", "description"],
+  "properties": {
+    "reason": {
+      "type": "string",
+      "enum": ["success", "error", "question"],
+      "description": "Completion reason: success (all done), error (failed), question (need clarification)"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable description of the handback reason"
+    },
+    "error": {
+      "type": "object",
+      "description": "Error details (required when reason=error)",
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": ["INPUT_MISSING", "INPUT_INVALID", "SCHEMA_VIOLATION", "EXTERNAL_FAILURE", "PERMISSION_DENIED", "RESOURCE_EXHAUSTED", "INTERNAL_ERROR", "TIMEOUT", "CANCELLED", "UNKNOWN"],
+          "description": "Error code from error-codes.json"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable error message with context"
+        },
+        "context": {
+          "type": "object",
+          "description": "Optional additional context (service name, retry count, etc.)",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "if": {
+    "properties": { "reason": { "const": "error" } }
+  },
+  "then": {
+    "required": ["error"]
+  }
+}

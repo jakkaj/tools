@@ -51,6 +51,33 @@ class StageValidationCheck:
 
 
 @dataclass
+class AcceptInfo:
+    """Information about accept.json if present.
+
+    Full parity with HandbackInfo: 5 fields for consistent serialization.
+    """
+
+    present: bool
+    state: str | None = None  # "agent" (current state)
+    timestamp: str | None = None  # ISO8601 timestamp when control was granted
+    valid: bool = True
+    warning: str | None = None
+
+
+@dataclass
+class HandbackInfo:
+    """Information about handback.json if present."""
+
+    present: bool
+    reason: str | None = None  # "success" | "error" | "question"
+    description: str | None = None
+    error_code: str | None = None
+    error_message: str | None = None
+    valid: bool = True
+    warning: str | None = None
+
+
+@dataclass
 class StageValidationResult:
     """Result of stage output validation per A.12 output format.
 
@@ -64,6 +91,8 @@ class StageValidationResult:
     output_params_written: bool = False
     output_params: dict[str, Any] = field(default_factory=dict)
     summary: str = ""
+    handback: HandbackInfo | None = None
+    accept: AcceptInfo | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to JSON-serializable dict per A.12 output format."""
@@ -83,6 +112,14 @@ class StageValidationResult:
         if self.output_params_written:
             result["output_params_written"] = True
             result["output_params"] = self.output_params
+        if self.handback:
+            result["handback"] = {
+                k: v for k, v in self.handback.__dict__.items() if v is not None
+            }
+        if self.accept:
+            result["accept"] = {
+                k: v for k, v in self.accept.__dict__.items() if v is not None
+            }
         return result
 
 
@@ -347,14 +384,114 @@ def validate_stage(stage_path: Path) -> StageValidationResult:
                 result.output_params_written = True
                 result.output_params = extracted
 
+    # Detect and validate accept.json (informational, does not affect pass/fail)
+    accept_path = stage_path / "run" / "output-data" / "accept.json"
+    if not accept_path.exists():
+        # Accept is optional - just note absence
+        result.accept = AcceptInfo(
+            present=False,
+            warning="accept.json not found - orchestrator has not granted control",
+        )
+    else:
+        # Load accept.json
+        accept_info = AcceptInfo(present=True)
+        try:
+            accept_data = json.loads(accept_path.read_text())
+            accept_info.state = accept_data.get("state")
+            accept_info.timestamp = accept_data.get("timestamp")
+
+            # Validate against schema if available (informational only)
+            schema_path = stage_path / "schemas" / "accept.schema.json"
+            if schema_path.exists():
+                try:
+                    schema = json.loads(schema_path.read_text())
+                    jsonschema.validate(accept_data, schema)
+                except json.JSONDecodeError:
+                    accept_info.valid = False
+                    accept_info.warning = "accept.schema.json is invalid JSON"
+                except jsonschema.ValidationError as e:
+                    accept_info.valid = False
+                    accept_info.warning = f"accept.json validation failed: {e.message}"
+                    # Note: This is informational only - does NOT fail validation
+
+        except json.JSONDecodeError as e:
+            accept_info.valid = False
+            accept_info.warning = f"Invalid JSON in accept.json: {e.msg}"
+            # Note: This is informational only - does NOT fail validation
+
+        result.accept = accept_info
+
+    # Detect and validate handback.json
+    handback_path = stage_path / "run" / "output-data" / "handback.json"
+    if not handback_path.exists():
+        # Handback is optional - warn but don't fail
+        result.handback = HandbackInfo(
+            present=False,
+            warning="handback.json not found - remember to write handback.json before calling handback command",
+        )
+    else:
+        # Load and validate handback
+        handback_info = HandbackInfo(present=True)
+        try:
+            handback_data = json.loads(handback_path.read_text())
+            handback_info.reason = handback_data.get("reason")
+            handback_info.description = handback_data.get("description")
+
+            # Extract error details if reason is error
+            if handback_info.reason == "error" and "error" in handback_data:
+                error_obj = handback_data["error"]
+                handback_info.error_code = error_obj.get("code")
+                handback_info.error_message = error_obj.get("message")
+
+            # Validate against schema if available
+            schema_path = stage_path / "schemas" / "handback.schema.json"
+            if schema_path.exists():
+                try:
+                    schema = json.loads(schema_path.read_text())
+                    jsonschema.validate(handback_data, schema)
+                except json.JSONDecodeError:
+                    handback_info.valid = False
+                    handback_info.warning = "handback.schema.json is invalid JSON"
+                except jsonschema.ValidationError as e:
+                    handback_info.valid = False
+                    # Add validation error to result
+                    result.errors.append(
+                        StageValidationCheck(
+                            check="schema_valid",
+                            path="run/output-data/handback.json",
+                            schema="schemas/handback.schema.json",
+                            status="FAIL",
+                            message=f"Handback validation failed: {e.message}",
+                            action="Fix handback.json to match handback.schema.json.",
+                        )
+                    )
+                    result.status = "fail"
+
+        except json.JSONDecodeError as e:
+            handback_info.valid = False
+            result.errors.append(
+                StageValidationCheck(
+                    check="schema_valid",
+                    path="run/output-data/handback.json",
+                    status="FAIL",
+                    message=f"Invalid JSON in handback.json: {e.msg}",
+                    action="Fix the JSON syntax error in handback.json.",
+                )
+            )
+            result.status = "fail"
+
+        result.handback = handback_info
+
     # Generate summary
     passed = len(result.checks)
     failed = len(result.errors)
+    summary_parts = [f"Stage '{stage_id}': {passed} checks passed, {failed} errors"]
     if result.output_params_written:
         param_count = len(result.output_params)
-        result.summary = f"Stage '{stage_id}': {passed} checks passed, {failed} errors, {param_count} output_parameters published"
-    else:
-        result.summary = f"Stage '{stage_id}': {passed} checks passed, {failed} errors"
+        summary_parts.append(f"{param_count} output_parameters published")
+    if result.handback and result.handback.present:
+        summary_parts.append(f"Handback: {result.handback.reason}")
+    result.summary = ", ".join(summary_parts)
 
     return result
 

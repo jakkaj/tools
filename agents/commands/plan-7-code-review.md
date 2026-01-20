@@ -807,6 +807,168 @@ This step runs **after** Step 3a (depends on link validation data) but can run i
 
    If no violations found, return {\"findings\": [], \"task_compliance\": {...all PASS...}, \"scope_creep_summary\": {\"unexpected_files\": [], \"excessive_changes_tasks\": [], \"gold_plating_tasks\": [], \"unplanned_functionality\": []}, \"violations_count\": 0, \"compliance_score\": \"PASS\"}."
 
+   **Subagent 6: Doctrine Evolution Analyzer** (always runs)
+   "You are a Doctrine Evolution Analyst. Review the implemented code against existing ADRs, rules, and idioms to identify patterns that should be codified as new architectural decisions, rules, or idioms.
+
+   **Inputs:**
+   - DIFF (unified diff of all changes in this phase)
+   - docs/adr/*.md (all existing ADRs, if directory exists)
+   - docs/project-rules/*.md (all doctrine files - constitution, rules, idioms, architecture, and any future additions)
+   - PLAN (for context on what was built and why)
+   - EXEC_LOG (for implementation decisions and rationale)
+
+   **Analysis Goals:**
+
+   1. **ADR Candidate Detection**:
+      - Scan diff for significant architectural decisions that emerged during implementation:
+        * New integration patterns with external services/APIs
+        * Technology choices (new libraries, frameworks, tools adopted)
+        * Data flow patterns that define boundaries between components
+        * Security/authentication approaches chosen
+        * Error handling strategies that should be consistent
+        * Performance trade-offs (caching, batching, lazy loading)
+      - For each candidate, assess:
+        * Is this decision reusable across the codebase?
+        * Does it affect multiple components or future features?
+        * Would a new team member benefit from knowing this decision?
+        * Is there an existing ADR that should be updated instead?
+      - Cross-check against existing ADRs:
+        * Does this pattern reinforce an existing ADR? (note as positive evidence)
+        * Does this pattern suggest an existing ADR needs updating? (flag for review)
+        * Is this a genuinely new decision not covered by existing ADRs?
+
+   2. **Rules Candidate Detection**:
+      - Identify patterns in the diff that could become enforceable rules:
+        * Consistent error handling patterns (e.g., always wrap external calls in try/catch)
+        * Validation patterns (e.g., always validate input at service boundaries)
+        * Logging conventions (e.g., always log entry/exit for public APIs)
+        * Testing patterns (e.g., always mock external services in unit tests)
+        * Naming conventions emerged from implementation
+        * Code organization patterns (e.g., separate concerns into specific layers)
+      - Evaluate rule candidates:
+        * Is this pattern repeated 3+ times in the diff? (strong candidate)
+        * Would violating this pattern cause bugs or inconsistency?
+        * Is this enforceable via linting or code review?
+        * Does this fill a gap in existing rules.md?
+
+   3. **Idioms Candidate Detection**:
+      - Look for recurring code patterns that should be documented:
+        * Utility function patterns worth standardizing
+        * Common data transformations
+        * API call patterns (request/response handling)
+        * State management approaches
+        * Component composition patterns
+        * Test fixture setup patterns
+      - Evaluate idiom candidates:
+        * Is this pattern elegant and worth copying?
+        * Would documenting this help new contributors?
+        * Does this show 'the right way' to do something in this codebase?
+        * Is it specific enough to be actionable?
+
+   4. **Architecture.md Update Detection**:
+      - Identify structural changes that should be reflected in architecture docs:
+        * New modules/services added
+        * Changed boundaries between components
+        * New integration points or data flows
+        * Modified deployment topology
+        * New anti-patterns discovered during implementation
+
+   5. **Cross-Reference Analysis**:
+      - Check if implementation reveals gaps in existing doctrine:
+        * Situations where rules.md was silent but a rule was needed
+        * Patterns that should have been in idioms.md
+        * Architectural boundaries that were unclear
+      - Check if implementation contradicts existing doctrine:
+        * Code that works but doesn't follow documented patterns
+        * Successful deviation that suggests doctrine needs updating
+
+   **Report** (JSON format):
+   ```json
+   {
+     \"adr_recommendations\": [
+       {
+         \"id\": \"ADR-REC-001\",
+         \"type\": \"new|update\",
+         \"existing_adr\": \"ADR-0003 (if update)\",
+         \"title\": \"Use Circuit Breaker for External API Calls\",
+         \"context\": \"Implementation added resilience patterns for payment API integration\",
+         \"evidence\": [\"src/services/payment.ts:45-78\", \"src/services/shipping.ts:23-56\"],
+         \"decision_summary\": \"Wrap all external HTTP calls in circuit breaker with 5s timeout, 3 retries\",
+         \"consequences\": \"Adds ~10ms latency overhead; prevents cascade failures\",
+         \"priority\": \"HIGH|MEDIUM|LOW\",
+         \"rationale\": \"Pattern used in 3 places; critical for system resilience\"
+       }
+     ],
+     \"rules_recommendations\": [
+       {
+         \"id\": \"RULE-REC-001\",
+         \"type\": \"new|update\",
+         \"existing_rule\": \"Section 3.2 (if update)\",
+         \"rule_statement\": \"All external API calls MUST include timeout configuration\",
+         \"evidence\": [\"src/services/payment.ts:52\", \"src/services/inventory.ts:34\"],
+         \"enforcement\": \"Lintable via custom ESLint rule or code review checklist\",
+         \"priority\": \"HIGH|MEDIUM|LOW\",
+         \"rationale\": \"Prevents hanging requests; observed as consistent pattern\"
+       }
+     ],
+     \"idioms_recommendations\": [
+       {
+         \"id\": \"IDIOM-REC-001\",
+         \"type\": \"new|update\",
+         \"title\": \"Result Type Pattern for Fallible Operations\",
+         \"pattern_description\": \"Return {success: boolean, data?: T, error?: Error} instead of throwing\",
+         \"code_example\": \"const result = await fetchUser(id);\\nif (!result.success) { handleError(result.error); }\",
+         \"evidence\": [\"src/services/user.ts:67-89\", \"src/services/order.ts:45-67\"],
+         \"priority\": \"MEDIUM|LOW\",
+         \"rationale\": \"Explicit error handling; used consistently in new services\"
+       }
+     ],
+     \"architecture_updates\": [
+       {
+         \"id\": \"ARCH-REC-001\",
+         \"section\": \"Integration Points\",
+         \"update_type\": \"add|modify\",
+         \"description\": \"Add Payment Gateway integration to external services diagram\",
+         \"evidence\": [\"src/services/payment.ts (new service)\"],
+         \"priority\": \"MEDIUM\"
+       }
+     ],
+     \"doctrine_gaps\": [
+       {
+         \"id\": \"GAP-001\",
+         \"gap_type\": \"missing_rule|unclear_boundary|silent_on_pattern\",
+         \"description\": \"No guidance on retry strategies for transient failures\",
+         \"impact\": \"Inconsistent retry logic across services\",
+         \"suggested_addition\": \"Add retry policy section to rules.md\"
+       }
+     ],
+     \"positive_alignment\": [
+       {
+         \"doctrine_ref\": \"ADR-0002: Use Repository Pattern\",
+         \"evidence\": [\"src/repositories/user.ts follows pattern exactly\"],
+         \"note\": \"Implementation correctly follows existing ADR\"
+       }
+     ],
+     \"summary\": {
+       \"new_adrs_suggested\": 1,
+       \"adr_updates_suggested\": 0,
+       \"new_rules_suggested\": 2,
+       \"rule_updates_suggested\": 1,
+       \"new_idioms_suggested\": 1,
+       \"architecture_updates_suggested\": 1,
+       \"doctrine_gaps_found\": 1,
+       \"positive_alignments_found\": 3
+     }
+   }
+   ```
+
+   **Priority Guidelines:**
+   - **HIGH**: Pattern affects system reliability, security, or is used 5+ times
+   - **MEDIUM**: Pattern improves consistency, used 3-4 times, benefits future work
+   - **LOW**: Nice-to-have documentation, single occurrence worth noting
+
+   **Important**: This subagent is advisory - recommendations don't block approval. Output is used to populate Section E.4 (Doctrine Evolution) in the review report."
+
    **Wait for All Validators**: Block until all applicable subagents complete their validation.
 
    **4c) Synthesize subagent results**:
@@ -819,6 +981,7 @@ This step runs **after** Step 3a (depends on link validation data) but can run i
       - MOCK-001, MOCK-002, ... (from Mock Usage Validator)
       - UNI-001, UNI-002, ... (from BridgeContext & Universal Validator)
       - PLAN-001, PLAN-002, ... (from Plan Compliance Validator)
+      - DOCTRINE-REC-001, ... (from Doctrine Evolution Analyzer - advisory only)
    3. **Deduplicate** overlapping issues (keep highest severity if same file:lines)
    4. **Aggregate severity counts**: CRITICAL, HIGH, MEDIUM, LOW
    5. **Calculate doctrine compliance score**:
@@ -828,11 +991,13 @@ This step runs **after** Step 3a (depends on link validation data) but can run i
       - LOW findings: -2 points each
       - Base score: 100
       - **Verdict**: PASS if score >= 0 (no CRITICAL/HIGH), FAIL if score < 0
+      - **Note**: Doctrine Evolution recommendations (Subagent 6) do NOT affect score - they are advisory
    6. **Set verdict flag**:
       - If any CRITICAL or HIGH findings: set REQUEST_CHANGES flag for step 8
       - If only MEDIUM/LOW findings: APPROVE with advisory notes
       - If no findings: APPROVE unconditionally
    7. **Pass merged findings table to step 8** for report generation (Section E.1: Doctrine & Testing Compliance)
+   8. **Extract Doctrine Evolution recommendations** to populate Section E.4 (new ADRs, rules, idioms suggested)
 
    **Execution**: Run all applicable subagents **in parallel** (concurrent prompts), then synthesize. Total wall time should be ~1 subagent duration, not 3-4x sequential. :contentReference[oaicite:5]{index=5}
 
@@ -1258,6 +1423,31 @@ This step runs **after** Step 3a (depends on link validation data) but can run i
            - Observability: Logging gaps, metrics, debugging limitations
            - (See synthesis format in step 6 for detailed structure)
 
+        E.4) **Doctrine Evolution Recommendations** (from step 4, Subagent 6 - ADVISORY, does not affect verdict)
+           - **New ADR Candidates**: Architectural decisions from implementation worth documenting
+             * Title, context, evidence (file:lines), decision summary, priority
+             * Action: Consider running `/plan-3a-adr` to formalize
+           - **ADR Updates**: Existing ADRs that should be revised based on implementation
+             * ADR reference, suggested update, evidence
+           - **New Rules Candidates**: Enforceable patterns discovered in implementation
+             * Rule statement, evidence, enforcement mechanism, priority
+             * Action: Add to `docs/project-rules/rules.md`
+           - **New Idioms Candidates**: Recurring code patterns worth documenting
+             * Pattern name, description, code example, evidence
+             * Action: Add to `docs/project-rules/idioms.md`
+           - **Architecture Updates**: Structural changes to reflect in architecture.md
+             * Section, update type, description
+           - **Doctrine Gaps**: Areas where existing doctrine was silent but guidance was needed
+             * Gap description, impact, suggested addition
+           - **Positive Alignment**: Implementation correctly followed existing doctrine (reinforces value)
+           - **Summary Table**:
+             | Category | New | Updates | Priority HIGH |
+             |----------|-----|---------|---------------|
+             | ADRs | N | M | P |
+             | Rules | N | M | P |
+             | Idioms | N | M | P |
+             | Architecture | N | M | P |
+
      F) **Coverage Map** (acceptance criteria <-> test files/assertions)
         - Per-criterion confidence scores (0-100%)
         - Overall coverage confidence percentage
@@ -1340,6 +1530,16 @@ Review rubric baked into this phase
   - **Security**: Path traversal, injection, secrets, auth bypasses, weak crypto
   - **Performance**: N+1 queries, unbounded scans, memory leaks, inefficient algorithms
   - **Observability**: Missing error logs, insufficient context, broken remote logging, no metrics
+
+- **Doctrine Evolution** (Step 4, Subagent 6 - ADVISORY):
+  - **ADR candidates**: Identify significant architectural decisions that emerged during implementation
+  - **Rules candidates**: Detect enforceable patterns (3+ occurrences, error prevention, lintable)
+  - **Idioms candidates**: Recognize recurring code patterns worth standardizing
+  - **Architecture updates**: Flag structural changes needing documentation
+  - **Cross-reference**: Check implementation against existing doctrine for gaps and positive alignment
+  - **Priority scoring**: HIGH (affects reliability/security, 5+ uses), MEDIUM (consistency, 3-4 uses), LOW (nice-to-have)
+  - **Output**: Advisory recommendations in Section E.4; does NOT affect approval verdict
+  - **Follow-up**: Suggest `/plan-3a-adr` for new ADRs, manual edits to rules.md/idioms.md
 
 - **BridgeContext patterns** (Step 4, Subagent 4 - EXPANDED to 10 patterns):
   1. Use vscode.Uri (not Node path) for file paths

@@ -566,7 +566,9 @@ This phase has been extended with the following subtasks:
 
 | ID | Summary | Status | Dossier |
 |----|---------|--------|---------|
-| 001-subtask-preflight-command | Implement preflight command for pre-execution input validation; update wf.md | [ ] Pending | [001-subtask-preflight-command.md](./001-subtask-preflight-command.md) |
+| 001-subtask-preflight-command | Implement preflight command for pre-execution input validation; update wf.md | [x] Complete | [001-subtask-preflight-command.md](./001-subtask-preflight-command.md) |
+| 002-subtask-error-output-and-handback | Add unified handback mechanism with embedded error reporting | [x] Complete | [002-subtask-error-output-and-handback.md](./002-subtask-error-output-and-handback.md) |
+| 003-subtask-filesystem-state-machine | Create filesystem-based state machine for explicit accept/handback control flow | [ ] Pending | [003-subtask-filesystem-state-machine.md](./003-subtask-filesystem-state-machine.md) |
 
 ---
 

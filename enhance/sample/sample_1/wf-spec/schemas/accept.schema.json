@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "accept.schema.json",
+  "title": "Accept Output Schema",
+  "description": "Schema for orchestrator-written accept.json files that grant control to an agent",
+  "type": "object",
+  "required": ["state", "timestamp"],
+  "properties": {
+    "state": {
+      "type": "string",
+      "enum": ["agent"],
+      "description": "Current control state: 'agent' means agent has control"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO8601 timestamp when control was granted"
+    }
+  },
+  "additionalProperties": false
+}

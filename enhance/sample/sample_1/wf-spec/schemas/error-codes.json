@@ -1,0 +1,14 @@
+{
+  "ERROR_CODES": {
+    "INPUT_MISSING": "Required input file does not exist",
+    "INPUT_INVALID": "Input file exists but content is invalid or unusable",
+    "SCHEMA_VIOLATION": "Output file fails JSON Schema validation",
+    "EXTERNAL_FAILURE": "External service or API failure outside agent control",
+    "PERMISSION_DENIED": "Insufficient permissions for required operation",
+    "RESOURCE_EXHAUSTED": "Resource limit exceeded (tokens, memory, disk)",
+    "INTERNAL_ERROR": "Unexpected internal error in agent logic",
+    "TIMEOUT": "Operation exceeded time limit",
+    "CANCELLED": "Operation was cancelled by user or system",
+    "UNKNOWN": "Error category cannot be determined"
+  }
+}
