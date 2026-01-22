@@ -11,7 +11,7 @@ CONTAINER_PREFIX="code-server"
 BASE_PORT=8080
 MAX_PORT=8099
 PASSWORD="jordo"
-DOCKER_IMAGE="codercom/code-server:latest"
+DOCKER_IMAGE="linuxserver/code-server:latest"
 
 # Status output functions
 print_status() { echo "[*] $1"; }
@@ -60,16 +60,13 @@ CONTAINER DETAILS
     Image: $DOCKER_IMAGE
     Password: $PASSWORD
     Port range: $BASE_PORT-$MAX_PORT
-    Mount: <directory>:/home/coder/project
+    Mount: <directory>:/workspace
     Restart policy: none (manual restart required)
 
-    Flags passed to code-server:
-    --bind-addr 0.0.0.0:8080       Listen on all interfaces
-    --auth password                Use password authentication
-    --disable-telemetry            Disable telemetry
-    --disable-update-check         Disable update notifications
-    --disable-workspace-trust      Skip workspace trust prompts
-    --disable-getting-started-override  Skip getting started page
+    Environment variables:
+    PUID/PGID                      Run as your user (avoids permission issues)
+    PASSWORD                       Password for authentication
+    DEFAULT_WORKSPACE              Opens directly in your project folder
 
 REMOTE ACCESS
     For remote access, use SSH port forwarding to avoid certificate issues:
@@ -154,6 +151,45 @@ find_available_port() {
   exit 1
 }
 
+# Detect git worktree and return the parent .git directory path
+# Returns empty string if not a worktree, or the path to mount if it is
+detect_worktree_git_dir() {
+  local project_dir="$1"
+  local git_file="${project_dir}/.git"
+
+  # Check if .git is a file (worktree) rather than a directory
+  if [[ -f "$git_file" ]]; then
+    # Print to stderr so it doesn't pollute the return value
+    echo "[*] Detected .git file (worktree indicator)" >&2
+
+    # Parse the gitdir path from the .git file
+    local gitdir
+    gitdir=$(grep "^gitdir:" "$git_file" | sed 's/^gitdir: //')
+    echo "[*]   gitdir points to: $gitdir" >&2
+
+    if [[ -n "$gitdir" ]]; then
+      # Convert relative path to absolute if needed
+      if [[ ! "$gitdir" = /* ]]; then
+        gitdir="${project_dir}/${gitdir}"
+      fi
+      gitdir=$(cd "$(dirname "$gitdir")" 2>/dev/null && pwd)/$(basename "$gitdir")
+
+      # Find the main .git directory (parent of worktrees/)
+      # gitdir is typically: /path/to/repo/.git/worktrees/name
+      local main_git_dir
+      main_git_dir=$(echo "$gitdir" | sed 's|/worktrees/.*$||')
+
+      if [[ -d "$main_git_dir" ]]; then
+        echo "[*]   Parent .git directory: $main_git_dir" >&2
+        echo "$main_git_dir"
+        return
+      fi
+    fi
+  fi
+
+  echo ""
+}
+
 # Main function
 main() {
   # Show help if requested
@@ -190,6 +226,10 @@ main() {
 
   print_status "Project directory: $project_dir"
 
+  # Detect git worktree and get parent git directory
+  local worktree_git_dir
+  worktree_git_dir=$(detect_worktree_git_dir "$project_dir")
+
   # Find next available ordinal and port
   local ordinal
   local port
@@ -209,18 +249,29 @@ main() {
   print_status "Starting code-server container..."
 
   local container_id
-  container_id=$(docker run -d \
-    --name "$container_name" \
-    -p "${port}:8080" \
-    -v "${project_dir}:/home/coder/project" \
-    -e PASSWORD="$PASSWORD" \
-    "$DOCKER_IMAGE" \
-    --bind-addr 0.0.0.0:8080 \
-    --auth password \
-    --disable-telemetry \
-    --disable-update-check \
-    --disable-workspace-trust \
-    --disable-getting-started-override)
+  # Build docker run command with optional worktree mount
+  local docker_cmd=(
+    docker run -d
+    --name "$container_name"
+    -p "${port}:8443"
+    -v "${project_dir}:/workspace"
+  )
+
+  # Add worktree git directory mount if detected
+  if [[ -n "$worktree_git_dir" ]]; then
+    print_status "Adding worktree mount: ${worktree_git_dir}:${worktree_git_dir}:ro"
+    docker_cmd+=(-v "${worktree_git_dir}:${worktree_git_dir}:ro")
+  fi
+
+  docker_cmd+=(
+    -e "PUID=$(id -u)"
+    -e "PGID=$(id -g)"
+    -e "PASSWORD=$PASSWORD"
+    -e "DEFAULT_WORKSPACE=/workspace"
+    "$DOCKER_IMAGE"
+  )
+
+  container_id=$("${docker_cmd[@]}")
 
   if [[ -z "$container_id" ]]; then
     print_error "Failed to start container"
