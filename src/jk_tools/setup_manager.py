@@ -250,7 +250,10 @@ class SetupManager:
         installers = []
 
         # Explicitly disabled installers
-        disabled_installers = ["opencode.sh"]
+        # - opencode.sh: OpenCode installation disabled
+        # - install-coding-stuff.sh: Redundant - same tools installed by individual scripts
+        #   (claude-code.sh, codex.sh). Also hangs on some systems at opencode.ai installer.
+        disabled_installers = ["opencode.sh", "install-coding-stuff.sh"]
 
         # Add installers in specified order first
         for name in install_order:
@@ -298,6 +301,10 @@ class SetupManager:
         # Add --clear-mcp flag for agents installer if requested
         if name == "agents" and hasattr(self, 'clear_mcp') and self.clear_mcp:
             cmd.append("--clear-mcp")
+
+        # Pass the current Python interpreter to agents.sh so it uses the uvx environment
+        if name == "agents":
+            cmd.extend(["--python", sys.executable])
 
         # Add --commands-local flags for agents installer if requested
         if name == "agents" and hasattr(self, 'commands_local') and self.commands_local:

@@ -92,18 +92,23 @@ main() {
     print_success "Synced setup manager"
 
     # 7. Sync .vscode planning commands only (exclude project-specific files)
-    print_status "Syncing .vscode planning commands..."
-    rsync -av \
-        --include="plan-*.md" \
-        --include="tad.md" \
-        --include="didyouknow.md" \
-        --include="deepresearch.md" \
-        --include="substrateresearch.md" \
-        --exclude="*" \
-        "${REPO_ROOT}/.vscode/" \
-        "${DIST_ROOT}/.vscode/"
-    count=$(find "${DIST_ROOT}/.vscode" -name "*.md" -type f | wc -l | tr -d ' ')
-    print_success "Synced ${count} VS Code command files"
+    # This is optional - .vscode may not exist in all environments
+    if [ -d "${REPO_ROOT}/.vscode" ]; then
+        print_status "Syncing .vscode planning commands..."
+        rsync -av \
+            --include="plan-*.md" \
+            --include="tad.md" \
+            --include="didyouknow.md" \
+            --include="deepresearch.md" \
+            --include="substrateresearch.md" \
+            --exclude="*" \
+            "${REPO_ROOT}/.vscode/" \
+            "${DIST_ROOT}/.vscode/"
+        count=$(find "${DIST_ROOT}/.vscode" -name "*.md" -type f 2>/dev/null | wc -l | tr -d ' ')
+        print_success "Synced ${count} VS Code command files"
+    else
+        print_status "Skipping .vscode sync (directory not present)"
+    fi
 
     echo ""
     echo "======================================"
