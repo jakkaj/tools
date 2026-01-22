@@ -244,6 +244,7 @@ class SetupManager:
             # "opencode.sh",  # Commented out - OpenCode installation disabled
             "claude-code.sh",
             "codex.sh",
+            "copilot-cli.sh",  # GitHub Copilot CLI
             "aliases.py"
         ]
 
@@ -294,7 +295,7 @@ class SetupManager:
         cmd = [str(installer)]
         if update_mode:
             # Add update flag for installers that support it
-            updatable_installers = ["claude-code", "codex", "install-coding-stuff"]  # Removed opencode
+            updatable_installers = ["claude-code", "codex", "copilot-cli", "install-coding-stuff"]  # Removed opencode
             if name in updatable_installers:
                 cmd.append("--update")
 
