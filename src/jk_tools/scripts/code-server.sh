@@ -285,7 +285,7 @@ main() {
   if docker ps -q --filter "id=$container_id" | grep -q .; then
     print_success "Container started successfully"
     echo ""
-    echo "  URL:       http://localhost:${port}"
+    echo "  URL:       http://localhost:${port}/?folder=/workspace"
     echo "  Password:  $PASSWORD"
     echo "  Container: $container_name"
     echo "  Project:   $project_dir"
