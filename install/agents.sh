@@ -27,10 +27,28 @@ SOURCE_DIR="${REPO_ROOT}/agents/commands"
 SYNC_SCRIPT="${REPO_ROOT}/scripts/sync-to-dist.sh"
 MCP_SOURCE="${REPO_ROOT}/agents/mcp/servers.json"
 
+# Determine the correct Python command to use
+# When running via uvx, setup_manager.py passes --python with the correct interpreter
+get_python_cmd() {
+    # Use the override if provided (passed from setup_manager.py when running via uvx)
+    if [ -n "${PYTHON_OVERRIDE:-}" ]; then
+        echo "${PYTHON_OVERRIDE}"
+    # If we're in a uv-managed environment (VIRTUAL_ENV set by uv), use uv run
+    elif [ -n "${VIRTUAL_ENV:-}" ] && command -v uv >/dev/null 2>&1; then
+        echo "uv run python"
+    # Check if uv is available and we can run python with it
+    elif command -v uv >/dev/null 2>&1 && uv run python --version >/dev/null 2>&1; then
+        echo "uv run python"
+    else
+        echo "python3"
+    fi
+}
+
 # Parse command line arguments
 CLEAR_MCP=false
 COMMANDS_LOCAL=""
 LOCAL_DIR="${PWD}"
+PYTHON_OVERRIDE=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -50,11 +68,18 @@ while [[ $# -gt 0 ]]; do
             export AUTO_SUDO_ENABLED=false
             shift
             ;;
+        --python)
+            PYTHON_OVERRIDE="$2"
+            shift 2
+            ;;
         *)
             shift
             ;;
     esac
 done
+
+# Set Python command after argument parsing (so --python override is available)
+PYTHON_CMD="$(get_python_cmd)"
 
 # Support multiple .env file locations (first found wins):
 # 1. Current directory .env (project-specific)
@@ -181,7 +206,7 @@ EOF
     local copilot_cli_mcp="${COPILOT_CLI_MCP_CONFIG}"
     mkdir_with_retry "$(dirname "${copilot_cli_mcp}")"
 
-    python3 - "$mcp_source" "$opencode_global" "$opencode_project" "$claude_global" "$codex_global" "$vscode_user_config" "$vscode_project_config" "$openrouter_key" "$perplexity_key" "$perplexity_model" "$CLEAR_MCP" "$copilot_cli_mcp" <<'PYTHON'
+    $PYTHON_CMD - "$mcp_source" "$opencode_global" "$opencode_project" "$claude_global" "$codex_global" "$vscode_user_config" "$vscode_project_config" "$openrouter_key" "$perplexity_key" "$perplexity_model" "$CLEAR_MCP" "$copilot_cli_mcp" <<'PYTHON'
 import json
 import sys
 from pathlib import Path
@@ -606,7 +631,7 @@ install_local_commands() {
 
         # Use Python to generate agent files with YAML frontmatter
         # Files use .agent.md extension per GitHub Copilot CLI docs
-        python3 - "${SOURCE_DIR}" "${copilot_cli_local_dir}" <<'COPILOT_CLI_LOCAL_PYTHON'
+        $PYTHON_CMD - "${SOURCE_DIR}" "${copilot_cli_local_dir}" <<'COPILOT_CLI_LOCAL_PYTHON'
 import sys
 import re
 from pathlib import Path
@@ -899,7 +924,7 @@ main() {
     echo ""
     print_status "Generating Copilot CLI agents with YAML frontmatter..."
     copilot_cli_agent_count=0
-    python3 - "${SOURCE_DIR}" "${COPILOT_CLI_AGENTS_DIR}" <<'COPILOT_CLI_AGENT_PYTHON'
+    $PYTHON_CMD - "${SOURCE_DIR}" "${COPILOT_CLI_AGENTS_DIR}" <<'COPILOT_CLI_AGENT_PYTHON'
 import sys
 import re
 from pathlib import Path

@@ -41,6 +41,12 @@ print_verbose() {
     fi
 }
 
+# Print progress with timestamp (always visible, for debugging hangs)
+print_progress() {
+    local timestamp=$(date '+%H:%M:%S')
+    echo -e "${BOLD}[$timestamp]${RESET} $1"
+}
+
 # Run a command with verbose output and timing
 run_cmd() {
     local desc="$1"
@@ -209,32 +215,44 @@ check_prerequisites() {
 
 install_node() {
     print_status "Installing Node.js..."
+    print_progress "Starting Node.js installation..."
     print_verbose "Package manager: $PKG_MANAGER"
 
     if [[ "$PKG_MANAGER" == "brew" ]]; then
         print_verbose "Using Homebrew to install Node.js"
+        print_progress "Attempting: brew install node"
         run_cmd "brew install node" brew install node
+        print_progress "Node.js brew install completed"
     elif [[ "$PKG_MANAGER" == "apt" ]]; then
         # Install Node.js 20.x from NodeSource
         print_verbose "Setting up NodeSource repository for Node.js 20.x"
+        print_progress "Attempting: curl NodeSource setup | sudo bash"
         run_pipe_cmd "NodeSource setup" "https://deb.nodesource.com/setup_20.x" "sudo -E bash -"
+        print_progress "NodeSource setup completed, installing nodejs..."
         print_verbose "Installing nodejs package"
         run_cmd "apt-get install nodejs" sudo apt-get install -y nodejs
+        print_progress "Node.js apt install completed"
     elif [[ "$PKG_MANAGER" == "dnf" ]] || [[ "$PKG_MANAGER" == "yum" ]]; then
         print_verbose "Setting up NodeSource repository for Node.js 20.x (RPM)"
+        print_progress "Attempting: curl NodeSource setup | sudo bash"
         run_pipe_cmd "NodeSource setup" "https://rpm.nodesource.com/setup_20.x" "sudo bash -"
+        print_progress "NodeSource setup completed, installing nodejs..."
         run_cmd "install nodejs" sudo $PKG_MANAGER install -y nodejs
+        print_progress "Node.js package install completed"
     else
         # Fallback to fnm (Fast Node Manager)
         print_status "Installing Node.js via fnm..."
+        print_progress "Attempting: curl fnm installer | bash"
         print_verbose "Downloading fnm installer"
         run_pipe_cmd "fnm installer" "https://fnm.vercel.app/install" "bash"
+        print_progress "fnm installed, setting up Node.js 20..."
         export PATH="$HOME/.local/share/fnm:$PATH"
         eval "$(fnm env)"
         print_verbose "Installing Node.js 20 via fnm"
         fnm install 20
         fnm use 20
         fnm default 20
+        print_progress "Node.js fnm install completed"
     fi
 }
 
@@ -366,30 +384,41 @@ check_opencode() {
 
 install_opencode() {
     print_status "Installing OpenCode..."
+    print_progress "Starting OpenCode installation..."
     print_verbose "Attempting official installer first"
 
     # Try curl installer first (recommended)
+    print_progress "Attempting: curl https://opencode.ai/install | bash"
     if run_pipe_cmd "OpenCode installer" "https://opencode.ai/install" "bash"; then
         print_success "OpenCode installed via official installer"
+        print_progress "OpenCode official installer completed"
     elif check_command npm; then
+        print_progress "Official installer failed, trying npm..."
         print_status "Installer failed, trying npm..."
         print_verbose "Running: npm install -g opencode-ai"
+        print_progress "Attempting: npm install -g opencode-ai"
         if run_cmd "npm install opencode" npm install -g opencode-ai; then
             print_success "OpenCode installed via npm"
+            print_progress "OpenCode npm install completed"
         else
             print_error "OpenCode installation failed"
+            print_progress "OpenCode installation FAILED"
             return 1
         fi
     elif [[ "$PKG_MANAGER" == "brew" ]]; then
+        print_progress "Trying Homebrew installation..."
         print_status "Trying Homebrew installation..."
         if run_cmd "brew install opencode" brew install sst/tap/opencode; then
             print_success "OpenCode installed via Homebrew"
+            print_progress "OpenCode Homebrew install completed"
         else
             print_error "OpenCode installation failed"
+            print_progress "OpenCode installation FAILED"
             return 1
         fi
     else
         print_error "Could not install OpenCode. Please install manually."
+        print_progress "OpenCode installation FAILED - no method available"
         return 1
     fi
 
@@ -447,10 +476,12 @@ check_claude_code() {
 
 install_claude_code() {
     print_status "Installing Claude Code CLI..."
+    print_progress "Starting Claude Code CLI installation..."
 
     # Try npm first (most reliable)
     if check_command npm; then
         print_status "Installing Claude Code via npm..."
+        print_progress "npm found, using npm install method"
         print_verbose "Using npm with user-local prefix to avoid permission issues"
 
         # Use user-local install (no sudo needed)
@@ -462,9 +493,11 @@ install_claude_code() {
 
         print_verbose "npm prefix set to: $npm_prefix"
         print_verbose "Running: npm install -g @anthropic-ai/claude-code"
+        print_progress "Attempting: npm install -g @anthropic-ai/claude-code"
 
         if run_cmd "npm install claude-code" npm install -g @anthropic-ai/claude-code; then
             print_success "Claude Code CLI installed via npm to $npm_prefix"
+            print_progress "Claude Code npm install completed"
 
             # Add to shell config if not already there
             if [ -f "$HOME/.zshrc" ] && ! grep -q ".npm-global/bin" "$HOME/.zshrc" 2>/dev/null; then
@@ -476,22 +509,28 @@ install_claude_code() {
             fi
         else
             print_warning "npm installation failed, trying native installer..."
+            print_progress "npm failed, attempting: curl https://claude.ai/install.sh | bash"
             print_verbose "Falling back to claude.ai/install.sh"
             if run_pipe_cmd "Claude native installer" "https://claude.ai/install.sh" "bash"; then
                 print_success "Claude Code CLI installed via native installer"
+                print_progress "Claude Code native installer completed"
             else
                 print_error "Claude Code CLI installation failed"
+                print_progress "Claude Code installation FAILED"
                 return 1
             fi
         fi
     else
         # Try native installer
         print_status "Installing Claude Code via native installer..."
+        print_progress "npm not found, attempting: curl https://claude.ai/install.sh | bash"
         print_verbose "npm not found, using native installer"
         if run_pipe_cmd "Claude native installer" "https://claude.ai/install.sh" "bash"; then
             print_success "Claude Code CLI installed"
+            print_progress "Claude Code native installer completed"
         else
             print_error "Claude Code CLI installation failed"
+            print_progress "Claude Code installation FAILED"
             return 1
         fi
     fi
@@ -520,10 +559,12 @@ check_codex() {
 
 install_codex() {
     print_status "Installing OpenAI Codex CLI..."
+    print_progress "Starting Codex CLI installation..."
 
     # Check Node.js version for Codex (requires Node 20+)
     local node_version=$(get_node_version)
     print_verbose "Detected Node.js version: $node_version"
+    print_progress "Node.js version: $node_version"
     if ! version_gte "$node_version" "20.0.0"; then
         print_warning "Codex requires Node.js >= 20, but found $node_version"
         print_status "Attempting installation anyway..."
@@ -532,6 +573,7 @@ install_codex() {
     # Try npm first with local prefix to avoid permission issues
     if check_command npm; then
         print_status "Installing Codex via npm (locally)..."
+        print_progress "npm found, using npm install method"
         # Install to user's home directory to avoid permission issues
         local npm_prefix="$HOME/.npm-global"
         mkdir -p "$npm_prefix"
@@ -540,9 +582,11 @@ install_codex() {
 
         print_verbose "npm prefix set to: $npm_prefix"
         print_verbose "Running: npm install -g @openai/codex"
+        print_progress "Attempting: npm install -g @openai/codex"
 
         if run_cmd "npm install codex" npm install -g @openai/codex; then
             print_success "Codex CLI installed via npm to ~/.npm-global"
+            print_progress "Codex npm install completed"
             # Add to shell config if not already there
             if [ -f "$HOME/.zshrc" ] && ! grep -q ".npm-global/bin" "$HOME/.zshrc" 2>/dev/null; then
                 echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.zshrc"
@@ -553,31 +597,40 @@ install_codex() {
             fi
         else
             print_warning "npm installation failed"
+            print_progress "npm install failed"
             if [[ "$PKG_MANAGER" == "brew" ]]; then
                 print_status "Trying Homebrew installation..."
+                print_progress "Attempting: brew install codex"
                 if run_cmd "brew install codex" brew install codex; then
                     print_success "Codex CLI installed via Homebrew"
+                    print_progress "Codex Homebrew install completed"
                 else
                     print_error "Codex CLI installation failed"
+                    print_progress "Codex installation FAILED"
                     print_warning "Note: Codex requires Node.js >= 20. Consider upgrading Node.js."
                     return 1
                 fi
             else
                 print_error "Codex CLI installation failed"
+                print_progress "Codex installation FAILED"
                 print_warning "Note: Codex requires Node.js >= 20. Consider upgrading Node.js."
                 return 1
             fi
         fi
     elif [[ "$PKG_MANAGER" == "brew" ]]; then
         print_status "Installing Codex via Homebrew..."
+        print_progress "Attempting: brew install codex"
         if run_cmd "brew install codex" brew install codex; then
             print_success "Codex CLI installed via Homebrew"
+            print_progress "Codex Homebrew install completed"
         else
             print_error "Codex CLI installation failed"
+            print_progress "Codex installation FAILED"
             return 1
         fi
     else
         print_error "Could not install Codex CLI. Please install Node.js/npm first."
+        print_progress "Codex installation FAILED - no npm or brew available"
         return 1
     fi
 
@@ -661,6 +714,7 @@ main() {
     echo "Installing Coding Assistant Tools"
     echo "======================================"
     echo ""
+    print_progress "Starting tool installation phase..."
 
     # Serena - TEMPORARILY COMMENTED OUT DUE TO INSTALLATION ISSUES
     # print_status "Checking Serena CLI..."
@@ -676,6 +730,7 @@ main() {
     # Continue with other tools even if there were issues
 
     # OpenCode
+    print_progress "=== OPENCODE CHECK/INSTALL ==="
     print_status "Checking OpenCode..."
     if [ "$UPDATE_MODE" = true ]; then
         if check_opencode; then
@@ -710,6 +765,7 @@ main() {
     echo ""
 
     # Claude Code
+    print_progress "=== CLAUDE CODE CHECK/INSTALL ==="
     print_status "Checking Claude Code CLI..."
     if [ "$UPDATE_MODE" = true ]; then
         if check_claude_code; then
@@ -739,6 +795,7 @@ main() {
     echo ""
 
     # Codex
+    print_progress "=== CODEX CHECK/INSTALL ==="
     print_status "Checking OpenAI Codex CLI..."
     if [ "$UPDATE_MODE" = true ]; then
         if check_codex; then

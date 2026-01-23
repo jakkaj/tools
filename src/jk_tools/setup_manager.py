@@ -244,13 +244,17 @@ class SetupManager:
             # "opencode.sh",  # Commented out - OpenCode installation disabled
             "claude-code.sh",
             "codex.sh",
+            "copilot-cli.sh",  # GitHub Copilot CLI
             "aliases.py"
         ]
 
         installers = []
 
         # Explicitly disabled installers
-        disabled_installers = ["opencode.sh"]
+        # - opencode.sh: OpenCode installation disabled
+        # - install-coding-stuff.sh: Redundant - same tools installed by individual scripts
+        #   (claude-code.sh, codex.sh). Also hangs on some systems at opencode.ai installer.
+        disabled_installers = ["opencode.sh", "install-coding-stuff.sh"]
 
         # Add installers in specified order first
         for name in install_order:
@@ -291,13 +295,17 @@ class SetupManager:
         cmd = [str(installer)]
         if update_mode:
             # Add update flag for installers that support it
-            updatable_installers = ["claude-code", "codex", "install-coding-stuff"]  # Removed opencode
+            updatable_installers = ["claude-code", "codex", "copilot-cli", "install-coding-stuff"]  # Removed opencode
             if name in updatable_installers:
                 cmd.append("--update")
 
         # Add --clear-mcp flag for agents installer if requested
         if name == "agents" and hasattr(self, 'clear_mcp') and self.clear_mcp:
             cmd.append("--clear-mcp")
+
+        # Pass the current Python interpreter to agents.sh so it uses the uvx environment
+        if name == "agents":
+            cmd.extend(["--python", sys.executable])
 
         # Add --commands-local flags for agents installer if requested
         if name == "agents" and hasattr(self, 'commands_local') and self.commands_local:
