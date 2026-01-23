@@ -154,7 +154,7 @@ uvx jk-tools
 #### Local Installation (Project-Specific)
 ```bash
 # Install commands locally to current directory
-uvx jk-tools --commands-local claude,opencode,ghcp
+uvx jk-tools --commands-local claude,opencode,ghcp,copilot-cli
 
 # Install to specific directory
 uvx jk-tools --commands-local claude --local-dir ~/my-project
@@ -167,6 +167,7 @@ uvx jk-tools --commands-local claude --local-dir ~/my-project
 | **Claude Code** | `.claude/commands/` | ✅ Yes | ✅ Fully supported |
 | **OpenCode** | `.opencode/command/` | ✅ Yes | ✅ Fully supported |
 | **GitHub Copilot** | `.github/prompts/*.prompt.md` | ⚠️ Manual attach | ✅ Supported |
+| **Copilot CLI** | `.github/agents/*.agent.md` | ✅ Yes | ✅ Fully supported |
 | **Codex** | N/A | ❌ No | ❌ Not supported |
 
 #### Local Installation Behavior
@@ -185,14 +186,17 @@ uvx jk-tools-setup --commands-local claude
 # Install from GitHub (for production use)
 uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local claude
 
-# Install GitHub Copilot commands from GitHub
+# Install GitHub Copilot prompts from GitHub
 uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local ghcp
+
+# Install Copilot CLI agents from GitHub
+uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local copilot-cli
 
 # Install to specific directory
 uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local claude --local-dir ~/my-project
 
 # Install multiple CLIs at once
-uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local claude,ghcp,opencode
+uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local claude,ghcp,opencode,copilot-cli
 
 # Force reinstall to get latest version
 uvx --force-reinstall --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local ghcp
@@ -207,7 +211,14 @@ uvx --force-reinstall --from git+https://github.com/jakkaj/tools jk-tools-setup 
 #         └── ... (14 command files)
 ```
 
-#### GitHub Copilot Notes
+#### Copilot CLI Notes
+
+- Files are created with `.agent.md` extension (e.g., `tad.md` → `tad.agent.md`)
+- Agents are stored in `.github/agents/` directory
+- Copilot CLI auto-discovers local agents when run from project directory
+- YAML frontmatter includes `name` and `description` fields (tools default to all)
+
+#### GitHub Copilot (VS Code) Notes
 
 - Files are renamed with `.prompt.md` extension (e.g., `tad.md` → `tad.prompt.md`)
 - Use the paperclip icon in your IDE to attach prompts

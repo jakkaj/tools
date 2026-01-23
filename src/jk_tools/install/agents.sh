@@ -598,13 +598,14 @@ install_local_commands() {
         echo ""
     fi
 
-    # Copilot CLI
+    # Copilot CLI (uses .github/agents/ for local project agents)
     if [[ "$cli_list" == *"copilot-cli"* ]]; then
-        local copilot_cli_local_dir="${target_dir}/.copilot/agents"
+        local copilot_cli_local_dir="${target_dir}/.github/agents"
         mkdir_with_retry "${copilot_cli_local_dir}"
         print_status "Installing Copilot CLI agents to ${copilot_cli_local_dir}"
 
         # Use Python to generate agent files with YAML frontmatter
+        # Files use .agent.md extension per GitHub Copilot CLI docs
         python3 - "${SOURCE_DIR}" "${copilot_cli_local_dir}" <<'COPILOT_CLI_LOCAL_PYTHON'
 import sys
 import re
@@ -627,22 +628,23 @@ def extract_frontmatter(content: str) -> tuple[dict, str]:
                     frontmatter[key] = value
     return frontmatter, content_without_fm
 
-def generate_copilot_cli_agent(source_path: Path, dest_path: Path) -> bool:
+def generate_copilot_cli_agent(source_path: Path, dest_dir: Path) -> bool:
     skip_files = {'README.md', 'GETTING-STARTED.md', 'changes.md', 'codebase.md'}
     if source_path.name in skip_files:
         return False
     content = source_path.read_text(encoding='utf-8')
     existing_fm, content_without_fm = extract_frontmatter(content)
     name = source_path.stem.lower().replace(' ', '-')
-    description = existing_fm.get('description', f"Command: {name}")
+    description = existing_fm.get('description', f"Custom agent: {name}")
+    # YAML frontmatter per GitHub docs: description is required, omit tools for all access
     new_frontmatter = f'''---
 name: "{name}"
 description: "{description}"
-tools:
-  - "*"
 ---
 
 '''
+    # Use .agent.md extension per GitHub Copilot CLI convention
+    dest_path = dest_dir / f"{source_path.stem}.agent.md"
     dest_path.write_text(new_frontmatter + content_without_fm.lstrip(), encoding='utf-8')
     return True
 
@@ -650,13 +652,12 @@ source_dir = Path(sys.argv[1])
 dest_dir = Path(sys.argv[2])
 count = 0
 for source_file in sorted(source_dir.glob('*.md')):
-    dest_file = dest_dir / source_file.name
-    if generate_copilot_cli_agent(source_file, dest_file):
-        print(f"  [↻] {source_file.name}")
+    if generate_copilot_cli_agent(source_file, dest_dir):
+        print(f"  [↻] {source_file.stem}.agent.md")
         count += 1
 COPILOT_CLI_LOCAL_PYTHON
 
-        copilot_cli_local_count=$(find "${copilot_cli_local_dir}" -maxdepth 1 -type f -name "*.md" | wc -l | tr -d ' ')
+        copilot_cli_local_count=$(find "${copilot_cli_local_dir}" -maxdepth 1 -type f -name "*.agent.md" | wc -l | tr -d ' ')
         print_success "Installed ${copilot_cli_local_count} agents to ${copilot_cli_local_dir}"
         echo ""
     fi
@@ -691,8 +692,8 @@ COPILOT_CLI_LOCAL_PYTHON
         echo "  ${target_dir}/.github/prompts/ (${file_count} .prompt.md files)"
     fi
     if [[ "$cli_list" == *"copilot-cli"* ]]; then
-        local copilot_cli_local_count=$(find "${target_dir}/.copilot/agents" -maxdepth 1 -type f -name "*.md" 2>/dev/null | wc -l | tr -d ' ')
-        echo "  ${target_dir}/.copilot/agents/ (${copilot_cli_local_count} agent files with YAML frontmatter)"
+        local copilot_cli_local_count=$(find "${target_dir}/.github/agents" -maxdepth 1 -type f -name "*.agent.md" 2>/dev/null | wc -l | tr -d ' ')
+        echo "  ${target_dir}/.github/agents/ (${copilot_cli_local_count} .agent.md files)"
     fi
     echo ""
     print_status "Tip: Commit these directories to version control to share with team"

@@ -564,7 +564,7 @@ def main():
         type=str,
         default="",
         metavar="CLIS",
-        help="Install commands locally to project directory (comma-separated: claude,opencode,ghcp,codex)"
+        help="Install commands locally to project directory (comma-separated: claude,opencode,ghcp,copilot-cli,codex)"
     )
     parser.add_argument(
         "--local-dir",
