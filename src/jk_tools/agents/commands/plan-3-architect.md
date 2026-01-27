@@ -101,6 +101,30 @@ Inputs:
   * Proceed with full 4-subagent research as described below
   * Note: "ℹ️ Consider running `/plan-1a-explore` before planning for deeper understanding"
 
+### Check for Workshop Documents
+
+**SECOND**: Check if `workshops/` directory exists in the plan folder:
+- If `${PLAN_DIR}/workshops/*.md` files exist:
+  * Read all workshop documents completely
+  * These are **authoritative design decisions** - do not contradict them
+  * Extract:
+    - Data models and schemas (use exactly as specified)
+    - CLI flows and command structures (implement as documented)
+    - State machines and transitions (follow the defined states)
+    - API contracts (match the specified interfaces)
+  * **OPTIMIZE**: Skip discovery for workshopped topics - design is already done
+  * Reference workshop documents in relevant phases (e.g., "Per Workshop: cli-command-flows.md...")
+  * List workshops in plan metadata:
+    ```markdown
+    **Workshops**: 
+    - [cli-command-flows.md](./workshops/cli-command-flows.md) - CLI Flow
+    - [workunit-data-model.md](./workshops/workunit-data-model.md) - Data Model
+    ```
+- If no workshops exist:
+  * Check spec for `## Workshop Opportunities` section
+  * If opportunities exist but no workshops: Note "ℹ️ Consider running `/plan-2c-workshop` for detailed design on: [topics]"
+  * Proceed with normal discovery
+
 ### Optimized Research Mode (when research-dossier.md exists)
 
 Launch **2 specialized subagents** focusing on implementation planning:

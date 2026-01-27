@@ -99,6 +99,24 @@ $ARGUMENTS
      * **Topics**: [List from research-dossier.md External Research Opportunities not yet addressed]
      * **Impact**: [How this uncertainty affects the spec]
      * **Recommendation**: Consider addressing before architecture phase (plan-3)
+    - `## Workshop Opportunities` – areas that benefit from detailed design exploration BEFORE architecture:
+      * Identify 0-5 concepts that are complex, have multiple valid approaches, or need detailed specification
+      * Each opportunity should include:
+
+      | Topic | Type | Why Workshop | Key Questions |
+      |-------|------|--------------|---------------|
+      | [Short name] | [Type] | [1-2 sentences] | [2-4 questions to answer] |
+
+      * **Types**: `CLI Flow` | `Data Model` | `API Contract` | `State Machine` | `Integration Pattern` | `Storage Design` | `Other`
+      * **Include if ANY apply**:
+        - Multiple valid implementation approaches exist
+        - External interfaces or contracts need detailed specification
+        - Data structures will be referenced by multiple components
+        - CLI/UX flow has branching paths or complex state
+        - Storage format decisions affect future extensibility
+        - Schema changes have migration implications
+      * **Complexity guidance**: Workshops are optional but recommended for CS-3+ features
+      * **Note**: Workshops can be created anytime during planning via `/plan-2c-workshop`
    If `templates/spec-template.md` exists, you may reference it for wording, but this command must succeed without it.
 4) For unknowns, embed `[NEEDS CLARIFICATION: ...]` markers within the appropriate section.
 5) Write spec to SPEC_FILE and report branch + path.
@@ -113,4 +131,6 @@ Output: SPEC_FILE ready for clarification.
 
 The section order above defines the canonical spec structure referenced by downstream planning phases.
 
-Next step (when happy): Run **/plan-2-clarify** for ≤5 high-impact questions.
+Next steps:
+- **If Workshop Opportunities identified**: Consider running **/plan-2c-workshop** to create detailed design documents
+- **Otherwise (or after workshops)**: Run **/plan-2-clarify** for ≤8 high-impact questions
