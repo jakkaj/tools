@@ -1,5 +1,5 @@
 ---
-description: Deep-dive research into existing codebase functionality. Outputs to console for immediate use or saves to plan folder when --plan is provided. Integrates with FlowSpace MCP when available.
+description: Deep-dive research into existing codebase functionality. Auto-detects plan context or creates new plan folder. Integrates with FlowSpace MCP when available.
 ---
 
 Please deep think / ultrathink as this is a complex task.
@@ -12,62 +12,151 @@ User input:
 ```
 $ARGUMENTS
 # Expected format:
-# /plan-1a-explore "research query"  # Outputs research to console
-# /plan-1a-explore --plan <name> "research query"  # Saves to plan folder
+# /plan-1a-explore "research query"              # Auto-detect context or create plan
+# /plan-1a-explore --plan <name> "research query" # Explicit plan name
+# /plan-1a-explore --console "research query"    # Output to console only (no files)
 #
 # Examples:
 # /plan-1a-explore "research how the search service works"
 # /plan-1a-explore --plan authentication-upgrade "research the current auth system"
+# /plan-1a-explore --console "quick question about error handling"
 ```
 
 ## Purpose
 
-Perform deep codebase research to understand how existing functionality works. Can be used for arbitrary research (outputs to console) or tied to a specific plan (saves to plan folder).
+Perform deep codebase research to understand how existing functionality works. Automatically saves to a plan folder (creating one if needed) unless `--console` is specified.
 
 ## Behavior
 
-- **Without --plan**: Outputs research report directly to console for immediate use
-- **With --plan**: Creates/uses plan folder and saves research as `research-dossier.md`
+- **Default (no flags)**: Auto-detect plan context, or create new plan folder from research query slug
+- **With --plan <name>**: Use/create specified plan folder
+- **With --console**: Output research to console only (no files created)
 
 ## Execution Flow
 
-### 1) Parse Input
+### 1) Parse Input and Detect Context
 
-Extract research query and optional plan name:
-- Parse $ARGUMENTS for --plan flag and research query
-- If --plan provided:
-  * Extract plan name (everything after --plan until research query)
-  * Determine plan folder (see section 1a below)
-  * Will save research to: `docs/plans/<ordinal>-<slug>/research-dossier.md`
-- If no --plan:
-  * Research will be output directly to console
-  * No files created
+Extract research query and determine output destination:
 
-### 1a) Plan Folder Management (when --plan provided)
+```python
+# Pseudo-code for context detection
+def determine_output_mode(arguments):
+    # Check for explicit flags first
+    if "--console" in arguments:
+        return "console", None  # Output to console only
+
+    if "--plan" in arguments:
+        plan_name = extract_after_flag("--plan", arguments)
+        return "plan", plan_name  # Explicit plan name provided
+
+    # AUTO-DETECTION: No explicit flag provided
+
+    # 1. Check if current git branch has ordinal prefix (e.g., "013-ci")
+    branch_name = get_current_branch()
+    if branch_name and re.match(r'^\d{3}-', branch_name):
+        print(f"📁 Detected ordinal branch: {branch_name}")
+        return "plan", branch_name  # Use branch name as plan folder name
+
+    # 2. Check if we're currently inside a plan folder
+    cwd = get_current_working_directory()
+    plan_folder = detect_plan_folder_context(cwd)
+    if plan_folder:
+        print(f"📁 Detected plan context: {plan_folder}")
+        return "plan", plan_folder
+
+    # 3. Check conversation context for recent plan work
+    recent_plan = detect_recent_plan_in_conversation()
+    if recent_plan:
+        print(f"📁 Using recent plan from context: {recent_plan}")
+        return "plan", recent_plan
+
+    # 4. No context found - create new plan folder from query slug
+    query = extract_research_query(arguments)
+    slug = slugify(query)[:50]  # Truncate long queries
+    print(f"📁 Creating new plan folder for research: {slug}")
+    return "plan", slug
+
+def get_current_branch():
+    """Get current git branch name"""
+    # Run: git rev-parse --abbrev-ref HEAD
+    # Returns branch name like "013-ci" or "main"
+    result = run_command("git rev-parse --abbrev-ref HEAD")
+    return result.strip() if result else None
+
+def detect_plan_folder_context(cwd):
+    """Check if cwd is inside a docs/plans/NNN-slug/ folder"""
+    # Walk up from cwd looking for docs/plans/NNN-* pattern
+    path = Path(cwd)
+    while path != path.parent:
+        if path.parent.name == "plans" and path.parent.parent.name == "docs":
+            if re.match(r'^\d{3}-', path.name):
+                return str(path)
+        path = path.parent
+    return None
+
+def detect_recent_plan_in_conversation():
+    """Check conversation history for recent plan folder references"""
+    # Look for patterns like:
+    # - "docs/plans/007-feature-name/"
+    # - "Working on plan 007-feature-name"
+    # - Recent file edits in a plan folder
+    # Return the plan folder path if found, else None
+    pass
+```
+
+**Output modes:**
+- `"console"`: Output research report to console, no files created
+- `"plan"`: Save research to `docs/plans/<ordinal>-<slug>/research-dossier.md`
+
+### 1a) Plan Folder Management
 
 ```python
 # Pseudo-code for plan folder handling
-def determine_plan_folder(plan_name):
-    # Check if plan_name is already a folder (e.g., "001-auth")
-    if matches_pattern(r'^\d{3}-', plan_name):
-        if exists(f"docs/plans/{plan_name}"):
-            return f"docs/plans/{plan_name}"
+def determine_plan_folder(plan_name_or_path):
+    # If it's already a full path (from context detection), use it
+    if plan_name_or_path.startswith("docs/plans/") or "/" in plan_name_or_path:
+        if exists(plan_name_or_path):
+            return plan_name_or_path
+        # Path doesn't exist but was specified - error
+        if matches_pattern(r'^\d{3}-', basename(plan_name_or_path)):
+            error(f"Plan folder {plan_name_or_path} does not exist")
+
+    # Check if plan_name is already a folder name (e.g., "001-auth")
+    if matches_pattern(r'^\d{3}-', plan_name_or_path):
+        if exists(f"docs/plans/{plan_name_or_path}"):
+            return f"docs/plans/{plan_name_or_path}"
         else:
-            error(f"Plan folder {plan_name} does not exist")
+            error(f"Plan folder {plan_name_or_path} does not exist")
 
     # plan_name is just a slug (e.g., "auth" or "authentication-upgrade")
-    slug = slugify(plan_name)
+    slug = slugify(plan_name_or_path)
 
     # Search for existing folder with this slug
     for folder in list_folders("docs/plans/"):
         if folder.endswith(f"-{slug}"):
+            print(f"📁 Found existing plan folder: docs/plans/{folder}")
             return f"docs/plans/{folder}"
 
     # No existing folder found - create new with next ordinal
     next_ordinal = get_next_ordinal()
     new_folder = f"docs/plans/{next_ordinal:03d}-{slug}"
     create_folder(new_folder)
+    print(f"📁 Created new plan folder: {new_folder}")
     return new_folder
+
+def get_next_ordinal():
+    # PREFERRED: Use plan-ordinal tool for cross-branch safety
+    try:
+        result = run_command("plan-ordinal")  # or "jk-po"
+        return int(result.strip())  # Returns "011" -> 11
+    except:
+        # FALLBACK: Tool not available - scan local filesystem only
+        # WARNING: This may cause ordinal collisions across branches!
+        print("⚠️ plan-ordinal tool not available - using local-only scan")
+        print("   Install: Add scripts/plan-ordinal.py and run setup.sh")
+        existing = [int(d[:3]) for d in list_folders("docs/plans/")
+                    if matches_pattern(r'^\d{3}-', d)]
+        return max(existing, default=0) + 1
 ```
 
 ### 2) FlowSpace MCP Detection
@@ -717,15 +806,16 @@ Note: Unresolved research opportunities will be flagged in `/plan-1b-specify` ou
 
 ### 6) Output Research
 
-**Without --plan**:
+**With --console flag** (console-only mode):
 - Output the full research report directly to console
 - No success message needed (the research IS the output)
 - User can copy/paste or use immediately
+- No files created
 
-**With --plan**:
+**Default behavior** (auto-detect or explicit --plan):
 ```
 ✅ Research complete: docs/plans/[ordinal]-[slug]/research-dossier.md
-- Plan folder: [Created new | Using existing]
+- Plan folder: [Created new | Using existing | Detected from context]
 - Components analyzed: [N] files
 - Critical findings: [Count]
 - Prior learnings surfaced: [Count] from previous implementations

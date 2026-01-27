@@ -44,6 +44,7 @@ cd tools
 - **Idempotent**: Safe to run multiple times
 - **Update mode**: `jk-tools-setup --update` to update existing tools
 - **Local command installation**: Install commands to project directories for version control
+- **Plan ordinal tool**: `plan-ordinal` (alias: `jk-po`) scans all git branches to prevent plan numbering collisions
 
 ## Installing Commands Locally
 

@@ -139,176 +139,6 @@ If analyzing a plan or tasks document that includes CS (Complexity Score) rating
 - Insights should span different perspectives (not all technical, not all UX)
 - When analyzing scored work, challenge CS ratings that seem misaligned with actual scope/risk
 
-### 2.5) VERIFICATION PHASE (After Deep Thinking)
-
-**CRITICAL**: Before presenting options, verify them against the actual codebase. This grounds your recommendations in code reality rather than assumptions.
-
-#### 2.5a) FlowSpace Detection
-
-First, detect FlowSpace MCP availability to select the optimal verification approach:
-
-```python
-# Pseudo-code for detection
-try:
-    # Fast, minimal probe
-    flowspace.tree(pattern=".", max_depth=1)
-    FLOWSPACE_AVAILABLE = True
-    print("✅ FlowSpace MCP detected - using /flowspace-research agents")
-except:
-    FLOWSPACE_AVAILABLE = False
-    print("ℹ️ FlowSpace not available - using standard Explore agents")
-```
-
-#### 2.5b) Launch 5 Parallel Verification Subagents
-
-After selecting the 5 insights and drafting initial options, launch verification subagents in a **single message with 5 Task tool calls**.
-
----
-
-**IF FLOWSPACE IS AVAILABLE**: Use `/flowspace-research` as the subagent
-
-For each insight, invoke the flowspace-research skill with targeted queries:
-
-```
-For Insight [N], launch Task tool with:
-  subagent_type: "general-purpose"
-  prompt: "Use /flowspace-research to verify insight [N].
-
-    INSIGHT: [The insight statement]
-    PROPOSED OPTIONS:
-    - Option A: [description]
-    - Option B: [description]
-    - Option C: [description]
-
-    VERIFICATION QUERIES TO RUN (use /flowspace-research for each):
-
-    1. Feasibility check for Option A:
-       /flowspace-research '[key concept from Option A]' --scope 'src/' --limit 5
-
-    2. Feasibility check for Option B:
-       /flowspace-research '[key concept from Option B]' --scope 'src/' --limit 5
-
-    3. Pattern discovery for similar implementations:
-       /flowspace-research '[pattern keyword]' --mode concept --limit 5
-
-    4. Constraint search (if relevant):
-       /flowspace-research '[constraint topic]' --exclude 'test' --limit 3
-
-    For each query result:
-    - Identify code that SUPPORTS or BLOCKS each option
-    - Note patterns that should be followed
-    - Flag constraints affecting feasibility
-
-    REQUIRED OUTPUT FORMAT:
-
-    ### Verification V[N]-01: [Finding Title]
-    **Option Affected**: [A/B/C/All]
-    **Type**: Feasibility | Pattern | Constraint | Evidence
-    **Finding**: [What was discovered]
-    **Code Reference**: [node_id from FlowSpace or file:line]
-    **Impact on Options**:
-    - Option A: [How this affects Option A]
-    - Option B: [How this affects Option B]
-    - Option C: [How this affects Option C]
-    **Recommendation Adjustment**: [If preferred recommendation should change]
-
-    Return 3-5 verification findings."
-```
-
----
-
-**IF FLOWSPACE IS NOT AVAILABLE**: Use standard Explore subagents
-
-```
-For Insight [N], launch Task tool with:
-  subagent_type: "Explore"
-  prompt: "Verify insight [N] and its proposed options against the codebase.
-
-    INSIGHT: [The insight statement]
-    PROPOSED OPTIONS:
-    - Option A: [description]
-    - Option B: [description]
-    - Option C: [description]
-
-    Use Glob, Grep, and Read tools to:
-
-    1. **Feasibility Check**: Can each option actually be implemented?
-       - Search for existing code that supports/blocks each option
-       - Identify dependencies each option would require
-       - Find architectural constraints
-
-    2. **Pattern Discovery**: Are there similar implementations?
-       - Search for how similar features handle this problem
-       - Find patterns that should be followed for consistency
-
-    3. **Constraint Identification**: What constraints affect the options?
-       - API limitations, framework constraints
-       - Security, performance concerns
-       - Existing conventions
-
-    4. **Evidence Gathering**: Collect concrete references
-       - File paths and line numbers
-       - Code snippets showing relevant patterns
-
-    REQUIRED OUTPUT FORMAT:
-
-    ### Verification V[N]-01: [Finding Title]
-    **Option Affected**: [A/B/C/All]
-    **Type**: Feasibility | Pattern | Constraint | Evidence
-    **Finding**: [What was discovered]
-    **Code Reference**: [file:line]
-    **Impact on Options**:
-    - Option A: [How this affects Option A]
-    - Option B: [How this affects Option B]
-    - Option C: [How this affects Option C]
-    **Recommendation Adjustment**: [If preferred recommendation should change]
-
-    Return 3-5 verification findings."
-```
-
-**Wait for All 5 Verification Subagents** to complete before proceeding.
-
-**Synthesize Verification Results**:
-1. Collect all ~15-25 verification findings from the 5 subagents
-2. For each insight, merge verification evidence into:
-   - Updated option feasibility assessments (Feasible / Partial / Not Feasible)
-   - Code references supporting or blocking each option
-   - Adjusted recommendations if evidence warrants change
-3. **Keep infeasible options but mark them clearly** with "Not Feasible" status and explanation
-   - This allows the user to override if they have additional context
-   - Never silently remove options - transparency is key
-4. Add "Verified By" references (V[N]-##) to each option
-
-**Output to User** (before starting conversation):
-
-If FlowSpace available:
-```
-🔍 Verifying insights against codebase...
-  ✅ FlowSpace detected - using /flowspace-research agents
-  [Launching 5 verification subagents in parallel]
-  ✓ Insight 1 verified (X findings) - via FlowSpace
-  ✓ Insight 2 verified (X findings) - via FlowSpace
-  ✓ Insight 3 verified (X findings) - via FlowSpace
-  ✓ Insight 4 verified (X findings) - via FlowSpace
-  ✓ Insight 5 verified (X findings) - via FlowSpace
-
-All insights verified. Starting conversation...
-```
-
-If FlowSpace not available:
-```
-🔍 Verifying insights against codebase...
-  ℹ️ FlowSpace not available - using Explore agents
-  [Launching 5 verification subagents in parallel]
-  ✓ Insight 1 verified (X findings) - via Grep/Glob/Read
-  ✓ Insight 2 verified (X findings) - via Grep/Glob/Read
-  ✓ Insight 3 verified (X findings) - via Grep/Glob/Read
-  ✓ Insight 4 verified (X findings) - via Grep/Glob/Read
-  ✓ Insight 5 verified (X findings) - via Grep/Glob/Read
-
-All insights verified. Starting conversation...
-```
-
 ### 3) CONVERSATIONAL PRESENTATION (One at a Time - CRITICAL!)
 
 **For EACH of the 5 insights, follow this exact structure:**
@@ -349,42 +179,36 @@ Use:
 - Data/numbers when relevant
 - Visual aids (tables, simple diagrams) if helpful
 
-#### c) Options & Recommendation (INFORMED BY VERIFICATION)
-Present 2-4 concrete options, now **grounded in verification evidence**:
+#### c) Options & Recommendation (Actionable Paths Forward)
+Present 2-4 concrete options for addressing the insight:
 
 ```markdown
-Here are our options (verified against codebase):
+Here are our options:
 
-**Option A: [Approach Name]** *(Verified: Feasible)*
+**Option A: [Approach Name]**
 - [What this involves]
 - Pros: [Benefits]
 - Cons: [Tradeoffs/risks]
-- **Evidence**: [Code reference from verification, e.g., "Similar pattern at src/auth/handler.ts:45"]
 - Complexity: CS-[1-5] ([trivial/small/medium/large/epic])
 
-**Option B: [Approach Name]** *(Verified: Partial)*
+**Option B: [Approach Name]**
 - [What this involves]
 - Pros: [Benefits]
 - Cons: [Tradeoffs/risks]
-- **Evidence**: [What verification found, e.g., "Requires refactoring PaymentService first (V2-03)"]
 - Complexity: CS-[1-5] ([trivial/small/medium/large/epic])
 
-**Option C: [Approach Name]** *(Verified: Not Feasible)*
+**Option C: [Approach Name]**
 - [What this involves]
 - Pros: [Benefits]
 - Cons: [Tradeoffs/risks]
-- **Evidence**: [What blocks this, e.g., "API limitation - endpoint doesn't support batch operations"]
-- **Why Not Feasible**: [Clear explanation so user understands and can override if they have additional context]
 - Complexity: CS-[1-5] ([trivial/small/medium/large/epic])
-- *Note: Kept for completeness - override if you have context suggesting this IS feasible*
 
 **My Recommendation: Option [X]**
-*Verified against codebase findings V[N]-01 through V[N]-0X*
 
 Here's why I think [Option X] is the best path:
-1. [Primary reason - now grounded in code evidence]
-2. [Secondary reason - references actual patterns found]
-3. [Tertiary reason - avoids discovered constraints]
+1. [Primary reason - addresses the core concern]
+2. [Secondary reason - practical/feasible]
+3. [Tertiary reason - fits project constraints]
 
 However, [acknowledge valid aspects of other options or when they might be better].
 ```
@@ -610,12 +434,8 @@ We have [high/medium/low] confidence in proceeding based on this clarity session
 
 **Hard Requirements (Must Pass):**
 - [ ] Exactly 5 insights presented (no more, no less)
-- [ ] **All 5 insights verified by subagents before presentation** (parallel execution)
 - [ ] Each insight discussed one-at-a-time (no batching!)
 - [ ] Human input received for each insight before proceeding
-- [ ] **Each option includes verification status** (Feasible / Partial / Not Feasible)
-- [ ] **Code references included for feasible options** (file:line or node_id)
-- [ ] **Options marked "Not Feasible" include explanation** (kept to allow user override)
 - [ ] **Updates applied IMMEDIATELY after each insight** (not deferred to end)
 - [ ] Conversational tone throughout (not formal documentation)
 - [ ] Each insight reveals something non-obvious
@@ -634,9 +454,6 @@ We have [high/medium/low] confidence in proceeding based on this clarity session
 
 **Anti-Patterns to Avoid:**
 - ❌ Dumping all 5 insights at once
-- ❌ **Skipping verification phase** - always verify options against codebase
-- ❌ **Presenting options without verification status** - every option needs Feasible/Partial/Not Feasible
-- ❌ **Silently removing infeasible options** - keep them marked, let user override
 - ❌ Not waiting for human responses
 - ❌ Deferring updates until the end instead of doing them immediately
 - ❌ Stating obvious facts from the docs
@@ -652,19 +469,11 @@ We have [high/medium/low] confidence in proceeding based on this clarity session
 🎯 Goal: Surface 5 critical insights before implementation
 
 Let me take a deep look at this OAuth integration plan...
-[thinking deeply about implications from 9+ perspectives...]
-[Selected 5 critical insights]
+[thinking deeply about implications...]
 
-🔍 Verifying insights against codebase...
-  ✅ FlowSpace detected - using /flowspace-research agents
-  [Launching 5 verification subagents in parallel]
-  ✓ Insight 1 verified (4 findings) - Session invalidation patterns found
-  ✓ Insight 2 verified (3 findings) - Scope management approaches identified
-  ✓ Insight 3 verified (5 findings) - Token refresh edge cases discovered
-  ✓ Insight 4 verified (3 findings) - Mobile storage patterns found
-  ✓ Insight 5 verified (4 findings) - Audit logging constraints identified
-
-All insights verified (via FlowSpace). Starting conversation...
+Alright, I've identified 5 things I think we should talk about.
+These aren't obvious from reading the plan, but they're important.
+Let's go through them one at a time, and please jump in with thoughts.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -695,50 +504,42 @@ For example, imagine we deploy at 2pm on a Tuesday (peak usage).
 once. OAuth provider's rate limit is 100 req/min. Now we have 400 users
 locked out for 4 minutes, getting angrier by the second.
 
-Here are our options (verified against codebase):
+Here are our options:
 
-**Option A: Dual-Auth Migration Period (24 hours)** *(Verified: Feasible)*
+**Option A: Dual-Auth Migration Period (24 hours)**
 - Support both JWT and OAuth simultaneously for 24 hours
 - Pros: Zero disruption, graceful transition, users can finish sessions
 - Cons: Complex code, temporary technical debt, security risk window
-- **Evidence**: Similar dual-auth pattern at src/auth/legacy-bridge.ts:45 (V1-02)
 - Complexity: CS-4 (large - requires dual auth logic + cleanup later)
 
-**Option B: Off-Peak Deployment Window** *(Verified: Feasible)*
+**Option B: Off-Peak Deployment Window**
 - Schedule deployment for 3am Sunday EST (lowest usage)
 - Pros: Simple, minimal user impact (~10-20 active users)
 - Cons: Requires weekend deployment, still disrupts some users
-- **Evidence**: Maintenance banner component exists at src/components/Banner.tsx (V1-01)
 - Complexity: CS-2 (small - just timing + maintenance banner)
 
-**Option C: On-the-Fly Token Migration** *(Verified: Not Feasible)*
+**Option C: On-the-Fly Token Migration**
 - Build migration tool that converts JWT→OAuth tokens automatically
 - Pros: Zero user disruption, can deploy anytime
 - Cons: Very complex, risky token conversion logic, potential security issues
-- **Evidence**: TokenService uses encrypted storage - cannot decrypt old tokens (V1-03)
-- **Why Not Feasible**: JWT secret rotation in v2.3 means old tokens can't be decoded
 - Complexity: CS-5 (epic - complex migration logic with security concerns)
-- *Note: Kept for completeness - override if you have context suggesting this IS feasible*
 
-**Option D: Hard Cutover with Warning Banner** *(Verified: Partial)*
+**Option D: Hard Cutover with Warning Banner**
 - Deploy during business hours, show 1-hour warning banner
 - Pros: Simple, transparent to users
 - Cons: Disrupts all active users, potential rate limiting chaos
-- **Evidence**: Banner exists but lacks countdown timer - needs enhancement (V1-04)
-- Complexity: CS-2 (small - just add banner, but timer adds ~2hrs work)
+- Complexity: CS-2 (small - just add banner)
 
 **My Recommendation: Option B (Off-Peak Deployment)**
-*Verified against codebase findings V1-01 through V1-04*
 
 Here's why I think Option B is the best path:
 1. **Minimizes disruption** - Only 10-20 users affected vs 500
-2. **Keeps it simple** - Maintenance banner already exists (V1-01)
+2. **Keeps it simple** - No complex migration code to maintain/debug
 3. **Reduces risk** - Fewer concurrent logins = no rate limit issues
-4. **Avoids infeasible paths** - Option C ruled out by verification
+4. **Reasonable effort** - Just add a maintenance banner (needed anyway)
 
 However, if weekend deployments are a hard constraint for your team,
-Option A becomes worth considering - the dual-auth pattern at
-src/auth/legacy-bridge.ts provides a template to follow.
+Option A becomes worth considering despite the complexity.
 
 What do you think about this recommendation? Does weekend deployment
 work for your team, or should we explore Option A instead?
