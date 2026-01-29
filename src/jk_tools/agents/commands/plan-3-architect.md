@@ -758,7 +758,7 @@ describe('[Component]', () => {
 | [ ] | T000 | Create feature folder structure | 1 | Setup | -- | /abs/path/features/<ordinal>-<slug>/ | Directory exists | PlanPak setup |
 ```
 
-T000 creates the `features/<ordinal>-<slug>/` directory (and any library split variants like `web/features/`, `cli/features/`).
+T000 creates the `features/<ordinal>-<slug>/` directory (and any library split variants like `web/features/`, `cli/features/`), plus `${PLAN_DIR}/files/` for symlinks back to source files.
 
 **If PlanPak NOT active**: Omit this section entirely. All files go to traditional layer-based locations.
 
