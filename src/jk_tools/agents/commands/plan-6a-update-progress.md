@@ -365,6 +365,8 @@ After:
 | [x] | T001 | Setup configuration | 2 | Setup | -- | /abs/path | Config created | log#task-t001-setup [^1] |
 ```
 
+**PlanPak Note**: If PlanPak is active (`File Management: PlanPak` in spec or T000 in task table), preserve any existing classification tag in Notes (`plan-scoped`, `cross-cutting`, `cross-plan-edit`, `shared-new`). Append log anchor and footnote after the tag.
+
 **Note**: In Simple Mode, there is NO separate dossier - the plan's inline task table IS the task source. Skip Subagent C2 (Plan Updater) since there's only one table to update.
 
 #### For Full Mode - Phase Dossier (`tasks.md`):

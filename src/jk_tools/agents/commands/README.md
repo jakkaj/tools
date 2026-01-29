@@ -124,6 +124,10 @@ graph TD
 
     P7 -->|REQUEST_CHANGES| P6
 
+    PAK["planpak<br/>Standalone reference"]
+    PAK -.->|"activates via"| P2
+
+    style PAK fill:#fff3e0
     style P0 fill:#e1f5fe
     style P2B fill:#fff3e0
     style P3A fill:#fff3e0
@@ -531,6 +535,24 @@ file:<file_path>
 
 ## Optional Enhancement Commands
 
+### /planpak
+**Purpose**: Activate plan-based feature file organization (Screaming Architecture for plans)
+
+**When to use**:
+- Drop into any project to organize code by plan/feature
+- Standalone reference for PlanPak rules and conventions
+- Works independently of the plan workflow
+
+**Key Concepts**:
+- New files live in `features/<ordinal>-<slug>/` folders (flat, no subdirs)
+- Cross-cutting code stays in traditional shared locations
+- File ownership is birth-based (files stay with the plan that created them)
+- Detection: `File Management: PlanPak` in spec header or T000 task
+
+**Integration**: Automatically flows through `/plan-2-clarify` (opt-in) → `/plan-3-architect` (manifest) → `/plan-5` (paths) → `/plan-6` (placement) → `/plan-7` (validation)
+
+---
+
 ### /plan-3a-adr
 **Purpose**: Generate Architectural Decision Records from spec
 
@@ -822,6 +844,8 @@ docs/
     └── 001-oauth/                      # Feature directory
         ├── oauth-spec.md                # Feature specification
         ├── oauth-plan.md                # Implementation plan
+        # If PlanPak active, source code lives in:
+        # src/features/001-oauth/         # Plan-scoped files (flat)
         ├── tasks/
         │   ├── phase-1/
         │   │   ├── tasks.md             # Phase 1 tasks + brief

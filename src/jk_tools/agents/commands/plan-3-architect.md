@@ -48,6 +48,11 @@ Inputs:
 - If `Mode: Simple` → Use **Simple Mode Output Format** (see below)
 - If `Mode: Full` or not specified → Use **Full Mode Output Format** (standard multi-phase)
 
+**ALSO**: Check spec for `**File Management**: PlanPak` or `**File Management**: Legacy`.
+
+- If `File Management: PlanPak` → Enable **PlanPak file organization** (see PlanPak sections below)
+- If `File Management: Legacy` or not specified → Use traditional layer-based file placement
+
 **Simple Mode Changes:**
 - Single phase instead of multiple phases
 - Inline task table (plan-5 format) directly in plan
@@ -394,6 +399,22 @@ After all 4 subagents complete:
 └── [configuration files]
 ```
 
+**If PlanPak active**, add `features/` directory to the tree:
+```
+/path/to/repo/
+├── src/
+│   ├── features/
+│   │   └── <ordinal>-<slug>/    # Plan-scoped files (flat, no subdirs)
+│   ├── [shared/core modules]    # Cross-cutting code stays here
+│   └── [existing structure]
+├── tests/                        # Test location per project conventions
+├── docs/
+│   └── plans/
+│       └── <ordinal>-<slug>/
+└── [configuration files]
+```
+If the project has library splits (`web/`, `cli/`, `shared/`), feature folders nest within each split.
+
 ## PHASE 4: Plan Document Generation
 
 ### Testing Strategy Adaptation
@@ -708,6 +729,38 @@ describe('[Component]', () => {
 - Content structure and organization
 - Update/maintenance schedule
 - Target audience and accessibility
+
+#### 8a. File Placement Manifest (PlanPak Only)
+
+**If `File Management: PlanPak` is active in spec**, include this section in the plan:
+
+```markdown
+### File Placement Manifest
+
+| File | Classification | Location | Rationale |
+|------|---------------|----------|-----------|
+| [filename] | plan-scoped | features/<ordinal>-<slug>/ | Serves only this plan |
+| [filename] | cross-cutting | src/shared/ | DI registration, wiring |
+| [filename] | cross-plan-edit | features/<earlier-ordinal>-<slug>/ | Editing existing file |
+| [filename] | shared-new | src/core/ | Needed by 3+ plans |
+```
+
+**Classification tags**: `plan-scoped`, `cross-cutting`, `cross-plan-edit`, `shared-new`
+
+**Decision tree for each new file**:
+1. Serves only this plan? → `plan-scoped` (feature folder)
+2. Registration/wiring/DI? → `cross-cutting` (shared location)
+3. Needed by 3+ plans? → `shared-new` (shared location)
+4. Otherwise → `plan-scoped` (graduate later via Rule of Three)
+
+**T000 Setup Task** (add as first task in the plan when PlanPak active):
+```markdown
+| [ ] | T000 | Create feature folder structure | 1 | Setup | -- | /abs/path/features/<ordinal>-<slug>/ | Directory exists | PlanPak setup |
+```
+
+T000 creates the `features/<ordinal>-<slug>/` directory (and any library split variants like `web/features/`, `cli/features/`).
+
+**If PlanPak NOT active**: Omit this section entirely. All files go to traditional layer-based locations.
 
 #### 9. Complexity Tracking
 
@@ -1059,6 +1112,12 @@ docs/how/
 - Tasks are detailed enough for direct implementation (no plan-5 expansion needed)
 - Include absolute paths for all files
 - CS scores follow constitution rubric
+
+**If PlanPak active in Simple Mode**, also include:
+- **File Placement Manifest** section (see § 8a above) before the task table
+- **T000** as the first task creating the feature folder
+- Plan-scoped file paths point to `features/<ordinal>-<slug>/`
+- Classification tags in the Notes column of each task
 
 ### Acceptance Criteria
 - [ ] [Criterion 1 - testable/observable]

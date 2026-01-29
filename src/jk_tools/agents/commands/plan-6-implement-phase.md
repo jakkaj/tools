@@ -152,6 +152,11 @@ $ARGUMENTS
    - If `Mode: Simple` → Use **Simple Mode** (inline tasks, no dossier required)
    - If `Mode: Full` or not specified → Use **Full Mode** (requires dossier)
 
+   **Detect PlanPak:**
+   - Check PLAN/SPEC for `**File Management**: PlanPak` OR T000 task in task table
+   - If found → PLANPAK_ACTIVE = true (apply placement rules in Step 2)
+   - If not found → PLANPAK_ACTIVE = false (legacy file placement)
+
    **Full Mode Path Resolution:**
    PHASE_HEADING = provided --phase (required when multiple phases exist); slugify to get `PHASE_SLUG` exactly as plan-5/plan-5a generate directories (e.g., "Phase 4: Data Flows" → `phase-4-data-flows`).
    If `--phase` omitted, infer `PHASE_SLUG` by locating the unique tasks directory that contains either `tasks.md` or the requested `--subtask` file; abort when inference is ambiguous.
@@ -258,6 +263,14 @@ $ARGUMENTS
       - Respect stack patterns (e.g., Python test debug via `module: 'pytest'` + `--no-cov`; bounded searches; remote-safe URIs)
       - Honor mock usage preference from Testing Strategy
       (Rules/idioms affirmed here.) :contentReference[oaicite:17]{index=17} :contentReference[oaicite:18]{index=18}
+
+   d) PlanPak placement rules (if PLANPAK_ACTIVE = true):
+      1. **Plan-scoped files** → create in `features/<ordinal>-<slug>/` (flat, descriptive names)
+      2. **Cross-cutting files** (DI registration, wiring, config) → create in traditional shared location
+      3. **Cross-plan edits** → edit files in-place in the original plan's feature folder (never move)
+      4. **Dependency direction** → plan code may import from shared/core; shared/core must never import from plan folders
+      5. **Rule of Three** → if 3+ plans import from one plan's folder, graduate the file to shared/
+      If PLANPAK_ACTIVE = false, skip these rules entirely.
 
 3) Execution (adapt to Testing Strategy):
    - Follow task order and dependencies listed in `PHASE_DOC`; [P] only for disjoint file sets (respect ST/T scopes).

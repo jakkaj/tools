@@ -69,6 +69,7 @@ $ARGUMENTS
 3) Scope guard (PHASE ONLY)
    - Parse `PHASE_DOC` to list target files for this phase; ensure the diff touches only those or justified neighbors.
    - If violations (files outside scope without justification in the alignment brief section of `PHASE_DOC` or EXEC_LOG), flag as HIGH.
+   - **PlanPak exemption**: If PlanPak is active, files classified as `cross-plan-edit` in the File Placement Manifest are legitimate even if they live in another plan's feature folder. Do not flag these as scope violations.
    - **Simple Mode**: Scope guard applies to inline task table paths in `## Implementation (Single Phase)` section.
 
 3a) Bidirectional Link Validation (CRITICAL for graph integrity)
@@ -969,6 +970,47 @@ This step runs **after** Step 3a (depends on link validation data) but can run i
 
    **Important**: This subagent is advisory - recommendations don't block approval. Output is used to populate Section E.4 (Doctrine Evolution) in the review report."
 
+   **Subagent 7: PlanPak Compliance Validator** (if PlanPak active — `File Management: PlanPak` in spec or T000 in plan)
+   "You are a PlanPak Compliance Auditor. Validate that file placement follows PlanPak rules.
+
+   **Inputs:**
+   - PLAN (plan.md with File Placement Manifest if present)
+   - DIFF (unified diff of changes)
+   - SPEC (spec with `File Management: PlanPak` header)
+
+   **Validation Checks:**
+
+   1. **Plan-scoped files in feature folder**: Files classified as `plan-scoped` in the manifest (or Notes column) must live in `features/<ordinal>-<slug>/`
+      - **Severity**: HIGH if plan-scoped file placed in wrong location
+
+   2. **Feature folders are flat**: No subdirectories inside `features/<ordinal>-<slug>/` (e.g., no `features/003-auth/models/`)
+      - **Severity**: MEDIUM if nested subdirectories found
+
+   3. **Cross-plan edits stay in place**: Files classified as `cross-plan-edit` must remain in the original plan's feature folder (not moved/copied)
+      - **Severity**: HIGH if file was moved from original location
+
+   4. **Dependency direction**: Plan-scoped code may import from shared/core; shared/core must never import from plan feature folders
+      - **Severity**: HIGH if shared code imports from feature folder
+
+   5. **Cross-cutting in shared locations**: Files classified as `cross-cutting` (DI, wiring, config) must be in traditional shared locations, not feature folders
+      - **Severity**: MEDIUM if cross-cutting file placed in feature folder
+
+   6. **Descriptive filenames**: Files in feature folders use descriptive names (e.g., `auth-service.ts`) not generic names (e.g., `service.ts`, `index.ts`)
+      - **Severity**: LOW if generic filename used
+
+   **Report** (JSON format):
+   ```json
+   {
+     \"findings\": [
+       {\"id\": \"PAK-001\", \"severity\": \"HIGH\", \"file\": \"path/to/file\", \"issue\": \"Plan-scoped file not in feature folder\", \"expected\": \"features/003-auth/auth-service.ts\", \"actual\": \"src/services/auth-service.ts\", \"fix\": \"Move to feature folder\"}
+     ],
+     \"violations_count\": N,
+     \"compliance_score\": \"PASS|FAIL\"
+   }
+   ```
+
+   If PlanPak not active, return {\"findings\": [], \"violations_count\": 0, \"compliance_score\": \"N/A - PlanPak not active\"}."
+
    **Wait for All Validators**: Block until all applicable subagents complete their validation.
 
    **4c) Synthesize subagent results**:
@@ -982,6 +1024,7 @@ This step runs **after** Step 3a (depends on link validation data) but can run i
       - UNI-001, UNI-002, ... (from BridgeContext & Universal Validator)
       - PLAN-001, PLAN-002, ... (from Plan Compliance Validator)
       - DOCTRINE-REC-001, ... (from Doctrine Evolution Analyzer - advisory only)
+      - PAK-001, PAK-002, ... (from PlanPak Compliance Validator, if active)
    3. **Deduplicate** overlapping issues (keep highest severity if same file:lines)
    4. **Aggregate severity counts**: CRITICAL, HIGH, MEDIUM, LOW
    5. **Calculate doctrine compliance score**:

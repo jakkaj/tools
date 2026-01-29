@@ -95,6 +95,28 @@ Rationale: [1-2 sentences from user]
 If C (Hybrid): What goes in README vs docs/how/? [Brief split description]
 ```
 
+File Management Strategy Question Format:
+```
+Q: How should code files be organized during implementation?
+
+| Option | Mode | Best For | What Changes |
+|--------|------|----------|--------------|
+| A | PlanPak (Recommended) | Full traceability, feature-grouped code | New files live in features/<ordinal>-<slug>/ folders grouped by plan |
+| B | Legacy | Quick edits, simple changes | Code placed in traditional layer-based locations as normal |
+
+Answer: [A/B]
+Rationale: [1-2 sentences from user]
+```
+
+**If PlanPak Selected:**
+- Update spec header with `**File Management**: PlanPak`
+- Plan-3-architect will produce a File Placement Manifest and T000 setup task
+- Implementation commands enforce feature folder placement for plan-scoped files
+
+**If Legacy Selected:**
+- Update spec header with `**File Management**: Legacy`
+- All commands behave exactly as they do today — zero change
+
 Updates to Spec:
 - Add/Update `## Testing Strategy` section with:
   - **Approach**: [Full TDD | TAD | Lightweight | Manual | Hybrid]
@@ -103,6 +125,7 @@ Updates to Spec:
   - **Excluded**: [What doesn't need extensive testing]
   - **Mock Usage**: [Avoid mocks | Targeted mocks | Liberal mocks] + rationale
   - **TAD-Specific** (if TAD selected): Scratch→Promote workflow, Test Doc comment blocks required, promotion heuristic (Critical/Opaque/Regression/Edge)
+- Add/Update `**File Management**` in spec header: `PlanPak` or `Legacy`
 - Add/Update `## Documentation Strategy` section with:
   - **Location**: [README.md only | docs/how/ only | Hybrid | None]
   - **Rationale**: [User's reasoning]

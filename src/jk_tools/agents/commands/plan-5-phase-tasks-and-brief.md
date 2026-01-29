@@ -342,6 +342,13 @@ $ARGUMENTS
    - `Subtasks` lists spawned subtask dossiers (e.g., "001-subtask-fixtures, 003-subtask-bulk") or "–" for none. Updated by plan-5a when subtask is created.
    - `Notes` include contextual references (e.g., ADR IDs, Critical Finding refs), but defer `[^N]` footnote tags until plan-6 updates the ledger.
 
+   **PlanPak Path Rules** (if `File Management: PlanPak` active in spec or T000 exists in plan):
+   - Plan-scoped files: `Absolute Path(s)` must point to `features/<ordinal>-<slug>/` folder
+   - Cross-cutting files: `Absolute Path(s)` points to traditional shared location
+   - Cross-plan edits: `Absolute Path(s)` points to the original plan's feature folder
+   - `Notes` column must include classification tag: `plan-scoped`, `cross-cutting`, `cross-plan-edit`, or `shared-new`
+   - If PlanPak NOT active: no classification tags, paths follow project conventions
+
 6) Write a single combined artifact `PHASE_DIR/tasks.md` containing:
    - Phase metadata (title, slug, links to SPEC and PLAN, today {{TODAY}}).
    - `## Executive Briefing` section at the TOP that explains **what this phase will accomplish and why** in human-readable form. This is NOT about how the dossier was generated—it's about the actual work to be done. Include:
@@ -497,6 +504,12 @@ $ARGUMENTS
        - Note specific constraints from the ADR that affect this phase
        - Map constraints to specific tasks: "Constrains: [items]; Addressed by: [T00X, T00Y]"
        - Tag affected task rows in the Notes column with "Per ADR-NNNN"
+     * **PlanPak Placement Rules** (if PlanPak active):
+       - Plan-scoped files → `features/<ordinal>-<slug>/` (flat, descriptive names)
+       - Cross-cutting files → traditional shared location
+       - Cross-plan edits → stay in original plan's folder
+       - Dependency direction: plans → shared (allowed), shared → plans (never)
+       - Test location: per project conventions (PlanPak doesn't prescribe)
      * Invariants & guardrails (perf/memory/security budgets if relevant)
      * Inputs to read (exact file paths)
      * Visual alignment aids: capture both a Mermaid flow diagram (system states) and a Mermaid sequence diagram (actor/interaction order). Treat these as shared-understanding checkpoints so the human sponsor and coding agent agree on the flow before implementation begins.
