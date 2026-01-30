@@ -553,6 +553,28 @@ file:<file_path>
 
 ---
 
+### /code-concept-search
+**Purpose**: Find a concept in the codebase even when it's named differently than expected — walks through code like a human engineer, returns provenance and reuse assessment.
+
+**When to use**:
+- Before creating something new — check if it already exists under a different name
+- Called by Flight Plan subagent (plan-5/5a) for duplication checks
+- During implementation when you encounter a concept that might exist elsewhere
+- Direct invocation for quick existence checks
+
+**Inputs**:
+```bash
+/code-concept-search "rate limiter"
+/code-concept-search "connectNode" --scope "src/graph/"
+/code-concept-search "logger" --no-provenance
+```
+
+**Search tiers**: FlowSpace semantic → FlowSpace text → Codebase walk-through (reads, follows flows, reasons) → Targeted grep
+
+**Output**: Ranked findings with match quality, provenance (origin plan, modification history), consumer count, and reuse assessment.
+
+---
+
 ### /plan-3a-adr
 **Purpose**: Generate Architectural Decision Records from spec
 

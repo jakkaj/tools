@@ -75,6 +75,20 @@ Implement the core API endpoint as specified in the plan acceptance criteria.
 
 ---
 
+## Flight Plan
+
+### Summary
+| File | Action | Origin | Modified By | Recommendation |
+|------|--------|--------|-------------|----------------|
+| /abs/path/src/handlers/base.py | Modify | Pre-plan | — | keep-as-is |
+| /abs/path/tests/test_api.py | Create | New | — | keep-as-is |
+| /abs/path/src/api/endpoint.py | Create | New | — | keep-as-is |
+
+### Compliance Check
+No violations found.
+
+---
+
 ## Architecture Map
 
 ### Component Diagram
@@ -349,6 +363,77 @@ $ARGUMENTS
    - `Notes` column must include classification tag: `plan-scoped`, `cross-cutting`, `cross-plan-edit`, or `shared-new`
    - If PlanPak NOT active: no classification tags, paths follow project conventions
 
+5a) **Launch Flight Plan subagent** to audit all files from the expanded task table:
+
+   After step 5 completes, the full file list is known from the `Absolute Path(s)` column. Launch a single subagent to build the Flight Plan — the pre-implementation audit that verifies provenance, checks for duplication, and validates compliance before any code is written.
+
+   **FlowSpace Detection**: Try `flowspace.tree(pattern=".", max_depth=1)`.
+   - If available: use `subagent_type="general-purpose"` with FlowSpace tool instructions
+   - If unavailable: use `subagent_type="Explore"` (has Glob/Grep/Read access)
+
+   **Subagent Prompt**:
+   "Build a Flight Plan for [PHASE_TITLE] of plan [PLAN_PATH].
+
+   Files to investigate (from task table Absolute Path(s) column):
+   [LIST EVERY UNIQUE FILE FROM THE EXPANDED TASK TABLE]
+
+   For EACH file, determine:
+
+   1. **ACTION**: Created (new) or Modified (exists)? Check if file exists on disk.
+
+   2. **PROVENANCE** (Modified files):
+      - Which plan created this file? Search:
+        * `docs/plans/*/execution.log.md` for the file path (grep both absolute and relative forms; paths may be wrapped in backticks)
+        * `docs/plans/*-plan.md` task tables for the path in Absolute Path(s) columns
+        * If PlanPak active: check if file lives in `features/<ordinal>-<slug>/` — the ordinal IS the origin plan
+        * `git log --follow --diff-filter=A -- <filepath>` for creation commit
+      - Which OTHER plans modified it? Same sources, collect all plan references.
+
+   3. **DUPLICATION CHECK** (Created files only):
+      - Use `/code-concept-search "<concept>" --no-provenance` for each major concept
+        the new file will introduce (class names, key functions, patterns).
+        code-concept-search walks the codebase like a human engineer — it finds
+        concepts even when named differently (e.g., finds "elementConnector" from
+        a query of "connectNode"). It uses FlowSpace semantic search when available,
+        falls back to codebase walk-through with Glob/Grep/Read when not.
+      - If code-concept-search finds matches, include the match quality, file path,
+        what it does, and its original intent paragraph — this lets the implementer
+        judge whether to reuse, extend, or create new.
+      - Report matches with file paths and one-line descriptions, or 'None found'
+
+   4. **COMPLIANCE CHECK** (all files):
+      - If `docs/adr/` exists: scan ADRs for constraints affecting this file's location, naming, or patterns
+      - If `docs/project-rules/rules.md` exists: check planned changes against project rules
+      - If `docs/project-rules/idioms.md` exists: check naming, patterns, conventions
+      - If `docs/project-rules/architecture.md` exists: check layer boundaries, dependency direction
+      - If PlanPak active: verify classification tag is correct per decision tree
+      - Report violations as: SEVERITY (HIGH/MEDIUM/LOW) | Rule/ADR | What's wrong | Suggested fix
+      - If none of these files exist, report 'No compliance sources found — skipped'
+
+   5. **RECOMMENDATION** (one per file):
+      - keep-as-is | reuse-existing | extract-to-shared | consider-moving | cross-plan-edit | compliance-warning
+
+   **Output format** — return these sections:
+
+   SUMMARY TABLE (one row per file):
+   | File | Action | Origin | Modified By | Recommendation |
+   |------|--------|--------|-------------|----------------|
+
+   PER-FILE DETAIL (only for files with findings):
+   ### <filepath>
+   - **Duplication check**: [findings or 'None']
+   - **Provenance**: [origin plan and modification history]
+   - **Compliance**: [violations or 'No violations']
+
+   COMPLIANCE SUMMARY (only if violations found):
+   | Severity | File | Rule/ADR | Violation | Suggested Fix |
+   |----------|------|----------|-----------|---------------|
+   "
+
+   - **Include subagent output** verbatim in the `## Flight Plan` section of tasks.md
+   - If `reuse-existing` recommendations found: flag prominently — task table may need revision
+   - If HIGH compliance violations found: note that implementation should address these first
+
 6) Write a single combined artifact `PHASE_DIR/tasks.md` containing:
    - Phase metadata (title, slug, links to SPEC and PLAN, today {{TODAY}}).
    - `## Executive Briefing` section at the TOP that explains **what this phase will accomplish and why** in human-readable form. This is NOT about how the dossier was generated—it's about the actual work to be done. Include:
@@ -410,6 +495,13 @@ $ARGUMENTS
        - ❌ Support for currency conversion (out of scope)
        - ❌ Caching of parsed results (not needed yet)
        ```
+   - `## Flight Plan` section (generated by step 5a) containing the pre-implementation file audit:
+     * **Summary Table**: One row per file with columns: File, Action, Origin, Modified By, Recommendation
+     * **Per-File Detail**: Subsections only for files with findings (duplication matches, provenance chain, compliance issues)
+     * **Compliance Check**: Table of any ADR/rules/idioms/architecture violations with severity (HIGH/MEDIUM/LOW)
+     * If step 5a subagent returned no findings: include section with note "No findings — all files are new or have clean provenance"
+     * If `reuse-existing` recommendations found: add prominent callout that task table may need revision before implementation
+     * If HIGH compliance violations found: add note that these must be addressed before implementation proceeds
    - `## Architecture Map` section that provides a **visual component diagram** showing all system elements being modified. This diagram uses color-coded status tracking that updates as implementation progresses:
 
      **Status Colors**:
