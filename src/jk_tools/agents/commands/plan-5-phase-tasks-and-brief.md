@@ -89,6 +89,25 @@ No violations found.
 
 ---
 
+## Requirements Traceability
+
+### Coverage Matrix
+| AC | Description | Flow Summary | Files in Flow | Tasks | Status |
+|----|-------------|-------------|---------------|-------|--------|
+| AC1 | Create POST /api/v1/process endpoint | endpoint.py → base.py | 2 | T001,T002 | ✅ Complete |
+| AC2 | Accept and validate JSON payloads | endpoint.py → base.py | 2 | T002 | ✅ Complete |
+| AC3 | Return structured results | endpoint.py → base.py | 2 | T003 | ✅ Complete |
+
+### Gaps Found
+No gaps — all acceptance criteria have complete file coverage.
+
+### Orphan Files
+| File | Tasks | Assessment |
+|------|-------|------------|
+| /abs/path/tests/test_api.py | T004 | Test infrastructure — validates AC1-AC3 |
+
+---
+
 ## Architecture Map
 
 ### Component Diagram
@@ -434,6 +453,69 @@ $ARGUMENTS
    - If `reuse-existing` recommendations found: flag prominently — task table may need revision
    - If HIGH compliance violations found: note that implementation should address these first
 
+5b) **Launch Requirements Flow subagent** to verify every acceptance criterion has complete file coverage:
+
+   After the Flight Plan audits existing files (step 5a), verify that the task table doesn't have gaps — files that an AC needs but no task covers. This catches the common failure mode where the agent implements a backend handler but forgets the frontend event wiring, or adds a service method but doesn't update the route that calls it.
+
+   **FlowSpace Detection**: Try `flowspace.tree(pattern=".", max_depth=1)`.
+   - If available: use `subagent_type="general-purpose"` with FlowSpace tool instructions
+   - If unavailable: use `subagent_type="Explore"` (has Glob/Grep/Read access)
+
+   **Subagent Prompt**:
+   "Run requirements flow tracing for [PHASE_TITLE] of plan [PLAN_PATH].
+
+   Acceptance Criteria (from spec [SPEC_PATH]):
+   [LIST ALL ACs FROM SPEC — numbered, full text]
+
+   Task table files (from step 5 Absolute Path(s) column):
+   [LIST ALL UNIQUE FILES FROM THE EXPANDED TASK TABLE]
+
+   Full task table (for cross-referencing):
+   [PASTE THE TASK TABLE WITH ID, Task, Absolute Path(s) COLUMNS]
+
+   For each acceptance criterion:
+   1. Identify the trigger — what user action or system event kicks this off?
+   2. Trace the full execution flow through the codebase — follow imports, call chains, event wiring, data flow, error paths, and return paths layer by layer
+   3. List every file in the flow that would need to change for this AC to work end-to-end
+   4. Cross-reference against the task table — does every file appear in some task's Absolute Path(s)?
+   5. Flag gaps: files in the flow but missing from the task table
+   6. Flag orphan files: files in tasks that don't map to any AC (may be valid utilities or scope creep)
+
+   Walk the codebase like a human engineer — read files, follow imports, trace call chains.
+   Don't just grep for keywords. The goal is to find EVERY file that must change, not just the obvious ones.
+
+   Common gaps to watch for:
+   - Event/message wiring (backend exists, no frontend trigger)
+   - Error paths (happy path covered, error display missing)
+   - Configuration (new feature needs config entries)
+   - UI state updates (API returns data, UI doesn't refresh)
+   - Middleware/interceptor registration
+   - Index/barrel file exports
+   - Migration/schema changes
+
+   Output format:
+   COVERAGE MATRIX:
+   | AC | Description | Flow Summary | Files in Flow | Tasks | Status |
+   (Status: ✅ Complete | ⚠️ Gap: [files] | ❌ No tasks | ⏭️ Deferred)
+
+   GAPS FOUND (for each gap):
+   - AC, missing file, role in flow, why needed, suggested action
+
+   ORPHAN FILES (if any):
+   - File, tasks, assessment (utility | config | scope-creep | test-infrastructure)
+
+   FLOW DETAILS (only for ACs with gaps or complex paths):
+   - Numbered file chain with task coverage markers
+   "
+
+   - **Review subagent output for gaps**. If gaps are found:
+     * Review each gap — is it a genuine missing file or a false positive?
+     * For genuine gaps: **add new tasks** to the task table (step 5) to cover the missing files
+     * For false positives: note why the file isn't needed in the Requirements Traceability section
+     * **Do NOT proceed to step 6** until all gaps are resolved (either by adding tasks or documenting why they're not needed)
+   - If no gaps found: proceed to step 6 with the Requirements Traceability section showing full coverage
+   - Include subagent output in the `## Requirements Traceability` section of tasks.md
+
 6) Write a single combined artifact `PHASE_DIR/tasks.md` containing:
    - Phase metadata (title, slug, links to SPEC and PLAN, today {{TODAY}}).
    - `## Executive Briefing` section at the TOP that explains **what this phase will accomplish and why** in human-readable form. This is NOT about how the dossier was generated—it's about the actual work to be done. Include:
@@ -502,6 +584,13 @@ $ARGUMENTS
      * If step 5a subagent returned no findings: include section with note "No findings — all files are new or have clean provenance"
      * If `reuse-existing` recommendations found: add prominent callout that task table may need revision before implementation
      * If HIGH compliance violations found: add note that these must be addressed before implementation proceeds
+   - `## Requirements Traceability` section (generated by step 5b) verifying every acceptance criterion has complete file coverage:
+     * **Coverage Matrix**: One row per AC with columns: AC, Description, Flow Summary, Files in Flow, Tasks, Status
+     * **Gaps Found**: Per-gap detail with missing file, role in flow, why needed, suggested action — only if gaps exist
+     * **Orphan Files**: Files in tasks that don't map to any AC, with assessment (utility, config, scope-creep) — only if orphans exist
+     * **Flow Details**: Numbered file chains for ACs with gaps or complex paths — only for those ACs
+     * If step 5b subagent returned no gaps: include section with note "All acceptance criteria have complete file coverage"
+     * If gaps were found and resolved (tasks added): note what was added and which gaps they close
    - `## Architecture Map` section that provides a **visual component diagram** showing all system elements being modified. This diagram uses color-coded status tracking that updates as implementation progresses:
 
      **Status Colors**:

@@ -575,6 +575,24 @@ file:<file_path>
 
 ---
 
+### /plan-5c-requirements-flow
+**Purpose**: Trace each acceptance criterion through execution flows to verify every needed file is in the task table
+
+**When to use**:
+- Invoked automatically as a subagent by plan-5 (step 5b) and plan-5a (step 4b)
+- Not typically run standalone — called after the task table is built and Flight Plan is complete
+
+**What it does**:
+- For each AC, traces the full execution flow (trigger → layers → outcome)
+- Cross-references every file in each flow against the task table
+- Flags gaps: files needed but missing from tasks
+- Flags orphans: task files that don't map to any AC
+- Catches common misses: event wiring, error paths, config, UI state updates, middleware registration
+
+**Output**: `## Requirements Traceability` section in the dossier with coverage matrix, gaps, orphans, and flow details.
+
+---
+
 ### /plan-3a-adr
 **Purpose**: Generate Architectural Decision Records from spec
 
