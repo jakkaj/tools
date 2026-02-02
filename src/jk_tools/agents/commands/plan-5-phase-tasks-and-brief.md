@@ -767,11 +767,100 @@ Otherwise → **Phase Mode** (continue to step 1).
      _See also: `execution.log.md` for detailed narrative._
      ```
 
-7) **Generate Flight Plan**: After writing tasks.md, automatically generate the consumable Flight Plan summary:
-   - Run `/plan-5b-flightplan --phase "${PHASE}" --plan "${PLAN}"`
-   - This produces `PHASE_DIR/tasks.fltplan.md` — a short, human-readable summary of the phase
-   - The Flight Plan is designed to be scanned in 30 seconds and answers: Where are we? Where are we going? How do we get there?
-   - If the subagent call fails, warn but do not abort — the tasks.md is the primary deliverable
+7) **Generate Flight Plan**: After writing tasks.md, **MANDATORY** — use the Task tool to launch a subagent that generates the consumable Flight Plan summary.
+
+   **Subagent Launch** (use `subagent_type="general-purpose"`):
+
+   "Generate a Flight Plan summary file for [PHASE_TITLE] of plan [PLAN_PATH].
+
+   Read these files:
+   - `${PHASE_DIR}/tasks.md` (the dossier you just wrote)
+   - `${PLAN}` (the architectural plan)
+   - The spec file (*-spec.md in PLAN_DIR)
+   - Prior phases' tasks.md Executive Briefings (if not Phase 1)
+
+   Write a file to: `${PHASE_DIR}/tasks.fltplan.md`
+
+   The Flight Plan must be scannable in 30 seconds. Use this EXACT structure:
+
+   ```markdown
+   # Flight Plan: Phase N — <Title>
+
+   **Plan**: [<plan-filename>](../../<plan-filename>)
+   **Phase**: <Phase N: Title>
+   **Generated**: {{TODAY}}
+   **Status**: Ready for takeoff
+
+   ---
+
+   ## Departure → Destination
+
+   **Where we are**: <Concrete summary of current state — what exists from prior phases or the project baseline. Mention specific components, APIs, capabilities. For Phase 1, describe the project before any plan work.>
+
+   **Where we're going**: <Concrete outcome after this phase. End with something tangible: 'A developer can...', 'The system will...', 'Users will see...'>
+
+   ---
+
+   ## Route
+
+   1. **<Bold action phrase>** — one sentence explanation (`affected file(s)`, noting 'new file' for created files)
+   2. **<Bold action phrase>** — one sentence explanation (`affected file(s)`)
+   ... (one item per task, ordered by dependencies, NO task IDs — plain English only)
+
+   ---
+
+   ## Architecture: Before & After
+
+   (Single Mermaid flowchart LR with two subgraphs: Before and After)
+   (Three classDefs: existing=green #E8F5E9, changed=orange #FFF3E0, new=blue #E3F2FD)
+   (Component-level: show modules/services/classes, NOT individual files)
+   (Before subgraph: all nodes :::existing)
+   (After subgraph: unchanged :::existing, modified :::changed, new :::new)
+   (Max ~10-15 nodes total across both subgraphs)
+
+   **Legend**: existing (green, unchanged) | changed (orange, modified) | new (blue, created)
+
+   ---
+
+   ## Acceptance Criteria
+
+   - [ ] <criterion from spec that this phase addresses>
+   - [ ] <criterion>
+   ... (checkbox list, one line per criterion, simple testable statements)
+
+   ## Goals & Non-Goals
+
+   **Goals**:
+   - <what this phase WILL deliver>
+
+   **Non-Goals**:
+   - <what this phase is NOT doing (and why/when)>
+
+   ---
+
+   ## Checklist
+
+   - [ ] T001: <task description> (CS-N)
+   - [ ] T002: <task description> (CS-N)
+   ... (mirror tasks.md status: [ ] pending, [x] complete, [~] in-progress)
+
+   ---
+
+   ## PlanPak
+
+   <If active: 'Active — files organized under features/<ordinal>-<slug>/'
+    If not active: 'Not active for this plan.'>
+   ```
+
+   RULES:
+   - No jargon — write for someone who hasn't read the plan
+   - One sentence per route step
+   - Concrete outcomes, not abstractions
+   - Overwrite the file if it exists (regeneration-safe)
+   "
+
+   - Wait for the subagent to complete
+   - If it fails, print a warning but do NOT abort — tasks.md is the primary deliverable
 
 8) Capture a short directory layout at the end of `PHASE_DIR/tasks.md` so future phases know where to place logs and ancillary evidence inside `PHASE_DIR`.
    - Note that Plan 6 writes `execution.log.md` and any other evidence directly into `PHASE_DIR`.
@@ -911,10 +1000,11 @@ S5) Write subtask dossier `${SUBTASK_FILE}` containing:
      - Parent Execution Log: [execution.log.md](../execution.log.md)
      ```
 
-S6) **Generate Flight Plan** for the subtask:
-   - Run `/plan-5b-flightplan --phase "${PHASE}" --plan "${PLAN}"`
-   - This regenerates `PHASE_DIR/tasks.fltplan.md` incorporating the subtask context
-   - If the call fails, warn but do not abort
+S6) **Generate Flight Plan** for the subtask: **MANDATORY** — use the Task tool to launch a subagent (`subagent_type="general-purpose"`) with the same Flight Plan prompt as Phase Mode step 7.
+   - The subagent reads `${PHASE_DIR}/tasks.md`, `${PLAN}`, the spec, and the subtask dossier
+   - Writes to `${PHASE_DIR}/tasks.fltplan.md` (overwrites if exists)
+   - Uses the exact same structure (Departure → Destination, Route, Architecture Before & After, Checklist, PlanPak)
+   - If it fails, warn but do not abort
 
 S7) Register subtask in plan's Subtasks Registry:
    - Read PLAN and check for section `## Subtasks Registry`.

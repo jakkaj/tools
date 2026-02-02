@@ -96,6 +96,26 @@ flowchart LR
 
 ---
 
+## Acceptance Criteria
+
+- [ ] POST /api/v1/process accepts JSON payloads and returns structured results
+- [ ] Invalid payloads return 400 with descriptive error messages
+- [ ] All endpoints have integration test coverage
+
+## Goals & Non-Goals
+
+**Goals**:
+- Create POST /api/v1/process endpoint
+- Accept and validate JSON payloads
+- Return structured results with status codes
+
+**Non-Goals**:
+- Authentication/authorization (Phase 3)
+- Rate limiting (Phase 4)
+- Batch processing (not in scope)
+
+---
+
 ## Checklist
 
 - [ ] T001: Review handler structure (CS-1)
@@ -183,6 +203,17 @@ $ARGUMENTS
    - Order follows task dependencies (not just table order).
    - Do NOT include task IDs (T001, etc.) in this list — keep it readable.
    - Do include file paths but keep them relative and short (strip common prefixes if all files share one).
+
+   **## Acceptance Criteria**:
+   - Pull from the spec's acceptance criteria that this phase addresses.
+   - Render as a checkbox list: `- [ ] <criterion>`.
+   - Keep each criterion to one line — simple, testable statements.
+
+   **## Goals & Non-Goals**:
+   - Pull directly from tasks.md `## Objectives & Scope` section.
+   - **Goals**: Bullet list of what this phase WILL deliver.
+   - **Non-Goals**: Bullet list of what this phase is NOT doing (and why/when if applicable).
+   - Keep each item to one line.
 
    **## Architecture: Before & After**:
    - Create a single Mermaid `flowchart LR` diagram with two subgraphs: "Before" and "After".
