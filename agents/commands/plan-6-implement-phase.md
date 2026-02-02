@@ -298,12 +298,14 @@ $ARGUMENTS
    [ ] Changed Tasks Table: [ ] → [~]
    [ ] Changed Architecture Map: T00X node → :::inprogress
    [ ] Changed Task-to-Component: ⬜ → 🟧
+   [ ] Updated Flight Plan (tasks.fltplan.md): matching Stage [ ] → [~], Checklist [ ] → [~]
 
    COMPLETING T00X:
    [ ] Changed Tasks Table: [~] → [x]
    [ ] Changed Architecture Map: T00X node → :::completed, added ✓
    [ ] Changed Architecture Map: File nodes → :::completed, added ✓
    [ ] Changed Task-to-Component: 🟧 → ✅
+   [ ] Updated Flight Plan (tasks.fltplan.md): matching Stage [~] → [x], Checklist [~] → [x]
    [ ] Appended entry to execution.log.md
    [ ] Added any discoveries to Discoveries & Learnings table
 
