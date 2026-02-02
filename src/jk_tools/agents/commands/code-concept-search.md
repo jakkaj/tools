@@ -365,7 +365,7 @@ This is used for targeted grep patterns, NOT as the primary search strategy. The
 ## Integration Points
 
 This command is designed to be called by:
-- **Flight Plan subagent** (plan-5/5a step 5a/4a): duplication check for new files
+- **Pre-Implementation Audit subagent** (plan-5 step 5a/S4): duplication check for new files
 - **plan-1a-explore**: codebase research subagents checking for existing implementations
 - **Direct user invocation**: "does this thing already exist before I build it?"
 - **plan-6**: mid-implementation discovery when agent encounters a concept that might exist elsewhere

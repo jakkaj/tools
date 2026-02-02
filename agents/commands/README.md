@@ -110,6 +110,7 @@ graph TD
     DYK --> P6
     P5 --> P6["plan-6-implement-phase<br/>Execute implementation"]
 
+    P5 --> P5B["plan-5b-flightplan<br/>Consumable summary"]
     P5 -.-> P5ST["plan-5 --subtask<br/>Mid-phase detours"]
     P5ST -.-> P6
 
@@ -558,7 +559,7 @@ file:<file_path>
 
 **When to use**:
 - Before creating something new — check if it already exists under a different name
-- Called by Flight Plan subagent (plan-5/5a) for duplication checks
+- Called by Pre-Implementation Audit subagent (plan-5 step 5a) for duplication checks
 - During implementation when you encounter a concept that might exist elsewhere
 - Direct invocation for quick existence checks
 
@@ -580,7 +581,7 @@ file:<file_path>
 
 **When to use**:
 - Invoked automatically as a subagent by plan-5 (step 5b in phase mode, step S4 in subtask mode)
-- Not typically run standalone — called after the task table is built and Flight Plan is complete
+- Not typically run standalone — called after the task table is built and Pre-Implementation Audit is complete
 
 **What it does**:
 - For each AC, traces the full execution flow (trigger → layers → outcome)
@@ -664,6 +665,26 @@ file:<file_path>
 - Includes resumption guidance (After Subtask Completion section)
 
 **Next**: `/plan-6-implement-phase --subtask "001-subtask-refresh"`
+
+---
+
+### /plan-5b-flightplan
+**Purpose**: Generate a consumable Flight Plan summary (`.fltplan.md`) for a phase
+
+**When to use**:
+- Auto-called at end of `/plan-5` — usually no need to run manually
+- Run standalone to regenerate after task changes or updates
+
+**Inputs**:
+```bash
+/plan-5b-flightplan --phase "Phase 2: Core Implementation" \
+  --plan "path/to/plan.md"
+```
+
+**Creates**:
+- `tasks.fltplan.md` in the phase directory — a 30-second-scan summary
+- Includes: Departure/Destination, numbered Route, Before & After architecture diagram, Checklist
+- PlanPak-aware
 
 ---
 

@@ -173,6 +173,7 @@ Four commands, done.
 | `/plan-3a` | Create ADR *(optional)* | `docs/adr/adr-NNNN-*.md` |
 | `/plan-4` | Validate plan readiness *(optional)* | Readiness report |
 | `/plan-5` | Generate tasks for one phase | `tasks/phase-N/tasks.md` |
+| `/plan-5b` | Flight Plan summary *(auto-generated)* | `tasks/phase-N/tasks.fltplan.md` |
 | `/plan-5 --subtask` | Handle mid-phase complexity *(optional)* | `NNN-subtask-<slug>.md` |
 | `/plan-6` | Implement the phase | Code + `execution.log.md` |
 | `/plan-6a` | Update progress *(auto-called by 6)* | Updates task tables |
