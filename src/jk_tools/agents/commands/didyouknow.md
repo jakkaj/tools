@@ -121,7 +121,7 @@ If analyzing a plan or tasks document that includes CS (Complexity Score) rating
 **Complexity Insights to Consider:**
 - **Scope underestimation**: "This task is marked CS-2, but did you know it touches 5 external systems?" → Recommend re-scoring to CS-4
 - **Testing gap**: "These CS-4 tasks have no staged rollout plan" → Recommend adding feature flags + monitoring
-- **Risk mismatch**: "CS-5 task has no subtask breakdown" → Recommend /plan-5a-subtask for decomposition
+- **Risk mismatch**: "CS-5 task has no subtask breakdown" → Recommend /plan-5 --subtask for decomposition
 - **Breadth discovery**: "Surface Area factor is underestimated" → Discuss actual file count vs estimate
 
 **Selection Criteria - Choose the 5 most impactful insights that are:**

@@ -1,5 +1,5 @@
 ---
-description: Use subagent to review previous phase execution (if applicable), then generate a combined `tasks.md` dossier (tasks + alignment brief) under the plan tree; stop before making code changes.
+description: Generate a `tasks.md` dossier (tasks + alignment brief) for a phase or subtask under the plan tree; stop before making code changes. Use --subtask for mid-phase detours.
 ---
 
 Please deep think / ultrathink as this is a complex task.
@@ -8,11 +8,11 @@ Please deep think / ultrathink as this is a complex task.
 
 ## Executive Briefing
 
-**What this command does**: Generates a detailed implementation dossier (`tasks.md`) for a single phase, transforming high-level plan tasks into executable work items with full context.
+**What this command does**: Generates a detailed implementation dossier for a single phase or subtask, transforming high-level plan tasks into executable work items with full context.
 
-**When to use**: After plan-3 has created the architectural plan with phases. Run once per phase, in order.
+**When to use**: After plan-3 has created the architectural plan with phases. Run once per phase, in order. Use `--subtask` mode when mid-phase work needs its own structured planning.
 
-### Input → Output
+### Phase Mode (default) — Input → Output
 
 ```
 INPUT:
@@ -22,6 +22,32 @@ INPUT:
 OUTPUT:
   docs/plans/3-feature-x/tasks/phase-2-core-implementation/tasks.md
 ```
+
+### Subtask Mode (`--subtask`) — Input → Output
+
+```
+INPUT:
+  --phase "Phase 2: Core Implementation"
+  --plan "/abs/path/docs/plans/3-feature-x/feature-x-plan.md"
+  --subtask "Generate integration fixtures for bulk API"
+  --parent "T003"
+
+OUTPUT:
+  docs/plans/3-feature-x/tasks/phase-2-core-implementation/001-subtask-generate-integration-fixtures.md
+
+  + Updates parent tasks.md (links subtask in Subtasks column)
+  + Updates plan.md (adds entry to Subtasks Registry)
+```
+
+### When to Use Subtask Mode vs New Phase
+
+| Scenario                                    | Use --subtask    | Use New Phase (plan-3) |
+|---------------------------------------------|------------------|------------------------|
+| Task blocked, needs focused breakdown       | Yes              | No                     |
+| Work stays within current phase scope       | Yes              | No                     |
+| Adds new acceptance criteria                | No               | Yes                    |
+| Requires architectural changes              | No               | Yes                    |
+| Multiple team members need coordination     | No               | Yes                    |
 
 ### Sample Output Structure
 
@@ -233,6 +259,20 @@ $ARGUMENTS
 # Expected flags:
 # --phase "<Phase N: Title>"
 # --plan "<abs path to docs/plans/<ordinal>-<slug>/<slug>-plan.md>"
+#
+# Subtask mode flags (optional):
+# --subtask "<summary>"    # activates subtask mode; value is the subtask description
+# --parent "T003"          # required with --subtask: which parent task this subtask supports
+# --ordinal "NNN"          # optional: override next subtask ordinal (zero-pad to 3 digits)
+
+## MODE DETECTION
+
+If `--subtask` is provided → **Subtask Mode** (jump to step S1 below).
+Otherwise → **Phase Mode** (continue to step 1).
+
+---
+
+## PHASE MODE
 
 1) Verify PLAN exists; set PLAN_DIR = dirname(PLAN); define `PHASE_DIR = PLAN_DIR/tasks/${PHASE_SLUG}` and create it if missing (mkdir -p).
 
@@ -372,7 +412,7 @@ $ARGUMENTS
    - `Dependencies` lists prerequisite task IDs (e.g., "T001, T002") or "–" for none.
    - `Absolute Path(s)` must list every impacted file or directory using absolute paths (REQUIRED - no relative paths).
    - `Validation` captures how acceptance or readiness will be confirmed.
-   - `Subtasks` lists spawned subtask dossiers (e.g., "001-subtask-fixtures, 003-subtask-bulk") or "–" for none. Updated by plan-5a when subtask is created.
+   - `Subtasks` lists spawned subtask dossiers (e.g., "001-subtask-fixtures, 003-subtask-bulk") or "–" for none. Updated by subtask mode (step S7) when subtask is created.
    - `Notes` include contextual references (e.g., ADR IDs, Critical Finding refs), but defer `[^N]` footnote tags until plan-6 updates the ledger.
 
    **PlanPak Path Rules** (if `File Management: PlanPak` active in spec or T000 exists in plan):
@@ -744,8 +784,151 @@ Rules & Stack Patterns:
 - Apply BridgeContext patterns when relevant: bounded `vscode.RelativePattern`, remote-safe `vscode.Uri`, Python debugging via `module: 'pytest'` with `--no-cov`. :contentReference[oaicite:14]{index=14}
 
 STOP: Do **not** edit code. Output the combined `PHASE_DIR/tasks.md` and wait for human **GO**.
+
+---
+
+## SUBTASK MODE
+
+Activated when `--subtask` is provided. Generates a focused subtask dossier alongside the parent phase's `tasks.md`. Use when a task needs deeper breakdown or a blocker requires separate tracked work that feeds back into the parent phase.
+
+S1) Resolve paths & derive identifiers:
+   - PLAN      = provided --plan; abort if missing.
+   - PLAN_DIR  = dirname(PLAN).
+   - If --phase supplied, match exact heading within PLAN; else infer:
+     * scan PLAN_DIR/tasks/* for `tasks.md`; if exactly one `phase-*` contains the most recent GO, adopt it.
+     * if multiple phases are eligible, stop and request explicit `--phase`.
+   - PHASE_SLUG from phase heading (same slug as Phase Mode uses).
+   - PHASE_DIR = PLAN_DIR/tasks/${PHASE_SLUG}; ensure exists (mkdir -p).
+   - SUBTASK_SUMMARY = --subtask value trimmed; abort if empty.
+   - PARENT_TASK = --parent value (e.g., "T003"); abort if missing.
+   - SUBTASK_SLUG = kebab-case summary (`[^a-z0-9-]` → '-', collapse dups, trim dash).
+   - Determine ordinal:
+     * Existing files matching `${PHASE_DIR}/[0-9][0-9][0-9]-subtask-*.md` → take highest NNN.
+     * ORD = --ordinal if provided else highest+1 (zero-pad to 3 digits; start at `001`).
+   - SUBTASK_FILE = `${PHASE_DIR}/${ORD}-subtask-${SUBTASK_SLUG}.md`.
+   - SUBTASK_KEY  = `${ORD}-subtask-${SUBTASK_SLUG}`.
+
+S2) Parse parent context:
+   - Load PLAN to review:
+     * `## 3. Critical Research Findings` (same as Phase Mode step 2).
+     * The chosen phase heading and its task table (plan-3 output).
+   - Load `PHASE_DIR/tasks.md` (abort if missing; subtask requires existing phase dossier).
+   - Locate PARENT_TASK row in the phase tasks table. Capture its Task description, Dependencies, Absolute Path(s), and current Status.
+   - Read relevant ADRs from `docs/adr/` if any (same as Phase Mode step 2a).
+
+S3) Define subtask tasks:
+   - Break down the subtask summary into executable work items using `ST001`, `ST002`, … IDs.
+   - Apply the same canonical tasks table layout as Phase Mode:
+     | Status | ID | Task | CS | Type | Dependencies | Absolute Path(s) | Validation | Subtasks | Notes |
+   - `Subtasks` column is always "–" (no recursive sub-subtasking).
+   - Notes capture parent T-ID reference (e.g., "Supports T003").
+   - Apply Critical Findings from step S2 — reference specific findings in task descriptions or Notes when applicable.
+
+S4) Launch Flight Plan and Requirements Flow subagents:
+   - **Flight Plan**: Same as Phase Mode step 5a, but scoped to the subtask's ST### file list.
+   - **Requirements Flow**: Same as Phase Mode step 5b, but scoped narrower:
+     * Only trace ACs that this subtask addresses (from parent task context and spec).
+     * Parent task files count as "already covered" — only flag files missing from BOTH subtask and parent task tables.
+   - If gaps are found in Requirements Flow: add new ST### tasks before proceeding.
+
+S5) Write subtask dossier `${SUBTASK_FILE}` containing:
+   - Front matter: title = `Subtask <ORD>: <Summary>`; include parent phase + plan links; record today as {{TODAY}}.
+   - `## Parent Context` section:
+     ```markdown
+     ## Parent Context
+
+     **Parent Plan:** [View Plan](../../<plan-filename>)
+     **Parent Phase:** <Phase N: Title>
+     **Parent Task(s):** [T<XXX>: <task summary>](../tasks.md#task-t<xxx>)
+
+     **Why This Subtask:**
+     <Reason captured from --subtask argument>
+
+     ---
+     ```
+   - `## Executive Briefing` (same structure as Phase Mode but scoped to subtask; include **Unblocks** instead of **User Value**).
+   - `## Objectives & Scope` (same structure: Objective, Goals, Non-Goals).
+   - `## Flight Plan` (from step S4).
+   - `## Requirements Traceability` (from step S4, narrower scope).
+   - `## Architecture Map` with:
+     * Parent task node(s) in "Parent Context" subgraph (shown as `:::blocked`)
+     * ST### nodes in "Subtask" subgraph
+     * "unblocks" edge from final subtask to parent task
+     * Same color classes as Phase Mode (pending/inprogress/completed/blocked)
+   - `## Tasks` table (ST### rows from step S3).
+   - `## Alignment Brief` tailored to subtask:
+     * Objective recap referencing parent phase goal + targeted parent tasks
+     * Critical Findings Affecting This Subtask
+     * ADR Decision Constraints (if applicable)
+     * Invariants/guardrails inherited from parent
+     * Visual aids (Mermaid flow + sequence diagram for subtask slice)
+     * Test Plan specific to this subtask
+     * Implementation outline mapped 1:1 to ST tasks
+     * Commands to run
+     * Risks & unknowns
+     * Ready Check gating `/plan-6-implement-phase --subtask ${SUBTASK_KEY}`
+   - `## Phase Footnote Stubs` (empty shell for plan-6).
+   - `## Evidence Artifacts` (execution log path = `${SUBTASK_KEY}.execution.log.md`).
+   - `## Discoveries & Learnings` (same empty table shell as Phase Mode).
+   - `## After Subtask Completion` section providing resumption guidance:
+     ```markdown
+     ## After Subtask Completion
+
+     **This subtask resolves a blocker for:**
+     - Parent Task: [T<XXX>: <summary>](../tasks.md#task-t<xxx>)
+
+     **When all ST### tasks complete:**
+
+     1. **Record completion** in parent execution log:
+        ```
+        ### Subtask <SUBTASK_KEY> Complete
+        Resolved: <brief summary>
+        See detailed log: [subtask execution log](./<SUBTASK_KEY>.execution.log.md)
+        ```
+
+     2. **Update parent task** (if it was blocked):
+        - Open: [`tasks.md`](../tasks.md)
+        - Find: T<XXX>
+        - Update Status: `[!]` → `[ ]` (unblock)
+        - Update Notes: Add "Subtask <SUBTASK_KEY> complete"
+
+     3. **Resume parent phase work:**
+        ```bash
+        /plan-6-implement-phase --phase "<PHASE_HEADING>" \
+          --plan "<PLAN_ABSOLUTE_PATH>"
+        ```
+
+     **Quick Links:**
+     - Parent Dossier: [tasks.md](../tasks.md)
+     - Parent Plan: [plan](../../<plan-filename>)
+     - Parent Execution Log: [execution.log.md](../execution.log.md)
+     ```
+
+S6) Register subtask in plan's Subtasks Registry:
+   - Read PLAN and check for section `## Subtasks Registry`.
+   - If section doesn't exist, append to bottom of PLAN:
+     ```markdown
+     ## Subtasks Registry
+
+     Mid-implementation detours requiring structured tracking.
+
+     | ID | Created | Phase | Parent Task | Reason | Status | Dossier |
+     |----|---------|-------|-------------|--------|--------|---------|
+     ```
+   - Append new row with subtask details. Status starts as `[ ] Pending`.
+
+S7) Update parent task's Subtasks column (bidirectional link):
+   - Open `${PHASE_DIR}/tasks.md`
+   - Locate PARENT_TASK row in the tasks table
+   - Update the `Subtasks` column:
+     * If currently "–", replace with: `${SUBTASK_KEY}`
+     * If already has subtasks, append: `, ${SUBTASK_KEY}`
+
+STOP: Do **not** edit code. Output the subtask dossier and wait for human **GO**.
+
+Next step (when happy): Run **/plan-6-implement-phase --phase "<Phase N: Title>" --plan "<PLAN_PATH>" --subtask "${SUBTASK_KEY}"**.
 ```
 
-Why this shape: it leverages your existing **tasks** template mechanics but restricts scope firmly to **one phase**, and carries forward the alignment without the separate heavy analysis pass you asked to remove.
+Why this shape: it leverages your existing **tasks** template mechanics but restricts scope firmly to **one phase** (or one subtask within a phase), and carries forward the alignment without a separate heavy analysis pass.
 
 Next step (when happy): Run **/plan-6-implement-phase --phase "<Phase N: Title>" --plan "<PLAN_PATH>"**.

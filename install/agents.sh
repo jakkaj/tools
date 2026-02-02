@@ -128,6 +128,29 @@ print_warning() {
     echo "[⚠] $1"
 }
 
+# Remove stale plan-<number>-* files from a target directory before copying fresh ones.
+# Only matches plan command files (plan-0-*, plan-5a-*, etc.), not planpak.md or other commands.
+cleanup_plan_commands() {
+    local dir="$1"
+    local pattern="$2"  # e.g., "plan-[0-9]*.md" or "plan-[0-9]*.prompt.md"
+
+    if [ ! -d "${dir}" ]; then
+        return 0
+    fi
+
+    local count=0
+    for file in "${dir}"/${pattern}; do
+        if [ -f "${file}" ]; then
+            rm -f "${file}"
+            count=$((count + 1))
+        fi
+    done
+
+    if [ "${count}" -gt 0 ]; then
+        print_status "Cleaned ${count} old plan command(s) from ${dir}"
+    fi
+}
+
 generate_mcp_configs() {
     local mcp_source="$1"
     local vscode_user_config="$2"
@@ -571,6 +594,7 @@ install_local_commands() {
     if [[ "$cli_list" == *"claude"* ]]; then
         local claude_dir="${target_dir}/.claude/commands"
         mkdir_with_retry "${claude_dir}"
+        cleanup_plan_commands "${claude_dir}" "plan-[0-9]*.md"
         print_status "Installing Claude commands to ${claude_dir}"
 
         for file in "${SOURCE_DIR}"/*.md; do
@@ -589,6 +613,7 @@ install_local_commands() {
     if [[ "$cli_list" == *"opencode"* ]]; then
         local opencode_dir="${target_dir}/.opencode/command"
         mkdir_with_retry "${opencode_dir}"
+        cleanup_plan_commands "${opencode_dir}" "plan-[0-9]*.md"
         print_status "Installing OpenCode commands to ${opencode_dir}"
 
         for file in "${SOURCE_DIR}"/*.md; do
@@ -607,6 +632,7 @@ install_local_commands() {
     if [[ "$cli_list" == *"ghcp"* ]]; then
         local ghcp_dir="${target_dir}/.github/prompts"
         mkdir_with_retry "${ghcp_dir}"
+        cleanup_plan_commands "${ghcp_dir}" "plan-[0-9]*.prompt.md"
         print_status "Installing GitHub Copilot prompts to ${ghcp_dir}"
 
         for file in "${SOURCE_DIR}"/*.md; do
@@ -627,6 +653,7 @@ install_local_commands() {
     if [[ "$cli_list" == *"copilot-cli"* ]]; then
         local copilot_cli_local_dir="${target_dir}/.github/agents"
         mkdir_with_retry "${copilot_cli_local_dir}"
+        cleanup_plan_commands "${copilot_cli_local_dir}" "plan-[0-9]*.agent.md"
         print_status "Installing Copilot CLI agents to ${copilot_cli_local_dir}"
 
         # Use Python to generate agent files with YAML frontmatter
@@ -880,7 +907,17 @@ main() {
 
     print_status "Found ${file_count} command file(s) to copy"
     echo ""
-    
+
+    # Clean stale plan commands from all global targets before copying
+    print_status "Cleaning stale plan commands..."
+    cleanup_plan_commands "${TARGET_DIR}" "plan-[0-9]*.md"
+    cleanup_plan_commands "${OPENCODE_DIR}" "plan-[0-9]*.md"
+    cleanup_plan_commands "${CODEX_DIR}" "plan-[0-9]*.md"
+    cleanup_plan_commands "${VSCODE_PROJECT_DIR}" "plan-[0-9]*.md"
+    cleanup_plan_commands "${COPILOT_GLOBAL_DIR}" "plan-[0-9]*.prompt.md"
+    cleanup_plan_commands "${COPILOT_CLI_AGENTS_DIR}" "plan-[0-9]*.md"
+    echo ""
+
     for file in "${SOURCE_DIR}"/*.md; do
         if [ -f "${file}" ]; then
             filename=$(basename "${file}")

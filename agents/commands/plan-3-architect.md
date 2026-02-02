@@ -1222,7 +1222,7 @@ Generated from: Subtask ordinal (003) + slugified name
 
 ### Slugification Rules
 
-**Algorithm** (used by plan-5, plan-5a, plan-6a):
+**Algorithm** (used by plan-5, plan-6a):
 1. Convert to lowercase
 2. Replace spaces with hyphens
 3. Replace non-alphanumeric characters (except hyphens) with hyphens

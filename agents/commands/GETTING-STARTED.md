@@ -24,7 +24,7 @@ flowchart TB
 
     subgraph implement["IMPLEMENT (Per phase)"]
         P5["/plan-5<br/>Phase Tasks"]
-        P5A["/plan-5a<br/>Subtasks"]
+        P5ST["/plan-5 --subtask<br/>Subtasks"]
         P6["/plan-6<br/>Implement"]
         P6A["/plan-6a<br/>Progress"]
         P7["/plan-7<br/>Review"]
@@ -43,8 +43,8 @@ flowchart TB
     P3 -.-> P5
 
     P5 --> P6
-    P5 -.-> P5A
-    P5A -.-> P6
+    P5 -.-> P5ST
+    P5ST -.-> P6
     P6 -->|auto| P6A
     P6A --> P6
     P6 --> P7
@@ -60,7 +60,7 @@ flowchart TB
     style P3A fill:#fff3e0
     style P4 fill:#fff3e0
     style P5 fill:#e8f5e9
-    style P5A fill:#fff3e0
+    style P5ST fill:#fff3e0
     style P6 fill:#c8e6c9
     style P6A fill:#fce4ec
     style P7 fill:#fce4ec
@@ -82,7 +82,7 @@ The planning workflow separates **what** you want to build from **how** you'll b
 
 **Now bring in technology** (`/plan-3`). With requirements locked down, the architect phase designs the implementation. It analyzes the codebase, identifies patterns to follow, and breaks the work into phases. Each phase has clear acceptance criteria. If major design decisions need documenting, `/plan-3a` creates an ADR.
 
-**For each phase** (`/plan-5` → `/plan-6` → `/plan-7`). For each phase: generate detailed tasks (/5), implement them with your chosen testing approach (/6), then review (/7). Progress is tracked automatically. If something gets complex mid-phase, `/plan-5a` lets you break it down further without losing context (take a detour and then come back).
+**For each phase** (`/plan-5` → `/plan-6` → `/plan-7`). For each phase: generate detailed tasks (/5), implement them with your chosen testing approach (/6), then review (/7). Progress is tracked automatically. If something gets complex mid-phase, `/plan-5 --subtask` lets you break it down further without losing context (take a detour and then come back).
 
 The result: traceable, well-tested code with clear documentation of why decisions were made.
 
@@ -173,7 +173,7 @@ Four commands, done.
 | `/plan-3a` | Create ADR *(optional)* | `docs/adr/adr-NNNN-*.md` |
 | `/plan-4` | Validate plan readiness *(optional)* | Readiness report |
 | `/plan-5` | Generate tasks for one phase | `tasks/phase-N/tasks.md` |
-| `/plan-5a` | Handle mid-phase complexity *(optional)* | `NNN-subtask-<slug>.md` |
+| `/plan-5 --subtask` | Handle mid-phase complexity *(optional)* | `NNN-subtask-<slug>.md` |
 | `/plan-6` | Implement the phase | Code + `execution.log.md` |
 | `/plan-6a` | Update progress *(auto-called by 6)* | Updates task tables |
 | `/plan-7` | Review implementation | `reviews/review.md` |
@@ -334,7 +334,7 @@ Verdict: **APPROVE** (proceed) or **REQUEST_CHANGES** (fix issues first)
 |---------|---------|-------------|
 | `/plan-3a-adr` | Create Architectural Decision Record | Major design decisions |
 | `/plan-4-complete-the-plan` | Validate plan readiness | Before complex implementations |
-| `/plan-5a-subtask` | Handle mid-phase complexity | When task needs decomposition |
+| `/plan-5 --subtask` | Handle mid-phase complexity | When task needs decomposition |
 | `/plan-2b-prep-issue` | Generate issue tracker text | Syncing to GitHub/Jira |
 
 ---

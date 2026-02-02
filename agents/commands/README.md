@@ -110,8 +110,8 @@ graph TD
     DYK --> P6
     P5 --> P6["plan-6-implement-phase<br/>Execute implementation"]
 
-    P5 -.-> P5A["plan-5a-subtask<br/>Mid-phase detours"]
-    P5A -.-> P6
+    P5 -.-> P5ST["plan-5 --subtask<br/>Mid-phase detours"]
+    P5ST -.-> P6
 
     P6 -->|auto-calls| P6A["plan-6a-update-progress<br/>Atomic 3-location update"]
     P6A --> P6
@@ -579,7 +579,7 @@ file:<file_path>
 **Purpose**: Trace each acceptance criterion through execution flows to verify every needed file is in the task table
 
 **When to use**:
-- Invoked automatically as a subagent by plan-5 (step 5b) and plan-5a (step 4b)
+- Invoked automatically as a subagent by plan-5 (step 5b in phase mode, step S4 in subtask mode)
 - Not typically run standalone — called after the task table is built and Flight Plan is complete
 
 **What it does**:
@@ -643,7 +643,7 @@ file:<file_path>
 
 ---
 
-### /plan-5a-subtask-tasks-and-brief
+### /plan-5 --subtask (Subtask Mode)
 **Purpose**: Generate subtask dossier for mid-phase structured detours
 
 **When to use**:
@@ -652,8 +652,8 @@ file:<file_path>
 
 **Inputs**:
 ```bash
-/plan-5a-subtask-tasks-and-brief "Add OAuth token refresh handling" \
-  --plan "path/to/plan.md" --phase "Phase 2: Authentication"
+/plan-5-phase-tasks-and-brief --subtask "Add OAuth token refresh handling" \
+  --parent "T003" --plan "path/to/plan.md" --phase "Phase 2: Authentication"
 ```
 
 **Creates**:
@@ -661,6 +661,7 @@ file:<file_path>
 - Uses ST### task IDs (not T###)
 - Updates parent task's Subtasks column
 - Updates plan's Subtasks Registry
+- Includes resumption guidance (After Subtask Completion section)
 
 **Next**: `/plan-6-implement-phase --subtask "001-subtask-refresh"`
 
@@ -857,7 +858,7 @@ graph TD
 
     P5["plan-5-phase-tasks"] --> D5["Creates:<br/>tasks/phase-1/<br/>tasks.md"]
 
-    P5A["plan-5a-subtask"] --> D5A["Adds:<br/>001-subtask-name.md"]
+    P5ST["plan-5 --subtask"] --> D5A["Adds:<br/>001-subtask-name.md"]
 
     P6["plan-6-implement"] --> D6["Adds:<br/>execution.log.md"]
 
@@ -1015,8 +1016,8 @@ This bidirectional graph enables traversal from any node to understand the compl
 
 ```bash
 # Mid-implementation, realize auth is complex
-/plan-5a-subtask-tasks-and-brief "Implement JWT refresh token rotation" \
-  --plan "docs/plans/001-oauth/oauth-plan.md" \
+/plan-5-phase-tasks-and-brief --subtask "Implement JWT refresh token rotation" \
+  --parent "T003" --plan "docs/plans/001-oauth/oauth-plan.md" \
   --phase "Phase 2: Token Management"
 
 # Implement the subtask

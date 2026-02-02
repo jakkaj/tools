@@ -158,7 +158,7 @@ $ARGUMENTS
    - If not found → PLANPAK_ACTIVE = false (legacy file placement)
 
    **Full Mode Path Resolution:**
-   PHASE_HEADING = provided --phase (required when multiple phases exist); slugify to get `PHASE_SLUG` exactly as plan-5/plan-5a generate directories (e.g., "Phase 4: Data Flows" → `phase-4-data-flows`).
+   PHASE_HEADING = provided --phase (required when multiple phases exist); slugify to get `PHASE_SLUG` exactly as plan-5 generates directories (e.g., "Phase 4: Data Flows" → `phase-4-data-flows`).
    If `--phase` omitted, infer `PHASE_SLUG` by locating the unique tasks directory that contains either `tasks.md` or the requested `--subtask` file; abort when inference is ambiguous.
    PHASE_DIR    = PLAN_DIR/tasks/${PHASE_SLUG}
    ensure `PHASE_DIR` exists (mkdir is not allowed here; abort if missing).
@@ -167,7 +167,7 @@ $ARGUMENTS
      - EXEC_LOG  = `${PHASE_DIR}/execution.log.md` (create when writing step 4).
    When `--subtask` is provided:
      - SUBTASK_KEY   = flag value (e.g., `003-subtask-bulk-import-fixtures`).
-     - PHASE_DOC     = `${PHASE_DIR}/${SUBTASK_KEY}.md`; must exist and follow plan-5a format.
+     - PHASE_DOC     = `${PHASE_DIR}/${SUBTASK_KEY}.md`; must exist and follow plan-5 subtask mode format.
      - EXEC_LOG      = `${PHASE_DIR}/${SUBTASK_KEY}.execution.log.md`; create if missing during step 4.
      - Capture parent task linkage from the subtask metadata table before execution.
    Load task definitions and Alignment Brief sections from `PHASE_DOC`.

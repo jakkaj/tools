@@ -94,7 +94,7 @@ Resolve all file paths before starting updates:
   3. No separate dossier (plan is the single source of truth)
 
 **If INLINE_MODE = false (Full Mode):**
-- **PHASE_HEADING** = `--phase` value; slugify to get `PHASE_SLUG` exactly as plan-5/plan-5a (e.g., "Phase 4: Data Flows" → `phase-4-data-flows`)
+- **PHASE_HEADING** = `--phase` value; slugify to get `PHASE_SLUG` exactly as plan-5 (e.g., "Phase 4: Data Flows" → `phase-4-data-flows`)
   - If `--phase` omitted: infer slug by locating the unique tasks directory containing `tasks.md` or requested `--subtask`
   - Halt if ambiguous (multiple candidates exist)
 - **PHASE_DIR** = `${PLAN_DIR}/tasks/${PHASE_SLUG}`

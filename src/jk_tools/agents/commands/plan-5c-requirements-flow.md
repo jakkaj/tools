@@ -1,5 +1,5 @@
 ---
-description: Trace each acceptance criterion through execution flows to verify every file needed is in the task table. Invoked as subagent by plan-5 and plan-5a.
+description: Trace each acceptance criterion through execution flows to verify every file needed is in the task table. Invoked as subagent by plan-5 (phase and subtask modes).
 ---
 
 Please deep think / ultrathink as this is a nuanced analysis task.
@@ -9,7 +9,7 @@ Please deep think / ultrathink as this is a nuanced analysis task.
 Verify **requirements completeness** by tracing each acceptance criterion through the codebase's execution flows. For every AC, walk the full path — from user trigger to final effect — and confirm every file in that path appears in the task table. Flag gaps (files needed but missing from tasks) and orphans (files in tasks that serve no AC).
 
 **Key Characteristics**:
-- **Invoked as a subagent** by plan-5 (step 5b) and plan-5a (step 4b) — not run standalone
+- **Invoked as a subagent** by plan-5 (step 5b in phase mode, step S4 in subtask mode) — not run standalone
 - **Requirement-up thinking** — flips perspective from "what does this task need?" to "what does this AC need end-to-end?"
 - **Flow-walking** — reads the codebase like a human engineer: follows imports, traces call chains, checks event wiring
 - **Gap detection** — the primary deliverable; ensures no file is forgotten
@@ -19,7 +19,7 @@ Verify **requirements completeness** by tracing each acceptance criterion throug
 
 ## Input (provided by calling command)
 
-The parent command (plan-5 or plan-5a) passes:
+The parent command (plan-5, in either phase or subtask mode) passes:
 
 ```
 PHASE_TITLE     = "Phase 2: Core Implementation" (or subtask summary)
@@ -355,7 +355,7 @@ If an AC belongs to a future phase, note it but don't flag as a gap:
 ### Multiple ACs Share the Same Flow
 Common — several ACs may touch the same files. Show each AC separately in the matrix but note shared coverage in Flow Details.
 
-### Subtask Scope (when invoked by plan-5a)
+### Subtask Scope (when invoked by plan-5 --subtask mode)
 When tracing for a subtask, scope is narrower:
 - Only trace ACs that the subtask is meant to address (from parent task context)
 - Parent task files are included in the "already covered" set
