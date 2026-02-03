@@ -83,9 +83,10 @@ What do you think?
 That's it. Short. Punchy. The human will do one of:
 - **Agree** → capture decision, move on
 - **Disagree/discuss** → engage naturally, reach alignment
-- **"Tell me more"** → NOW expand with the deep dive (implications, options with pros/cons, examples)
+- **"Tell me more"** → expand with implications, examples, deeper analysis
+- **"Give me options/alternatives"** → present 2-4 concrete options with pros, cons, complexity (CS), and your recommendation. Include enough detail per option that the human can choose confidently.
 
-**Do NOT front-load** the deep dive, options matrix, numbered consequences, or examples. Only expand when asked.
+**Do NOT front-load** the deep dive, options matrix, numbered consequences, or examples. Only expand when asked. Match the depth to what the human asks for.
 
 **Rules:**
 - One insight at a time — WAIT for response before the next
