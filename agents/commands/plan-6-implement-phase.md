@@ -299,6 +299,7 @@ $ARGUMENTS
    [ ] Changed Architecture Map: T00X node → :::inprogress
    [ ] Changed Task-to-Component: ⬜ → 🟧
    [ ] Updated Flight Plan (tasks.fltplan.md): matching Stage [ ] → [~], Checklist [ ] → [~]
+   [ ] Updated Flight Plan Flight Status diagram: SN class pending → active
 
    COMPLETING T00X:
    [ ] Changed Tasks Table: [~] → [x]
@@ -306,8 +307,13 @@ $ARGUMENTS
    [ ] Changed Architecture Map: File nodes → :::completed, added ✓
    [ ] Changed Task-to-Component: 🟧 → ✅
    [ ] Updated Flight Plan (tasks.fltplan.md): matching Stage [~] → [x], Checklist [~] → [x]
+   [ ] Updated Flight Plan Flight Status diagram: SN class active → done
    [ ] Appended entry to execution.log.md
    [ ] Added any discoveries to Discoveries & Learnings table
+
+   IF BLOCKED (problem or user input needed):
+   [ ] Updated Flight Plan Flight Status diagram: SN class → blocked
+   [ ] (When unblocked, change back to active and continue)
 
    ✓ ALL DONE → Proceed to next task
    ```

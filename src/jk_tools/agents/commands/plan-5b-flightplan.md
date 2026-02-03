@@ -49,6 +49,35 @@ processed data.
 
 ---
 
+## Flight Status
+
+<!-- Updated by /plan-6: pending → active → done. Use blocked for problems/input needed. -->
+
+```mermaid
+stateDiagram-v2
+    classDef pending fill:#9E9E9E,stroke:#757575,color:#fff
+    classDef active fill:#FFC107,stroke:#FFA000,color:#000
+    classDef done fill:#4CAF50,stroke:#388E3C,color:#fff
+    classDef blocked fill:#F44336,stroke:#D32F2F,color:#fff
+
+    state "1: Review handlers" as S1
+    state "2: Write tests" as S2
+    state "3: Implement endpoint" as S3
+    state "4: Integration test" as S4
+
+    [*] --> S1
+    S1 --> S2
+    S2 --> S3
+    S3 --> S4
+    S4 --> [*]
+
+    class S1,S2,S3,S4 pending
+```
+
+**Legend**: grey = pending | yellow = active | red = blocked/needs input | green = done
+
+---
+
 ## Stages
 
 <!-- Updated by /plan-6 during implementation: [ ] → [~] → [x] -->
@@ -199,6 +228,20 @@ $ARGUMENTS
    - **Where we are**: Synthesize from prior phases' Executive Briefings and plan progress. For Phase 1, describe the project's current state before any plan work. Be concrete — mention specific components, APIs, or capabilities that exist.
    - **Where we're going**: Synthesize from this phase's Executive Briefing and spec acceptance criteria. State the concrete outcome a user or developer will experience. End with something tangible: "A developer can...", "The system will...", "Users will see...".
 
+   **## Flight Status**:
+   - Create a Mermaid `stateDiagram-v2` showing the flight path as a simple linear state diagram.
+   - **Four class definitions** (always include all four):
+     * `classDef pending fill:#9E9E9E,stroke:#757575,color:#fff` — not yet started (grey)
+     * `classDef active fill:#FFC107,stroke:#FFA000,color:#000` — currently being worked on (yellow)
+     * `classDef done fill:#4CAF50,stroke:#388E3C,color:#fff` — completed successfully (green)
+     * `classDef blocked fill:#F44336,stroke:#D32F2F,color:#fff` — problem or user input required (red)
+   - One state per stage, using short labels (3-5 words max). Format: `state "N: Short label" as SN`
+   - Linear flow: `[*] --> S1 --> S2 --> ... --> SN --> [*]`
+   - Initially all states get `class S1,S2,...,SN pending`
+   - Plan-6 updates classes as it works: `pending` → `active` → `done`, or `blocked` if stuck.
+   - Include legend line: `**Legend**: grey = pending | yellow = active | red = blocked/needs input | green = done`
+   - Keep it **very simple** — this is a glanceable overview, not a detailed flowchart.
+
    **## Stages**:
    - Create a checkbox list from the tasks table — these are the stages of the flight.
    - Include an HTML comment: `<!-- Updated by /plan-6 during implementation: [ ] → [~] → [x] -->`
@@ -260,10 +303,17 @@ This command produces a document designed to be read in 30 seconds. It answers t
 
 During implementation, `/plan-6` should update `tasks.fltplan.md` as it completes each task:
 
-1. **When starting a task**: Find the matching Stage in `## Stages` and change `[ ]` → `[~]`
-2. **When completing a task**: Change `[~]` → `[x]` for that Stage
-3. **Update the Checklist** similarly: `[ ]` → `[~]` → `[x]` for the matching T### row
-4. **When all stages are complete**: Change the metadata `**Status**:` from `Ready for takeoff` → `Landed`
+1. **When starting a task**:
+   - Find the matching Stage in `## Stages` and change `[ ]` → `[~]`
+   - In `## Flight Status` diagram: change that state's class from `pending` → `active`
+2. **When completing a task**:
+   - Change `[~]` → `[x]` for that Stage
+   - In `## Flight Status` diagram: change that state's class from `active` → `done`
+3. **When blocked/needs input**:
+   - In `## Flight Status` diagram: change that state's class to `blocked`
+   - (Change back to `active` when unblocked)
+4. **Update the Checklist** similarly: `[ ]` → `[~]` → `[x]` for the matching T### row
+5. **When all stages are complete**: Change the metadata `**Status**:` from `Ready for takeoff` → `Landed`
 
 This keeps the Flight Plan as a live progress tracker the human can glance at any time.
 
