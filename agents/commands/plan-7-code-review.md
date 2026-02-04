@@ -998,9 +998,6 @@ This step runs **after** Step 3a (depends on link validation data) but can run i
    6. **Descriptive filenames**: Files in feature folders use descriptive names (e.g., `auth-service.ts`) not generic names (e.g., `service.ts`, `index.ts`)
       - **Severity**: LOW if generic filename used
 
-   7. **Plan folder symlinks**: Every created/edited file should have a symlink in `${PLAN_DIR}/files/` (owned) or `${PLAN_DIR}/otherfiles/` (cross-plan edits)
-      - **Severity**: LOW if symlink missing (advisory, does not block approval)
-
    **Report** (JSON format):
    ```json
    {
