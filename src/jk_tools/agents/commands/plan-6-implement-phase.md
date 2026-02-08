@@ -270,11 +270,6 @@ $ARGUMENTS
       3. **Cross-plan edits** → edit files in-place in the original plan's feature folder (never move)
       4. **Dependency direction** → plan code may import from shared/core; shared/core must never import from plan folders
       5. **Rule of Three** → if 3+ plans import from one plan's folder, graduate the file to shared/
-      6. **Symlink back to plan folder** → after creating or editing each file, create a relative symlink:
-         - **Owned files** (plan-scoped, cross-cutting, shared-new) → `${PLAN_DIR}/files/<file>` (or `${PLAN_DIR}/files/<lib>/<file>` if project has library splits)
-         - **Cross-plan edits** → `${PLAN_DIR}/otherfiles/<file>` (or `${PLAN_DIR}/otherfiles/<lib>/<file>` with splits)
-         - Create `files/` or `otherfiles/` subdirectories on first use
-         - Symlink target is a relative path from the plan folder to the real source file
       If PLANPAK_ACTIVE = false, skip these rules entirely.
 
 3) Execution (adapt to Testing Strategy):

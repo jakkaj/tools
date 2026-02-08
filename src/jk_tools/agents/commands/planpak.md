@@ -1,5 +1,5 @@
 ---
-description: Plan Pack paradigm — the pack is a manifest of symlinks claiming project files. Drop this into any conversation to activate plan-pack mode.
+description: Plan Pack paradigm — feature-based file organization grouped by the plan that created them. Drop this into any conversation to activate plan-pack mode.
 ---
 
 # PlanPak: Plan-Based Feature File Organization
@@ -147,52 +147,6 @@ PlanPak **does not prescribe** where tests live. Test placement follows the proj
 - Common patterns: `tests/`, colocated `__tests__/`, `tests/feat-<slug>/`
 - Whatever the project already does — PlanPak defers entirely
 
-## Plan Folder Symlinks
-
-Every file a plan creates or edits gets a symlink back into the plan folder under `files/`, giving a single view of everything the plan produced.
-
-### Structure
-
-**No library splits** (flat project):
-```
-docs/plans/003-auth/
-├── auth-spec.md
-├── auth-plan.md
-├── files/                          # symlinks to real source files
-│   ├── auth-service.ts       → ../../../src/features/003-auth/auth-service.ts
-│   ├── auth-adapter.ts       → ../../../src/features/003-auth/auth-adapter.ts
-│   └── auth-registration.ts  → ../../../src/di/auth-registration.ts
-└── otherfiles/                     # cross-plan edits (files owned by other plans)
-    └── user-model.ts          → ../../../src/features/001-users/user-model.ts
-```
-
-**With library splits** (web/cli/shared):
-```
-docs/plans/003-auth/
-├── files/
-│   ├── web/
-│   │   ├── auth-service.ts   → ../../../../src/web/features/003-auth/auth-service.ts
-│   │   └── login-handler.ts  → ../../../../src/web/features/003-auth/login-handler.ts
-│   └── shared/
-│       └── auth-model.ts     → ../../../../src/shared/features/003-auth/auth-model.ts
-└── otherfiles/
-    └── web/
-        └── session.ts         → ../../../../src/web/features/001-users/session.ts
-```
-
-### Rules
-
-- **`files/`**: Symlinks to files this plan **owns** (plan-scoped + cross-cutting + shared-new)
-- **`otherfiles/`**: Symlinks to files this plan **edited but doesn't own** (cross-plan-edit)
-- Mirror the project's library split structure one level deep (if splits exist)
-- plan-6 creates symlinks as it creates/edits each file during implementation
-- T000 creates the `files/` directory; `otherfiles/` is created on first cross-plan edit
-- Symlinks use relative paths from the plan folder to the source file
-
-### Why This Is Safe
-
-The symlinks live in `docs/plans/` — documentation territory. Compilers, bundlers, and linters never look there. The real files are in the source tree where tooling expects them. This is the reverse of v1 (which put real files in docs and symlinked into src, breaking compilers).
-
 ## Backward Compatibility
 
 PlanPak detection uses dual signals:
@@ -215,8 +169,6 @@ When **neither** is present, all commands behave exactly as they do today. Zero 
 | When does code graduate to shared? | When 3+ plans import from one plan's folder |
 | How is PlanPak detected? | Spec header `File Management: PlanPak` OR T000 task |
 | Does PlanPak change DI/adapters? | No — only file location changes, not architecture |
-| Can I see all plan files in one place? | Yes — `docs/plans/<slug>/files/` has symlinks back to every file |
-| What about files I edited but don't own? | They go in `docs/plans/<slug>/otherfiles/` |
 | What naming convention? | `features/<ordinal>-<slug>/` matching `docs/plans/<ordinal>-<slug>/` |
 
 ## Integration With Plan Workflow
@@ -226,7 +178,7 @@ When **neither** is present, all commands behave exactly as they do today. Zero 
 | `/plan-2-clarify` | Asks File Management question (PlanPak vs Legacy) |
 | `/plan-3-architect` | Detects PlanPak, adds File Placement Manifest, generates T000 |
 | `/plan-5-phase-tasks-and-brief` | Enforces `features/` paths for plan-scoped files |
-| `/plan-6-implement-phase` | Follows 5 PlanPak placement rules + creates symlinks in plan `files/`/`otherfiles/` |
+| `/plan-6-implement-phase` | Follows 5 PlanPak placement rules |
 | `/plan-6a-update-progress` | Includes classification tag in Notes |
 | `/plan-7-code-review` | Validates PlanPak compliance with dedicated subagent |
 
@@ -240,5 +192,5 @@ You can drop PlanPak into any project without the full plan workflow:
 4. Follow the decision tree for each new file
 5. Use descriptive filenames (not generic `service.ts`)
 
-No manifests, no special tooling required — just file placement. Optionally create `files/` symlinks in your plan folder for a unified view.
+No manifests, no special tooling required — just file placement.
 ```
