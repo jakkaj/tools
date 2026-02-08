@@ -33,16 +33,21 @@ This is a **clarity tool** — it builds understanding of what was built, drives
 
 ## Output
 
-A single runnable script saved to:
+Every worked example produces **two files** — a runnable script and a companion walkthrough:
+
 ```
-${PHASE_DIR}/examples/worked-example.{ext}
+${PHASE_DIR}/examples/
+├── worked-example.{ext}                    # The runnable script
+└── worked-example.walkthrough.md           # Companion visual walkthrough
 ```
 
-If multiple distinct concepts were built, create one file per concept:
+If multiple distinct concepts were built, create one pair per concept:
 ```
 ${PHASE_DIR}/examples/
 ├── worked-example-routing.ts
+├── worked-example-routing.walkthrough.md
 ├── worked-example-middleware.ts
+├── worked-example-middleware.walkthrough.md
 └── README.md              # How to run them
 ```
 
@@ -184,7 +189,80 @@ for i, inst in enumerate(installers, 1):
 
 **Length**: 2-4 sentences per narrative block. Enough to set context, not so much that you skip reading it.
 
-### 7) Create README
+### 7) Write the Companion Walkthrough
+
+For every worked example script, generate a **companion `.walkthrough.md`** that provides visual context using mermaid diagrams. This is the "read before or alongside" document — it maps the terrain so the script makes sense on first contact.
+
+**File naming**: Same stem as the script with `.walkthrough.md` suffix:
+- `worked-example.py` → `worked-example.walkthrough.md`
+- `worked-example-routing.ts` → `worked-example-routing.walkthrough.md`
+
+**Walkthrough structure:**
+
+```markdown
+# Worked Example Walkthrough: [Title]
+
+> **Script**: [`worked-example.py`](./worked-example.py)
+> **Run**: `uv run python examples/worked-example.py`
+> **Phase**: Phase N: [Title]
+
+## What This Demonstrates
+
+[2-3 sentences — same scope as the script header but pitched at a reader
+who hasn't run it yet]
+
+---
+
+## High-Level Flow
+
+[Mermaid flowchart showing the overall process the example walks through]
+
+---
+
+## Section-by-Section
+
+### 1. [Section Title]
+
+[1-2 paragraph explanation with more depth than the script's inline comments]
+
+[Mermaid diagram — pick the type that best fits this section]
+
+**What to watch in output**: [What to look for when running the script]
+
+---
+
+### 2. [Section Title]
+...
+
+---
+
+## Key Takeaways
+
+| Concept | Why It Matters |
+|---------|---------------|
+| ... | ... |
+```
+
+**Diagram selection guide** — pick the mermaid type that best explains each section:
+
+| Use When | Diagram Type | Example |
+|----------|-------------|---------|
+| Showing a process or decision path | `flowchart` | Init logic, mode branching |
+| Showing interactions between components | `sequenceDiagram` | API calls, env construction, request/response |
+| Showing object lifecycles or modes | `stateDiagram-v2` | State machines, mode transitions |
+| Showing data structures | `classDiagram` | Dataclasses, interfaces, schemas |
+| Showing dependencies or relationships | `graph LR/TD` | Install order, module dependencies |
+| Showing timeline of events | `sequenceDiagram` | Build pipeline, request lifecycle |
+
+**Diagram principles:**
+- **One diagram per section** (not every section needs one — skip if it adds nothing)
+- **Keep diagrams small** — 5-10 nodes max, readable without zooming
+- **Label edges** — show what flows between nodes, not just connections
+- **Use styling sparingly** — `fill` colors to highlight the interesting node, not to decorate
+
+**Walkthrough tone**: Slightly more expansive than the script comments. The script is terse by design (you're reading code); the walkthrough has room to explain *why* things work this way, what the alternatives were, and what to look for when debugging.
+
+### 8) Create README
 
 If multiple example files are created, generate a brief `README.md`:
 
@@ -207,7 +285,7 @@ Run these to see what this phase built, step by step.
 
 For a single file, embed the run command in the script's header docstring instead.
 
-### 8) Verify It Runs
+### 9) Verify It Runs
 
 **Run the example script** and confirm:
 - It executes without errors
@@ -216,11 +294,12 @@ For a single file, embed the run command in the script's header docstring instea
 
 If it fails, fix the example (not the implementation). The example must work against the real code as-is.
 
-### 9) Output Summary
+### 10) Output Summary
 
 ```
 ✅ Worked example created:
    ${PHASE_DIR}/examples/worked-example.py
+   ${PHASE_DIR}/examples/worked-example.walkthrough.md
 
    Run: uv run docs/plans/003-feature/tasks/phase-1-core/examples/worked-example.py
 
@@ -230,7 +309,8 @@ If it fails, fix the example (not the implementation). The example must work aga
    • Environment sanitization for subprocess isolation
    • InstallResult data structure and version tracking
 
-   Lines: 130  |  Sections: 7  |  Print statements: 22
+   Script: 130 lines  |  7 sections  |  22 print statements
+   Walkthrough: 5 diagrams (2 flowchart, 1 sequence, 1 class, 1 state)
 ```
 
 ## Reference Example
@@ -435,6 +515,8 @@ This makes the command usable for ad-hoc "show me how this works" requests too.
 - ❌ Abstract examples — use **realistic data** that looks like what users would see
 - ❌ Creating the example without running it — **verify it executes**
 - ❌ Actually triggering side effects — exercise logic without blast radius (don't install, don't write to disk, don't hit APIs)
+- ❌ Skipping the walkthrough — the `.walkthrough.md` is **not optional**
+- ❌ Diagrams without purpose — only add a diagram when it clarifies something the prose alone can't
 
 ## Integration
 
@@ -452,3 +534,6 @@ This makes the command usable for ad-hoc "show me how this works" requests too.
 ✅ Script is short enough to step through in a debugger (80-150 lines, 5-8 sections)
 ✅ A developer unfamiliar with the phase can read it and understand what was built
 ✅ No side effects — exercises logic without triggering installs, writes, or API calls
+✅ Companion `.walkthrough.md` exists alongside every script
+✅ Walkthrough uses mermaid diagrams tactically (flowchart, sequence, state, class — whichever fits)
+✅ Walkthrough has a "What to watch in output" note per section connecting it to the script's print output
