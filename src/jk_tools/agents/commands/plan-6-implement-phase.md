@@ -457,8 +457,46 @@ Note:
 
 The execution semantics match your existing implementation command, adjusted to consume phase-scoped artifacts and BridgeContext practices.
 
-**Next step (when happy):**
+```
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  ⛔ MANDATORY: AUTO-RUN /plan-6a-update-progress BEFORE REPORTING DONE ⛔    ┃
+┃                                                                              ┃
+┃  When all tasks are complete, YOU MUST automatically invoke                   ┃
+┃  /plan-6a-update-progress for every completed task — DO NOT ask the user,    ┃
+┃  DO NOT skip it, DO NOT report the phase as done until 6a has run.           ┃
+┃                                                                              ┃
+┃  This is NOT optional. This is NOT a suggestion. Execute it yourself.        ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+```
 
-**Full Mode**: Run **/plan-7-code-review --phase "<Phase N: Title>" --plan "<PLAN_PATH>"**
+6) **Auto-run plan-6a (YOU do this — not the user):**
 
-**Simple Mode**: Run **/plan-7-code-review --plan "<PLAN_PATH>"** (no --phase needed)
+   After all tasks are implemented, automatically invoke `/plan-6a-update-progress` for every completed task that has not yet been reported. Do NOT ask the user for permission — just run it.
+
+   **Full Mode** — for each task:
+   ```bash
+   /plan-6a-update-progress \
+     --phase "${PHASE_HEADING}" \
+     --plan "${PLAN}" \
+     --task "${TASK_ID}" \
+     --status "completed" \
+     --changes "class:path:ClassName,function:path:funcName,file:path"
+   ```
+
+   **Simple Mode** — for each task:
+   ```bash
+   /plan-6a-update-progress \
+     --plan "${PLAN}" \
+     --task "${TASK_ID}" \
+     --status "completed" \
+     --changes "class:path:ClassName,function:path:funcName,file:path" \
+     --inline
+   ```
+
+   **Only after plan-6a has run for ALL tasks**, report the phase as complete and suggest the next step to the user.
+
+**Suggest next step to user (do NOT auto-run):**
+
+**Full Mode**: Suggest **/plan-7-code-review --phase "<Phase N: Title>" --plan "<PLAN_PATH>"**
+
+**Simple Mode**: Suggest **/plan-7-code-review --plan "<PLAN_PATH>"** (no --phase needed)
