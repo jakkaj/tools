@@ -1,7 +1,5 @@
 ---
-mode: 'agent'
-description: 'Generate an Architectural Decision Record (ADR) from the feature spec and clarifications; persist to docs/adr and cross-link into the plan.'
-
+description: Generate an Architectural Decision Record (ADR) from the feature spec and clarifications; persist to docs/adr and cross-link into the plan.
 ---
 
 Please deep think / ultrathink as this is a complex task.

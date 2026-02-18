@@ -13,7 +13,7 @@ Inputs: PLAN_PATH, SPEC_PATH (co-located as `<plan-dir>/<slug>-spec.md>`), rules
 
 **IMPORTANT**: This command uses **parallel subagent validation** for comprehensive plan readiness assessment.
 
-**Strategy**: Launch 4 validators simultaneously (single message with 4 Task tool calls). Each validator focuses on specific plan quality dimension, then results synthesize into readiness verdict.
+**Strategy**: Launch 5 validators simultaneously (single message with 5 Task tool calls; Subagent 5/ADR is conditional on docs/adr/ existing). Each validator focuses on specific plan quality dimension, then results synthesize into readiness verdict.
 
 **Parallel Validation Architecture**:
 

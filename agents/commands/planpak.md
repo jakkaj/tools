@@ -181,6 +181,7 @@ When **neither** is present, all commands behave exactly as they do today. Zero 
 | `/plan-6-implement-phase` | Follows 5 PlanPak placement rules |
 | `/plan-6a-update-progress` | Includes classification tag in Notes |
 | `/plan-7-code-review` | Validates PlanPak compliance with dedicated subagent |
+| `/plan-5b-flightplan` | Includes PlanPak file placement in flight plan summary |
 
 ## Standalone Usage
 

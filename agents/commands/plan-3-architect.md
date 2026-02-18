@@ -26,7 +26,7 @@ Generate a **comprehensive, phase-based implementation plan** with detailed task
 - ✅ CS-4 (large): 8-9 complexity points
 - ✅ CS-5 (epic): 10-12 complexity points
 
-**Rubric factors** (each scored 0-2): Scope, Interconnections, Dependencies, Novelty, Fragility, Testing
+**Rubric factors** (each scored 0-2): Surface Area, Integration Breadth, Data & State, Novelty & Ambiguity, Non-Functional Constraints, Testing & Rollout
 Reference: `docs/project-rules/constitution.md` § 9
 
 **Before outputting the plan, validate**: No time language present? All estimates use CS 1-5 only?

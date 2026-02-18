@@ -816,9 +816,9 @@ Overall Progress: 1.75/4 phases (44%)
 
 **IMPORTANT - YOU MUST LAUNCH**: Use **parallel subagent validators** for comprehensive verification.
 
-**REQUIRED:** Before displaying success message, **YOU** launch 3 parallel validators to verify ALL updates were completed correctly.
+**REQUIRED:** Before displaying success message, **YOU** launch 3-4 parallel validators to verify ALL updates were completed correctly (D4 is conditional on diagram existence).
 
-**Strategy**: **YOU** launch 3 validators (single message with 3 Task tool calls) to check different aspects concurrently.
+**Strategy**: **YOU** launch 3-4 validators (single message with 3-4 Task tool calls; D4 is conditional) to check different aspects concurrently.
 
 **Subagent D1: Footnote Validator**
 "Verify footnote synchronization and format.

@@ -413,7 +413,7 @@ This step runs **after** Step 3a (depends on link validation data) but can run i
    - Read Mock Usage preference: Avoid mocks | Targeted mocks | Liberal mocks
    - Store for subagent context
 
-   **4b) Launch parallel validation subagents** (3-4 subagents based on approach):
+   **4b) Launch parallel validation subagents** (4-7 subagents based on approach and PlanPak status):
 
    **Subagent 1: TDD Validator** (if Testing Approach = Full TDD or Hybrid with TDD tasks)
    "You are a TDD Compliance Auditor. Validate strict Test-Driven Development discipline.
@@ -1601,7 +1601,7 @@ Review rubric baked into this phase
 Flow update (ordered commands)
 
 0. **plan-0-constitution**
-1. **plan-1-specify**
+1. **plan-1b-specify**
 2. **plan-2-clarify**
 3. **plan-3-architect**
 4. **plan-4-complete-the-plan**

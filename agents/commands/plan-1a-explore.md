@@ -919,3 +919,7 @@ If `002-search-improvement` exists, saves there. Otherwise creates new folder.
 Saves to `docs/plans/003-payment-refactor/research-dossier.md`
 
 This command provides deep, actionable research into existing codebase functionality, filling the critical gap between needing to change something and understanding how it currently works. It adapts to available tools (FlowSpace or standard) and integrates seamlessly with the planning workflow when desired.
+
+**Suggest next step to user:**
+
+Run **/plan-1b-specify** to create the feature specification, or **/plan-2c-workshop** if deep design exploration is needed first.

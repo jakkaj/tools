@@ -94,6 +94,8 @@ graph TD
     Start --> P1B
 
     P1B --> P2["plan-2-clarify<br/>Answer ≤8 questions"]
+    P1B -.-> P2C["plan-2c-workshop<br/>Design workshops (optional)"]
+    P2C -.-> P2
     P2 --> P3["plan-3-architect<br/>Generate plan"]
 
     P2 -.-> P2B["plan-2b-prep-issue<br/>External tracking (optional)"]
@@ -114,7 +116,7 @@ graph TD
     P5 -.-> P5ST["plan-5 --subtask<br/>Mid-phase detours"]
     P5ST -.-> P6
 
-    P6 -->|auto-calls| P6A["plan-6a-update-progress<br/>Atomic 3-location update"]
+    P6 -->|auto-runs| P6A["plan-6a-update-progress<br/>Atomic 3-location update"]
     P6A --> P6
 
     P6 --> P7["plan-7-code-review<br/>Review implementation"]
@@ -124,6 +126,8 @@ graph TD
     NextPhase -->|No| End([Feature Complete])
 
     P7 -->|REQUEST_CHANGES| P6
+    P6 -.-> P6B["plan-6b-worked-example<br/>Runnable examples (optional)"]
+    P7 -.->|merge needed| P8["plan-8-merge<br/>Upstream merge analysis"]
 
     PAK["planpak<br/>Standalone reference"]
     PAK -.->|"activates via"| P2
@@ -133,7 +137,10 @@ graph TD
     style P2B fill:#fff3e0
     style P3A fill:#fff3e0
     style P4 fill:#fff3e0
-    style P5A fill:#fff3e0
+    style P5ST fill:#fff3e0
+    style P2C fill:#fff3e0
+    style P6B fill:#fff3e0
+    style P8 fill:#fff3e0
     style DYK fill:#e8f5e9
     style P6A fill:#fce4ec
     style Start fill:#c8e6c9
@@ -260,7 +267,7 @@ graph TD
 2. Table of Contents
 3. Executive Summary
 4. Technical Context
-5. **Critical Research Findings** (15-20+ discoveries from 4 parallel subagents)
+5. **Critical Research Findings** (15-20+ discoveries from 6 parallel subagents in 2 phases)
 6. Testing Philosophy
 7. Implementation Phases (with acceptance criteria per phase)
 8. Cross-Cutting Concerns
@@ -269,16 +276,22 @@ graph TD
 11. Change Footnotes Ledger
 12. Appendices (naming conventions, graph traversal)
 
-**Parallel Subagents** (4 concurrent):
+**Parallel Subagents** (6 across 2 phases):
 
 ```mermaid
 graph TD
-    P3["plan-3-architect"] --> PS["Launch 4 Parallel Subagents"]
+    P3["plan-3-architect"] --> PH1["Phase 1: Launch 2 Strategist Subagents"]
 
-    PS --> S1["Pattern Analyst<br/>5-8 findings"]
-    PS --> S2["Technical Investigator<br/>5-8 findings"]
-    PS --> S3["Discovery Documenter<br/>5-8 findings"]
-    PS --> S4["Dependency Mapper<br/>5-8 findings"]
+    PH1 --> ST1["Implementation Strategist"]
+    PH1 --> ST2["Risk & Mitigation Planner"]
+
+    ST1 --> PH2["Phase 2: Launch 4 Research Subagents"]
+    ST2 --> PH2
+
+    PH2 --> S1["Codebase Pattern Analyst<br/>5-8 findings"]
+    PH2 --> S2["Technical Investigator<br/>5-8 findings"]
+    PH2 --> S3["Discovery Documenter<br/>5-8 findings"]
+    PH2 --> S4["Dependency Mapper<br/>5-8 findings"]
 
     S1 --> SYNC["Synthesize Results"]
     S2 --> SYNC
@@ -287,7 +300,8 @@ graph TD
 
     SYNC --> FINDINGS["15-20+ Critical Findings<br/>Deduplicated & Prioritized"]
 
-    style PS fill:#fff3e0
+    style PH1 fill:#e1f5fe
+    style PH2 fill:#fff3e0
     style SYNC fill:#e8f5e9
     style FINDINGS fill:#ffebee
 ```
@@ -419,9 +433,9 @@ graph TD
 - Test evidence and diffs
 - Commands and output
 
-**Auto-calls**: `/plan-6a-update-progress` after EACH task
+**Auto-runs**: `/plan-6a-update-progress` for every completed task (agent invokes automatically — not a suggestion to the user)
 
-**Next**: `/plan-7-code-review` when phase complete
+**Next**: Suggest `/plan-7-code-review` to user when phase complete
 
 ---
 
@@ -429,8 +443,8 @@ graph TD
 **Purpose**: Atomic 3-location progress update with FlowSpace tracking
 
 **When to use**:
-- Automatically called by plan-6 after each task
-- Never call manually
+- Auto-run by plan-6 after each task (plan-6 agent invokes it directly)
+- Can also be run standalone if progress updates were missed
 
 **Updates (ALL THREE atomically)**:
 
@@ -514,17 +528,18 @@ file:<file_path>
 - Plan↔Dossier sync
 - Parent↔Subtask links
 
-#### Step 4: Doctrine Gates (3-4 validators)
+#### Step 4: Doctrine Gates (4-7 validators based on testing approach)
 - TDD Validator (if Full TDD)
 - TAD Validator (if TAD)
 - Mock Usage Validator
 - BridgeContext & Universal Validator
 
-#### Step 6: Quality & Safety (4 reviewers)
+#### Step 6: Quality & Safety (5 reviewers)
 - Correctness (logic, errors, races)
 - Security (injection, traversal)
 - Performance (N+1, leaks)
 - Observability (logs, context)
+- Semantic Analysis (naming, contracts)
 
 **Verdict**:
 - **APPROVE**: Zero HIGH/CRITICAL findings
@@ -632,8 +647,8 @@ file:<file_path>
 
 **Inputs**:
 ```bash
-/plan-2b-prep-issue --spec "path/to/spec.md"
-# Optional: --phase "Phase 1" to generate phase-specific issue
+/plan-2b-prep-issue <plan-slug-or-path>
+# Optional: --phase N to generate phase-specific issue
 # Optional: --type feature|story|task for issue format
 ```
 
@@ -685,6 +700,88 @@ file:<file_path>
 - `tasks.fltplan.md` in the phase directory — a 30-second-scan summary
 - Includes: Departure/Destination, numbered Route, Before & After architecture diagram, Checklist
 - PlanPak-aware
+
+---
+
+### /plan-2c-workshop
+**Purpose**: Create detailed design documents for complex concepts identified in the spec's Workshop Opportunities
+
+**When to use**:
+- After `/plan-1b-specify` identifies Workshop Opportunities
+- Before `/plan-2-clarify` for concepts needing deep exploration
+- Any time a topic needs structured design thinking
+
+**Inputs**:
+```bash
+/plan-2c-workshop <plan-slug> "topic name"
+/plan-2c-workshop <plan-slug> --from-spec  # Interactive selection from spec
+/plan-2c-workshop <plan-slug> --list       # List existing workshops
+```
+
+**Creates**: `docs/plans/<ordinal>-<slug>/workshops/<topic>.md` with structured design document including diagrams, schemas, and examples.
+
+---
+
+### /plan-6b-worked-example
+**Purpose**: Generate a runnable worked example demonstrating a phase's implementation
+
+**When to use**:
+- After implementation to create a clear narrative walkthrough
+- When a phase's changes need step-by-step demonstration
+- For onboarding or documentation
+
+**Inputs**:
+```bash
+/plan-6b-worked-example --phase "Phase 1: Core Setup" --plan "path/to/plan.md"
+```
+
+**Creates**: A narrative, step-by-step script showing the implementation in action.
+
+---
+
+### /plan-8-merge
+**Purpose**: Analyze upstream changes from main and generate a merge plan
+
+**When to use**:
+- When your feature branch has diverged from main
+- Before merging to understand conflicts and impacts
+- When upstream changes may affect your planned work
+
+**Inputs**:
+```bash
+/plan-8-merge --plan "path/to/plan.md"
+```
+
+**Verdict**: PROCEED (safe to merge) or ABORT (conflicts need resolution first). Generates a merge plan document with conflict analysis and resolution strategy.
+
+---
+
+### /tad
+**Purpose**: Test-Assisted Development workflow guide for LLM coding agents
+
+**When to use**:
+- Reference guide when using TAD testing approach
+- Onboarding to TAD methodology
+
+**Key Concepts**: Scratch tests in `tests/scratch/` for exploration, run repeatedly (10-20+ RED→GREEN cycles), promote 5-10% with full Test Doc blocks, delete the rest.
+
+---
+
+### /deepresearch
+**Purpose**: Craft structured research prompts for deep research agents
+
+**When to use**:
+- When `/plan-1a` or `/plan-3` identifies knowledge gaps that code can't answer
+- When you need external research on APIs, patterns, or technologies
+
+---
+
+### /flowspace-research
+**Purpose**: FlowSpace-first codebase research agent for parallel subagent exploration
+
+**When to use**:
+- Deep codebase research leveraging FlowSpace graph when available
+- Called internally by other commands (plan-1a, plan-3) for research phases
 
 ---
 
@@ -887,7 +984,7 @@ graph TD
 
     style P0 fill:#e1f5fe
     style P3A fill:#fff3e0
-    style P5A fill:#fff3e0
+    style P5ST fill:#fff3e0
 ```
 
 ### Final Structure After Full Workflow

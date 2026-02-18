@@ -245,7 +245,7 @@ _Populated during implementation by plan-6. Log anything of interest to your fut
 - ✅ CS-4 (large): 8-9 complexity points
 - ✅ CS-5 (epic): 10-12 complexity points
 
-**Rubric factors** (each scored 0-2): Scope, Interconnections, Dependencies, Novelty, Fragility, Testing
+**Rubric factors** (each scored 0-2): Surface Area, Integration Breadth, Data & State, Novelty & Ambiguity, Non-Functional Constraints, Testing & Rollout
 Reference: `docs/project-rules/constitution.md` § 9
 
 **Before outputting tasks.md, validate**: No time language present? All task estimates use CS 1-5 only?

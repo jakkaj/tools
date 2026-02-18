@@ -16,6 +16,7 @@ flowchart TB
         P1A["/plan-1a<br/>Research"]
         P1B["/plan-1b<br/>Specify"]
         P2["/plan-2<br/>Clarify"]
+        P2C["/plan-2c<br/>Workshop"]
         P2B["/plan-2b<br/>Prep Issue"]
         P3["/plan-3<br/>Architect"]
         P3A["/plan-3a<br/>ADR"]
@@ -27,13 +28,17 @@ flowchart TB
         P5ST["/plan-5 --subtask<br/>Subtasks"]
         P6["/plan-6<br/>Implement"]
         P6A["/plan-6a<br/>Progress"]
+        P6B["/plan-6b<br/>Worked Example"]
         P7["/plan-7<br/>Review"]
+        P8["/plan-8<br/>Merge"]
     end
 
     P0 --> P1A
     P0 --> P1B
     P1A -.-> P1B
     P1B --> P2
+    P1B -.-> P2C
+    P2C -.-> P2
     P2 --> P3
     P2 -.-> P2B
     P3 -.-> P3A
@@ -48,8 +53,10 @@ flowchart TB
     P6 -->|auto| P6A
     P6A --> P6
     P6 --> P7
+    P6 -.-> P6B
     P7 -->|Next phase| P5
     P7 -.->|fixes| P6
+    P7 -.->|merge needed| P8
 
     style P0 fill:#e1f5fe
     style P1A fill:#fff3e0
@@ -64,6 +71,9 @@ flowchart TB
     style P6 fill:#c8e6c9
     style P6A fill:#fce4ec
     style P7 fill:#fce4ec
+    style P2C fill:#fff3e0
+    style P6B fill:#fff3e0
+    style P8 fill:#fff3e0
 ```
 
 **Legend**: Solid lines = main flow | Dashed lines = optional | Orange = optional commands
@@ -178,6 +188,11 @@ Four commands, done.
 | `/plan-6` | Implement the phase | Code + `execution.log.md` |
 | `/plan-6a` | Update progress *(auto-called by 6)* | Updates task tables |
 | `/plan-7` | Review implementation | `reviews/review.md` |
+| `/plan-2c` | Design workshop for complex concepts *(optional)* | `workshops/<topic>.md` |
+| `/plan-5c` | Trace acceptance criteria to files *(auto-called by 5)* | Updates dossier |
+| `/plan-6b` | Generate runnable worked example *(optional)* | Worked example script |
+| `/plan-8` | Analyze upstream merge conflicts | Merge plan document |
+| `/planpak` | Activate plan-based file organization *(standalone)* | Reference only |
 
 ---
 
@@ -238,7 +253,7 @@ Creates four doctrine files:
 /plan-1a-explore --plan auth-upgrade "research current auth system"
 ```
 
-Uses 6 parallel subagents to explore implementation, dependencies, patterns, tests, interfaces, and documentation.
+Uses 7 parallel subagents to explore implementation, dependencies, patterns, tests, interfaces, documentation, and prior learnings.
 
 ---
 
@@ -295,8 +310,8 @@ Uses 4 parallel subagents to produce:
 /plan-5 --phase "Phase 1: Core Setup" --plan "docs/plans/001-oauth/oauth-plan.md"
 ```
 
-Creates a task table with 9 columns:
-Status | ID | Task | Type | Dependencies | Paths | Validation | Subtasks | Notes
+Creates a task table with 10 columns:
+Status | ID | Task | CS | Type | Dependencies | Absolute Path(s) | Validation | Subtasks | Notes
 
 ---
 
@@ -378,17 +393,6 @@ Key concepts:
 **Structure external research.** Crafts prompts for Perplexity, ChatGPT, etc.
 
 Use when `/plan-1a` or `/plan-3` identifies knowledge gaps that code can't answer.
-
----
-
-### `/substrateresearch`
-**Lightweight planning alternative.** For simpler projects needing less ceremony.
-
-```bash
-/substrateresearch "implement user preferences"
-```
-
-Positions AI as technical leader, creates phase-based plan with checklists.
 
 ---
 
