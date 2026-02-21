@@ -6,7 +6,7 @@ Please deep think / ultrathink as this is a complex task.
 
 # didyouknow
 
-**Universal clarity builder** - analyze any context (spec, plan, tasks, subtask, code) and surface 5 critical "Did you know?" insights through natural conversation.
+**Universal clarity builder** - analyze any context (spec, plan, tasks, subtask, code) and surface critical "Did you know?" insights through natural conversation. Supports two modes: **default** (risks, gotchas, hidden assumptions) and **enhance** (scoped improvement ideas).
 
 ````md
 User input:
@@ -21,17 +21,29 @@ Expected usage patterns:
 /didyouknow --subtask <path>   # Analyze a subtask
 /didyouknow --code <path>      # Analyze code file(s)
 /didyouknow                    # Auto-detect most recent context
+/didyouknow --enhance          # Enhancement mode (5 ideas, scoped to feature)
+/didyouknow --enhance 3        # Enhancement mode with custom count
+/didyouknow --enhance --spec <path>  # Enhance mode on a specific spec
 ```
+
+## Modes
+
+### Default Mode (clarity)
+Surface risks, gotchas, hidden assumptions, and non-obvious implications in what already exists. Always 5 insights.
+
+### Enhance Mode (`--enhance [N]`)
+Surface scoped improvement ideas — UX polish, missing quality-of-life features, enhancements to the existing feature. Does NOT suggest tangential or out-of-scope ideas. Defaults to 5 ideas; the user may specify a custom count (e.g. `--enhance 3`, `--enhance 10`).
 
 ## Purpose
 
-Build shared understanding between human and AI by surfacing non-obvious implications, gotchas, and critical insights. This is a **clarity tool** — run it whenever you need to step back and really understand what's about to happen.
+Build shared understanding between human and AI. In **default mode**, surface non-obvious implications, gotchas, and critical insights. In **enhance mode**, surface improvement ideas scoped to the feature being analyzed. This is a **clarity and ideation tool** — run it whenever you need to step back and really understand or improve what's being built.
 
 ## Flow
 
 ### 1) Context Loading
 
 - Parse flags to determine context type (spec/plan/tasks/subtask/code)
+- Detect mode: if `--enhance` is present, activate enhance mode. Parse optional count (default 5).
 - If auto-detect mode (no flags): search `docs/plans/` for most recent plan or spec
 - Read the primary context document completely
 - Load related documents for full picture:
@@ -41,7 +53,9 @@ Build shared understanding between human and AI by surfacing non-obvious implica
 
 ### 2) ULTRA-DEEP THINKING (Most Critical Step)
 
-**Spend significant thinking time here.** Analyze from all these lenses:
+**Spend significant thinking time here.**
+
+#### Default Mode Lenses
 
 - **User Experience** — what changes for users? What's surprising?
 - **System Behavior** — new constraints, assumptions, data flow changes?
@@ -60,12 +74,25 @@ Build shared understanding between human and AI by surfacing non-obvious implica
 
 **Select the 5 most impactful insights** — non-obvious, actionable, ordered by impact, spanning different perspectives.
 
+#### Enhance Mode Lenses
+
+- **UX Polish** — what would make this smoother, more intuitive, more delightful?
+- **Missing Conveniences** — quality-of-life features users would expect but aren't specified?
+- **Robustness** — error messages, fallbacks, graceful degradation that would improve trust?
+- **Consistency** — does this align with patterns elsewhere in the codebase/product?
+- **Developer Experience** — logging, debugging hooks, configurability that would help future maintainers?
+
+**Stay scoped to the feature being analyzed.** Do NOT suggest tangential features or out-of-scope additions. Every idea must directly enhance what's already planned.
+
+**Select the N most valuable ideas** (default 5, or user-specified count) — ordered by value, practical, and scoped to the existing feature.
+
 ### 3) CONVERSATIONAL PRESENTATION (One at a Time)
 
-**CRITICAL: Present insights concisely. The human can ask to expand.**
+**⚠️ CRITICAL — HARD RULE: Present ONLY ONE insight per message. Output ONE insight, then STOP and WAIT for the human to respond before presenting the next. Do NOT present insight #2 until the human has replied to #1. This is the most important rule in this entire prompt.**
 
-For each insight, present it like this:
+For each insight/idea, present it like this:
 
+**Default mode:**
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -80,6 +107,21 @@ This matters because [one sentence on why it's important].
 What do you think?
 ```
 
+**Enhance mode:**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**#N/N: [Short Title]**
+
+What if we [one-sentence enhancement idea]?
+
+This would improve [one sentence on the benefit].
+
+**Recommendation**: [one-line suggestion]
+
+Worth adding?
+```
+
 That's it. Short. Punchy. The human will do one of:
 - **Agree** → capture decision, move on
 - **Disagree/discuss** → engage naturally, reach alignment
@@ -89,7 +131,7 @@ That's it. Short. Punchy. The human will do one of:
 **Do NOT front-load** the deep dive, options matrix, numbered consequences, or examples. Only expand when asked. Match the depth to what the human asks for.
 
 **Rules:**
-- One insight at a time — WAIT for response before the next
+- **ONE insight per message. STOP after each. WAIT for the human to reply.** Never present two or more insights in the same message. This is non-negotiable.
 - Use "we/our/us" — collaborative language
 - Ask real questions, not rhetorical ones
 - Start with the insight, no preamble ("Can we talk about..." — NO)
@@ -111,7 +153,7 @@ Do NOT defer updates to the end.
 
 ### 5) Session Summary
 
-After all 5 insights, output a brief summary:
+After all insights/ideas are complete, output a brief summary:
 
 ```
 **Did You Know — Complete**
@@ -148,7 +190,7 @@ No new files created — insights are appended to the analyzed document.
 
 ## Validation
 
-- Exactly 5 insights, one at a time
+- Default mode: exactly 5 insights. Enhance mode: N ideas (default 5, or user-specified count). Always one at a time.
 - Human responds to each before proceeding
 - Each insight is 3-5 lines on first presentation (not a wall of text)
 - Deep dives only happen when the human asks
@@ -158,12 +200,13 @@ No new files created — insights are appended to the analyzed document.
 
 ## Anti-Patterns
 
-- Dumping all 5 at once
+- **Dumping all 5 at once or presenting more than one insight per message (MOST COMMON FAILURE — never do this)**
 - Front-loading deep dives, options matrices, and examples
-- Not waiting for human responses
+- Not waiting for human responses — you MUST stop and wait after each insight
 - Stating obvious facts from the docs
 - Being overly formal or academic
 - Deferring document updates to the end
+- In enhance mode: suggesting out-of-scope or tangential features
 
 ## Integration
 
