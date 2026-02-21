@@ -337,6 +337,15 @@ jk-gcm ./scratch/analysis ./src
 cat ./scratch/analysis/codebase.md
 ```
 
+## Agent Commands: Full & Lite Variants
+
+The `agents/commands/` directory contains two highly cohesive command sets:
+
+- `agents/commands/` — **Full pipeline** (24 commands, all features including FlowSpace, PlanPak, footnotes, constitution gates)
+- `agents/commands-lite/` — **Lite pipeline** (10 commands, standard tools only — no FlowSpace, PlanPak, or specialized infrastructure)
+
+**⚠️ IMPORTANT**: These two sets are different versions of the same workflow. When making changes to shared commands (plan-1a, 1b, 3, 5, 5b, 6, 7, didyouknow, plan-2c-workshop, deepresearch), always consider whether the change applies to both variants and keep them in sync. They are highly cohesive — a bug fix or flow improvement in one likely needs to be reflected in the other.
+
 ## Maintenance
 
 ### Daily Workflow

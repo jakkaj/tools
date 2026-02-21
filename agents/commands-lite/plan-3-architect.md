@@ -1,0 +1,1025 @@
+---
+description: Perform planning and architecture, generating a phase-based plan with success criteria before implementation.
+---
+
+Please deep think / ultrathink as this is a complex task.
+
+# plan-3-architect
+
+Generate a **comprehensive, phase-based implementation plan** with detailed tasks and acceptance criteria. This command produces the master plan document that will guide all subsequent implementation phases.
+
+---
+
+## 🚫 CRITICAL PROHIBITION: NO TIME ESTIMATES
+
+**NEVER** output time or duration estimates in **ANY FORM**:
+- ❌ Hours, minutes, days, weeks, months
+- ❌ "Quick", "fast", "soon", "trivial duration"
+- ❌ "ETA", "deadline", "timeline"
+- ❌ "~4 hours", "2-3 days", "should take X time"
+- ❌ "Total Estimated Effort: X hours"
+
+**ONLY** use **Complexity Score (CS 1-5)** from constitution rubric:
+- ✅ CS-1 (trivial): 0-2 complexity points
+- ✅ CS-2 (small): 3-4 complexity points
+- ✅ CS-3 (medium): 5-7 complexity points
+- ✅ CS-4 (large): 8-9 complexity points
+- ✅ CS-5 (epic): 10-12 complexity points
+
+**Rubric factors** (each scored 0-2): Surface Area, Integration Breadth, Data & State, Novelty & Ambiguity, Non-Functional Constraints, Testing & Rollout
+
+**Before outputting the plan, validate**: No time language present? All estimates use CS 1-5 only?
+
+---
+
+```md
+Inputs:
+  FEATURE_SPEC = `docs/plans/<ordinal>-<slug>/<slug>-spec.md` (co-located with plan),
+  PLAN_PATH (absolute; MUST match `docs/plans/<ordinal>-<slug>/<slug>-plan.md`),
+  rules at `docs/project-rules/{rules.md, idioms.md, architecture.md}`,
+  today {{TODAY}}.
+
+## PHASE 0: Detect Workflow Mode
+
+**FIRST**: Check spec for `**Mode**: Simple` or `**Mode**: Full` in header/metadata.
+
+- If `Mode: Simple` → Use **Simple Mode Output Format** (see below)
+- If `Mode: Full` or not specified → Use **Full Mode Output Format** (standard multi-phase)
+
+**Simple Mode Changes:**
+- Single phase instead of multiple phases
+- Inline task table (plan-5 format) directly in plan
+- Concise findings format (shorter, action-focused)
+- Next step prompts show plan-4/plan-5 as optional
+- Same subagent depth (4 researchers) for thoroughness
+
+## PHASE 1: Initial Gates & Validation
+
+### GATE - Spec Quality
+- If critical ambiguities remain in SPEC (marked with [NEEDS CLARIFICATION]), ask the user to resolve them in the spec before proceeding
+- Verify `## Testing Strategy` section exists in spec with defined approach
+
+Before generating the plan, confirm with the user:
+1. **Testing approach**: Standard (unit + integration) / Lightweight (core validation only) / None
+2. **Mock usage**: Targeted mocks where needed / No mocks
+Write answers into the plan header.
+
+### GATE - Architecture
+- Validate against `docs/project-rules/architecture.md`
+- Check for layer-boundary violations (LFL/LSL/Graph/etc.)
+- Verify language-agnostic GraphBuilder compliance
+- Document any architectural exceptions with justification
+
+### GATE - ADR (Optional)
+- Scan `docs/adr/` for ADRs that reference this feature (match by slug/title or spec path)
+- Build an ADR Ledger table:
+
+| ADR | Status | Affects Phases | Notes |
+|-----|--------|----------------|-------|
+
+- If existing ADRs found, populate table with each ADR's ID (NNNN), status, affected phases, and key constraints
+- Note: This gate is non-blocking; plan can proceed with or without ADRs
+
+## PHASE 2: Research & Technical Discovery
+
+### Check for Existing Research
+
+**FIRST**: Check if `research-dossier.md` exists in the plan folder:
+- If `${PLAN_DIR}/research-dossier.md` exists:
+  * Read the research dossier completely
+  * Extract all critical and high-impact findings
+  * Note discovered patterns, dependencies, and constraints
+  * **OPTIMIZE**: Reduce research subagents from 4 to 2 (focus on implementation-specific discovery)
+  * Reference research findings throughout the plan (e.g., "Per Research Finding IA-03...")
+- If no research exists:
+  * Proceed with full 4-subagent research as described below
+  * Note: "ℹ️ Consider running `/plan-1a-explore` before planning for deeper understanding"
+
+### Check for Workshop Documents
+
+**SECOND**: Check if `workshops/` directory exists in the plan folder:
+- If `${PLAN_DIR}/workshops/*.md` files exist:
+  * Read all workshop documents completely
+  * These are **authoritative design decisions** - do not contradict them
+  * Extract:
+    - Data models and schemas (use exactly as specified)
+    - CLI flows and command structures (implement as documented)
+    - State machines and transitions (follow the defined states)
+    - API contracts (match the specified interfaces)
+  * **OPTIMIZE**: Skip discovery for workshopped topics - design is already done
+  * Reference workshop documents in relevant phases (e.g., "Per Workshop: cli-command-flows.md...")
+  * List workshops in plan metadata:
+    ```markdown
+    **Workshops**: 
+    - [cli-command-flows.md](./workshops/cli-command-flows.md) - CLI Flow
+    - [workunit-data-model.md](./workshops/workunit-data-model.md) - Data Model
+    ```
+- If no workshops exist:
+  * Check spec for `## Workshop Opportunities` section
+  * If opportunities exist but no workshops: Note "ℹ️ Consider running `/plan-2c-workshop` for detailed design on: [topics]"
+  * Proceed with normal discovery
+
+### Optimized Research Mode (when research-dossier.md exists)
+
+Launch **2 specialized subagents** focusing on implementation planning:
+
+**Subagent 1: Implementation Strategist**
+"Based on existing research in research-dossier.md, create implementation strategy.
+
+**Given Research**: [Summary of critical findings from dossier]
+
+**Tasks**:
+- Design phase breakdown based on discovered dependencies
+- Identify implementation order considering existing patterns
+- Plan integration approach using discovered extension points
+- Design testing strategy based on existing test infrastructure
+
+**Output**: Implementation-focused discoveries I1-01 through I1-08."
+
+**Subagent 2: Risk & Mitigation Planner**
+"Based on research findings, identify implementation risks and mitigation.
+
+**Given Research**: [Danger zones and constraints from dossier]
+
+**Tasks**:
+- Map high-risk implementation areas
+- Design mitigation strategies for each risk
+- Plan rollback approach for dangerous changes
+- Identify required safety checks and validations
+
+**Output**: Risk-focused discoveries R1-01 through R1-08."
+
+### Full Research Mode (when no research exists)
+
+**IMPORTANT**: Use **parallel research subagents** for comprehensive and efficient discovery.
+
+**Strategy**: Launch 4 specialized research subagents (single message with 4 Task tool calls) to maximize discovery breadth and depth. Each subagent focuses on a specific domain, gathers codebase evidence using standard tools, then analyzes and synthesizes findings.
+
+### Evidence Gathering Approach
+
+Each subagent follows a 2-phase pattern:
+1. **Evidence Phase**: Use glob, grep, and view to gather grounded codebase evidence
+2. **Analysis Phase**: Apply domain-specific analysis framework to categorize and synthesize findings
+
+### Parallel Research Architecture
+
+**Subagent 1: Codebase Pattern Analyst**
+"Discover existing patterns, conventions, and integration points.
+
+**PHASE 1 - Evidence Gathering**:
+Use glob to find source files matching the feature domain. Use grep for naming conventions, existing patterns. Use view to examine key files and understand structure.
+
+**PHASE 2 - Analysis**:
+Based on evidence gathered, analyze and categorize:
+- Existing similar features/components and their implementation patterns
+- Naming conventions (file naming, class naming, function naming)
+- Directory structures and organization
+- Design patterns in use (factory, singleton, observer, etc.)
+- Integration points where new feature connects to existing systems
+- Code conventions (error handling, logging, testing styles)
+
+**Output**: 5-8 discoveries numbered S1-01 through S1-08 covering patterns, integration points, and conventions.
+
+**Format per discovery**:
+```markdown
+### Discovery S1-01: [Title]
+**Category**: Pattern | Integration | Convention
+**Impact**: Critical | High | Medium | Low
+**Evidence**: [file:line reference from evidence phase]
+**What**: [Concise description]
+**Why It Matters**: [How this affects implementation]
+**Example**:
+​```[language]
+// ❌ WRONG - [Why this violates pattern]
+[counter-example]
+
+// ✅ CORRECT - [Why this follows pattern]
+[good example from codebase]
+​```
+**Action Required**: [What implementation must do]
+```
+"
+
+**Subagent 2: Technical Investigator**
+"Identify technical constraints, API limitations, and framework-specific gotchas.
+
+**PHASE 1 - Evidence Gathering**:
+Use grep for error handling, validation, configuration patterns. Use view to read config files, API definitions. Use glob for test files, dependency manifests.
+
+**PHASE 2 - Analysis**:
+Based on evidence gathered, identify and root-cause:
+- API limitations (rate limits, quotas, restrictions, version compatibility)
+- Framework gotchas (known bugs, common mistakes, performance bottlenecks)
+- Technical constraints (memory/CPU limits, query limits, file system limitations)
+- Security requirements (input validation, sanitization, CORS, CSP)
+
+**Output**: 5-8 discoveries numbered S2-01 through S2-08 covering API limits, framework gotchas, and constraints.
+
+**Format per discovery**:
+```markdown
+### Discovery S2-01: [Title]
+**Category**: API Limit | Framework Gotcha | Constraint
+**Impact**: Critical | High | Medium | Low
+**Evidence**: [file:line reference from evidence phase]
+**Problem**: [What doesn't work as expected or limitation exists]
+**Root Cause**: [Why this limitation exists]
+**Solution**: [How to work around it]
+**Example**:
+​```[language]
+// ❌ WRONG - [Why this fails due to limitation]
+[bad code example]
+
+// ✅ CORRECT - [Why this works around limitation]
+[good code example]
+​```
+**References**: [Links to docs, GitHub issues, Stack Overflow]
+```
+"
+
+**Subagent 3: Discovery Documenter**
+"Analyze spec for ambiguities, implications, and edge cases.
+
+**PHASE 1 - Evidence Gathering**:
+Use grep for existing edge case handling. Use view to read test files for expected behavior. Use glob for docs, READMEs, architecture notes.
+
+**PHASE 2 - Analysis**:
+Based on evidence gathered and spec analysis, identify:
+- Spec ambiguities (unclear or underspecified requirements)
+- Implementation implications (performance, data migration, backward compatibility, security)
+- Edge cases and error scenarios (empty/null input, concurrent access, network failures)
+
+**Output**: 5-8 discoveries numbered S3-01 through S3-08 covering ambiguities, implications, and edge cases.
+
+**Format per discovery**:
+```markdown
+### Discovery S3-01: [Title]
+**Category**: Ambiguity | Implication | Edge Case
+**Impact**: Critical | High | Medium | Low
+**Evidence**: [file:line showing existing handling]
+**Spec Reference**: [Quote relevant spec section]
+**Issue**: [What is unclear, implication, or edge case]
+**Design Decision Required**: [What choice must be made]
+**Recommendation**: [Suggested approach with rationale]
+**Example**: [Scenario with code showing safe/unsafe approaches]
+```
+"
+
+**Subagent 4: Dependency Mapper**
+"Map module dependencies, architectural boundaries, and cross-cutting concerns.
+
+**PHASE 1 - Evidence Gathering**:
+Use grep for import statements, function calls. Use glob for all files in target directories. Use view to understand module interfaces.
+
+**PHASE 2 - Analysis**:
+Based on evidence gathered, map and document:
+- Module dependencies (what feature depends on, what depends on it)
+- Architectural boundaries (layers, domains, cross-boundary communication)
+- Cross-cutting concerns (logging, error handling, auth, caching, metrics, config)
+
+**Output**: 5-8 discoveries numbered S4-01 through S4-08 covering dependencies, boundaries, and cross-cutting concerns.
+
+**Format per discovery**:
+```markdown
+### Discovery S4-01: [Title]
+**Category**: Dependency | Boundary | Cross-Cutting Concern
+**Impact**: Critical | High | Medium | Low
+**Evidence**: [file:line showing dependency/boundary]
+**What**: [Describe dependency/boundary/concern]
+**Architectural Context**: [How this fits into system architecture]
+**Design Constraint**: [What this means for implementation]
+**Example**:
+​```[language]
+// ❌ VIOLATES BOUNDARY - [Why this breaks architectural rules]
+[bad code example]
+
+// ✅ RESPECTS BOUNDARY - [Why this follows architectural rules]
+[good code example]
+​```
+**Reference**: [Link to docs/project-rules/architecture.md, dependency docs]
+```
+"
+
+**Wait for All Researchers**: Block until all 4 subagents complete.
+
+### Synthesis Phase
+
+After all 4 subagents complete:
+1. **Collect All Discoveries**: Gather S1-01 through S4-08 (approximately 24-32 discoveries)
+2. **Deduplicate**: Merge overlapping findings (note sources: S1-03 + S2-05)
+3. **Renumber Sequentially**: Assign final discovery numbers 01, 02, 03, ..., NN
+   - Order by impact: Critical first, then High, then Medium, then Low
+   - Within each tier, order by implementation phase relevance
+4. **Format Final Discoveries**:
+
+```markdown
+### 🚨 Critical Discovery 01: [Title]
+**Impact**: Critical
+**Sources**: [S1-03, S2-05] (pattern analyst + technical investigator)
+**Problem**: [What doesn't work as expected]
+**Root Cause**: [Why this happens]
+**Solution**: [How to work around it or design for it]
+**Example**:
+​```[language]
+// ❌ WRONG - [Why this fails]
+[bad code example]
+
+// ✅ CORRECT - [Why this works]
+[good code example]
+​```
+**Action Required**: [What implementation must do]
+**Affects Phases**: [List phase numbers, e.g., Phase 3, Phase 5]
+```
+
+### Research Output Requirements
+- Minimum 15-20 final discoveries (after deduplication)
+- At least 3-5 Critical discoveries
+- At least 5-8 High impact discoveries
+- All discoveries include code examples
+- All discoveries specify affected phases
+- Deduplication log showing which subagent findings were merged
+- Each final discovery references source subagent discoveries (e.g., "Sources: [S1-03, S4-02]")
+
+## PHASE 3: Project Structure & Setup
+
+### Project Type Selection
+- Determine project type: (single | web | mobile | library | cli | service)
+- Generate **actual** directory tree showing all relevant paths
+- Use absolute repo-root paths throughout the plan
+
+### Directory Structure Template
+```
+/path/to/repo/
+├── src/
+│   ├── [component directories]
+│   └── [feature modules]
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   └── fixtures/
+├── docs/
+│   └── plans/
+│       └── <ordinal>-<slug>/
+│           ├── <slug>-plan.md (this file)
+│           └── tasks/
+│               └── [phase directories will be created by plan-5]
+└── [configuration files]
+```
+
+## PHASE 4: Plan Document Generation
+
+### Testing Strategy Adaptation
+Read the `## Testing Strategy` section from the spec and adapt plan generation accordingly. Capture both the testing approach and the mock usage preference; reflect both throughout the plan.
+
+**Approach-Specific Guidance:**
+- **Standard**: Generate test-first tasks with unit + integration coverage for all phases
+- **Lightweight**: Reduce test tasks to core validation only; focus on integration/smoke tests
+- **None**: Replace test tasks with manual verification checklists
+
+### Documentation Strategy Adaptation
+Read the `## Documentation Strategy` section from the spec and generate appropriate documentation phases based on the location choice:
+
+- **README.md only**: Create single documentation phase updating root README.md with getting-started content
+- **docs/how/ only**: Create documentation phase(s) for detailed guides under docs/how/
+  - Structure: `docs/how/<feature-name>/N-topic.md` (numbered files within feature directory)
+  - **Intelligent file placement**:
+    1. Survey existing `docs/how/` directories to identify relevant feature areas
+    2. Decide: create new `docs/how/<new-feature>/` OR use existing `docs/how/<existing-feature>/`
+    3. Determine file strategy: create new numbered file OR append to existing file if content is small/related
+    4. Use sequential numbering (1-overview.md, 2-usage.md, 3-api.md, etc.)
+- **Hybrid**: Create multiple documentation phases:
+  - Phase for README.md updates (getting-started, overview, essential commands)
+  - Phase for docs/how/ content following structure above
+  - Ensure content split matches spec guidance
+- **None**: Skip documentation phases (note in plan why docs are not needed)
+
+Documentation phases should include:
+- **Discovery step**: List existing docs/how/ feature directories and their content
+- **Placement decision**: Document whether creating new feature dir or using existing, with rationale
+- **File strategy**: Specify whether creating new files or updating existing ones
+- Clear file paths (absolute: /path/to/repo/README.md or /path/to/repo/docs/how/<feature>/N-topic.md)
+- Content outlines (what sections/topics to cover)
+- Target audience considerations
+- Maintenance/update expectations
+- **ADR references**: Link relevant ADR(s) in the plan's References & per-phase Acceptance Criteria if they constrain the work
+
+- **Standard**: Generate comprehensive test-first tasks for all phases
+- **Lightweight**:
+  - Reduce test tasks to core validation only
+  - Skip unit test tasks for simple operations
+  - Focus on integration/smoke tests
+- **None**:
+  - Replace test tasks with "Document manual validation steps"
+  - Include manual test checklist in acceptance criteria
+
+### Required Sections (in order)
+
+#### 1. Title Block & Metadata
+```markdown
+# [Feature Name] Implementation Plan
+
+**Plan Version**: 1.0.0
+**Variant**: Lite
+**Created**: {{TODAY}}
+**Spec**: [link to ./<slug>-spec.md]
+**Status**: DRAFT | READY | IN_PROGRESS | COMPLETE
+```
+
+#### 2. Table of Contents (MANDATORY)
+- Must include all major sections
+- Link to each phase
+- Include appendices
+
+#### 3. Executive Summary
+- Problem statement (2-3 sentences)
+- Solution approach (bullet points)
+- Expected outcomes
+- Success metrics
+
+#### 4. Technical Context
+- Current system state
+- Integration requirements
+- Constraints and limitations
+- Assumptions
+
+#### 5. Critical Research Findings
+- Include all discoveries from Phase 2
+- Order by impact (highest first)
+- Cross-reference to affected phases
+
+#### 6. Testing Philosophy
+```markdown
+### Testing Approach
+[Reference the Testing Strategy from spec]
+- **Selected Approach**: [Standard | Lightweight | None]
+- **Rationale**: [From spec]
+- **Focus Areas**: [From spec]
+
+### Standard Testing (if applicable)
+[Include if Standard selected]
+- Write tests alongside implementation
+- Cover unit tests and integration tests
+- Target meaningful coverage for new code
+
+### Lightweight Testing (if applicable)
+[Include if Lightweight selected]
+- Focus on core functionality validation
+- Skip extensive unit testing for simple operations
+- Prioritize integration and smoke tests
+
+### Test Documentation (when tests are written)
+Every test must include:
+"""
+Purpose: [what truth this test proves]
+Quality Contribution: [how this prevents bugs]
+Acceptance Criteria: [measurable assertions]
+"""
+
+### Mock Usage (align with spec)
+- If spec says "Avoid mocks": use real data/fixtures; only stub truly external calls (network/SaaS)
+- If spec says "Targeted mocks": permit mocks for explicitly slow/external dependencies; document rationale per phase
+- If spec says "Liberal mocks": allow mocks/stubs wherever they improve clarity or speed; ensure acceptance criteria still cover end-to-end behavior
+```
+
+#### 7. Implementation Phases
+
+For EACH phase, generate:
+
+### Phase N: [Descriptive Title]
+
+**Objective**: [Single sentence goal]
+
+**Deliverables**:
+- [Concrete deliverable 1]
+- [Concrete deliverable 2]
+
+**Dependencies**:
+- Phase X must be complete (if applicable)
+- External systems available
+- Test data prepared
+
+**Risks**:
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| [Risk description] | Low/Med/High | Low/Med/High | [Mitigation strategy] |
+
+### Tasks (Adapt based on Testing Strategy)
+
+For **Standard** approach:
+| #   | Status | Task | CS | Success Criteria | Log | Notes |
+|-----|--------|------|----|------------------|-----|-------|
+| N.1 | [ ] | Write tests for [component] | 2 | Tests cover: [scenarios] | - | |
+| N.2 | [ ] | Implement [component] | 3 | All tests from N.1 pass | - | |
+| N.3 | [ ] | Write integration tests for [feature] | 2 | Tests document expected behavior | - | |
+| N.4 | [ ] | Integrate [component] with [system] | 3 | Integration tests pass | - | |
+| N.5 | [ ] | Refactor for [quality aspect] | 2 | Code meets idioms, tests still pass | - | |
+
+For **Lightweight** approach:
+| #   | Status | Task | CS | Success Criteria | Log | Notes |
+|-----|--------|------|----|------------------|-----|-------|
+| N.1 | [ ] | Implement [component] | 2 | Basic functionality works | - | |
+| N.2 | [ ] | Write validation test | 1 | Core behavior verified | - | |
+| N.3 | [ ] | Run smoke test | 1 | End-to-end flow works | - | |
+
+For **None** approach:
+| #   | Status | Task | CS | Success Criteria | Log | Notes |
+|-----|--------|------|----|------------------|-----|-------|
+| N.1 | [ ] | Implement [component] | 2 | Functionality complete | - | |
+| N.2 | [ ] | Document manual test steps | 1 | Clear verification process | - | |
+| N.3 | [ ] | Execute manual validation | 1 | All checks pass | - | |
+
+### Test Examples (Write First!)
+
+```[language]
+describe('[Component]', () => {
+    test('should [specific behavior]', () => {
+        """
+        Purpose: Proves [component] correctly handles [scenario]
+        Quality Contribution: Prevents [type of bug]
+        Acceptance Criteria:
+        - [Assertion 1]
+        - [Assertion 2]
+        """
+
+        // Arrange
+        const input = [test data];
+
+        // Act
+        const result = component.method(input);
+
+        // Assert
+        expect(result.property).toBe(expectedValue);
+        expect(result.state).toMatch(pattern);
+    });
+
+    test('should handle [edge case]', () => {
+        """
+        Purpose: Ensures system remains stable when [condition]
+        Quality Contribution: Prevents crashes in production
+        Acceptance Criteria: Graceful error handling
+        """
+
+        // Test implementation
+    });
+});
+```
+
+### Non-Happy-Path Coverage
+- [ ] Null/undefined inputs handled
+- [ ] Concurrent access scenarios tested
+- [ ] Error propagation verified
+- [ ] Resource cleanup confirmed
+
+### Acceptance Criteria
+- [ ] All tests passing (100% of phase tests)
+- [ ] Test coverage > 80% for new code
+- [ ] Mock usage conforms to spec preference (document deviations)
+- [ ] Documentation updated
+- [ ] ADR constraints respected (list ADR-NNNN IDs where applicable)
+
+#### 8. Cross-Cutting Concerns
+
+### Security Considerations
+- Input validation strategy
+- Authentication/authorization requirements
+- Sensitive data handling
+
+### Observability
+- Logging strategy
+- Metrics to capture
+- Error tracking approach
+
+### Documentation
+- Documentation location (per Documentation Strategy from spec)
+- Content structure and organization
+- Update/maintenance schedule
+- Target audience and accessibility
+
+#### 9. Complexity Tracking
+
+Track component-level complexity using CS 1-5 scale:
+
+| Component | CS | Label | Breakdown (S,I,D,N,F,T) | Justification | Mitigation |
+|-----------|-----|-------|------------------------|---------------|------------|
+| [Component] | 4 | Large | S=2,I=1,D=2,N=1,F=1,T=2 | [Why this complexity unavoidable] | [Rollout plan, flags, monitoring] |
+
+**When to populate**:
+- Any component with CS ≥ 3 (medium or higher)
+- Constitution/Architecture deviations
+- Technical debt accumulation points
+- High-risk integration points
+
+**CS mapping**: CS-1 (trivial), CS-2 (small), CS-3 (medium), CS-4 (large), CS-5 (epic)
+
+**For CS ≥ 4**: Mitigation MUST include staged rollout, feature flags, and rollback plan
+
+#### 10. Progress Tracking
+
+### Phase Completion Checklist
+- [ ] Phase 1: [Title] - [Status]
+- [ ] Phase 2: [Title] - [Status]
+- [ ] Phase 3: [Title] - [Status]
+- [ ] Phase 4: [Title] - [Status]
+- [ ] Phase 5: [Title] - [Status]
+
+### STOP Rule
+**IMPORTANT**: This plan must be complete before creating tasks. After writing this plan:
+1. Run `/plan-5-phase-tasks-and-brief` to generate phase task dossiers
+2. Then proceed to `/plan-6-implement-phase` for implementation
+
+## PHASE 5: Validation & Output
+
+### Pre-Write Validation Checklist
+- [ ] TOC includes all sections
+- [ ] All phases have numbered tasks
+- [ ] Each task has clear success criteria
+- [ ] Test examples provided for each phase
+- [ ] Testing approach evident (tests alongside implementation)
+- [ ] Mock usage policy mirrors spec
+- [ ] Absolute paths used throughout
+- [ ] Dependencies clearly stated
+- [ ] Risks identified with mitigations
+- [ ] Acceptance criteria measurable
+- [ ] Cross-cutting concerns addressed
+
+### Output Requirements
+1. Create parent directory if needed: `docs/plans/<ordinal>-<slug>/`
+2. Write plan to: `docs/plans/<ordinal>-<slug>/<slug>-plan.md`
+3. Ensure plan is self-contained (no assumed context)
+4. Include all code examples inline
+5. Use mermaid diagrams where helpful
+
+### Success Message Template
+```
+✅ Plan created successfully:
+- Location: [absolute path to plan]
+- Phases: [count]
+- Total tasks: [count]
+- Next step: Run /plan-5-phase-tasks-and-brief to generate tasks
+```
+
+## Example Phase (For Reference)
+
+Note: This example shows Standard testing approach. Adapt based on Testing Strategy from spec.
+
+### Phase 1: Core BridgeContext Infrastructure
+
+**Objective**: Create the foundational BridgeContext interface and basic service structure with tests.
+
+**Deliverables**:
+- BridgeContext interface with VS Code API wrappers
+- Factory pattern implementation
+- Logger service using OutputChannel
+- Comprehensive test coverage
+
+**Dependencies**: None (foundational phase)
+
+**Risks**:
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| VS Code API changes | Low | High | Pin VS Code engine version |
+| Test isolation issues | Medium | Medium | Use test fixtures |
+
+### Tasks (Standard Approach)
+
+| #   | Status | Task | CS | Success Criteria | Log | Notes |
+|-----|--------|------|----|------------------|-----|-------|
+| 1.1 | [ ] | Write comprehensive tests for BridgeContext | 2 | Tests cover: version check, getWorkspace, getConfiguration, error cases | - | Create BridgeContext.test.ts |
+| 1.2 | [ ] | Write tests for BridgeContext factory | 2 | Tests cover: singleton behavior, lifecycle, context injection | - | Create factory.test.ts |
+| 1.3 | [ ] | Create BridgeContext TypeScript interface | 1 | Interface compiles, exports properly | - | Define in types.ts |
+| 1.4 | [ ] | Implement BridgeContext to pass tests | 3 | All tests from 1.1 pass | - | Thin wrappers around VS Code APIs |
+| 1.5 | [ ] | Implement factory to pass tests | 2 | All tests from 1.2 pass | - | Singleton pattern |
+| 1.6 | [ ] | Write tests for logger service | 2 | Tests cover: log levels, output channel, formatting | - | Integrate with BridgeContext.test.ts |
+| 1.7 | [ ] | Implement logger service | 2 | Logger uses OutputChannel, all tests pass | - | Use VS Code OutputChannel API |
+| 1.8 | [ ] | Create index exports and validate | 1 | Can import from 'core/bridge-context' | - | Clean module exports |
+
+### Test Examples (Write First!)
+
+```typescript
+import * as assert from 'assert';
+import * as vscode from 'vscode';
+import { BridgeContext } from '../../../extension/src/core/bridge-context';
+
+suite('BridgeContext using VS Code APIs', () => {
+    let context: BridgeContext;
+
+    setup(async () => {
+        """
+        Purpose: Ensure clean test state for each test
+        Quality Contribution: Prevents test interdependencies
+        Acceptance Criteria: Fresh context for each test
+        """
+        const ext = vscode.extensions.getExtension('your.extension.id')!;
+        await ext.activate();
+        context = new BridgeContext(ext.exports.getContext());
+    });
+
+    test('should return current version', () => {
+        """
+        Purpose: Proves version property is accessible and correct
+        Quality Contribution: Enables version-specific behavior
+        Acceptance Criteria:
+        - Returns string version
+        - Matches package.json version
+        - Property is readonly
+        """
+
+        assert.strictEqual(typeof context.version, 'string');
+        assert.strictEqual(context.version, '1.0.0');
+        assert.throws(() => {
+            (context as any).version = '2.0.0';
+        });
+    });
+
+    test('should handle missing workspace gracefully', () => {
+        """
+        Purpose: Ensures stability when no workspace is open
+        Quality Contribution: Prevents crashes in extension activation
+        Acceptance Criteria: Returns undefined, no exceptions
+        """
+
+        const workspace = context.getWorkspace();
+        if (!vscode.workspace.workspaceFolders) {
+            assert.strictEqual(workspace, undefined);
+        }
+    });
+});
+```
+
+### Non-Happy-Path Coverage
+- [ ] Null context handling
+- [ ] Disposed extension context
+- [ ] Missing VS Code APIs (older versions)
+- [ ] Concurrent initialization attempts
+
+### Acceptance Criteria
+- [ ] All tests passing (18 tests)
+- [ ] No mocks used (real VS Code APIs)
+- [ ] Test coverage > 90%
+- [ ] Clean module exports
+- [ ] TypeScript strict mode passes
+
+## Example Documentation Phase (For Reference)
+
+Note: This example shows a Hybrid documentation approach (README + docs/how/). Adapt based on Documentation Strategy from spec.
+
+### Phase N: Documentation
+
+**Objective**: Document the BridgeContext feature for users and maintainers following hybrid approach (essentials in README, details in docs/how/bridge-context/).
+
+**Deliverables**:
+- Updated README.md with getting-started guide
+- Detailed guides in docs/how/bridge-context/ (numbered structure)
+
+**Dependencies**: All implementation phases complete, tests passing
+
+**Risks**:
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| Documentation drift | Medium | Medium | Include doc updates in phase acceptance criteria |
+| Unclear examples | Low | Medium | Use real code snippets from implementation |
+
+### Discovery & Placement Decision
+
+**Existing docs/how/ structure**:
+```
+docs/how/
+├── testing/
+│   ├── 1-overview.md
+│   └── 2-tdd-workflow.md
+└── architecture/
+    └── 1-overview.md
+```
+
+**Decision**: Create new `docs/how/bridge-context/` directory (no existing relevant feature area)
+
+**File strategy**: Create new numbered files (1-overview.md, 2-usage.md, 3-api.md)
+
+### Tasks (Lightweight Approach for Documentation)
+
+| #   | Status | Task | CS | Success Criteria | Log | Notes |
+|-----|--------|------|----|------------------|-----|-------|
+| N.1 | [ ] | Survey existing docs/how/ directories | 1 | Documented existing structure, identified no conflicts | - | Discovery step |
+| N.2 | [ ] | Update README.md with BridgeContext getting-started | 2 | Installation, basic usage, link to docs/how/bridge-context/ | - | /path/to/repo/README.md |
+| N.3 | [ ] | Create docs/how/bridge-context/1-overview.md | 2 | Introduction, motivation, architecture diagram complete | - | /path/to/repo/docs/how/bridge-context/1-overview.md |
+| N.4 | [ ] | Create docs/how/bridge-context/2-usage.md | 2 | Step-by-step usage guide with code examples | - | /path/to/repo/docs/how/bridge-context/2-usage.md |
+| N.5 | [ ] | Create docs/how/bridge-context/3-api.md | 2 | All public APIs documented with examples | - | /path/to/repo/docs/how/bridge-context/3-api.md |
+| N.6 | [ ] | Review documentation for clarity and completeness | 1 | Peer review passed, no broken links | - | All docs reviewed |
+
+### Content Outlines
+
+**README.md section** (Hybrid: getting-started only):
+- What is BridgeContext (1-2 sentences)
+- Installation/setup (essential steps)
+- Basic usage example (minimal code snippet)
+- Link to detailed docs: `docs/how/bridge-context/`
+
+**docs/how/bridge-context/1-overview.md**:
+- Introduction and motivation
+- Architecture diagram
+- Key concepts
+- When to use BridgeContext
+
+**docs/how/bridge-context/2-usage.md**:
+- Installation and configuration
+- Common use cases with examples
+- Code snippets (tested)
+- Troubleshooting section
+
+**docs/how/bridge-context/3-api.md**:
+- API reference for all public interfaces
+- Parameter descriptions and types
+- Return types
+- Code examples for each method
+
+### Acceptance Criteria
+- [ ] README.md updated with getting-started section
+- [ ] All docs/how/bridge-context/ files created and complete
+- [ ] Code examples tested and working
+- [ ] No broken links (internal or external)
+- [ ] Peer review completed
+- [ ] Target audience can follow guides successfully
+- [ ] Numbered file structure follows convention
+
+## Simple Mode Output Format
+
+**When spec has `Mode: Simple`**, generate a streamlined single-phase plan:
+
+### Simple Mode Plan Structure
+
+```markdown
+# [Feature Name] Implementation Plan
+
+**Mode**: Simple
+**Variant**: Lite
+**Plan Version**: 1.0.0
+**Created**: {{TODAY}}
+**Spec**: [link to ./<slug>-spec.md]
+**Status**: DRAFT | READY | IN_PROGRESS | COMPLETE
+
+## Table of Contents
+1. [Executive Summary](#executive-summary)
+2. [Critical Research Findings](#critical-research-findings)
+3. [Implementation](#implementation)
+
+## Executive Summary
+[2-3 sentences: Problem, Solution approach, Expected outcome]
+
+## Critical Research Findings (Concise)
+
+**Format for Simple Mode** - Action-focused, one finding per line:
+
+| # | Impact | Finding | Action |
+|---|--------|---------|--------|
+| 01 | Critical | [Title: One-line description] | [What implementation must do] |
+| 02 | High | [Title: One-line description] | [What implementation must do] |
+| 03 | High | [Title: One-line description] | [What implementation must do] |
+| ... | ... | ... | ... |
+
+**Note**: Still generate 15-20+ findings via 4 subagents, but present in concise table format.
+
+## Implementation (Single Phase)
+
+**Objective**: [One sentence goal]
+
+**Testing Approach**: [From spec - Standard/Lightweight/None]
+**Mock Usage**: [From spec - Avoid/Targeted/Liberal]
+
+### Tasks
+
+| Status | ID | Task | CS | Type | Dependencies | Absolute Path(s) | Validation | Notes |
+|--------|-----|------|----|------|--------------|------------------|------------|-------|
+| [ ] | T001 | [Task description] | 2 | Setup | -- | /abs/path/to/file | [Success criteria] | |
+| [ ] | T002 | [Task description] | 2 | Core | T001 | /abs/path/to/file | [Success criteria] | |
+| [ ] | T003 | [Task description] | 2 | Core | T001 | /abs/path/to/file | [Success criteria] | |
+| [ ] | T004 | [Task description] | 1 | Test | T002,T003 | /abs/path/to/test | [Success criteria] | |
+
+**Task Table Notes**:
+- Uses same 9-column format as plan-5 dossiers
+- Tasks are detailed enough for direct implementation (no plan-5 expansion needed)
+- Include absolute paths for all files
+- CS scores follow constitution rubric
+
+### Acceptance Criteria
+- [ ] [Criterion 1 - testable/observable]
+- [ ] [Criterion 2 - testable/observable]
+- [ ] [Criterion 3 - testable/observable]
+
+### Risks
+| Risk | Likelihood | Impact | Mitigation |
+|------|------------|--------|------------|
+| [Risk] | Low/Med/High | Low/Med/High | [Mitigation] |
+
+---
+
+**Next steps:**
+- **Ready to implement**: `/plan-6-implement-phase --plan "<path>"`
+- **Optional task expansion**: `/plan-5-phase-tasks-and-brief` (if you want a separate dossier)
+```
+
+### Simple Mode Success Message
+
+```
+✅ Plan created successfully (Simple Mode):
+- Location: [absolute path to plan]
+- Mode: Simple (single phase, inline tasks)
+- Tasks: [count]
+- Next step: Run /plan-6-implement-phase --plan "<path>"
+- Optional: Run /plan-5-phase-tasks-and-brief for task expansion
+```
+
+### Key Differences from Full Mode
+
+| Aspect | Full Mode | Simple Mode |
+|--------|-----------|-------------|
+| Phases | Multiple (3-5 typical) | Single |
+| Task table | High-level (expanded by plan-5) | Detailed inline (plan-5 format) |
+| Findings format | Detailed with code examples | Concise table format |
+| plan-5 | Required | Optional |
+| Next step | /plan-5-phase-tasks-and-brief | /plan-6-implement-phase |
+
+---
+
+## Style & Formatting Rules
+
+- Use Markdown headings hierarchically (# > ## > ### > ####)
+- Keep one blank line between sections
+- Wrap lines at ~100 chars for readability
+- Use tables for structured data
+- Include language hints in code blocks
+- Number all phases and tasks consistently
+- Use checkboxes for status tracking
+- Provide absolute paths (no relative paths)
+
+---
+
+## Appendix A: Anchor Naming Conventions
+
+All deep links in plan documents use kebab-case anchors for consistency and reliability.
+
+### Phase Anchors
+**Format**: `phase-{number}-{slug}`
+**Example**: `phase-2-input-validation`
+
+Generated from: "Phase 2: Input Validation"
+
+### Task Anchors (Plan)
+**Format**: `task-{number}-{slug}` (use plan task number like "23" for task 2.3)
+**Example**: `task-23-implement-validation`
+
+Generated from: Task 2.3 with name "Implement validation"
+Note: Use the flattened number (2.3 → 23) for uniqueness
+
+### Task Anchors (Dossier)
+**Format**: `task-{id}-{slug}` (use T-ID like "t003")
+**Example**: `task-t003-implement-validation`
+
+Generated from: Dossier task T003 with name "Implement validation"
+Note: Includes "t" prefix to distinguish from plan task anchors
+
+### Table Anchors
+**Format**: `tasks-{approach}-approach` (based on testing approach)
+**Examples**:
+- `tasks-standard-approach`
+- `tasks-lightweight-approach`
+- `tasks-none-approach`
+
+Generated from: Testing approach specified in plan § 6 Testing Strategy
+
+### Subtask Anchors
+**Format**: `{ordinal}-subtask-{slug}`
+**Example**: `003-subtask-bulk-import-fixtures`
+
+Generated from: Subtask ordinal (003) + slugified name
+
+### Slugification Rules
+
+**Algorithm** (used by plan-5, plan-6):
+1. Convert to lowercase
+2. Replace spaces with hyphens
+3. Replace non-alphanumeric characters (except hyphens) with hyphens
+4. Collapse multiple consecutive hyphens to single hyphen
+5. Trim leading and trailing hyphens
+
+**Command**:
+```bash
+ANCHOR=$(echo "${INPUT}" | tr ' ' '-' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//')
+```
+
+**Examples**:
+- "Phase 2: Input Validation" → `phase-2-input-validation`
+- "Task 2.3: Implement Validation" → `task-23-implement-validation` (plan) or `task-t003-implement-validation` (dossier)
+- "Standard Approach" → `tasks-standard-approach`
+- "003-subtask-bulk import_fixtures!" → `003-subtask-bulk-import-fixtures`
+
+### Anchor Stability
+
+**IMPORTANT**: Once anchors are created and referenced, they should not change. Modifying task names or phase titles should NOT break existing deep links.
+
+**Best Practice**: If a task name must change after implementation begins:
+1. Keep the original anchor unchanged
+2. Update only the visible heading text
+3. Verify all deep links still resolve correctly
+
+---
+
+Next step (when happy): Run **/plan-5-phase-tasks-and-brief** to generate phase task dossiers.
