@@ -112,26 +112,26 @@ For each phase in the plan:
     → Launches 4 research subagents against codebase
     → Produces: api-widgets-plan.md (2 phases)
 
-4.  /plan-5 --phase "Phase 1: Route & Validation"
+4.  /plan-5-phase-tasks-and-brief --phase "Phase 1: Route & Validation"
     → Produces: tasks.md with 3 tasks + flight plan
 
 5.  /didyouknow
     → "Review the Phase 1 tasks" → surfaces 5 insights
 
-6.  /plan-6 --phase "Phase 1"
+6.  /plan-6-implement-phase --phase "Phase 1"
     → Implements route, validation, and tests
     → Updates task checkboxes, log anchors, execution.log.md
 
-7.  /plan-7 --plan "docs/plans/005-api-widgets/api-widgets-plan.md"
+7.  /plan-7-code-review --plan "docs/plans/005-api-widgets/api-widgets-plan.md"
     → Reviews diff → ✅ APPROVE
 
-8.  /plan-5 --phase "Phase 2: Error Handling & Docs"
+8.  /plan-5-phase-tasks-and-brief --phase "Phase 2: Error Handling & Docs"
     → Generates tasks for phase 2
 
-9.  /plan-6 --phase "Phase 2"
+9.  /plan-6-implement-phase --phase "Phase 2"
     → Implements error handlers and API docs
 
-10. /plan-7 --plan "docs/plans/005-api-widgets/api-widgets-plan.md"
+10. /plan-7-code-review --plan "docs/plans/005-api-widgets/api-widgets-plan.md"
     → Reviews diff → ✅ APPROVE → Feature complete 🎉
 ```
 

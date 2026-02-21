@@ -278,7 +278,7 @@ $ARGUMENTS
 
    - **Unified diffs** for all touched files.
    - **Commands & evidence** (runner output excerpts that prove acceptance criteria):
-     * Full TDD/TAD/Lightweight: Test runner output (TAD includes promoted tests only, not scratch/)
+     * Full TDD, TAD, Lightweight: Test runner output (TAD includes promoted tests only, not scratch/)
      * Manual: Screenshots, command output, or manual test logs
      * TAD: Evidence that tests/scratch/ is excluded from CI, promoted tests are deterministic and reliable
    - **Risk/Impact** confirmation.

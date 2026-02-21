@@ -39,14 +39,11 @@ Inputs:
   rules at `docs/project-rules/{rules.md, idioms.md, architecture.md}`,
   today {{TODAY}}.
 
-## PHASE 0: Detect Workflow Mode
+## PHASE 0: Workflow Mode
 
-**FIRST**: Check spec for `**Mode**: Simple` or `**Mode**: Full` in header/metadata.
+This is the **lite pipeline** — always use **Simple Mode Output Format** (see below).
 
-- If `Mode: Simple` → Use **Simple Mode Output Format** (see below)
-- If `Mode: Full` or not specified → Use **Full Mode Output Format** (standard multi-phase)
-
-**Simple Mode Changes:**
+**Simple Mode:**
 - Single phase instead of multiple phases
 - Inline task table (plan-5 format) directly in plan
 - Concise findings format (shorter, action-focused)
@@ -1002,7 +999,7 @@ Generated from: Subtask ordinal (003) + slugified name
 
 **Command**:
 ```bash
-ANCHOR=$(echo "${INPUT}" | tr ' ' '-' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//')
+ANCHOR=$(echo "${INPUT}" | tr ' ' '-' | tr '[:upper:]' '[:lower:]' | sed 's/[!@#$%&*()+=.,;:?/<>{}|~`]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//')
 ```
 
 **Examples**:

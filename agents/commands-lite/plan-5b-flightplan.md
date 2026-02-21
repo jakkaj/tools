@@ -189,7 +189,7 @@ $ARGUMENTS
    - PLAN      = provided --plan; abort if missing.
    - PLAN_DIR  = dirname(PLAN).
    - PHASE_SLUG from phase heading (same slug as plan-5 uses).
-   - PHASE_DIR = PLAN_DIR/tasks/${PHASE_SLUG}; abort if missing.
+   - PHASE_DIR = PLAN_DIR (lite Simple Mode — no tasks/ subdirectory).
    - FLTPLAN_FILE = ${PHASE_DIR}/tasks.fltplan.md
    - Locate SPEC file: look for *-spec.md in PLAN_DIR.
 

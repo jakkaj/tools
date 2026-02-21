@@ -271,7 +271,7 @@ Otherwise → **Phase Mode** (continue to step 1).
 
 ## PHASE MODE
 
-1) Verify PLAN exists; set PLAN_DIR = dirname(PLAN); define `PHASE_DIR = PLAN_DIR/tasks/${PHASE_SLUG}` and create it if missing (mkdir -p).
+1) Verify PLAN exists; set PLAN_DIR = dirname(PLAN); define `PHASE_DIR = PLAN_DIR` (lite Simple Mode — no tasks/ subdirectory).
 
 1a) **Subagent Review of All Prior Phases** (skip if Phase 1):
    - **Determine all prior phases**: Extract phase number from $PHASE (e.g., "Phase 4: Data Flows" → review Phases 1, 2, 3)
@@ -286,8 +286,8 @@ Otherwise → **Phase Mode** (continue to step 1).
      "Review Phase X to understand its complete implementation, learnings, and impact on subsequent phases.
 
      **Read**:
-     - `PLAN_DIR/tasks/${PHASE_X_SLUG}/tasks.md` (complete task table)
-     - `PLAN_DIR/tasks/${PHASE_X_SLUG}/execution.log.md` (full implementation log)
+     - `PLAN_DIR/tasks.md` (complete task table — inline in plan directory)
+     - `PLAN_DIR/execution.log.md` (full implementation log — sibling to plan)
      - `${PLAN}` § 8 Progress Tracking for Phase X
      - `${PLAN}` § 3 Critical Findings addressed in Phase X
 
@@ -699,13 +699,13 @@ S1) Resolve paths & derive identifiers:
    - PLAN      = provided --plan; abort if missing.
    - PLAN_DIR  = dirname(PLAN).
    - If --phase supplied, match exact heading within PLAN; else infer:
-     * scan PLAN_DIR/tasks/* for `tasks.md`; if exactly one `phase-*` contains the most recent GO, adopt it.
+     * scan PLAN_DIR for `tasks.md`; if it contains the most recent GO, adopt it.
      * if multiple phases are eligible, stop and request explicit `--phase`.
    - PHASE_SLUG from phase heading (same slug as Phase Mode uses).
-   - PHASE_DIR = PLAN_DIR/tasks/${PHASE_SLUG}; ensure exists (mkdir -p).
+   - PHASE_DIR = PLAN_DIR (lite Simple Mode — no tasks/ subdirectory).
    - SUBTASK_SUMMARY = --subtask value trimmed; abort if empty.
    - PARENT_TASK = --parent value (e.g., "T003"); abort if missing.
-   - SUBTASK_SLUG = kebab-case summary (`[^a-z0-9-]` → '-', collapse dups, trim dash).
+   - SUBTASK_SLUG = kebab-case summary (non-alphanumeric → '-', collapse dups, trim dash).
    - Determine ordinal:
      * Existing files matching `${PHASE_DIR}/[0-9][0-9][0-9]-subtask-*.md` → take highest NNN.
      * ORD = --ordinal if provided else highest+1 (zero-pad to 3 digits; start at `001`).

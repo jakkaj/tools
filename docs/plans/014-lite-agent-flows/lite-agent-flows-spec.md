@@ -11,13 +11,13 @@
 
 ## Summary
 
-Extract a clean, self-contained "lite" version of the agent command pipeline into `agents/commands/lite/`. The lite set contains 10 commands that deliver the core planning-to-review workflow without requiring FlowSpace MCP, PlanPak, plan-ordinal, or any of the 14 excluded commands. The full pipeline remains completely untouched — this is a parallel extraction, not an overwrite.
+Extract a clean, self-contained "lite" version of the agent command pipeline into `agents/commands-lite/`. The lite set contains 10 commands that deliver the core planning-to-review workflow without requiring FlowSpace MCP, PlanPak, plan-ordinal, or any of the 14 excluded commands. The full pipeline remains completely untouched — this is a parallel extraction, not an overwrite.
 
 **Who it's for**: Users who want a streamlined plan→implement→review workflow using only standard tools (grep, glob, view, bash) with no specialized infrastructure.
 
 ## Goals
 
-- **G1**: Create 10 extracted command files in `agents/commands/lite/` that form a complete, self-contained planning pipeline
+- **G1**: Create 10 extracted command files in `agents/commands-lite/` that form a complete, self-contained planning pipeline
 - **G2**: Remove all FlowSpace MCP references — no flowspace.tree(), flowspace.search(), /flowspace-research, fs2 install instructions, or FlowSpace node ID management
 - **G3**: Remove all PlanPak conditional branches — lite always uses Legacy file placement (standard project directories)
 - **G4**: Remove all references to the 14 excluded commands — no dangling next-step suggestions, no gates pointing to missing commands, no subagent invocations of excluded commands
@@ -64,9 +64,9 @@ Extract a clean, self-contained "lite" version of the agent command pipeline int
 
 ## Acceptance Criteria
 
-1. **AC1**: `agents/commands/lite/` directory contains exactly 12 files: 10 command `.md` files + `README.md` + `GETTING-STARTED.md`
+1. **AC1**: `agents/commands-lite/` directory contains exactly 12 files: 10 command `.md` files + `README.md` + `GETTING-STARTED.md`
 2. **AC2**: Zero files in `agents/commands/` (the full pipeline) are modified
-3. **AC3**: Grep for `flowspace|FlowSpace|fs2|flow_squared|flowspace-tree|flowspace-search|flowspace-get_node|flowspace-research` across all `agents/commands/lite/*.md` files returns zero matches
+3. **AC3**: Grep for `flowspace|FlowSpace|fs2|flow_squared|flowspace-tree|flowspace-search|flowspace-get_node|flowspace-research` across all `agents/commands-lite/*.md` files returns zero matches
 4. **AC4**: Grep for `planpak|plan-pack|PlanPak|features/<` across all lite files returns zero matches
 5. **AC5**: Grep for `plan-ordinal|jk-po` across all lite files returns zero matches
 6. **AC6**: Grep for `/plan-0-constitution|/plan-2-clarify|/plan-2b-prep-issue|/plan-3a-adr|/plan-4-complete-the-plan|/plan-5c-requirements-flow|/plan-6a-update-progress|/plan-6b-worked-example|/plan-8-merge|/planpak|/tad|/util-0-handover|/code-concept-search|/flowspace-research` across all lite files returns zero matches (no references to excluded commands as invocable `/command` targets)
@@ -105,7 +105,7 @@ Extract a clean, self-contained "lite" version of the agent command pipeline int
 
 - **Decision Drivers**: Need for infrastructure-free command set; full pipeline complexity deters new users; specialized tooling (FlowSpace) not available in all environments
 - **Candidate Alternatives**:
-  - A: Extraction to `agents/commands/lite/` (parallel set) — chosen approach
+  - A: Extraction to `agents/commands-lite/` (parallel set) — chosen approach
   - B: `--lite` flag on existing commands (conditional branches) — rejected: adds complexity to already-complex commands
   - C: Separate repository for lite commands — rejected: too much overhead for 12 files
 - **Stakeholders**: Command pipeline users, contributors maintaining the command set
