@@ -24,6 +24,7 @@ else
     cp_with_retry() { cp -r "$1" "$2"; }
 fi
 SOURCE_DIR="${REPO_ROOT}/agents/commands"
+V2_SOURCE_DIR="${REPO_ROOT}/agents/v2-commands"
 SYNC_SCRIPT="${REPO_ROOT}/scripts/sync-to-dist.sh"
 MCP_SOURCE="${REPO_ROOT}/agents/mcp/servers.json"
 
@@ -604,6 +605,16 @@ install_local_commands() {
                 echo "  [↻] ${filename}"
             fi
         done
+        # Also install v2-commands
+        if [ -d "${V2_SOURCE_DIR}" ]; then
+            for file in "${V2_SOURCE_DIR}"/*.md; do
+                if [ -f "${file}" ]; then
+                    filename=$(basename "${file}")
+                    cp_with_retry "${file}" "${claude_dir}/${filename}"
+                    echo "  [↻] ${filename} (v2)"
+                fi
+            done
+        fi
 
         print_success "Installed ${file_count} commands to ${claude_dir}"
         echo ""
@@ -623,6 +634,16 @@ install_local_commands() {
                 echo "  [↻] ${filename}"
             fi
         done
+        # Also install v2-commands
+        if [ -d "${V2_SOURCE_DIR}" ]; then
+            for file in "${V2_SOURCE_DIR}"/*.md; do
+                if [ -f "${file}" ]; then
+                    filename=$(basename "${file}")
+                    cp_with_retry "${file}" "${opencode_dir}/${filename}"
+                    echo "  [↻] ${filename} (v2)"
+                fi
+            done
+        fi
 
         print_success "Installed ${file_count} commands to ${opencode_dir}"
         echo ""
@@ -643,6 +664,17 @@ install_local_commands() {
                 echo "  [↻] ${filename} -> ${prompt_name}"
             fi
         done
+        # Also install v2-commands
+        if [ -d "${V2_SOURCE_DIR}" ]; then
+            for file in "${V2_SOURCE_DIR}"/*.md; do
+                if [ -f "${file}" ]; then
+                    filename=$(basename "${file}")
+                    prompt_name="${filename%.md}.prompt.md"
+                    cp_with_retry "${file}" "${ghcp_dir}/${prompt_name}"
+                    echo "  [↻] ${filename} -> ${prompt_name} (v2)"
+                fi
+            done
+        fi
 
         print_success "Installed ${file_count} prompts to ${ghcp_dir}"
         print_status "Note: Use paperclip icon in IDE to attach .prompt.md files"
@@ -711,6 +743,38 @@ COPILOT_CLI_LOCAL_PYTHON
 
         copilot_cli_local_count=$(find "${copilot_cli_local_dir}" -maxdepth 1 -type f -name "*.agent.md" | wc -l | tr -d ' ')
         print_success "Installed ${copilot_cli_local_count} agents to ${copilot_cli_local_dir}"
+
+        # Also generate v2-commands as local Copilot CLI agents
+        if [ -d "${V2_SOURCE_DIR}" ]; then
+            $PYTHON_CMD - "${V2_SOURCE_DIR}" "${copilot_cli_local_dir}" <<'COPILOT_CLI_LOCAL_V2_PYTHON'
+import sys
+import re
+from pathlib import Path
+
+source_dir = Path(sys.argv[1])
+dest_dir = Path(sys.argv[2])
+skip_files = {'README.md', 'GETTING-STARTED.md'}
+for source_file in sorted(source_dir.glob('*.md')):
+    if source_file.name in skip_files:
+        continue
+    content = source_file.read_text(encoding='utf-8')
+    name = source_file.stem.lower().replace(' ', '-')
+    desc = f"V2 domain-aware command: {name}"
+    fm_match = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
+    content_body = content
+    if fm_match:
+        for line in fm_match.group(1).split('\n'):
+            if line.strip().startswith('description:'):
+                desc = line.partition(':')[2].strip().strip('"').strip("'")
+                break
+        content_body = content[fm_match.end():]
+    frontmatter = f'---\nname: "{name}"\ndescription: "{desc}"\n---\n\n'
+    dest_path = dest_dir / f"{source_file.stem}.agent.md"
+    dest_path.write_text(frontmatter + content_body.lstrip(), encoding='utf-8')
+    print(f"  [↻] {source_file.stem}.agent.md (v2)")
+COPILOT_CLI_LOCAL_V2_PYTHON
+        fi
+
         echo ""
     fi
 
@@ -939,18 +1003,41 @@ main() {
         fi
     done
 
-    # Idempotency: installer overwrites prompt copies on each run (validated by tests/install/test_complete_flow.sh).
+    # Install v2-commands (domain-aware) to same targets
+    if [ -d "${V2_SOURCE_DIR}" ]; then
+        echo ""
+        print_status "Installing v2-commands (domain-aware)..."
+        for file in "${V2_SOURCE_DIR}"/*.md; do
+            if [ -f "${file}" ]; then
+                filename=$(basename "${file}")
+                cp_with_retry "${file}" "${TARGET_DIR}/${filename}"
+                cp_with_retry "${file}" "${OPENCODE_DIR}/${filename}"
+                cp_with_retry "${file}" "${CODEX_DIR}/${filename}"
+                cp_with_retry "${file}" "${VSCODE_PROJECT_DIR}/${filename}"
+                copilot_prompt_name="${filename%.md}.prompt.md"
+                cp_with_retry "${file}" "${COPILOT_GLOBAL_DIR}/${copilot_prompt_name}"
+                echo "  [↻] ${filename} (v2-command → Claude/OpenCode/Codex/VS Code/Copilot)"
+            fi
+        done
+        v2_count=$(find "${V2_SOURCE_DIR}" -maxdepth 1 -name "*.md" -type f | wc -l | tr -d ' ')
+        print_success "Installed ${v2_count} v2-command files"
+    fi
+    # Idempotency check: compare against v1+v2 combined count
+    v2_count_for_check=0
+    if [ -d "${V2_SOURCE_DIR}" ]; then
+        v2_count_for_check=$(find "${V2_SOURCE_DIR}" -maxdepth 1 -name "*.md" -type f | wc -l | tr -d ' ')
+    fi
+    total_expected=$((file_count + v2_count_for_check))
     copilot_global_count=$(find "${COPILOT_GLOBAL_DIR}" -maxdepth 1 -type f -name "*.prompt.md" | wc -l | tr -d ' ')
-    if [ "${copilot_global_count}" -eq "${file_count}" ]; then
-        echo "[✓ Idempotent] Copilot prompts mirrored (${copilot_global_count} of ${file_count} sources)"
+    if [ "${copilot_global_count}" -eq "${total_expected}" ]; then
+        echo "[✓ Idempotent] Copilot prompts mirrored (${copilot_global_count} of ${total_expected} sources)"
     else
-        print_warning "[Idempotent] Copilot prompt count mismatch (sources=${file_count}, global=${copilot_global_count})"
-        # Report extra files in global dir that aren't in source
-        if [ "${copilot_global_count}" -gt "${file_count}" ]; then
+        print_warning "[Idempotent] Copilot prompt count mismatch (sources=${total_expected}, global=${copilot_global_count})"
+        if [ "${copilot_global_count}" -gt "${total_expected}" ]; then
             echo "  Extra files in ${COPILOT_GLOBAL_DIR}:"
             for global_file in "${COPILOT_GLOBAL_DIR}"/*.prompt.md; do
                 base_name=$(basename "${global_file}" .prompt.md)
-                if [ ! -f "${SOURCE_DIR}/${base_name}.md" ]; then
+                if [ ! -f "${SOURCE_DIR}/${base_name}.md" ] && [ ! -f "${V2_SOURCE_DIR}/${base_name}.md" ]; then
                     echo "    - $(basename "${global_file}")"
                 fi
             done
@@ -1038,6 +1125,45 @@ COPILOT_CLI_AGENT_PYTHON
         echo "[✓ Idempotent] Copilot CLI agents generated (${copilot_cli_agent_count} agents)"
     else
         print_warning "[Idempotent] Copilot CLI agent count lower than expected (${copilot_cli_agent_count} vs ${expected_count})"
+    fi
+
+    # Generate Copilot CLI agents for v2-commands
+    if [ -d "${V2_SOURCE_DIR}" ]; then
+        echo ""
+        print_status "Generating Copilot CLI agents for v2-commands..."
+        if ! $PYTHON_CMD - "${V2_SOURCE_DIR}" "${COPILOT_CLI_AGENTS_DIR}" <<'COPILOT_CLI_V2_PYTHON'
+import sys
+from pathlib import Path
+
+source_dir = Path(sys.argv[1])
+target_dir = Path(sys.argv[2])
+target_dir.mkdir(parents=True, exist_ok=True)
+
+for md_file in sorted(source_dir.glob("*.md")):
+    if md_file.name in ("README.md", "GETTING-STARTED.md"):
+        continue
+    agent_name = md_file.stem
+    agent_file = target_dir / f"{agent_name}.agent.md"
+    content = md_file.read_text()
+    # Extract description from frontmatter if present
+    desc = f"V2 domain-aware command: {agent_name}"
+    if content.startswith("---"):
+        import re
+        fm = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
+        if fm:
+            for line in fm.group(1).split('\n'):
+                if line.strip().startswith('description:'):
+                    desc = line.partition(':')[2].strip()
+                    break
+    frontmatter = f"---\nname: {agent_name}\ndescription: {desc}\ntools: all\n---\n\n"
+    agent_file.write_text(frontmatter + content)
+    print(f"  [↻ Copilot CLI] {md_file.name} -> {agent_file.name}")
+COPILOT_CLI_V2_PYTHON
+        then
+            print_error "Failed to generate v2 Copilot CLI agents"
+        fi
+        v2_cli_count=$(find "${COPILOT_CLI_AGENTS_DIR}" -maxdepth 1 -type f \( -name "*v2*.md" -o -name "plan-v2-*" \) | wc -l | tr -d ' ')
+        print_success "Generated ${v2_cli_count} v2 Copilot CLI agents"
     fi
 
     echo ""

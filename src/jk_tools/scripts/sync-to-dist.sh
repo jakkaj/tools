@@ -43,6 +43,7 @@ main() {
 
     # Ensure distribution directories exist
     mkdir -p "${DIST_ROOT}/agents/commands"
+    mkdir -p "${DIST_ROOT}/agents/v2-commands"
     mkdir -p "${DIST_ROOT}/agents/mcp"
     mkdir -p "${DIST_ROOT}/scripts"
     mkdir -p "${DIST_ROOT}/install"
@@ -57,6 +58,18 @@ main() {
         "${DIST_ROOT}/agents/commands/"
     count=$(find "${DIST_ROOT}/agents/commands" -name "*.md" -type f | wc -l | tr -d ' ')
     print_success "Synced ${count} command files"
+
+    # 1b. Sync agents/v2-commands (all .md files)
+    if [ -d "${REPO_ROOT}/agents/v2-commands" ]; then
+        print_status "Syncing agents/v2-commands/*.md..."
+        rsync -av --delete \
+            --include="*.md" \
+            --exclude="*" \
+            "${REPO_ROOT}/agents/v2-commands/" \
+            "${DIST_ROOT}/agents/v2-commands/"
+        count=$(find "${DIST_ROOT}/agents/v2-commands" -name "*.md" -type f | wc -l | tr -d ' ')
+        print_success "Synced ${count} v2-command files"
+    fi
 
     # 2. Sync agents/mcp
     print_status "Syncing agents/mcp/..."

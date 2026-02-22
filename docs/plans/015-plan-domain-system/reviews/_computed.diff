@@ -1,0 +1,3246 @@
+diff --git a/install/agents.sh b/install/agents.sh
+index f549201..c934531 100755
+--- a/install/agents.sh
++++ b/install/agents.sh
+@@ -24,6 +24,7 @@ else
+     cp_with_retry() { cp -r "$1" "$2"; }
+ fi
+ SOURCE_DIR="${REPO_ROOT}/agents/commands"
++V2_SOURCE_DIR="${REPO_ROOT}/agents/v2-commands"
+ SYNC_SCRIPT="${REPO_ROOT}/scripts/sync-to-dist.sh"
+ MCP_SOURCE="${REPO_ROOT}/agents/mcp/servers.json"
+ 
+@@ -604,6 +605,16 @@ install_local_commands() {
+                 echo "  [↻] ${filename}"
+             fi
+         done
++        # Also install v2-commands
++        if [ -d "${V2_SOURCE_DIR}" ]; then
++            for file in "${V2_SOURCE_DIR}"/*.md; do
++                if [ -f "${file}" ]; then
++                    filename=$(basename "${file}")
++                    cp_with_retry "${file}" "${claude_dir}/${filename}"
++                    echo "  [↻] ${filename} (v2)"
++                fi
++            done
++        fi
+ 
+         print_success "Installed ${file_count} commands to ${claude_dir}"
+         echo ""
+@@ -623,6 +634,16 @@ install_local_commands() {
+                 echo "  [↻] ${filename}"
+             fi
+         done
++        # Also install v2-commands
++        if [ -d "${V2_SOURCE_DIR}" ]; then
++            for file in "${V2_SOURCE_DIR}"/*.md; do
++                if [ -f "${file}" ]; then
++                    filename=$(basename "${file}")
++                    cp_with_retry "${file}" "${opencode_dir}/${filename}"
++                    echo "  [↻] ${filename} (v2)"
++                fi
++            done
++        fi
+ 
+         print_success "Installed ${file_count} commands to ${opencode_dir}"
+         echo ""
+@@ -643,6 +664,17 @@ install_local_commands() {
+                 echo "  [↻] ${filename} -> ${prompt_name}"
+             fi
+         done
++        # Also install v2-commands
++        if [ -d "${V2_SOURCE_DIR}" ]; then
++            for file in "${V2_SOURCE_DIR}"/*.md; do
++                if [ -f "${file}" ]; then
++                    filename=$(basename "${file}")
++                    prompt_name="${filename%.md}.prompt.md"
++                    cp_with_retry "${file}" "${ghcp_dir}/${prompt_name}"
++                    echo "  [↻] ${filename} -> ${prompt_name} (v2)"
++                fi
++            done
++        fi
+ 
+         print_success "Installed ${file_count} prompts to ${ghcp_dir}"
+         print_status "Note: Use paperclip icon in IDE to attach .prompt.md files"
+@@ -939,7 +971,25 @@ main() {
+         fi
+     done
+ 
+-    # Idempotency: installer overwrites prompt copies on each run (validated by tests/install/test_complete_flow.sh).
++    # Install v2-commands (domain-aware) to same targets
++    if [ -d "${V2_SOURCE_DIR}" ]; then
++        echo ""
++        print_status "Installing v2-commands (domain-aware)..."
++        for file in "${V2_SOURCE_DIR}"/*.md; do
++            if [ -f "${file}" ]; then
++                filename=$(basename "${file}")
++                cp_with_retry "${file}" "${TARGET_DIR}/${filename}"
++                cp_with_retry "${file}" "${OPENCODE_DIR}/${filename}"
++                cp_with_retry "${file}" "${CODEX_DIR}/${filename}"
++                cp_with_retry "${file}" "${VSCODE_PROJECT_DIR}/${filename}"
++                copilot_prompt_name="${filename%.md}.prompt.md"
++                cp_with_retry "${file}" "${COPILOT_GLOBAL_DIR}/${copilot_prompt_name}"
++                echo "  [↻] ${filename} (v2-command → Claude/OpenCode/Codex/VS Code/Copilot)"
++            fi
++        done
++        v2_count=$(find "${V2_SOURCE_DIR}" -maxdepth 1 -name "*.md" -type f | wc -l | tr -d ' ')
++        print_success "Installed ${v2_count} v2-command files"
++    fi
+     copilot_global_count=$(find "${COPILOT_GLOBAL_DIR}" -maxdepth 1 -type f -name "*.prompt.md" | wc -l | tr -d ' ')
+     if [ "${copilot_global_count}" -eq "${file_count}" ]; then
+         echo "[✓ Idempotent] Copilot prompts mirrored (${copilot_global_count} of ${file_count} sources)"
+@@ -1040,6 +1090,42 @@ COPILOT_CLI_AGENT_PYTHON
+         print_warning "[Idempotent] Copilot CLI agent count lower than expected (${copilot_cli_agent_count} vs ${expected_count})"
+     fi
+ 
++    # Generate Copilot CLI agents for v2-commands
++    if [ -d "${V2_SOURCE_DIR}" ]; then
++        echo ""
++        print_status "Generating Copilot CLI agents for v2-commands..."
++        $PYTHON_CMD - "${V2_SOURCE_DIR}" "${COPILOT_CLI_AGENTS_DIR}" <<'COPILOT_CLI_V2_PYTHON'
++import sys
++from pathlib import Path
++
++source_dir = Path(sys.argv[1])
++target_dir = Path(sys.argv[2])
++target_dir.mkdir(parents=True, exist_ok=True)
++
++for md_file in sorted(source_dir.glob("*.md")):
++    if md_file.name in ("README.md", "GETTING-STARTED.md"):
++        continue
++    agent_name = md_file.stem
++    agent_file = target_dir / f"{agent_name}.agent.md"
++    content = md_file.read_text()
++    # Extract description from frontmatter if present
++    desc = f"V2 domain-aware command: {agent_name}"
++    if content.startswith("---"):
++        import re
++        fm = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
++        if fm:
++            for line in fm.group(1).split('\n'):
++                if line.strip().startswith('description:'):
++                    desc = line.partition(':')[2].strip()
++                    break
++    frontmatter = f"---\nname: {agent_name}\ndescription: {desc}\ntools: all\n---\n\n"
++    agent_file.write_text(frontmatter + content)
++    print(f"  [↻ Copilot CLI] {md_file.name} -> {agent_file.name}")
++COPILOT_CLI_V2_PYTHON
++        v2_cli_count=$(find "${COPILOT_CLI_AGENTS_DIR}" -maxdepth 1 -type f -name "*v2*.md" -o -name "extract-domain*" | wc -l | tr -d ' ')
++        print_success "Generated ${v2_cli_count} v2 Copilot CLI agents"
++    fi
++
+     echo ""
+     print_status "Configuring MCP servers from ${MCP_SOURCE}"
+     if generate_mcp_configs "${MCP_SOURCE}" "${VSCODE_USER_CONFIG}" "${VSCODE_PROJECT_CONFIG}"; then
+diff --git a/scripts/sync-to-dist.sh b/scripts/sync-to-dist.sh
+index b9f9990..85beec0 100755
+--- a/scripts/sync-to-dist.sh
++++ b/scripts/sync-to-dist.sh
+@@ -43,6 +43,7 @@ main() {
+ 
+     # Ensure distribution directories exist
+     mkdir -p "${DIST_ROOT}/agents/commands"
++    mkdir -p "${DIST_ROOT}/agents/v2-commands"
+     mkdir -p "${DIST_ROOT}/agents/mcp"
+     mkdir -p "${DIST_ROOT}/scripts"
+     mkdir -p "${DIST_ROOT}/install"
+@@ -58,6 +59,18 @@ main() {
+     count=$(find "${DIST_ROOT}/agents/commands" -name "*.md" -type f | wc -l | tr -d ' ')
+     print_success "Synced ${count} command files"
+ 
++    # 1b. Sync agents/v2-commands (all .md files)
++    if [ -d "${REPO_ROOT}/agents/v2-commands" ]; then
++        print_status "Syncing agents/v2-commands/*.md..."
++        rsync -av --delete \
++            --include="*.md" \
++            --exclude="*" \
++            "${REPO_ROOT}/agents/v2-commands/" \
++            "${DIST_ROOT}/agents/v2-commands/"
++        count=$(find "${DIST_ROOT}/agents/v2-commands" -name "*.md" -type f | wc -l | tr -d ' ')
++        print_success "Synced ${count} v2-command files"
++    fi
++
+     # 2. Sync agents/mcp
+     print_status "Syncing agents/mcp/..."
+     rsync -av --delete \
+diff --git a/src/jk_tools/install/agents.sh b/src/jk_tools/install/agents.sh
+index f549201..c934531 100755
+--- a/src/jk_tools/install/agents.sh
++++ b/src/jk_tools/install/agents.sh
+@@ -24,6 +24,7 @@ else
+     cp_with_retry() { cp -r "$1" "$2"; }
+ fi
+ SOURCE_DIR="${REPO_ROOT}/agents/commands"
++V2_SOURCE_DIR="${REPO_ROOT}/agents/v2-commands"
+ SYNC_SCRIPT="${REPO_ROOT}/scripts/sync-to-dist.sh"
+ MCP_SOURCE="${REPO_ROOT}/agents/mcp/servers.json"
+ 
+@@ -604,6 +605,16 @@ install_local_commands() {
+                 echo "  [↻] ${filename}"
+             fi
+         done
++        # Also install v2-commands
++        if [ -d "${V2_SOURCE_DIR}" ]; then
++            for file in "${V2_SOURCE_DIR}"/*.md; do
++                if [ -f "${file}" ]; then
++                    filename=$(basename "${file}")
++                    cp_with_retry "${file}" "${claude_dir}/${filename}"
++                    echo "  [↻] ${filename} (v2)"
++                fi
++            done
++        fi
+ 
+         print_success "Installed ${file_count} commands to ${claude_dir}"
+         echo ""
+@@ -623,6 +634,16 @@ install_local_commands() {
+                 echo "  [↻] ${filename}"
+             fi
+         done
++        # Also install v2-commands
++        if [ -d "${V2_SOURCE_DIR}" ]; then
++            for file in "${V2_SOURCE_DIR}"/*.md; do
++                if [ -f "${file}" ]; then
++                    filename=$(basename "${file}")
++                    cp_with_retry "${file}" "${opencode_dir}/${filename}"
++                    echo "  [↻] ${filename} (v2)"
++                fi
++            done
++        fi
+ 
+         print_success "Installed ${file_count} commands to ${opencode_dir}"
+         echo ""
+@@ -643,6 +664,17 @@ install_local_commands() {
+                 echo "  [↻] ${filename} -> ${prompt_name}"
+             fi
+         done
++        # Also install v2-commands
++        if [ -d "${V2_SOURCE_DIR}" ]; then
++            for file in "${V2_SOURCE_DIR}"/*.md; do
++                if [ -f "${file}" ]; then
++                    filename=$(basename "${file}")
++                    prompt_name="${filename%.md}.prompt.md"
++                    cp_with_retry "${file}" "${ghcp_dir}/${prompt_name}"
++                    echo "  [↻] ${filename} -> ${prompt_name} (v2)"
++                fi
++            done
++        fi
+ 
+         print_success "Installed ${file_count} prompts to ${ghcp_dir}"
+         print_status "Note: Use paperclip icon in IDE to attach .prompt.md files"
+@@ -939,7 +971,25 @@ main() {
+         fi
+     done
+ 
+-    # Idempotency: installer overwrites prompt copies on each run (validated by tests/install/test_complete_flow.sh).
++    # Install v2-commands (domain-aware) to same targets
++    if [ -d "${V2_SOURCE_DIR}" ]; then
++        echo ""
++        print_status "Installing v2-commands (domain-aware)..."
++        for file in "${V2_SOURCE_DIR}"/*.md; do
++            if [ -f "${file}" ]; then
++                filename=$(basename "${file}")
++                cp_with_retry "${file}" "${TARGET_DIR}/${filename}"
++                cp_with_retry "${file}" "${OPENCODE_DIR}/${filename}"
++                cp_with_retry "${file}" "${CODEX_DIR}/${filename}"
++                cp_with_retry "${file}" "${VSCODE_PROJECT_DIR}/${filename}"
++                copilot_prompt_name="${filename%.md}.prompt.md"
++                cp_with_retry "${file}" "${COPILOT_GLOBAL_DIR}/${copilot_prompt_name}"
++                echo "  [↻] ${filename} (v2-command → Claude/OpenCode/Codex/VS Code/Copilot)"
++            fi
++        done
++        v2_count=$(find "${V2_SOURCE_DIR}" -maxdepth 1 -name "*.md" -type f | wc -l | tr -d ' ')
++        print_success "Installed ${v2_count} v2-command files"
++    fi
+     copilot_global_count=$(find "${COPILOT_GLOBAL_DIR}" -maxdepth 1 -type f -name "*.prompt.md" | wc -l | tr -d ' ')
+     if [ "${copilot_global_count}" -eq "${file_count}" ]; then
+         echo "[✓ Idempotent] Copilot prompts mirrored (${copilot_global_count} of ${file_count} sources)"
+@@ -1040,6 +1090,42 @@ COPILOT_CLI_AGENT_PYTHON
+         print_warning "[Idempotent] Copilot CLI agent count lower than expected (${copilot_cli_agent_count} vs ${expected_count})"
+     fi
+ 
++    # Generate Copilot CLI agents for v2-commands
++    if [ -d "${V2_SOURCE_DIR}" ]; then
++        echo ""
++        print_status "Generating Copilot CLI agents for v2-commands..."
++        $PYTHON_CMD - "${V2_SOURCE_DIR}" "${COPILOT_CLI_AGENTS_DIR}" <<'COPILOT_CLI_V2_PYTHON'
++import sys
++from pathlib import Path
++
++source_dir = Path(sys.argv[1])
++target_dir = Path(sys.argv[2])
++target_dir.mkdir(parents=True, exist_ok=True)
++
++for md_file in sorted(source_dir.glob("*.md")):
++    if md_file.name in ("README.md", "GETTING-STARTED.md"):
++        continue
++    agent_name = md_file.stem
++    agent_file = target_dir / f"{agent_name}.agent.md"
++    content = md_file.read_text()
++    # Extract description from frontmatter if present
++    desc = f"V2 domain-aware command: {agent_name}"
++    if content.startswith("---"):
++        import re
++        fm = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
++        if fm:
++            for line in fm.group(1).split('\n'):
++                if line.strip().startswith('description:'):
++                    desc = line.partition(':')[2].strip()
++                    break
++    frontmatter = f"---\nname: {agent_name}\ndescription: {desc}\ntools: all\n---\n\n"
++    agent_file.write_text(frontmatter + content)
++    print(f"  [↻ Copilot CLI] {md_file.name} -> {agent_file.name}")
++COPILOT_CLI_V2_PYTHON
++        v2_cli_count=$(find "${COPILOT_CLI_AGENTS_DIR}" -maxdepth 1 -type f -name "*v2*.md" -o -name "extract-domain*" | wc -l | tr -d ' ')
++        print_success "Generated ${v2_cli_count} v2 Copilot CLI agents"
++    fi
++
+     echo ""
+     print_status "Configuring MCP servers from ${MCP_SOURCE}"
+     if generate_mcp_configs "${MCP_SOURCE}" "${VSCODE_USER_CONFIG}" "${VSCODE_PROJECT_CONFIG}"; then
+diff --git a/src/jk_tools/scripts/sync-to-dist.sh b/src/jk_tools/scripts/sync-to-dist.sh
+index b9f9990..85beec0 100755
+--- a/src/jk_tools/scripts/sync-to-dist.sh
++++ b/src/jk_tools/scripts/sync-to-dist.sh
+@@ -43,6 +43,7 @@ main() {
+ 
+     # Ensure distribution directories exist
+     mkdir -p "${DIST_ROOT}/agents/commands"
++    mkdir -p "${DIST_ROOT}/agents/v2-commands"
+     mkdir -p "${DIST_ROOT}/agents/mcp"
+     mkdir -p "${DIST_ROOT}/scripts"
+     mkdir -p "${DIST_ROOT}/install"
+@@ -58,6 +59,18 @@ main() {
+     count=$(find "${DIST_ROOT}/agents/commands" -name "*.md" -type f | wc -l | tr -d ' ')
+     print_success "Synced ${count} command files"
+ 
++    # 1b. Sync agents/v2-commands (all .md files)
++    if [ -d "${REPO_ROOT}/agents/v2-commands" ]; then
++        print_status "Syncing agents/v2-commands/*.md..."
++        rsync -av --delete \
++            --include="*.md" \
++            --exclude="*" \
++            "${REPO_ROOT}/agents/v2-commands/" \
++            "${DIST_ROOT}/agents/v2-commands/"
++        count=$(find "${DIST_ROOT}/agents/v2-commands" -name "*.md" -type f | wc -l | tr -d ' ')
++        print_success "Synced ${count} v2-command files"
++    fi
++
+     # 2. Sync agents/mcp
+     print_status "Syncing agents/mcp/..."
+     rsync -av --delete \
+--- /dev/null	2026-02-03 14:48:37.172593093 +1000
++++ agents/v2-commands/README.md	2026-02-23 07:28:56.382982684 +1000
+@@ -0,0 +1,56 @@
++# V2 Commands — Domain-Aware Plan Workflow
++
++These commands are **standalone rewrites** of select v1 commands from `agents/commands/`, incorporating:
++
++- **Domain system**: First-class business domain boundaries that own code, contracts, and composition
++- **Leaner output**: Slimmer plan and task artifacts that provide guardrails without removing implementor agency
++- **No PlanPak**: Domain-based organization replaces plan-based file organization
++
++## When to Use V2 vs V1
++
++| Use V2 when... | Use V1 when... |
++|----------------|----------------|
++| Project uses or wants domain-based organization | Project doesn't use domains |
++| You want leaner plan/task output | You want the full-detail v1 output |
++| You're working on a brownfield codebase and want to formalize concepts | Quick fixes that don't need domain tracking |
++
++## Commands
++
++| Command | Replaces | What's Different |
++|---------|----------|-----------------|
++| `plan-v2-extract-domain` | *(new)* | Collaboratively identify and formalize existing code as a named domain |
++| `plan-1b-v2-specify` | `plan-1b-specify` | Adds `## Target Domains` section to spec |
++| `plan-2-v2-clarify` | `plan-2-clarify` | Domain Review question replaces PlanPak question |
++| `plan-3-v2-architect` | `plan-3-architect` | Lean output (≤500 lines), 2 research subagents, domain manifest |
++| `plan-5-v2-phase-tasks-and-brief` | `plan-5-phase-tasks-and-brief` | 7-column task table with Domain column, simplified prior-phase review |
++| `plan-6-v2-implement-phase` | `plan-6-implement-phase` | Domain placement rules, post-implementation domain.md updates |
++| `plan-6a-v2-update-progress` | `plan-6a-update-progress` | Domain context in progress tracking |
++| `plan-7-v2-code-review` | `plan-7-code-review` | Domain Compliance Validator, anti-reinvention checks |
++
++## Commands That Don't Need V2
++
++These work unchanged with domain-aware projects:
++
++`plan-0-constitution`, `plan-1a-explore`, `plan-2b-prep-issue`, `plan-2c-workshop`, `plan-3a-adr`, `plan-4-complete-the-plan`, `plan-5b-flightplan`, `plan-5c-requirements-flow`, `plan-6b-worked-example`, `plan-8-merge`, `code-concept-search`, `deepresearch`, `didyouknow`, `flowspace-research`, `tad`, `util-0-handover`
++
++## Domain System Overview
++
++Domains are persistent, named business concept boundaries. Every source file belongs to a domain. Plans deliver into domains.
++
++```
++docs/domains/
++├── registry.md              # Master index of all domains
++├── auth/
++│   ├── domain.md            # Locked-down definition (required sections)
++│   └── *.md                 # Freeform notes, sketches, research
++└── _platform/               # Infrastructure parent domain
++    └── data-access/
++        └── domain.md
++
++src/
++├── auth/                    # Mirrors docs/domains/auth/
++├── billing/                 # Mirrors docs/domains/billing/
++└── _platform/               # Mirrors docs/domains/_platform/
++```
++
++See `plan-v2-extract-domain.md` for the full domain.md template and registry format.
+--- /dev/null	2026-02-03 14:48:37.172593093 +1000
++++ agents/v2-commands/plan-1b-v2-specify.md	2026-02-22 21:51:20.359428932 +1000
+@@ -0,0 +1,125 @@
++---
++description: Create or update the feature specification from a natural language feature description, focusing on user value (WHAT/WHY) without implementation details. Domain-aware v2.
++---
++
++Please deep think / ultrathink as this is a complex task.
++
++# plan-1b-v2-specify
++
++Create or update the feature **spec** from a natural-language description (WHAT/WHY only; no tech choices). Includes mandatory **Target Domains** section for domain-aware planning.
++
++```md
++User input:
++
++$ARGUMENTS
++# Optional flags:
++# --simple    # Pre-set Mode: Simple (user can skip mode question in plan-2-v2-clarify)
++
++1) Determine the feature slug from user input and check for existing plan folder:
++   - Generate slug from feature description
++   - Check if `docs/plans/*-<slug>/` already exists (created by plan-1a-explore)
++   - If exists: Use existing folder and check for `research-dossier.md`
++   - If not exists: Create new folder with next available ordinal
++   - PLAN_DIR = `docs/plans/<ordinal>-<slug>/`
++   - SPEC_FILE = `${PLAN_DIR}/<slug>-spec.md`
++
++1a) Check for and incorporate existing research:
++   - If `${PLAN_DIR}/research-dossier.md` exists:
++     * Read the research dossier completely
++     * Use research to inform complexity scoring and domain identification
++     * Add note: "📚 This specification incorporates findings from research-dossier.md"
++   - If no research exists:
++     * Add note: "ℹ️ Consider running `/plan-1a-explore` for deeper codebase understanding"
++
++1b) Check for existing domains:
++   - If `docs/domains/registry.md` exists:
++     * Read the registry to understand what domains already exist
++     * For each domain, scan `docs/domains/<slug>/domain.md` for relevant contracts and composition
++     * Use existing domains to inform the Target Domains section
++   - If no domain registry exists:
++     * Note that domains will be identified as part of this spec
++
++1c) Check for workshop documents:
++   - If `${PLAN_DIR}/workshops/*.md` exist:
++     * Read all workshops — these are **authoritative design decisions**
++     * Incorporate findings into relevant spec sections
++
++2) Ensure PLAN_DIR exists (create only if not already present).
++
++3) Populate SPEC_FILE with these sections (use Markdown headings):
++   - `# <Feature Title>`
++   - **Mode header** (if --simple flag provided):
++     * Add `**Mode**: Simple` immediately after title
++   - `## Research Context` (if research exists) – brief summary of key findings
++   - `## Summary` – short WHAT/WHY overview
++   - `## Goals` – bullet list of desired outcomes/user value
++   - `## Non-Goals` – explicitly out-of-scope behavior
++   - `## Target Domains` – **MANDATORY** domain mapping:
++
++     ```markdown
++     ## Target Domains
++
++     | Domain | Status | Role in This Feature |
++     |--------|--------|---------------------|
++     | auth | existing | Extend with OAuth provider support |
++     | notifications | **NEW** | Establish for email alert delivery |
++     | _platform | existing | Use logging and config (no changes) |
++
++     ### New Domain Sketches
++
++     #### notifications [NEW]
++     - **Purpose**: [1-3 sentences]
++     - **Boundary Owns**: [concepts this domain is responsible for]
++     - **Boundary Excludes**: [concepts explicitly NOT in this domain, with notes on where they belong]
++     ```
++
++     For each domain listed:
++     - If `docs/domains/<slug>/domain.md` exists → mark as `existing`
++     - If no domain.md exists → mark as `**NEW**` and provide a sketch
++     - Note what role this domain plays in the feature (extend, establish, use)
++
++   - `## Complexity` – initial complexity assessment using CS 1-5 system:
++     * **Score**: CS-{1|2|3|4|5} ({trivial|small|medium|large|epic})
++     * **Breakdown**: S={0-2}, I={0-2}, D={0-2}, N={0-2}, F={0-2}, T={0-2}
++     * **Confidence**: {0.00-1.00}
++     * **Assumptions**: [list]
++     * **Dependencies**: [external dependencies or blockers]
++     * **Risks**: [complexity-related risks]
++     * **Phases**: [suggested high-level phases]
++
++     CS rubric:
++     - Surface Area (S): Files/modules touched (0=one, 1=multiple, 2=many/cross-cutting)
++     - Integration (I): External deps (0=internal, 1=one external, 2=multiple/unstable)
++     - Data/State (D): Schema/migrations (0=none, 1=minor, 2=non-trivial)
++     - Novelty (N): Req clarity (0=well-specified, 1=some ambiguity, 2=unclear/discovery)
++     - Non-Functional (F): Perf/security/compliance (0=standard, 1=moderate, 2=strict)
++     - Testing/Rollout (T): Test depth/staging (0=unit only, 1=integration, 2=flags/staged)
++
++     Total P = S+I+D+N+F+T → CS mapping: 0-2=CS-1, 3-4=CS-2, 5-7=CS-3, 8-9=CS-4, 10-12=CS-5
++
++   - `## Acceptance Criteria` – numbered, testable scenarios framed as observable outcomes
++   - `## Risks & Assumptions`
++   - `## Open Questions`
++   - `## Workshop Opportunities` – areas that benefit from detailed design exploration BEFORE architecture:
++
++     | Topic | Type | Why Workshop | Key Questions |
++     |-------|------|--------------|---------------|
++
++     Types: `CLI Flow` | `Data Model` | `API Contract` | `State Machine` | `Integration Pattern` | `Storage Design` | `Other`
++
++4) For unknowns, embed `[NEEDS CLARIFICATION: ...]` markers within the appropriate section.
++
++5) Write spec to SPEC_FILE and report path.
++
++Gates:
++- Focus on user value; no stack/framework details.
++- Mandatory sections present; acceptance scenarios are testable.
++- Target Domains section present with at least one domain.
++- If empty description, ERROR.
++
++Output: SPEC_FILE ready for clarification.
++```
++
++Next steps:
++- **If Workshop Opportunities identified**: Consider running **/plan-2c-workshop**
++- **Otherwise**: Run **/plan-2-v2-clarify** for ≤8 high-impact questions
+--- /dev/null	2026-02-03 14:48:37.172593093 +1000
++++ agents/v2-commands/plan-2-v2-clarify.md	2026-02-22 21:52:05.676649979 +1000
+@@ -0,0 +1,123 @@
++---
++description: Resolve high-impact ambiguities (<=8 questions), capture answers in the spec, and update relevant sections immediately. Domain-aware v2.
++---
++
++Please deep think / ultrathink as this is a complex task.
++
++# plan-2-v2-clarify
++
++Ask **≤8** high-impact questions (only those truly needed), write answers into the **spec**, and update affected sections immediately. Replaces PlanPak question with Domain Review.
++
++```md
++User input:
++
++$ARGUMENTS
++
++Flow:
++1) Determine PLAN_DIR from the spec path provided, then set FEATURE_SPEC = `${PLAN_DIR}/<slug>-spec.md`.
++2) Scan spec with taxonomy (Testing Strategy, Documentation Strategy, Target Domains, FRs, NFRs, data model, integrations, UX, edge cases, terminology).
++3) Ask ONE question at a time using the ask_user tool (MC 2-5 options or short answer); cap at 8 total.
++   - **Q1 MUST be Workflow Mode selection** (Simple vs Full) — see format below
++   - PRIORITIZE Testing Strategy question next if not already defined (usually Q2)
++   - Ask for mock/stub preference immediately after testing strategy
++   - Ask Documentation Strategy question early
++   - Ask Domain Review question when Target Domains section exists
++4) After each answer: append under `## Clarifications` → `### Session YYYY-MM-DD`, then update the matching section(s). Save after each edit.
++5) Stop when critical ambiguities resolved or cap reached. Emit coverage summary.
++
++## Standard Questions
++
++### Q1: Workflow Mode (MUST be first)
++
++| Option | Mode | Best For | What Changes |
++|--------|------|----------|--------------|
++| A | Simple | CS-1/CS-2 tasks, single phase, quick path | Single-phase plan, inline tasks, plan-4/plan-5 optional |
++| B | Full | CS-3+ features, multiple phases | Multi-phase plan, required dossiers, all gates |
++
++**If Simple Mode**: Update spec header with `**Mode**: Simple`, testing defaults to Lightweight.
++**If Full Mode**: Update spec header with `**Mode**: Full`, all gates required.
++
++### Testing Strategy
++
++| Option | Approach | Best For |
++|--------|----------|----------|
++| A | Full TDD | Complex logic, algorithms, APIs |
++| B | Lightweight | Simple operations, config changes |
++| C | Manual Only | One-time scripts, trivial changes |
++| D | Hybrid | Mixed complexity — TDD for complex, lightweight for simple |
++
++Updates to spec: Add `## Testing Strategy` with Approach, Rationale, Focus Areas, Excluded.
++
++### Mock Usage
++
++| Option | Policy |
++|--------|--------|
++| A | Avoid mocks entirely — real data/fixtures only |
++| B | Allow targeted mocks — limited to external systems |
++| C | Allow liberal mocking — wherever beneficial |
++
++### Documentation Strategy
++
++| Option | Location | Best For |
++|--------|----------|----------|
++| A | README.md only | Quick-start essentials |
++| B | docs/how/ only | Detailed guides |
++| C | Hybrid (README + docs/how/) | Both quick-start and depth |
++| D | No new documentation | Internal/trivial changes |
++
++### Domain Review (replaces PlanPak question)
++
++Present the Target Domains from the spec:
++
++```
++The spec identifies these target domains:
++
++| Domain | Status | Role |
++|--------|--------|------|
++| [from spec] | [existing/NEW] | [from spec] |
++
++Questions:
++```
++
++Ask the user to confirm using ask_user:
++
++**For NEW domains**:
++- Does the boundary look right?
++- Should any part be absorbed into an existing domain instead?
++- Are the contracts clear enough to proceed?
++
++**For existing domains**:
++- Will changes respect existing contracts?
++- Any contract-breaking changes needed? (flag for ADR)
++
++**After Domain Review**: Update spec `## Target Domains` section with user's adjustments. If user identified new domain boundaries or merged domains, update the table and sketches accordingly.
++
++### Additional Questions (as needed)
++
++Draw from these categories based on spec gaps:
++- **Data model**: Entity relationships, schemas, storage
++- **FRs**: Feature requirements needing clarification
++- **NFRs**: Performance, security, accessibility requirements
++- **Integrations**: External system dependencies
++- **Edge cases**: Boundary conditions, error scenarios
++- **Terminology**: Domain-specific terms needing definition
++
++## Updates to Spec
++
++After each answer, update the appropriate spec section:
++- `## Testing Strategy` — Approach, Rationale, Focus Areas, Mock Usage
++- `## Documentation Strategy` — Location, Rationale
++- `## Target Domains` — Adjusted boundaries, merged/split domains
++- `## Clarifications` → `### Session YYYY-MM-DD` — Q&A record
++- Other sections as appropriate (Goals, Non-Goals, ACs, Risks)
++
++## Gates
++
++- At least Q1 (Workflow Mode) answered
++- Target Domains reviewed (if section exists in spec)
++- No critical `[NEEDS CLARIFICATION]` markers remaining in spec
++
++Output: Updated SPEC_FILE with clarifications applied.
++```
++
++Next step: Run **/plan-3-v2-architect** to generate the implementation plan.
+--- /dev/null	2026-02-03 14:48:37.172593093 +1000
++++ agents/v2-commands/plan-3-v2-architect.md	2026-02-22 21:53:25.874372307 +1000
+@@ -0,0 +1,274 @@
++---
++description: Generate a domain-aware, lean implementation plan with phases, task tables, and concise research findings. V2 standalone rewrite.
++---
++
++Please deep think / ultrathink as this is a complex task.
++
++# plan-3-v2-architect
++
++Generate a **lean, domain-aware implementation plan** with phases, task tables, and acceptance criteria. Produces the master plan document that guides all subsequent implementation.
++
++---
++
++## 🚫 NO TIME ESTIMATES
++
++Use **Complexity Score (CS 1-5)** only:
++- CS-1 (trivial): 0-2 points | CS-2 (small): 3-4 | CS-3 (medium): 5-7 | CS-4 (large): 8-9 | CS-5 (epic): 10-12
++- Factors (each 0-2): Surface Area, Integration, Data/State, Novelty, Non-Functional, Testing/Rollout
++
++---
++
++```md
++Inputs:
++  FEATURE_SPEC = `docs/plans/<ordinal>-<slug>/<slug>-spec.md`,
++  PLAN_PATH = `docs/plans/<ordinal>-<slug>/<slug>-plan.md`,
++  rules at `docs/project-rules/{rules.md, idioms.md, architecture.md}` (if present),
++  constitution at `docs/project-rules/constitution.md` (if present),
++  today {{TODAY}}.
++
++## PHASE 0: Detect Mode & Load Domains
++
++**Mode Detection**:
++- Check spec for `**Mode**: Simple` or `**Mode**: Full`
++- Simple → Single-phase plan with inline tasks
++- Full → Multi-phase plan
++
++**Domain Loading**:
++- Read `## Target Domains` from spec → list of existing and NEW domains
++- If `docs/domains/registry.md` exists → read all registered domains
++- For each existing domain in spec's target list → read `docs/domains/<slug>/domain.md`
++  * Note: contracts (what's available to use), composition (what exists), dependencies
++- For each NEW domain → note the sketch from spec (Purpose, Boundary Owns/Excludes)
++
++## PHASE 1: Gates
++
++### GATE - Clarify
++- If critical `[NEEDS CLARIFICATION]` markers remain in spec, instruct running /plan-2-v2-clarify first
++- User can override with --skip-clarify
++
++### GATE - Constitution (if present)
++- Validate plan against docs/project-rules/constitution.md
++- Document deviations:
++
++| Principle Violated | Why Needed | Simpler Alternative Rejected | Risk Mitigation |
++|-------------------|------------|------------------------------|-----------------|
++
++### GATE - Architecture (if present)
++- Validate against `docs/project-rules/architecture.md`
++- Check for layer-boundary violations
++- Document exceptions with justification
++
++## PHASE 2: Research
++
++### Check for Existing Research
++
++If `${PLAN_DIR}/research-dossier.md` exists:
++- Read completely, extract critical findings
++- Reduce to 1 research subagent (implementation-focused only)
++- Reference findings throughout plan
++
++If `${PLAN_DIR}/workshops/*.md` exist:
++- Read all workshops — these are **authoritative design decisions**
++- Do NOT contradict workshop decisions
++- Skip research for workshopped topics
++
++### Research Subagents (2, not 4)
++
++Launch **2 parallel subagents**:
++
++**Subagent 1: Domain & Pattern Scout**
++"What exists that this plan needs to know about?
++
++Check:
++1. `docs/domains/` — existing domain contracts and composition
++2. Codebase patterns relevant to this feature
++3. Integration points where new code connects to existing code
++4. **Anti-reinvention**: Does any capability being planned already exist in a domain?
++
++For each proposed new component, check domain contracts:
++- EXISTING → reuse (report contract and location)
++- EXTEND → add to existing domain (report what to extend)
++- NEW → create fresh (confirm no duplication)
++
++Output: 4-6 findings, Critical and High impact only.
++Format per finding: Title | Impact | What exists | What to do about it"
++
++**Subagent 2: Risk & Constraint Finder**
++"What could go wrong or surprise the implementor?
++
++Check:
++1. API limitations, framework gotchas
++2. Spec ambiguities that affect implementation
++3. Cross-domain dependencies needing coordination
++4. Contract-breaking changes to existing domains
++
++Output: 4-6 findings, Critical and High impact only.
++Format per finding: Title | Impact | The risk | Mitigation"
++
++**Wait for both. Merge into Key Findings table.**
++
++## PHASE 3: Generate Plan
++
++### Plan Output Format
++
++```markdown
++# [Feature Name] Implementation Plan
++
++**Plan Version**: 1.0.0
++**Created**: {{TODAY}}
++**Spec**: [link to spec]
++**Status**: DRAFT
++
++## Summary
++
++[3-5 sentences: Problem, approach, expected outcome]
++
++## Target Domains
++
++[From spec — domains this plan touches]
++
++| Domain | Status | Role |
++|--------|--------|------|
++| ... | ... | ... |
++
++## Domain Manifest
++
++[Every file this plan introduces or modifies, mapped to its domain]
++
++| File | Domain | Classification | Rationale |
++|------|--------|---------------|-----------|
++
++Classification: `contract` (public interface), `internal` (domain-internal), `cross-domain` (editing another domain's files)
++
++## Key Findings
++
++| # | Impact | Finding | Action |
++|---|--------|---------|--------|
++| 01 | Critical | ... | ... |
++| 02 | High | ... | ... |
++
++## Phases
++
++[Generate phases following these principles:]
++
++### Phase Design Principles
++
++- Each phase should primarily target **ONE domain**
++- Multi-domain phases are permitted but each domain-touch is a separate task group
++- Domain creation phases come BEFORE domain extension phases
++- Composition/wiring phases (connecting domains) come LAST
++- For each NEW domain, first phase includes domain setup task:
++  * Create `docs/domains/<slug>/domain.md` (use format from /extract-domain)
++  * Create source directory
++  * Update `docs/domains/registry.md`
++
++### Per-Phase Format
++
++#### Phase N: [Title]
++
++**Objective**: [One sentence]
++**Domain**: [Primary domain this phase targets]
++**Delivers**: [Bullet list of concrete deliverables]
++**Depends on**: [Prior phases or "None"]
++**Key risks**: [1-2 sentences, or "None"]
++
++| # | Task | Domain | Success Criteria | Notes |
++|---|------|--------|-----------------|-------|
++| N.1 | [What to build] | [domain] | [How you know it works] | |
++| N.2 | [What to build] | [domain] | [How you know it works] | Per finding 01 |
++
++### Acceptance Criteria
++
++- [ ] [Testable criterion from spec]
++- [ ] [Testable criterion from spec]
++
++### Risks
++
++| Risk | Likelihood | Impact | Mitigation |
++|------|------------|--------|------------|
++```
++
++### Simple Mode
++
++When `Mode: Simple`, generate a streamlined single-phase plan:
++
++```markdown
++# [Feature Name] Implementation Plan
++
++**Mode**: Simple
++**Plan Version**: 1.0.0
++**Created**: {{TODAY}}
++**Spec**: [link]
++**Status**: DRAFT
++
++## Summary
++[2-3 sentences]
++
++## Target Domains
++[From spec]
++
++## Domain Manifest
++[File → Domain mapping]
++
++## Key Findings
++
++| # | Impact | Finding | Action |
++|---|--------|---------|--------|
++
++## Implementation
++
++**Objective**: [One sentence]
++**Testing Approach**: [From spec]
++
++### Tasks
++
++| Status | ID | Task | Domain | Path(s) | Done When | Notes |
++|--------|-----|------|--------|---------|-----------|-------|
++| [ ] | T001 | ... | ... | /abs/path | ... | |
++
++### Acceptance Criteria
++- [ ] ...
++
++### Risks
++| Risk | Likelihood | Impact | Mitigation |
++|------|------------|--------|------------|
++```
++
++Simple Mode tasks use the 7-column format directly (no plan-5 expansion needed).
++
++**Next steps (Simple Mode)**:
++- Ready to implement: `/plan-6-v2-implement-phase --plan "<path>"`
++- Optional: `/plan-4-complete-the-plan` for validation
++
++**Next steps (Full Mode)**:
++- Run `/plan-4-complete-the-plan` to validate
++- Then `/plan-5-v2-phase-tasks-and-brief` per phase
++
++## PHASE 4: Validation
++
++Before writing the plan, verify:
++- [ ] All phases have task tables
++- [ ] Each task has success criteria
++- [ ] Domain manifest covers all files
++- [ ] Target domains from spec are all addressed
++- [ ] Key findings reference affected phases
++- [ ] No time language present (CS 1-5 only)
++- [ ] Absolute paths used throughout
++
++### Output
++
++1. Create parent directory if needed: `docs/plans/<ordinal>-<slug>/`
++2. Write plan to: `docs/plans/<ordinal>-<slug>/<slug>-plan.md`
++
++```
++✅ Plan created:
++- Location: [path]
++- Phases: [count]
++- Tasks: [count]
++- Domains: [count existing + count new]
++- Next step: [based on mode]
++```
++```
++
++Next step (Full Mode): Run **/plan-4-complete-the-plan** to validate readiness.
++Next step (Simple Mode): Run **/plan-6-v2-implement-phase --plan "<PLAN_PATH>"**
+--- /dev/null	2026-02-03 14:48:37.172593093 +1000
++++ agents/v2-commands/plan-5-v2-phase-tasks-and-brief.md	2026-02-22 21:54:36.539442821 +1000
+@@ -0,0 +1,229 @@
++---
++description: Generate a tasks dossier (tasks + context brief) for a phase under the plan tree; stop before making code changes. V2 standalone rewrite with domain awareness and lean output.
++---
++
++Please deep think / ultrathink as this is a complex task.
++
++# plan-5-v2-phase-tasks-and-brief
++
++Generate an actionable **tasks + context brief dossier** for one phase, then stop before implementation. Leaner than v1: 7-column task table, 5-section prior-phase review, simplified audit, Context Brief with diagrams.
++
++---
++
++## 🚫 NO TIME ESTIMATES — Use CS 1-5 only.
++
++---
++
++### Input → Output
++
++```
++INPUT:
++  --phase "Phase 2: Core Implementation"
++  --plan "/abs/path/docs/plans/3-feature-x/feature-x-plan.md"
++
++OUTPUT:
++  docs/plans/3-feature-x/tasks/phase-2-core-implementation/tasks.md
++```
++
++---
++
++```md
++User input:
++
++$ARGUMENTS
++# Expected flags:
++# --phase "<Phase N: Title>"
++# --plan "<abs path to plan.md>"
++#
++# Subtask mode (optional):
++# --subtask "<summary>"
++# --parent "T003"
++
++## MODE DETECTION
++
++If `--subtask` provided → **Subtask Mode** (jump to Subtask section below).
++Otherwise → **Phase Mode** (continue).
++
++---
++
++## PHASE MODE
++
++1) Verify PLAN exists; set PLAN_DIR = dirname(PLAN); define PHASE_DIR = PLAN_DIR/tasks/${PHASE_SLUG}; create if missing.
++
++2) **Prior Phase Review** (skip if Phase 1):
++
++   Determine all prior phases. Launch **parallel subagents** (one per prior phase) with this focused template:
++
++   "Review Phase X implementation. Read:
++   - `PLAN_DIR/tasks/${PHASE_X_SLUG}/tasks.md`
++   - `PLAN_DIR/tasks/${PHASE_X_SLUG}/execution.log.md`
++   - Plan progress tracking for Phase X
++
++   Report these 5 sections ONLY:
++
++   A. **Deliverables**: Files, modules, APIs created (absolute paths)
++   B. **Dependencies Exported**: Signatures, interfaces, data structures available for later phases
++   C. **Gotchas & Debt**: Edge cases, technical debt, things that didn't work as expected
++   D. **Incomplete Items**: Tasks not completed, blockers carrying forward
++   E. **Patterns to Follow**: Established patterns, architectural decisions, anti-patterns to avoid"
++
++   Wait for all subagents. Synthesize into Prior Phase Context section.
++
++3) **Read plan-3 task table** for this phase. Transform and expand into detailed tasks:
++   - Plan-3 tasks (e.g., "2.1") become detailed tasks (T001, T002...)
++   - Apply Key Findings from plan — reference specific findings in Notes
++   - Every task gets a Domain from the plan's Domain Manifest
++
++4) **Pre-Implementation Check**:
++   Quick check for each file in the task table:
++
++   | File | Exists? | Domain Check | Notes |
++   |------|---------|-------------|-------|
++
++   - Does the file exist? (create vs modify)
++   - Is it in the correct domain's source tree?
++   - Run `/code-concept-search` for major new concepts to check for duplication
++   - Flag contract changes (higher risk)
++
++5) **Write tasks.md** containing:
++
++   ### Executive Briefing
++   - **Purpose**: 2-3 sentences — what this phase delivers and why
++   - **What We're Building**: Concrete description
++   - **Goals**: ✅ bullet list
++   - **Non-Goals**: ❌ what this phase is NOT doing
++
++   ### Prior Phase Context
++   [From step 2 — 5 sections per completed phase]
++
++   ### Pre-Implementation Check
++   [From step 4 — quick table]
++
++   ### Architecture Map
++   Mermaid diagram showing components and their relationships:
++
++   ```mermaid
++   flowchart TD
++       classDef pending fill:#9E9E9E,stroke:#757575,color:#fff
++       classDef completed fill:#4CAF50,stroke:#388E3C,color:#fff
++
++       subgraph Phase["Phase N: [Title]"]
++           T001["T001: [Task]"]:::pending
++           T002["T002: [Task]"]:::pending
++           T001 --> T002
++       end
++
++       subgraph Files["Files"]
++           F1["/path/to/file"]:::pending
++       end
++
++       T001 -.-> F1
++   ```
++
++   ### Tasks
++
++   **Canonical 7-column format** (all dossiers MUST use this):
++
++   | Status | ID | Task | Domain | Path(s) | Done When | Notes |
++   |--------|-----|------|--------|---------|-----------|-------|
++   | [ ] | T001 | [What to build] | [domain] | /abs/path | [Success criteria] | |
++
++   - `Status`: `[ ]` pending, `[~]` in progress, `[x]` complete, `[!]` blocked
++   - `ID`: T001, T002... sequence
++   - `Task`: What to build — enough detail for implementation
++   - `Domain`: Which domain this task delivers into
++   - `Path(s)`: Absolute paths to files touched
++   - `Done When`: Plain language success criteria
++   - `Notes`: Finding references, domain constraints, etc.
++
++   ### Context Brief
++
++   **Key findings from plan**:
++   - [Finding N: brief + action required]
++
++   **Domain constraints**:
++   - [Import rules, dependency direction, contract boundaries]
++
++   **Reusable from prior phases**:
++   - [Test fixtures, helpers, patterns available]
++
++   **Mermaid flow diagram** (system states):
++   ```mermaid
++   flowchart LR
++       A[Input] --> B[Process] --> C[Output]
++   ```
++
++   **Mermaid sequence diagram** (actor interactions):
++   ```mermaid
++   sequenceDiagram
++       Actor->>Service: request
++       Service->>Repository: query
++       Repository-->>Service: result
++       Service-->>Actor: response
++   ```
++
++   ### Discoveries & Learnings
++
++   _Populated during implementation by plan-6._
++
++   | Date | Task | Type | Discovery | Resolution | References |
++   |------|------|------|-----------|------------|------------|
++
++   **Types**: `gotcha` | `research-needed` | `unexpected-behavior` | `workaround` | `decision` | `debt` | `insight`
++
++6) **Generate Flight Plan**: Run `/plan-5b-flightplan --phase "${PHASE}" --plan "${PLAN}"`
++
++7) Capture directory layout at end of tasks.md:
++   ```
++   docs/plans/<ordinal>-<slug>/
++     ├── <slug>-plan.md
++     └── tasks/phase-N/
++         ├── tasks.md
++         ├── tasks.fltplan.md
++         └── execution.log.md   # created by plan-6
++   ```
++
++STOP: Do NOT edit code. Output tasks.md and wait for human GO.
++
++---
++
++## SUBTASK MODE
++
++Activated when `--subtask` is provided. Focused subtask dossier alongside parent phase.
++
++S1) Resolve paths:
++   - PLAN, PLAN_DIR, PHASE_DIR from flags
++   - SUBTASK_SLUG = kebab-case summary
++   - ORD = next ordinal (001, 002...)
++   - SUBTASK_FILE = `${PHASE_DIR}/${ORD}-subtask-${SUBTASK_SLUG}.md`
++
++S2) Parse parent context:
++   - Load plan key findings
++   - Load parent tasks.md, locate PARENT_TASK row
++
++S3) Define subtask tasks:
++   - Break down into ST001, ST002... using same 7-column format
++   - Notes reference parent T-ID
++
++S4) Pre-Implementation Check (scoped to subtask files only)
++
++S5) Write subtask dossier containing:
++   - Parent Context (phase, task, why this subtask)
++   - Executive Briefing (scoped to subtask)
++   - Pre-Implementation Check
++   - Architecture Map (parent task as blocked node, subtask nodes, "unblocks" edge)
++   - Tasks table (ST### rows)
++   - Context Brief (scoped)
++   - Discoveries & Learnings (empty table)
++   - After Subtask Completion (resumption guide)
++
++S6) Generate Flight Plan for subtask
++
++S7) Register subtask in plan's Subtasks Registry (create section if missing)
++
++S8) Update parent task's Notes in tasks.md to reference subtask
++
++STOP: Do NOT edit code. Output subtask dossier and wait for human GO.
++```
++
++Next step: Run **/plan-6-v2-implement-phase --phase "<Phase N: Title>" --plan "<PLAN_PATH>"**
+--- /dev/null	2026-02-03 14:48:37.172593093 +1000
++++ agents/v2-commands/plan-6-v2-implement-phase.md	2026-02-22 21:56:34.127635091 +1000
+@@ -0,0 +1,130 @@
++---
++description: Implement exactly one approved phase or subtask using the testing approach from the plan, with domain placement rules. V2 standalone rewrite.
++---
++
++Please deep think / ultrathink as this is a complex task.
++
++# plan-6-v2-implement-phase
++
++Implement **exactly one** approved phase or subtask using the **testing approach from the plan**. Apply domain placement rules. Update domain.md files after implementation.
++
++---
++
++## 📝 LOG DISCOVERIES AS YOU GO
++
++Throughout implementation, capture discoveries in:
++1. **Execution Log** (`execution.log.md`) — detailed narrative
++2. **Discoveries Table** (`## Discoveries & Learnings` in tasks.md or plan) — structured record
++
++Log when you encounter: something unexpected, needed research, hit a trouble spot, found a gotcha, made a decision, introduced debt, or gained an insight.
++
++---
++
++## 🛑 UPDATE PROGRESS AFTER EVERY TASK
++
++After completing EACH task:
++1. ☑️ Tasks Table — `[ ]` → `[x]`
++2. 🎨 Architecture Map — node → `:::completed`
++3. 📝 Execution Log — append task entry with evidence
++
++DO NOT start the next task until updates are done.
++
++---
++
++```md
++User input:
++
++$ARGUMENTS
++# Expected flags:
++# --phase "<Phase N: Title>" (Full Mode) or omitted (Simple Mode)
++# --plan "<abs path to plan.md>"
++# --subtask "<ORD-subtask-slug>" (optional)
++
++1) Resolve paths:
++   PLAN = provided --plan
++   PLAN_DIR = dirname(PLAN)
++
++   **Mode Detection**: Read PLAN for `**Mode**: Simple` or `**Mode**: Full`
++
++   **Full Mode**:
++   - PHASE_DIR = PLAN_DIR/tasks/${PHASE_SLUG}
++   - PHASE_DOC = ${PHASE_DIR}/tasks.md
++   - EXEC_LOG = ${PHASE_DIR}/execution.log.md
++   - If --subtask: PHASE_DOC = ${PHASE_DIR}/${SUBTASK_KEY}.md
++
++   **Simple Mode**:
++   - Check for optional dossier: ${PLAN_DIR}/tasks/implementation/tasks.md
++   - If exists → PHASE_DOC = that file
++   - If not → PHASE_DOC = PLAN itself (inline tasks from § Implementation)
++   - EXEC_LOG = ${PLAN_DIR}/execution.log.md
++
++2) Load context:
++   - Read Testing Strategy from plan (approach + mock usage)
++   - Read task table from PHASE_DOC
++   - Read Context Brief / Key Findings for hazards to watch for
++   - **Load domain context**:
++     * Read `## Target Domains` from spec
++     * Read `## Domain Manifest` from plan
++     * For each domain being modified, read `docs/domains/<slug>/domain.md`
++
++3) Execute tasks:
++   Follow task order. Apply testing approach from plan:
++
++   **Full TDD**: RED-GREEN-REFACTOR loop per task
++   **Lightweight**: Minimal validation tests for core functionality
++   **Manual**: Document verification steps, execute manually
++   **Hybrid**: Apply approach per task annotation
++
++   ### Domain Placement Rules
++
++   1. Every new file MUST go under its declared domain's source directory
++   2. Contract files (public interfaces) go in the domain's contracts/ directory
++   3. Cross-domain imports MUST use the target domain's public contracts only
++      (never import from another domain's internals)
++   4. Dependency direction:
++      - business → infrastructure: ✅ allowed
++      - infrastructure → business: ❌ never
++      - business → business: ⚠️ contracts only
++   5. When creating a NEW domain (domain setup task):
++      - Create `docs/domains/<slug>/domain.md` using format from /extract-domain
++      - Create source directory structure
++      - Update `docs/domains/registry.md`
++
++4) After ALL tasks complete — update domain files:
++
++   For each domain touched by this phase:
++
++   a) **Update domain.md § History**:
++      ```markdown
++      | [plan-ordinal-slug] | [What changed — 1 line summary] | [today] |
++      ```
++
++   b) **Update domain.md § Composition** (if new services/adapters/repos created):
++      Add new rows to the composition table.
++
++   c) **Update domain.md § Contracts** (if public interface changed):
++      Add/modify contract entries.
++
++   d) **Update domain.md § Dependencies** (if new domain relationships formed):
++      Add to "This Domain Depends On" or "Domains That Depend On This".
++
++   e) **Update domain.md § Source Location** (if new files added):
++      Add file paths to source location listing.
++
++   f) **Update docs/domains/registry.md** if domain status changed.
++
++5) Output:
++   - Execution Log with per-task entries (write incrementally)
++   - Unified diffs for all touched files
++   - Evidence (test output, verification results)
++   - Domain files updated (domain.md changes listed)
++   - Final status mapped to acceptance criteria
++   - Suggested commit message
++
++6) Auto-run plan-6a-v2-update-progress for each completed task.
++
++STOP: Report phase complete. Suggest next step.
++```
++
++**Next step (Full Mode)**: Run **/plan-7-v2-code-review --phase "<Phase N: Title>" --plan "<PLAN_PATH>"**
++**Next step (Simple Mode)**: Run **/plan-7-v2-code-review --plan "<PLAN_PATH>"**
+--- /dev/null	2026-02-03 14:48:37.172593093 +1000
++++ agents/v2-commands/plan-6a-v2-update-progress.md	2026-02-22 21:56:34.127635091 +1000
+@@ -0,0 +1,69 @@
++---
++description: Update plan progress with task status and domain context. V2 standalone rewrite.
++---
++
++# plan-6a-v2-update-progress
++
++Update plan and dossier progress tracking with task status. Adds domain context to change tracking.
++
++```md
++User input:
++
++$ARGUMENTS
++# Expected flags:
++# --plan "<abs path to plan.md>"
++# --task "<task ID, e.g., T001>"
++# --status "completed|in_progress|blocked"
++# --changes "class:path:Name,method:path:Name.method,function:path:funcName,file:path"
++# --domain "<domain slug>" (optional — inferred from task table if not provided)
++# Optional:
++# --phase "<Phase N: Title>" (Full Mode)
++# --subtask "<subtask-key>" (if updating subtask)
++# --inline (Simple Mode — update inline task table in plan)
++
++## Steps
++
++1) Resolve paths:
++   - PLAN, PLAN_DIR from --plan
++   - If --inline: update task table within PLAN itself
++   - If --phase: locate dossier at PLAN_DIR/tasks/${PHASE_SLUG}/tasks.md
++   - If --subtask: locate subtask dossier
++
++2) Parse --changes into structured entries:
++   - `class:path:ClassName` → class node
++   - `method:path:ClassName.method_name` → method node
++   - `function:path:function_name` → function node
++   - `file:path` → file-level change
++
++3) Determine domain:
++   - If --domain provided, use it
++   - Otherwise, read task table and extract Domain column for the task
++   - If no domain found, use "unknown"
++
++4) Update task status:
++   - In task table (dossier or inline): update Status column
++     * `completed` → `[x]`
++     * `in_progress` → `[~]`
++     * `blocked` → `[!]`
++   - Update Architecture Map nodes if present
++
++5) Update progress tracking in PLAN:
++   - Locate progress section
++   - Update phase/task status
++
++6) Record changes with domain context:
++   - If plan has a Change Footnotes Ledger, append entry:
++
++   ```markdown
++   [^N]: Task [plan-task-id] - [one-line summary]
++     - domain: [domain-slug]
++     - `[change-entry-1]`
++     - `[change-entry-2]`
++   ```
++
++   - Determine next footnote number by reading existing ledger entries
++
++7) Report what was updated.
++```
++
++This command is the **single source of truth** for progress updates. Always delegate progress tracking to this command rather than manually editing task tables.
+--- /dev/null	2026-02-03 14:48:37.172593093 +1000
++++ agents/v2-commands/plan-7-v2-code-review.md	2026-02-22 21:56:34.164635465 +1000
+@@ -0,0 +1,152 @@
++---
++description: Read-only per-phase code review with domain compliance validation. V2 standalone rewrite.
++---
++
++Please deep think / ultrathink as this is a complex task.
++
++# plan-7-v2-code-review
++
++Read-only code review that inspects diffs, verifies domain compliance, checks for concept reinvention, and produces structured findings. Does NOT modify code.
++
++---
++
++```md
++User input:
++
++$ARGUMENTS
++# Expected flags:
++# --phase "<Phase N: Title>" (Full Mode) or omitted (Simple Mode)
++# --plan "<abs path to plan.md>"
++
++## Steps
++
++1) Resolve paths:
++   - PLAN, PLAN_DIR, SPEC from --plan
++   - Full Mode: PHASE_DIR, tasks.md, execution.log.md
++   - Simple Mode: read inline tasks from plan
++
++2) Gather diffs:
++   - Read execution.log.md for files changed
++   - Use `git diff` to collect actual changes
++   - If no git changes, read file list from task table Path(s) column
++
++3) Launch review subagents in parallel:
++
++### Subagent 1: Implementation Quality
++"Review the code changes for this phase.
++
++Read:
++- All changed files (from diffs)
++- Task table (expected changes)
++- Acceptance criteria
++
++Check:
++- Do changes match what the tasks specified?
++- Are there obvious bugs, logic errors, or security issues?
++- Is error handling adequate?
++- Are edge cases handled?
++- Does the code follow existing patterns in the codebase?
++
++Output: Findings as SEVERITY (HIGH/MEDIUM/LOW) | File | Issue | Suggestion
++Only report issues that genuinely matter. No style nits."
++
++### Subagent 2: Domain Compliance Validator
++"Validate domain compliance for all changes in this phase.
++
++Read:
++- `docs/domains/registry.md` — all registered domains
++- `docs/domains/<slug>/domain.md` — for each domain touched
++- Plan's Domain Manifest — expected file→domain mapping
++- All changed files
++
++Check:
++1. **File placement**: Every new file is under its declared domain's source tree
++2. **Contract-only imports**: No imports from another domain's internal files
++   (only contracts/ or public exports are allowed)
++3. **Dependency direction**:
++   - business → infrastructure: ✅
++   - infrastructure → business: ❌ VIOLATION
++   - business → business: only via contracts
++4. **Domain.md currency**: domain.md § History updated for this plan,
++   § Composition updated if new components added,
++   § Contracts updated if public interface changed
++5. **Registry currency**: docs/domains/registry.md reflects any new domains
++6. **No orphan files**: Every changed file maps to a domain in the manifest
++
++Output: Findings as SEVERITY | File | Rule Violated | Details | Fix"
++
++### Subagent 3: Anti-Reinvention Check
++"Check whether this phase introduced functionality that already exists in another domain.
++
++Read:
++- All NEW files created in this phase
++- `docs/domains/*/domain.md` — contracts and composition for all domains
++
++For each major new component (service, adapter, repository, handler):
++1. Run `/code-concept-search "<component concept>"` against the codebase
++2. Check domain contracts for overlapping capabilities
++3. Flag if similar functionality exists in another domain
++
++Output: Findings as SEVERITY | New Component | Existing Match | Domain | Recommendation
++Only flag genuine duplication, not incidental similarity."
++
++4) Collect and merge findings from all subagents.
++
++5) Produce structured review:
++
++```markdown
++# Code Review: [Phase Title]
++
++**Plan**: [path]
++**Date**: [today]
++**Reviewer**: Automated (plan-7-v2)
++
++## Summary
++
++[2-3 sentences: overall quality, domain compliance status, reinvention check results]
++
++## Findings
++
++### Critical (must fix)
++| # | File | Issue | Recommendation |
++|---|------|-------|---------------|
++
++### High (should fix)
++| # | File | Issue | Recommendation |
++|---|------|-------|---------------|
++
++### Medium (consider)
++| # | File | Issue | Recommendation |
++|---|------|-------|---------------|
++
++## Domain Compliance
++
++| Check | Status | Details |
++|-------|--------|---------|
++| File placement | ✅/❌ | [details] |
++| Contract-only imports | ✅/❌ | [details] |
++| Dependency direction | ✅/❌ | [details] |
++| Domain.md updated | ✅/❌ | [details] |
++| Registry current | ✅/❌ | [details] |
++| No orphan files | ✅/❌ | [details] |
++
++## Anti-Reinvention
++
++| New Component | Existing Match? | Domain | Status |
++|--------------|----------------|--------|--------|
++| [component] | None found | — | ✅ Clean |
++| [component] | [similar in domain X] | [domain] | ⚠️ Review |
++
++## Verdict
++
++**[PASS | PASS WITH NOTES | NEEDS FIXES]**
++
++[If NEEDS FIXES: list the critical/high items that must be addressed]
++```
++
++6) Save review to PHASE_DIR (Full Mode) or PLAN_DIR (Simple Mode).
++
++STOP: This is a read-only review. Do NOT modify any code.
++```
++
++Output: Structured review with domain compliance validation, anti-reinvention results, and verdict.
+--- /dev/null	2026-02-03 14:48:37.172593093 +1000
++++ agents/v2-commands/plan-v2-extract-domain.md	2026-02-22 21:50:11.967717544 +1000
+@@ -0,0 +1,273 @@
++---
++description: Collaboratively identify and formalize an existing codebase concept as a named domain. No files are moved — this is about communication and traceability, not refactoring.
++---
++
++Please deep think / ultrathink as this is a complex task.
++
++# extract-domain
++
++Collaboratively identify and formalize an existing codebase concept as a **named domain** without moving files. This is a workshop with the user, not an automated refactor. The goal is **communication** — future plans can reference "the auth domain" and everyone knows what that means.
++
++```md
++User input:
++
++$ARGUMENTS
++# Expected:
++# <concept>                    — the concept to extract (e.g., "authentication", "billing")
++# Optional flags:
++# --domain <slug>              — override the auto-generated slug
++# --list                       — list existing domains and exit
++```
++
++## What This Command Does
++
++1. **Explores** the codebase to discover all code related to the concept
++2. **Catalogues** discovered files and their roles — presented to user for review
++3. **Workshops** with user to define what belongs vs. doesn't (boundary)
++4. **Identifies** public interfaces other code already consumes (contracts)
++5. **Maps** internal components (services, adapters, repos — composition)
++6. **Writes** `docs/domains/<slug>/domain.md` pointing to files where they currently live
++7. **Updates** `docs/domains/registry.md` (creates it if first domain)
++
++## What This Command Does NOT Do
++
++- ❌ Move files to a new directory structure
++- ❌ Refactor imports
++- ❌ Create new source directories
++- ❌ Change any code
++
++---
++
++## Step 0: List Mode
++
++If `--list` flag provided:
++- Read `docs/domains/registry.md` (if exists)
++- Display all registered domains with slug, type, status
++- If no registry exists, report "No domains registered yet"
++- Exit
++
++## Step 1: Check for Existing Domain
++
++- Read `docs/domains/registry.md` if it exists
++- Check if a domain with matching slug already exists
++- If exists: report it and ask user whether to update or abort
++- Generate slug from concept: lowercase, replace spaces with hyphens, strip non-alphanumeric
++
++## Step 2: Explore
++
++Launch 2 research subagents in parallel to discover code related to the concept:
++
++**Subagent 1: Code Discovery**
++"Find all code related to the concept '<concept>' in this codebase.
++
++Search for:
++- Services, handlers, controllers related to <concept>
++- Adapters wrapping external SDKs/APIs for <concept>
++- Repositories/data access for <concept>
++- Models, types, interfaces for <concept>
++- Configuration files for <concept>
++- Middleware, hooks, plugins for <concept>
++- Tests related to <concept>
++
++Output: List of files with suspected roles (service, adapter, repository, model, config, test, middleware, other)"
++
++**Subagent 2: Dependency & Contract Discovery**
++"Find how other parts of the codebase consume '<concept>' functionality.
++
++Search for:
++- Imports/requires from <concept>-related files
++- Public interfaces/classes that other modules depend on
++- Event channels, message queues related to <concept>
++- Shared types/contracts consumed externally
++
++Output: List of public interfaces with their consumers"
++
++## Step 3: Present & Workshop
++
++Present discovered files to the user in a table:
++
++```
++I found these files related to "<concept>":
++
++| # | File | Suspected Role | Include? |
++|---|------|---------------|----------|
++| 1 | src/services/auth-service.ts | Service | ✅ |
++| 2 | src/middleware/jwt.ts | Middleware | ? |
++| 3 | src/models/user.ts | Model (shared?) | ? |
++| ... | ... | ... | ... |
++```
++
++Ask the user to confirm/adjust using the ask_user tool:
++
++1. **For uncertain files**: "Should `<file>` be part of the `<concept>` domain, or does it belong elsewhere?"
++2. **Boundary definition**: "What does this domain OWN vs. what does it NOT own?"
++3. **Shared files**: "Some files serve multiple concepts. Should I note them as shared?"
++4. **Contracts**: "These interfaces are consumed by other code — are they the right public surface?"
++
++**Key principle**: The agent proposes, the user decides. Domain boundary identification is a collaborative conversation.
++
++## Step 4: Write Domain Files
++
++### 4a: Create domain.md
++
++Create `docs/domains/<slug>/domain.md` (mkdir -p the directory):
++
++```markdown
++# Domain: [Name]
++
++**Slug**: [kebab-case]
++**Type**: business | infrastructure
++**Created**: [ISO-8601]
++**Created By**: extracted from existing codebase
++**Status**: active
++
++## Purpose
++
++[1-3 sentences from user discussion: What business concept does this domain own?
++Why does it exist? What would break if it didn't?]
++
++## Boundary
++
++### Owns
++- [Concept 1 — from user confirmation]
++- [Concept 2]
++
++### Does NOT Own
++- [Boundary clarification — note which domain owns it if known]
++
++## Contracts (Public Interface)
++
++[Identified from Subagent 2 — what other code consumes]
++
++| Contract | Type | Consumers | Description |
++|----------|------|-----------|-------------|
++
++## Composition (Internal)
++
++[Mapped from Subagent 1 — the lego blocks]
++
++| Component | Role | Depends On |
++|-----------|------|------------|
++
++## Source Location
++
++[Files WHERE THEY CURRENTLY LIVE — no reorganization]
++
++Primary: `[most common path prefix, or "scattered"]`
++
++| File | Role | Notes |
++|------|------|-------|
++
++## Dependencies
++
++### This Domain Depends On
++- [Other domains or libraries this domain uses]
++
++### Domains That Depend On This
++- [From contract consumer analysis]
++
++## History
++
++| Plan | What Changed | Date |
++|------|-------------|------|
++| *(extracted)* | Domain extracted from existing codebase | [today] |
++```
++
++**Required sections** (plan-7 validates these exist):
++- Purpose
++- Boundary (Owns + Does NOT Own)
++- Contracts
++- Composition
++- Source Location
++- History
++
++**Additional files are welcome** in the domain folder — sketches, research notes, diagrams, API explorations. The domain.md is locked down; everything else is freeform.
++
++### 4b: Create or Update Registry
++
++If `docs/domains/registry.md` does not exist, create it:
++
++```markdown
++# Domain Registry
++
++| Domain | Slug | Type | Parent | Created By | Status |
++|--------|------|------|--------|------------|--------|
++
++## Domain Types
++
++- **business**: User-facing business capability
++- **infrastructure**: Cross-cutting technical capability serving other domains
++
++## Domain Statuses
++
++- **active**: In use and accepting changes
++- **deprecated**: Being phased out (note successor domain)
++- **archived**: Code remains but is no longer modified
++```
++
++Add a row for the new domain:
++
++```markdown
++| [Name] | [slug] | business | — | extracted | active |
++```
++
++For infrastructure domains, use `_platform` as parent:
++
++```markdown
++| [Name] | _platform/[slug] | infrastructure | _platform | extracted | active |
++```
++
++## Step 5: Report
++
++```
++✅ Domain extracted: <slug>
++- Files catalogued: N
++- Contracts identified: N
++- Location: docs/domains/<slug>/domain.md
++- Registry: docs/domains/registry.md (updated)
++
++Note: No files were moved. Source Location in domain.md
++points to files in their current locations. A future plan
++can consolidate files into src/<slug>/ if desired.
++```
++
++---
++
++## Infrastructure Domains
++
++For cross-cutting concepts (logging, config, data access):
++
++- Use `_platform` as the parent domain
++- Slug format: `_platform/data-access`, `_platform/observability`
++- Source location: `src/_platform/data-access/` (or wherever files currently live)
++- Type: `infrastructure`
++
++Start coarse — `_platform` alone is fine. Split into child domains when a concern grows large enough.
++
++## Dependency Rules
++
++```
++business domain  ──→  infrastructure domain  ✅  (always allowed)
++infrastructure   ──→  business domain        ❌  (never allowed)
++business domain  ──→  business domain        ⚠️  (only via contracts)
++```
++
++## Domain Granularity
++
++A domain should represent a **business conversation** — concepts that change together for the same business reasons.
++
++- **Too granular**: `login/`, `registration/`, `token-refresh/` → merge into `auth/`
++- **Right size**: `auth/` — all authentication & authorization
++- **Too coarse**: `backend/` — everything server-side
++
++**Split signal**: Different plans consistently touch only one half of the domain.
++**Merge signal**: Every plan that touches one also touches the other.
++
++## Brownfield Adoption
++
++Domains are built **incrementally and collaboratively**. No big-bang migration.
++
++- Only formalize domains as plans naturally encounter them
++- Existing code that isn't part of an active plan doesn't move
++- A project might have 2 domains formalized and 80% of code still in legacy locations — that's fine
++- Coverage grows over time as plans touch more areas
+--- /dev/null	2026-02-03 14:48:37.172593093 +1000
++++ src/jk_tools/agents/v2-commands/README.md	2026-02-22 21:48:46.051009852 +1000
+@@ -0,0 +1,56 @@
++# V2 Commands — Domain-Aware Plan Workflow
++
++These commands are **standalone rewrites** of select v1 commands from `agents/commands/`, incorporating:
++
++- **Domain system**: First-class business domain boundaries that own code, contracts, and composition
++- **Leaner output**: Slimmer plan and task artifacts that provide guardrails without removing implementor agency
++- **No PlanPak**: Domain-based organization replaces plan-based file organization
++
++## When to Use V2 vs V1
++
++| Use V2 when... | Use V1 when... |
++|----------------|----------------|
++| Project uses or wants domain-based organization | Project doesn't use domains |
++| You want leaner plan/task output | You want the full-detail v1 output |
++| You're working on a brownfield codebase and want to formalize concepts | Quick fixes that don't need domain tracking |
++
++## Commands
++
++| Command | Replaces | What's Different |
++|---------|----------|-----------------|
++| `extract-domain` | *(new)* | Collaboratively identify and formalize existing code as a named domain |
++| `plan-1b-v2-specify` | `plan-1b-specify` | Adds `## Target Domains` section to spec |
++| `plan-2-v2-clarify` | `plan-2-clarify` | Domain Review question replaces PlanPak question |
++| `plan-3-v2-architect` | `plan-3-architect` | Lean output (≤500 lines), 2 research subagents, domain manifest |
++| `plan-5-v2-phase-tasks-and-brief` | `plan-5-phase-tasks-and-brief` | 7-column task table with Domain column, simplified prior-phase review |
++| `plan-6-v2-implement-phase` | `plan-6-implement-phase` | Domain placement rules, post-implementation domain.md updates |
++| `plan-6a-v2-update-progress` | `plan-6a-update-progress` | Domain context in progress tracking |
++| `plan-7-v2-code-review` | `plan-7-code-review` | Domain Compliance Validator, anti-reinvention checks |
++
++## Commands That Don't Need V2
++
++These work unchanged with domain-aware projects:
++
++`plan-0-constitution`, `plan-1a-explore`, `plan-2b-prep-issue`, `plan-2c-workshop`, `plan-3a-adr`, `plan-4-complete-the-plan`, `plan-5b-flightplan`, `plan-5c-requirements-flow`, `plan-6b-worked-example`, `plan-8-merge`, `code-concept-search`, `deepresearch`, `didyouknow`, `flowspace-research`, `tad`, `util-0-handover`
++
++## Domain System Overview
++
++Domains are persistent, named business concept boundaries. Every source file belongs to a domain. Plans deliver into domains.
++
++```
++docs/domains/
++├── registry.md              # Master index of all domains
++├── auth/
++│   ├── domain.md            # Locked-down definition (required sections)
++│   └── *.md                 # Freeform notes, sketches, research
++└── _platform/               # Infrastructure parent domain
++    └── data-access/
++        └── domain.md
++
++src/
++├── auth/                    # Mirrors docs/domains/auth/
++├── billing/                 # Mirrors docs/domains/billing/
++└── _platform/               # Mirrors docs/domains/_platform/
++```
++
++See `extract-domain.md` for the full domain.md template and registry format.
+--- /dev/null	2026-02-03 14:48:37.172593093 +1000
++++ src/jk_tools/agents/v2-commands/extract-domain.md	2026-02-22 21:50:11.967717544 +1000
+@@ -0,0 +1,273 @@
++---
++description: Collaboratively identify and formalize an existing codebase concept as a named domain. No files are moved — this is about communication and traceability, not refactoring.
++---
++
++Please deep think / ultrathink as this is a complex task.
++
++# extract-domain
++
++Collaboratively identify and formalize an existing codebase concept as a **named domain** without moving files. This is a workshop with the user, not an automated refactor. The goal is **communication** — future plans can reference "the auth domain" and everyone knows what that means.
++
++```md
++User input:
++
++$ARGUMENTS
++# Expected:
++# <concept>                    — the concept to extract (e.g., "authentication", "billing")
++# Optional flags:
++# --domain <slug>              — override the auto-generated slug
++# --list                       — list existing domains and exit
++```
++
++## What This Command Does
++
++1. **Explores** the codebase to discover all code related to the concept
++2. **Catalogues** discovered files and their roles — presented to user for review
++3. **Workshops** with user to define what belongs vs. doesn't (boundary)
++4. **Identifies** public interfaces other code already consumes (contracts)
++5. **Maps** internal components (services, adapters, repos — composition)
++6. **Writes** `docs/domains/<slug>/domain.md` pointing to files where they currently live
++7. **Updates** `docs/domains/registry.md` (creates it if first domain)
++
++## What This Command Does NOT Do
++
++- ❌ Move files to a new directory structure
++- ❌ Refactor imports
++- ❌ Create new source directories
++- ❌ Change any code
++
++---
++
++## Step 0: List Mode
++
++If `--list` flag provided:
++- Read `docs/domains/registry.md` (if exists)
++- Display all registered domains with slug, type, status
++- If no registry exists, report "No domains registered yet"
++- Exit
++
++## Step 1: Check for Existing Domain
++
++- Read `docs/domains/registry.md` if it exists
++- Check if a domain with matching slug already exists
++- If exists: report it and ask user whether to update or abort
++- Generate slug from concept: lowercase, replace spaces with hyphens, strip non-alphanumeric
++
++## Step 2: Explore
++
++Launch 2 research subagents in parallel to discover code related to the concept:
++
++**Subagent 1: Code Discovery**
++"Find all code related to the concept '<concept>' in this codebase.
++
++Search for:
++- Services, handlers, controllers related to <concept>
++- Adapters wrapping external SDKs/APIs for <concept>
++- Repositories/data access for <concept>
++- Models, types, interfaces for <concept>
++- Configuration files for <concept>
++- Middleware, hooks, plugins for <concept>
++- Tests related to <concept>
++
++Output: List of files with suspected roles (service, adapter, repository, model, config, test, middleware, other)"
++
++**Subagent 2: Dependency & Contract Discovery**
++"Find how other parts of the codebase consume '<concept>' functionality.
++
++Search for:
++- Imports/requires from <concept>-related files
++- Public interfaces/classes that other modules depend on
++- Event channels, message queues related to <concept>
++- Shared types/contracts consumed externally
++
++Output: List of public interfaces with their consumers"
++
++## Step 3: Present & Workshop
++
++Present discovered files to the user in a table:
++
++```
++I found these files related to "<concept>":
++
++| # | File | Suspected Role | Include? |
++|---|------|---------------|----------|
++| 1 | src/services/auth-service.ts | Service | ✅ |
++| 2 | src/middleware/jwt.ts | Middleware | ? |
++| 3 | src/models/user.ts | Model (shared?) | ? |
++| ... | ... | ... | ... |
++```
++
++Ask the user to confirm/adjust using the ask_user tool:
++
++1. **For uncertain files**: "Should `<file>` be part of the `<concept>` domain, or does it belong elsewhere?"
++2. **Boundary definition**: "What does this domain OWN vs. what does it NOT own?"
++3. **Shared files**: "Some files serve multiple concepts. Should I note them as shared?"
++4. **Contracts**: "These interfaces are consumed by other code — are they the right public surface?"
++
++**Key principle**: The agent proposes, the user decides. Domain boundary identification is a collaborative conversation.
++
++## Step 4: Write Domain Files
++
++### 4a: Create domain.md
++
++Create `docs/domains/<slug>/domain.md` (mkdir -p the directory):
++
++```markdown
++# Domain: [Name]
++
++**Slug**: [kebab-case]
++**Type**: business | infrastructure
++**Created**: [ISO-8601]
++**Created By**: extracted from existing codebase
++**Status**: active
++
++## Purpose
++
++[1-3 sentences from user discussion: What business concept does this domain own?
++Why does it exist? What would break if it didn't?]
++
++## Boundary
++
++### Owns
++- [Concept 1 — from user confirmation]
++- [Concept 2]
++
++### Does NOT Own
++- [Boundary clarification — note which domain owns it if known]
++
++## Contracts (Public Interface)
++
++[Identified from Subagent 2 — what other code consumes]
++
++| Contract | Type | Consumers | Description |
++|----------|------|-----------|-------------|
++
++## Composition (Internal)
++
++[Mapped from Subagent 1 — the lego blocks]
++
++| Component | Role | Depends On |
++|-----------|------|------------|
++
++## Source Location
++
++[Files WHERE THEY CURRENTLY LIVE — no reorganization]
++
++Primary: `[most common path prefix, or "scattered"]`
++
++| File | Role | Notes |
++|------|------|-------|
++
++## Dependencies
++
++### This Domain Depends On
++- [Other domains or libraries this domain uses]
++
++### Domains That Depend On This
++- [From contract consumer analysis]
++
++## History
++
++| Plan | What Changed | Date |
++|------|-------------|------|
++| *(extracted)* | Domain extracted from existing codebase | [today] |
++```
++
++**Required sections** (plan-7 validates these exist):
++- Purpose
++- Boundary (Owns + Does NOT Own)
++- Contracts
++- Composition
++- Source Location
++- History
++
++**Additional files are welcome** in the domain folder — sketches, research notes, diagrams, API explorations. The domain.md is locked down; everything else is freeform.
++
++### 4b: Create or Update Registry
++
++If `docs/domains/registry.md` does not exist, create it:
++
++```markdown
++# Domain Registry
++
++| Domain | Slug | Type | Parent | Created By | Status |
++|--------|------|------|--------|------------|--------|
++
++## Domain Types
++
++- **business**: User-facing business capability
++- **infrastructure**: Cross-cutting technical capability serving other domains
++
++## Domain Statuses
++
++- **active**: In use and accepting changes
++- **deprecated**: Being phased out (note successor domain)
++- **archived**: Code remains but is no longer modified
++```
++
++Add a row for the new domain:
++
++```markdown
++| [Name] | [slug] | business | — | extracted | active |
++```
++
++For infrastructure domains, use `_platform` as parent:
++
++```markdown
++| [Name] | _platform/[slug] | infrastructure | _platform | extracted | active |
++```
++
++## Step 5: Report
++
++```
++✅ Domain extracted: <slug>
++- Files catalogued: N
++- Contracts identified: N
++- Location: docs/domains/<slug>/domain.md
++- Registry: docs/domains/registry.md (updated)
++
++Note: No files were moved. Source Location in domain.md
++points to files in their current locations. A future plan
++can consolidate files into src/<slug>/ if desired.
++```
++
++---
++
++## Infrastructure Domains
++
++For cross-cutting concepts (logging, config, data access):
++
++- Use `_platform` as the parent domain
++- Slug format: `_platform/data-access`, `_platform/observability`
++- Source location: `src/_platform/data-access/` (or wherever files currently live)
++- Type: `infrastructure`
++
++Start coarse — `_platform` alone is fine. Split into child domains when a concern grows large enough.
++
++## Dependency Rules
++
++```
++business domain  ──→  infrastructure domain  ✅  (always allowed)
++infrastructure   ──→  business domain        ❌  (never allowed)
++business domain  ──→  business domain        ⚠️  (only via contracts)
++```
++
++## Domain Granularity
++
++A domain should represent a **business conversation** — concepts that change together for the same business reasons.
++
++- **Too granular**: `login/`, `registration/`, `token-refresh/` → merge into `auth/`
++- **Right size**: `auth/` — all authentication & authorization
++- **Too coarse**: `backend/` — everything server-side
++
++**Split signal**: Different plans consistently touch only one half of the domain.
++**Merge signal**: Every plan that touches one also touches the other.
++
++## Brownfield Adoption
++
++Domains are built **incrementally and collaboratively**. No big-bang migration.
++
++- Only formalize domains as plans naturally encounter them
++- Existing code that isn't part of an active plan doesn't move
++- A project might have 2 domains formalized and 80% of code still in legacy locations — that's fine
++- Coverage grows over time as plans touch more areas
+--- /dev/null	2026-02-03 14:48:37.172593093 +1000
++++ src/jk_tools/agents/v2-commands/plan-1b-v2-specify.md	2026-02-22 21:51:20.359428932 +1000
+@@ -0,0 +1,125 @@
++---
++description: Create or update the feature specification from a natural language feature description, focusing on user value (WHAT/WHY) without implementation details. Domain-aware v2.
++---
++
++Please deep think / ultrathink as this is a complex task.
++
++# plan-1b-v2-specify
++
++Create or update the feature **spec** from a natural-language description (WHAT/WHY only; no tech choices). Includes mandatory **Target Domains** section for domain-aware planning.
++
++```md
++User input:
++
++$ARGUMENTS
++# Optional flags:
++# --simple    # Pre-set Mode: Simple (user can skip mode question in plan-2-v2-clarify)
++
++1) Determine the feature slug from user input and check for existing plan folder:
++   - Generate slug from feature description
++   - Check if `docs/plans/*-<slug>/` already exists (created by plan-1a-explore)
++   - If exists: Use existing folder and check for `research-dossier.md`
++   - If not exists: Create new folder with next available ordinal
++   - PLAN_DIR = `docs/plans/<ordinal>-<slug>/`
++   - SPEC_FILE = `${PLAN_DIR}/<slug>-spec.md`
++
++1a) Check for and incorporate existing research:
++   - If `${PLAN_DIR}/research-dossier.md` exists:
++     * Read the research dossier completely
++     * Use research to inform complexity scoring and domain identification
++     * Add note: "📚 This specification incorporates findings from research-dossier.md"
++   - If no research exists:
++     * Add note: "ℹ️ Consider running `/plan-1a-explore` for deeper codebase understanding"
++
++1b) Check for existing domains:
++   - If `docs/domains/registry.md` exists:
++     * Read the registry to understand what domains already exist
++     * For each domain, scan `docs/domains/<slug>/domain.md` for relevant contracts and composition
++     * Use existing domains to inform the Target Domains section
++   - If no domain registry exists:
++     * Note that domains will be identified as part of this spec
++
++1c) Check for workshop documents:
++   - If `${PLAN_DIR}/workshops/*.md` exist:
++     * Read all workshops — these are **authoritative design decisions**
++     * Incorporate findings into relevant spec sections
++
++2) Ensure PLAN_DIR exists (create only if not already present).
++
++3) Populate SPEC_FILE with these sections (use Markdown headings):
++   - `# <Feature Title>`
++   - **Mode header** (if --simple flag provided):
++     * Add `**Mode**: Simple` immediately after title
++   - `## Research Context` (if research exists) – brief summary of key findings
++   - `## Summary` – short WHAT/WHY overview
++   - `## Goals` – bullet list of desired outcomes/user value
++   - `## Non-Goals` – explicitly out-of-scope behavior
++   - `## Target Domains` – **MANDATORY** domain mapping:
++
++     ```markdown
++     ## Target Domains
++
++     | Domain | Status | Role in This Feature |
++     |--------|--------|---------------------|
++     | auth | existing | Extend with OAuth provider support |
++     | notifications | **NEW** | Establish for email alert delivery |
++     | _platform | existing | Use logging and config (no changes) |
++
++     ### New Domain Sketches
++
++     #### notifications [NEW]
++     - **Purpose**: [1-3 sentences]
++     - **Boundary Owns**: [concepts this domain is responsible for]
++     - **Boundary Excludes**: [concepts explicitly NOT in this domain, with notes on where they belong]
++     ```
++
++     For each domain listed:
++     - If `docs/domains/<slug>/domain.md` exists → mark as `existing`
++     - If no domain.md exists → mark as `**NEW**` and provide a sketch
++     - Note what role this domain plays in the feature (extend, establish, use)
++
++   - `## Complexity` – initial complexity assessment using CS 1-5 system:
++     * **Score**: CS-{1|2|3|4|5} ({trivial|small|medium|large|epic})
++     * **Breakdown**: S={0-2}, I={0-2}, D={0-2}, N={0-2}, F={0-2}, T={0-2}
++     * **Confidence**: {0.00-1.00}
++     * **Assumptions**: [list]
++     * **Dependencies**: [external dependencies or blockers]
++     * **Risks**: [complexity-related risks]
++     * **Phases**: [suggested high-level phases]
++
++     CS rubric:
++     - Surface Area (S): Files/modules touched (0=one, 1=multiple, 2=many/cross-cutting)
++     - Integration (I): External deps (0=internal, 1=one external, 2=multiple/unstable)
++     - Data/State (D): Schema/migrations (0=none, 1=minor, 2=non-trivial)
++     - Novelty (N): Req clarity (0=well-specified, 1=some ambiguity, 2=unclear/discovery)
++     - Non-Functional (F): Perf/security/compliance (0=standard, 1=moderate, 2=strict)
++     - Testing/Rollout (T): Test depth/staging (0=unit only, 1=integration, 2=flags/staged)
++
++     Total P = S+I+D+N+F+T → CS mapping: 0-2=CS-1, 3-4=CS-2, 5-7=CS-3, 8-9=CS-4, 10-12=CS-5
++
++   - `## Acceptance Criteria` – numbered, testable scenarios framed as observable outcomes
++   - `## Risks & Assumptions`
++   - `## Open Questions`
++   - `## Workshop Opportunities` – areas that benefit from detailed design exploration BEFORE architecture:
++
++     | Topic | Type | Why Workshop | Key Questions |
++     |-------|------|--------------|---------------|
++
++     Types: `CLI Flow` | `Data Model` | `API Contract` | `State Machine` | `Integration Pattern` | `Storage Design` | `Other`
++
++4) For unknowns, embed `[NEEDS CLARIFICATION: ...]` markers within the appropriate section.
++
++5) Write spec to SPEC_FILE and report path.
++
++Gates:
++- Focus on user value; no stack/framework details.
++- Mandatory sections present; acceptance scenarios are testable.
++- Target Domains section present with at least one domain.
++- If empty description, ERROR.
++
++Output: SPEC_FILE ready for clarification.
++```
++
++Next steps:
++- **If Workshop Opportunities identified**: Consider running **/plan-2c-workshop**
++- **Otherwise**: Run **/plan-2-v2-clarify** for ≤8 high-impact questions
+--- /dev/null	2026-02-03 14:48:37.172593093 +1000
++++ src/jk_tools/agents/v2-commands/plan-2-v2-clarify.md	2026-02-22 21:52:05.676649979 +1000
+@@ -0,0 +1,123 @@
++---
++description: Resolve high-impact ambiguities (<=8 questions), capture answers in the spec, and update relevant sections immediately. Domain-aware v2.
++---
++
++Please deep think / ultrathink as this is a complex task.
++
++# plan-2-v2-clarify
++
++Ask **≤8** high-impact questions (only those truly needed), write answers into the **spec**, and update affected sections immediately. Replaces PlanPak question with Domain Review.
++
++```md
++User input:
++
++$ARGUMENTS
++
++Flow:
++1) Determine PLAN_DIR from the spec path provided, then set FEATURE_SPEC = `${PLAN_DIR}/<slug>-spec.md`.
++2) Scan spec with taxonomy (Testing Strategy, Documentation Strategy, Target Domains, FRs, NFRs, data model, integrations, UX, edge cases, terminology).
++3) Ask ONE question at a time using the ask_user tool (MC 2-5 options or short answer); cap at 8 total.
++   - **Q1 MUST be Workflow Mode selection** (Simple vs Full) — see format below
++   - PRIORITIZE Testing Strategy question next if not already defined (usually Q2)
++   - Ask for mock/stub preference immediately after testing strategy
++   - Ask Documentation Strategy question early
++   - Ask Domain Review question when Target Domains section exists
++4) After each answer: append under `## Clarifications` → `### Session YYYY-MM-DD`, then update the matching section(s). Save after each edit.
++5) Stop when critical ambiguities resolved or cap reached. Emit coverage summary.
++
++## Standard Questions
++
++### Q1: Workflow Mode (MUST be first)
++
++| Option | Mode | Best For | What Changes |
++|--------|------|----------|--------------|
++| A | Simple | CS-1/CS-2 tasks, single phase, quick path | Single-phase plan, inline tasks, plan-4/plan-5 optional |
++| B | Full | CS-3+ features, multiple phases | Multi-phase plan, required dossiers, all gates |
++
++**If Simple Mode**: Update spec header with `**Mode**: Simple`, testing defaults to Lightweight.
++**If Full Mode**: Update spec header with `**Mode**: Full`, all gates required.
++
++### Testing Strategy
++
++| Option | Approach | Best For |
++|--------|----------|----------|
++| A | Full TDD | Complex logic, algorithms, APIs |
++| B | Lightweight | Simple operations, config changes |
++| C | Manual Only | One-time scripts, trivial changes |
++| D | Hybrid | Mixed complexity — TDD for complex, lightweight for simple |
++
++Updates to spec: Add `## Testing Strategy` with Approach, Rationale, Focus Areas, Excluded.
++
++### Mock Usage
++
++| Option | Policy |
++|--------|--------|
++| A | Avoid mocks entirely — real data/fixtures only |
++| B | Allow targeted mocks — limited to external systems |
++| C | Allow liberal mocking — wherever beneficial |
++
++### Documentation Strategy
++
++| Option | Location | Best For |
++|--------|----------|----------|
++| A | README.md only | Quick-start essentials |
++| B | docs/how/ only | Detailed guides |
++| C | Hybrid (README + docs/how/) | Both quick-start and depth |
++| D | No new documentation | Internal/trivial changes |
++
++### Domain Review (replaces PlanPak question)
++
++Present the Target Domains from the spec:
++
++```
++The spec identifies these target domains:
++
++| Domain | Status | Role |
++|--------|--------|------|
++| [from spec] | [existing/NEW] | [from spec] |
++
++Questions:
++```
++
++Ask the user to confirm using ask_user:
++
++**For NEW domains**:
++- Does the boundary look right?
++- Should any part be absorbed into an existing domain instead?
++- Are the contracts clear enough to proceed?
++
++**For existing domains**:
++- Will changes respect existing contracts?
++- Any contract-breaking changes needed? (flag for ADR)
++
++**After Domain Review**: Update spec `## Target Domains` section with user's adjustments. If user identified new domain boundaries or merged domains, update the table and sketches accordingly.
++
++### Additional Questions (as needed)
++
++Draw from these categories based on spec gaps:
++- **Data model**: Entity relationships, schemas, storage
++- **FRs**: Feature requirements needing clarification
++- **NFRs**: Performance, security, accessibility requirements
++- **Integrations**: External system dependencies
++- **Edge cases**: Boundary conditions, error scenarios
++- **Terminology**: Domain-specific terms needing definition
++
++## Updates to Spec
++
++After each answer, update the appropriate spec section:
++- `## Testing Strategy` — Approach, Rationale, Focus Areas, Mock Usage
++- `## Documentation Strategy` — Location, Rationale
++- `## Target Domains` — Adjusted boundaries, merged/split domains
++- `## Clarifications` → `### Session YYYY-MM-DD` — Q&A record
++- Other sections as appropriate (Goals, Non-Goals, ACs, Risks)
++
++## Gates
++
++- At least Q1 (Workflow Mode) answered
++- Target Domains reviewed (if section exists in spec)
++- No critical `[NEEDS CLARIFICATION]` markers remaining in spec
++
++Output: Updated SPEC_FILE with clarifications applied.
++```
++
++Next step: Run **/plan-3-v2-architect** to generate the implementation plan.
+--- /dev/null	2026-02-03 14:48:37.172593093 +1000
++++ src/jk_tools/agents/v2-commands/plan-3-v2-architect.md	2026-02-22 21:53:25.874372307 +1000
+@@ -0,0 +1,274 @@
++---
++description: Generate a domain-aware, lean implementation plan with phases, task tables, and concise research findings. V2 standalone rewrite.
++---
++
++Please deep think / ultrathink as this is a complex task.
++
++# plan-3-v2-architect
++
++Generate a **lean, domain-aware implementation plan** with phases, task tables, and acceptance criteria. Produces the master plan document that guides all subsequent implementation.
++
++---
++
++## 🚫 NO TIME ESTIMATES
++
++Use **Complexity Score (CS 1-5)** only:
++- CS-1 (trivial): 0-2 points | CS-2 (small): 3-4 | CS-3 (medium): 5-7 | CS-4 (large): 8-9 | CS-5 (epic): 10-12
++- Factors (each 0-2): Surface Area, Integration, Data/State, Novelty, Non-Functional, Testing/Rollout
++
++---
++
++```md
++Inputs:
++  FEATURE_SPEC = `docs/plans/<ordinal>-<slug>/<slug>-spec.md`,
++  PLAN_PATH = `docs/plans/<ordinal>-<slug>/<slug>-plan.md`,
++  rules at `docs/project-rules/{rules.md, idioms.md, architecture.md}` (if present),
++  constitution at `docs/project-rules/constitution.md` (if present),
++  today {{TODAY}}.
++
++## PHASE 0: Detect Mode & Load Domains
++
++**Mode Detection**:
++- Check spec for `**Mode**: Simple` or `**Mode**: Full`
++- Simple → Single-phase plan with inline tasks
++- Full → Multi-phase plan
++
++**Domain Loading**:
++- Read `## Target Domains` from spec → list of existing and NEW domains
++- If `docs/domains/registry.md` exists → read all registered domains
++- For each existing domain in spec's target list → read `docs/domains/<slug>/domain.md`
++  * Note: contracts (what's available to use), composition (what exists), dependencies
++- For each NEW domain → note the sketch from spec (Purpose, Boundary Owns/Excludes)
++
++## PHASE 1: Gates
++
++### GATE - Clarify
++- If critical `[NEEDS CLARIFICATION]` markers remain in spec, instruct running /plan-2-v2-clarify first
++- User can override with --skip-clarify
++
++### GATE - Constitution (if present)
++- Validate plan against docs/project-rules/constitution.md
++- Document deviations:
++
++| Principle Violated | Why Needed | Simpler Alternative Rejected | Risk Mitigation |
++|-------------------|------------|------------------------------|-----------------|
++
++### GATE - Architecture (if present)
++- Validate against `docs/project-rules/architecture.md`
++- Check for layer-boundary violations
++- Document exceptions with justification
++
++## PHASE 2: Research
++
++### Check for Existing Research
++
++If `${PLAN_DIR}/research-dossier.md` exists:
++- Read completely, extract critical findings
++- Reduce to 1 research subagent (implementation-focused only)
++- Reference findings throughout plan
++
++If `${PLAN_DIR}/workshops/*.md` exist:
++- Read all workshops — these are **authoritative design decisions**
++- Do NOT contradict workshop decisions
++- Skip research for workshopped topics
++
++### Research Subagents (2, not 4)
++
++Launch **2 parallel subagents**:
++
++**Subagent 1: Domain & Pattern Scout**
++"What exists that this plan needs to know about?
++
++Check:
++1. `docs/domains/` — existing domain contracts and composition
++2. Codebase patterns relevant to this feature
++3. Integration points where new code connects to existing code
++4. **Anti-reinvention**: Does any capability being planned already exist in a domain?
++
++For each proposed new component, check domain contracts:
++- EXISTING → reuse (report contract and location)
++- EXTEND → add to existing domain (report what to extend)
++- NEW → create fresh (confirm no duplication)
++
++Output: 4-6 findings, Critical and High impact only.
++Format per finding: Title | Impact | What exists | What to do about it"
++
++**Subagent 2: Risk & Constraint Finder**
++"What could go wrong or surprise the implementor?
++
++Check:
++1. API limitations, framework gotchas
++2. Spec ambiguities that affect implementation
++3. Cross-domain dependencies needing coordination
++4. Contract-breaking changes to existing domains
++
++Output: 4-6 findings, Critical and High impact only.
++Format per finding: Title | Impact | The risk | Mitigation"
++
++**Wait for both. Merge into Key Findings table.**
++
++## PHASE 3: Generate Plan
++
++### Plan Output Format
++
++```markdown
++# [Feature Name] Implementation Plan
++
++**Plan Version**: 1.0.0
++**Created**: {{TODAY}}
++**Spec**: [link to spec]
++**Status**: DRAFT
++
++## Summary
++
++[3-5 sentences: Problem, approach, expected outcome]
++
++## Target Domains
++
++[From spec — domains this plan touches]
++
++| Domain | Status | Role |
++|--------|--------|------|
++| ... | ... | ... |
++
++## Domain Manifest
++
++[Every file this plan introduces or modifies, mapped to its domain]
++
++| File | Domain | Classification | Rationale |
++|------|--------|---------------|-----------|
++
++Classification: `contract` (public interface), `internal` (domain-internal), `cross-domain` (editing another domain's files)
++
++## Key Findings
++
++| # | Impact | Finding | Action |
++|---|--------|---------|--------|
++| 01 | Critical | ... | ... |
++| 02 | High | ... | ... |
++
++## Phases
++
++[Generate phases following these principles:]
++
++### Phase Design Principles
++
++- Each phase should primarily target **ONE domain**
++- Multi-domain phases are permitted but each domain-touch is a separate task group
++- Domain creation phases come BEFORE domain extension phases
++- Composition/wiring phases (connecting domains) come LAST
++- For each NEW domain, first phase includes domain setup task:
++  * Create `docs/domains/<slug>/domain.md` (use format from /extract-domain)
++  * Create source directory
++  * Update `docs/domains/registry.md`
++
++### Per-Phase Format
++
++#### Phase N: [Title]
++
++**Objective**: [One sentence]
++**Domain**: [Primary domain this phase targets]
++**Delivers**: [Bullet list of concrete deliverables]
++**Depends on**: [Prior phases or "None"]
++**Key risks**: [1-2 sentences, or "None"]
++
++| # | Task | Domain | Success Criteria | Notes |
++|---|------|--------|-----------------|-------|
++| N.1 | [What to build] | [domain] | [How you know it works] | |
++| N.2 | [What to build] | [domain] | [How you know it works] | Per finding 01 |
++
++### Acceptance Criteria
++
++- [ ] [Testable criterion from spec]
++- [ ] [Testable criterion from spec]
++
++### Risks
++
++| Risk | Likelihood | Impact | Mitigation |
++|------|------------|--------|------------|
++```
++
++### Simple Mode
++
++When `Mode: Simple`, generate a streamlined single-phase plan:
++
++```markdown
++# [Feature Name] Implementation Plan
++
++**Mode**: Simple
++**Plan Version**: 1.0.0
++**Created**: {{TODAY}}
++**Spec**: [link]
++**Status**: DRAFT
++
++## Summary
++[2-3 sentences]
++
++## Target Domains
++[From spec]
++
++## Domain Manifest
++[File → Domain mapping]
++
++## Key Findings
++
++| # | Impact | Finding | Action |
++|---|--------|---------|--------|
++
++## Implementation
++
++**Objective**: [One sentence]
++**Testing Approach**: [From spec]
++
++### Tasks
++
++| Status | ID | Task | Domain | Path(s) | Done When | Notes |
++|--------|-----|------|--------|---------|-----------|-------|
++| [ ] | T001 | ... | ... | /abs/path | ... | |
++
++### Acceptance Criteria
++- [ ] ...
++
++### Risks
++| Risk | Likelihood | Impact | Mitigation |
++|------|------------|--------|------------|
++```
++
++Simple Mode tasks use the 7-column format directly (no plan-5 expansion needed).
++
++**Next steps (Simple Mode)**:
++- Ready to implement: `/plan-6-v2-implement-phase --plan "<path>"`
++- Optional: `/plan-4-complete-the-plan` for validation
++
++**Next steps (Full Mode)**:
++- Run `/plan-4-complete-the-plan` to validate
++- Then `/plan-5-v2-phase-tasks-and-brief` per phase
++
++## PHASE 4: Validation
++
++Before writing the plan, verify:
++- [ ] All phases have task tables
++- [ ] Each task has success criteria
++- [ ] Domain manifest covers all files
++- [ ] Target domains from spec are all addressed
++- [ ] Key findings reference affected phases
++- [ ] No time language present (CS 1-5 only)
++- [ ] Absolute paths used throughout
++
++### Output
++
++1. Create parent directory if needed: `docs/plans/<ordinal>-<slug>/`
++2. Write plan to: `docs/plans/<ordinal>-<slug>/<slug>-plan.md`
++
++```
++✅ Plan created:
++- Location: [path]
++- Phases: [count]
++- Tasks: [count]
++- Domains: [count existing + count new]
++- Next step: [based on mode]
++```
++```
++
++Next step (Full Mode): Run **/plan-4-complete-the-plan** to validate readiness.
++Next step (Simple Mode): Run **/plan-6-v2-implement-phase --plan "<PLAN_PATH>"**
+--- /dev/null	2026-02-03 14:48:37.172593093 +1000
++++ src/jk_tools/agents/v2-commands/plan-5-v2-phase-tasks-and-brief.md	2026-02-22 21:54:36.539442821 +1000
+@@ -0,0 +1,229 @@
++---
++description: Generate a tasks dossier (tasks + context brief) for a phase under the plan tree; stop before making code changes. V2 standalone rewrite with domain awareness and lean output.
++---
++
++Please deep think / ultrathink as this is a complex task.
++
++# plan-5-v2-phase-tasks-and-brief
++
++Generate an actionable **tasks + context brief dossier** for one phase, then stop before implementation. Leaner than v1: 7-column task table, 5-section prior-phase review, simplified audit, Context Brief with diagrams.
++
++---
++
++## 🚫 NO TIME ESTIMATES — Use CS 1-5 only.
++
++---
++
++### Input → Output
++
++```
++INPUT:
++  --phase "Phase 2: Core Implementation"
++  --plan "/abs/path/docs/plans/3-feature-x/feature-x-plan.md"
++
++OUTPUT:
++  docs/plans/3-feature-x/tasks/phase-2-core-implementation/tasks.md
++```
++
++---
++
++```md
++User input:
++
++$ARGUMENTS
++# Expected flags:
++# --phase "<Phase N: Title>"
++# --plan "<abs path to plan.md>"
++#
++# Subtask mode (optional):
++# --subtask "<summary>"
++# --parent "T003"
++
++## MODE DETECTION
++
++If `--subtask` provided → **Subtask Mode** (jump to Subtask section below).
++Otherwise → **Phase Mode** (continue).
++
++---
++
++## PHASE MODE
++
++1) Verify PLAN exists; set PLAN_DIR = dirname(PLAN); define PHASE_DIR = PLAN_DIR/tasks/${PHASE_SLUG}; create if missing.
++
++2) **Prior Phase Review** (skip if Phase 1):
++
++   Determine all prior phases. Launch **parallel subagents** (one per prior phase) with this focused template:
++
++   "Review Phase X implementation. Read:
++   - `PLAN_DIR/tasks/${PHASE_X_SLUG}/tasks.md`
++   - `PLAN_DIR/tasks/${PHASE_X_SLUG}/execution.log.md`
++   - Plan progress tracking for Phase X
++
++   Report these 5 sections ONLY:
++
++   A. **Deliverables**: Files, modules, APIs created (absolute paths)
++   B. **Dependencies Exported**: Signatures, interfaces, data structures available for later phases
++   C. **Gotchas & Debt**: Edge cases, technical debt, things that didn't work as expected
++   D. **Incomplete Items**: Tasks not completed, blockers carrying forward
++   E. **Patterns to Follow**: Established patterns, architectural decisions, anti-patterns to avoid"
++
++   Wait for all subagents. Synthesize into Prior Phase Context section.
++
++3) **Read plan-3 task table** for this phase. Transform and expand into detailed tasks:
++   - Plan-3 tasks (e.g., "2.1") become detailed tasks (T001, T002...)
++   - Apply Key Findings from plan — reference specific findings in Notes
++   - Every task gets a Domain from the plan's Domain Manifest
++
++4) **Pre-Implementation Check**:
++   Quick check for each file in the task table:
++
++   | File | Exists? | Domain Check | Notes |
++   |------|---------|-------------|-------|
++
++   - Does the file exist? (create vs modify)
++   - Is it in the correct domain's source tree?
++   - Run `/code-concept-search` for major new concepts to check for duplication
++   - Flag contract changes (higher risk)
++
++5) **Write tasks.md** containing:
++
++   ### Executive Briefing
++   - **Purpose**: 2-3 sentences — what this phase delivers and why
++   - **What We're Building**: Concrete description
++   - **Goals**: ✅ bullet list
++   - **Non-Goals**: ❌ what this phase is NOT doing
++
++   ### Prior Phase Context
++   [From step 2 — 5 sections per completed phase]
++
++   ### Pre-Implementation Check
++   [From step 4 — quick table]
++
++   ### Architecture Map
++   Mermaid diagram showing components and their relationships:
++
++   ```mermaid
++   flowchart TD
++       classDef pending fill:#9E9E9E,stroke:#757575,color:#fff
++       classDef completed fill:#4CAF50,stroke:#388E3C,color:#fff
++
++       subgraph Phase["Phase N: [Title]"]
++           T001["T001: [Task]"]:::pending
++           T002["T002: [Task]"]:::pending
++           T001 --> T002
++       end
++
++       subgraph Files["Files"]
++           F1["/path/to/file"]:::pending
++       end
++
++       T001 -.-> F1
++   ```
++
++   ### Tasks
++
++   **Canonical 7-column format** (all dossiers MUST use this):
++
++   | Status | ID | Task | Domain | Path(s) | Done When | Notes |
++   |--------|-----|------|--------|---------|-----------|-------|
++   | [ ] | T001 | [What to build] | [domain] | /abs/path | [Success criteria] | |
++
++   - `Status`: `[ ]` pending, `[~]` in progress, `[x]` complete, `[!]` blocked
++   - `ID`: T001, T002... sequence
++   - `Task`: What to build — enough detail for implementation
++   - `Domain`: Which domain this task delivers into
++   - `Path(s)`: Absolute paths to files touched
++   - `Done When`: Plain language success criteria
++   - `Notes`: Finding references, domain constraints, etc.
++
++   ### Context Brief
++
++   **Key findings from plan**:
++   - [Finding N: brief + action required]
++
++   **Domain constraints**:
++   - [Import rules, dependency direction, contract boundaries]
++
++   **Reusable from prior phases**:
++   - [Test fixtures, helpers, patterns available]
++
++   **Mermaid flow diagram** (system states):
++   ```mermaid
++   flowchart LR
++       A[Input] --> B[Process] --> C[Output]
++   ```
++
++   **Mermaid sequence diagram** (actor interactions):
++   ```mermaid
++   sequenceDiagram
++       Actor->>Service: request
++       Service->>Repository: query
++       Repository-->>Service: result
++       Service-->>Actor: response
++   ```
++
++   ### Discoveries & Learnings
++
++   _Populated during implementation by plan-6._
++
++   | Date | Task | Type | Discovery | Resolution | References |
++   |------|------|------|-----------|------------|------------|
++
++   **Types**: `gotcha` | `research-needed` | `unexpected-behavior` | `workaround` | `decision` | `debt` | `insight`
++
++6) **Generate Flight Plan**: Run `/plan-5b-flightplan --phase "${PHASE}" --plan "${PLAN}"`
++
++7) Capture directory layout at end of tasks.md:
++   ```
++   docs/plans/<ordinal>-<slug>/
++     ├── <slug>-plan.md
++     └── tasks/phase-N/
++         ├── tasks.md
++         ├── tasks.fltplan.md
++         └── execution.log.md   # created by plan-6
++   ```
++
++STOP: Do NOT edit code. Output tasks.md and wait for human GO.
++
++---
++
++## SUBTASK MODE
++
++Activated when `--subtask` is provided. Focused subtask dossier alongside parent phase.
++
++S1) Resolve paths:
++   - PLAN, PLAN_DIR, PHASE_DIR from flags
++   - SUBTASK_SLUG = kebab-case summary
++   - ORD = next ordinal (001, 002...)
++   - SUBTASK_FILE = `${PHASE_DIR}/${ORD}-subtask-${SUBTASK_SLUG}.md`
++
++S2) Parse parent context:
++   - Load plan key findings
++   - Load parent tasks.md, locate PARENT_TASK row
++
++S3) Define subtask tasks:
++   - Break down into ST001, ST002... using same 7-column format
++   - Notes reference parent T-ID
++
++S4) Pre-Implementation Check (scoped to subtask files only)
++
++S5) Write subtask dossier containing:
++   - Parent Context (phase, task, why this subtask)
++   - Executive Briefing (scoped to subtask)
++   - Pre-Implementation Check
++   - Architecture Map (parent task as blocked node, subtask nodes, "unblocks" edge)
++   - Tasks table (ST### rows)
++   - Context Brief (scoped)
++   - Discoveries & Learnings (empty table)
++   - After Subtask Completion (resumption guide)
++
++S6) Generate Flight Plan for subtask
++
++S7) Register subtask in plan's Subtasks Registry (create section if missing)
++
++S8) Update parent task's Notes in tasks.md to reference subtask
++
++STOP: Do NOT edit code. Output subtask dossier and wait for human GO.
++```
++
++Next step: Run **/plan-6-v2-implement-phase --phase "<Phase N: Title>" --plan "<PLAN_PATH>"**
+--- /dev/null	2026-02-03 14:48:37.172593093 +1000
++++ src/jk_tools/agents/v2-commands/plan-6-v2-implement-phase.md	2026-02-22 21:56:34.127635091 +1000
+@@ -0,0 +1,130 @@
++---
++description: Implement exactly one approved phase or subtask using the testing approach from the plan, with domain placement rules. V2 standalone rewrite.
++---
++
++Please deep think / ultrathink as this is a complex task.
++
++# plan-6-v2-implement-phase
++
++Implement **exactly one** approved phase or subtask using the **testing approach from the plan**. Apply domain placement rules. Update domain.md files after implementation.
++
++---
++
++## 📝 LOG DISCOVERIES AS YOU GO
++
++Throughout implementation, capture discoveries in:
++1. **Execution Log** (`execution.log.md`) — detailed narrative
++2. **Discoveries Table** (`## Discoveries & Learnings` in tasks.md or plan) — structured record
++
++Log when you encounter: something unexpected, needed research, hit a trouble spot, found a gotcha, made a decision, introduced debt, or gained an insight.
++
++---
++
++## 🛑 UPDATE PROGRESS AFTER EVERY TASK
++
++After completing EACH task:
++1. ☑️ Tasks Table — `[ ]` → `[x]`
++2. 🎨 Architecture Map — node → `:::completed`
++3. 📝 Execution Log — append task entry with evidence
++
++DO NOT start the next task until updates are done.
++
++---
++
++```md
++User input:
++
++$ARGUMENTS
++# Expected flags:
++# --phase "<Phase N: Title>" (Full Mode) or omitted (Simple Mode)
++# --plan "<abs path to plan.md>"
++# --subtask "<ORD-subtask-slug>" (optional)
++
++1) Resolve paths:
++   PLAN = provided --plan
++   PLAN_DIR = dirname(PLAN)
++
++   **Mode Detection**: Read PLAN for `**Mode**: Simple` or `**Mode**: Full`
++
++   **Full Mode**:
++   - PHASE_DIR = PLAN_DIR/tasks/${PHASE_SLUG}
++   - PHASE_DOC = ${PHASE_DIR}/tasks.md
++   - EXEC_LOG = ${PHASE_DIR}/execution.log.md
++   - If --subtask: PHASE_DOC = ${PHASE_DIR}/${SUBTASK_KEY}.md
++
++   **Simple Mode**:
++   - Check for optional dossier: ${PLAN_DIR}/tasks/implementation/tasks.md
++   - If exists → PHASE_DOC = that file
++   - If not → PHASE_DOC = PLAN itself (inline tasks from § Implementation)
++   - EXEC_LOG = ${PLAN_DIR}/execution.log.md
++
++2) Load context:
++   - Read Testing Strategy from plan (approach + mock usage)
++   - Read task table from PHASE_DOC
++   - Read Context Brief / Key Findings for hazards to watch for
++   - **Load domain context**:
++     * Read `## Target Domains` from spec
++     * Read `## Domain Manifest` from plan
++     * For each domain being modified, read `docs/domains/<slug>/domain.md`
++
++3) Execute tasks:
++   Follow task order. Apply testing approach from plan:
++
++   **Full TDD**: RED-GREEN-REFACTOR loop per task
++   **Lightweight**: Minimal validation tests for core functionality
++   **Manual**: Document verification steps, execute manually
++   **Hybrid**: Apply approach per task annotation
++
++   ### Domain Placement Rules
++
++   1. Every new file MUST go under its declared domain's source directory
++   2. Contract files (public interfaces) go in the domain's contracts/ directory
++   3. Cross-domain imports MUST use the target domain's public contracts only
++      (never import from another domain's internals)
++   4. Dependency direction:
++      - business → infrastructure: ✅ allowed
++      - infrastructure → business: ❌ never
++      - business → business: ⚠️ contracts only
++   5. When creating a NEW domain (domain setup task):
++      - Create `docs/domains/<slug>/domain.md` using format from /extract-domain
++      - Create source directory structure
++      - Update `docs/domains/registry.md`
++
++4) After ALL tasks complete — update domain files:
++
++   For each domain touched by this phase:
++
++   a) **Update domain.md § History**:
++      ```markdown
++      | [plan-ordinal-slug] | [What changed — 1 line summary] | [today] |
++      ```
++
++   b) **Update domain.md § Composition** (if new services/adapters/repos created):
++      Add new rows to the composition table.
++
++   c) **Update domain.md § Contracts** (if public interface changed):
++      Add/modify contract entries.
++
++   d) **Update domain.md § Dependencies** (if new domain relationships formed):
++      Add to "This Domain Depends On" or "Domains That Depend On This".
++
++   e) **Update domain.md § Source Location** (if new files added):
++      Add file paths to source location listing.
++
++   f) **Update docs/domains/registry.md** if domain status changed.
++
++5) Output:
++   - Execution Log with per-task entries (write incrementally)
++   - Unified diffs for all touched files
++   - Evidence (test output, verification results)
++   - Domain files updated (domain.md changes listed)
++   - Final status mapped to acceptance criteria
++   - Suggested commit message
++
++6) Auto-run plan-6a-v2-update-progress for each completed task.
++
++STOP: Report phase complete. Suggest next step.
++```
++
++**Next step (Full Mode)**: Run **/plan-7-v2-code-review --phase "<Phase N: Title>" --plan "<PLAN_PATH>"**
++**Next step (Simple Mode)**: Run **/plan-7-v2-code-review --plan "<PLAN_PATH>"**
+--- /dev/null	2026-02-03 14:48:37.172593093 +1000
++++ src/jk_tools/agents/v2-commands/plan-6a-v2-update-progress.md	2026-02-22 21:56:34.127635091 +1000
+@@ -0,0 +1,69 @@
++---
++description: Update plan progress with task status and domain context. V2 standalone rewrite.
++---
++
++# plan-6a-v2-update-progress
++
++Update plan and dossier progress tracking with task status. Adds domain context to change tracking.
++
++```md
++User input:
++
++$ARGUMENTS
++# Expected flags:
++# --plan "<abs path to plan.md>"
++# --task "<task ID, e.g., T001>"
++# --status "completed|in_progress|blocked"
++# --changes "class:path:Name,method:path:Name.method,function:path:funcName,file:path"
++# --domain "<domain slug>" (optional — inferred from task table if not provided)
++# Optional:
++# --phase "<Phase N: Title>" (Full Mode)
++# --subtask "<subtask-key>" (if updating subtask)
++# --inline (Simple Mode — update inline task table in plan)
++
++## Steps
++
++1) Resolve paths:
++   - PLAN, PLAN_DIR from --plan
++   - If --inline: update task table within PLAN itself
++   - If --phase: locate dossier at PLAN_DIR/tasks/${PHASE_SLUG}/tasks.md
++   - If --subtask: locate subtask dossier
++
++2) Parse --changes into structured entries:
++   - `class:path:ClassName` → class node
++   - `method:path:ClassName.method_name` → method node
++   - `function:path:function_name` → function node
++   - `file:path` → file-level change
++
++3) Determine domain:
++   - If --domain provided, use it
++   - Otherwise, read task table and extract Domain column for the task
++   - If no domain found, use "unknown"
++
++4) Update task status:
++   - In task table (dossier or inline): update Status column
++     * `completed` → `[x]`
++     * `in_progress` → `[~]`
++     * `blocked` → `[!]`
++   - Update Architecture Map nodes if present
++
++5) Update progress tracking in PLAN:
++   - Locate progress section
++   - Update phase/task status
++
++6) Record changes with domain context:
++   - If plan has a Change Footnotes Ledger, append entry:
++
++   ```markdown
++   [^N]: Task [plan-task-id] - [one-line summary]
++     - domain: [domain-slug]
++     - `[change-entry-1]`
++     - `[change-entry-2]`
++   ```
++
++   - Determine next footnote number by reading existing ledger entries
++
++7) Report what was updated.
++```
++
++This command is the **single source of truth** for progress updates. Always delegate progress tracking to this command rather than manually editing task tables.
+--- /dev/null	2026-02-03 14:48:37.172593093 +1000
++++ src/jk_tools/agents/v2-commands/plan-7-v2-code-review.md	2026-02-22 21:56:34.164635465 +1000
+@@ -0,0 +1,152 @@
++---
++description: Read-only per-phase code review with domain compliance validation. V2 standalone rewrite.
++---
++
++Please deep think / ultrathink as this is a complex task.
++
++# plan-7-v2-code-review
++
++Read-only code review that inspects diffs, verifies domain compliance, checks for concept reinvention, and produces structured findings. Does NOT modify code.
++
++---
++
++```md
++User input:
++
++$ARGUMENTS
++# Expected flags:
++# --phase "<Phase N: Title>" (Full Mode) or omitted (Simple Mode)
++# --plan "<abs path to plan.md>"
++
++## Steps
++
++1) Resolve paths:
++   - PLAN, PLAN_DIR, SPEC from --plan
++   - Full Mode: PHASE_DIR, tasks.md, execution.log.md
++   - Simple Mode: read inline tasks from plan
++
++2) Gather diffs:
++   - Read execution.log.md for files changed
++   - Use `git diff` to collect actual changes
++   - If no git changes, read file list from task table Path(s) column
++
++3) Launch review subagents in parallel:
++
++### Subagent 1: Implementation Quality
++"Review the code changes for this phase.
++
++Read:
++- All changed files (from diffs)
++- Task table (expected changes)
++- Acceptance criteria
++
++Check:
++- Do changes match what the tasks specified?
++- Are there obvious bugs, logic errors, or security issues?
++- Is error handling adequate?
++- Are edge cases handled?
++- Does the code follow existing patterns in the codebase?
++
++Output: Findings as SEVERITY (HIGH/MEDIUM/LOW) | File | Issue | Suggestion
++Only report issues that genuinely matter. No style nits."
++
++### Subagent 2: Domain Compliance Validator
++"Validate domain compliance for all changes in this phase.
++
++Read:
++- `docs/domains/registry.md` — all registered domains
++- `docs/domains/<slug>/domain.md` — for each domain touched
++- Plan's Domain Manifest — expected file→domain mapping
++- All changed files
++
++Check:
++1. **File placement**: Every new file is under its declared domain's source tree
++2. **Contract-only imports**: No imports from another domain's internal files
++   (only contracts/ or public exports are allowed)
++3. **Dependency direction**:
++   - business → infrastructure: ✅
++   - infrastructure → business: ❌ VIOLATION
++   - business → business: only via contracts
++4. **Domain.md currency**: domain.md § History updated for this plan,
++   § Composition updated if new components added,
++   § Contracts updated if public interface changed
++5. **Registry currency**: docs/domains/registry.md reflects any new domains
++6. **No orphan files**: Every changed file maps to a domain in the manifest
++
++Output: Findings as SEVERITY | File | Rule Violated | Details | Fix"
++
++### Subagent 3: Anti-Reinvention Check
++"Check whether this phase introduced functionality that already exists in another domain.
++
++Read:
++- All NEW files created in this phase
++- `docs/domains/*/domain.md` — contracts and composition for all domains
++
++For each major new component (service, adapter, repository, handler):
++1. Run `/code-concept-search "<component concept>"` against the codebase
++2. Check domain contracts for overlapping capabilities
++3. Flag if similar functionality exists in another domain
++
++Output: Findings as SEVERITY | New Component | Existing Match | Domain | Recommendation
++Only flag genuine duplication, not incidental similarity."
++
++4) Collect and merge findings from all subagents.
++
++5) Produce structured review:
++
++```markdown
++# Code Review: [Phase Title]
++
++**Plan**: [path]
++**Date**: [today]
++**Reviewer**: Automated (plan-7-v2)
++
++## Summary
++
++[2-3 sentences: overall quality, domain compliance status, reinvention check results]
++
++## Findings
++
++### Critical (must fix)
++| # | File | Issue | Recommendation |
++|---|------|-------|---------------|
++
++### High (should fix)
++| # | File | Issue | Recommendation |
++|---|------|-------|---------------|
++
++### Medium (consider)
++| # | File | Issue | Recommendation |
++|---|------|-------|---------------|
++
++## Domain Compliance
++
++| Check | Status | Details |
++|-------|--------|---------|
++| File placement | ✅/❌ | [details] |
++| Contract-only imports | ✅/❌ | [details] |
++| Dependency direction | ✅/❌ | [details] |
++| Domain.md updated | ✅/❌ | [details] |
++| Registry current | ✅/❌ | [details] |
++| No orphan files | ✅/❌ | [details] |
++
++## Anti-Reinvention
++
++| New Component | Existing Match? | Domain | Status |
++|--------------|----------------|--------|--------|
++| [component] | None found | — | ✅ Clean |
++| [component] | [similar in domain X] | [domain] | ⚠️ Review |
++
++## Verdict
++
++**[PASS | PASS WITH NOTES | NEEDS FIXES]**
++
++[If NEEDS FIXES: list the critical/high items that must be addressed]
++```
++
++6) Save review to PHASE_DIR (Full Mode) or PLAN_DIR (Simple Mode).
++
++STOP: This is a read-only review. Do NOT modify any code.
++```
++
++Output: Structured review with domain compliance validation, anti-reinvention results, and verdict.
