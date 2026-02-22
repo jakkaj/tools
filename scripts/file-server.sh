@@ -12,7 +12,7 @@ BASE_PORT=9090
 MAX_PORT=9099
 DOCKER_IMAGE="filebrowser/filebrowser:latest"
 FB_USERNAME="jordo"
-FB_PASSWORD="jordo"
+FB_PASSWORD_PLAIN="jordo"
 
 # Status output functions
 print_status() { echo "[*] $1"; }
@@ -198,7 +198,12 @@ main() {
   print_status "Ensuring Docker image is available..."
   docker pull "$DOCKER_IMAGE" >/dev/null 2>&1 || true
 
-  # Run the container
+  # Hash the password using the filebrowser image
+  print_status "Hashing password..."
+  local password_hash
+  password_hash=$(docker run --rm "$DOCKER_IMAGE" hash "$FB_PASSWORD_PLAIN" 2>/dev/null)
+
+  # Run the container with credentials via env vars
   print_status "Starting filebrowser container..."
 
   local container_id
@@ -208,6 +213,8 @@ main() {
     -v "${project_dir}:/srv" \
     -e "UID=$(id -u)" \
     -e "GID=$(id -g)" \
+    -e "FB_USERNAME=${FB_USERNAME}" \
+    -e "FB_PASSWORD=${password_hash}" \
     "$DOCKER_IMAGE")
 
   if [[ -z "$container_id" ]]; then
@@ -215,23 +222,15 @@ main() {
     exit 1
   fi
 
-  # Wait for container to start and DB to initialize
-  sleep 2
+  # Wait for container to start
+  sleep 1
 
   # Verify container is running
   if docker ps -q --filter "id=$container_id" | grep -q .; then
-    # Configure credentials: rename default admin user and set password
-    print_status "Configuring credentials..."
-    docker exec "$container_name" filebrowser users update 1 \
-      --username "$FB_USERNAME" --password "$FB_PASSWORD" \
-      -d /database/filebrowser.db >/dev/null 2>&1 \
-      && print_success "Credentials set: $FB_USERNAME / $FB_PASSWORD" \
-      || print_error "Failed to set credentials (default: admin/admin)"
-
     print_success "Container started successfully"
     echo ""
     echo "  URL:       http://localhost:${port}"
-    echo "  Login:     $FB_USERNAME / $FB_PASSWORD"
+    echo "  Login:     $FB_USERNAME / $FB_PASSWORD_PLAIN"
     echo "  Container: $container_name"
     echo "  Serving:   $project_dir"
     echo ""
