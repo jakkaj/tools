@@ -26,12 +26,14 @@ These commands are **standalone rewrites** of select v1 commands from `agents/co
 | `plan-6-v2-implement-phase` | `plan-6-implement-phase` | Domain placement rules, post-implementation domain.md updates |
 | `plan-6a-v2-update-progress` | `plan-6a-update-progress` | Domain context in progress tracking |
 | `plan-7-v2-code-review` | `plan-7-code-review` | Domain Compliance Validator, anti-reinvention checks |
+| `plan-2c-v2-workshop` | `plan-2c-workshop` | Domain context in workshop design documents |
+| `didyouknow-v2` | `didyouknow` | Domain boundary/contract insights when relevant |
 
 ## Commands That Don't Need V2
 
 These work unchanged with domain-aware projects:
 
-`plan-0-constitution`, `plan-1a-explore`, `plan-2b-prep-issue`, `plan-2c-workshop`, `plan-3a-adr`, `plan-4-complete-the-plan`, `plan-5b-flightplan`, `plan-5c-requirements-flow`, `plan-6b-worked-example`, `plan-8-merge`, `code-concept-search`, `deepresearch`, `didyouknow`, `flowspace-research`, `tad`, `util-0-handover`
+`plan-0-constitution`, `plan-1a-explore`, `plan-2b-prep-issue`, `plan-3a-adr`, `plan-4-complete-the-plan`, `plan-5b-flightplan`, `plan-5c-requirements-flow`, `plan-6b-worked-example`, `plan-8-merge`, `code-concept-search`, `deepresearch`, `flowspace-research`, `tad`, `util-0-handover`
 
 ## Domain System Overview
 

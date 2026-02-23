@@ -178,6 +178,18 @@ Otherwise → **Phase Mode** (continue).
 
 6) **Generate Flight Plan**: Run `/plan-5b-flightplan --phase "${PHASE}" --plan "${PLAN}"`
 
+   The flight plan MUST include these sections (plan-5b generates them):
+   - **Departure → Destination**: Where we are now, where we're going (concrete outcomes)
+   - **Domain Context**: Domains we're changing (create/modify) with overview of changes and key files, AND domains we depend on (consume) with which contracts we use
+   - **Flight Status**: Mermaid state diagram showing task progression
+   - **Stages**: Checkbox list of tasks in plain English
+   - **Architecture: Before & After**: Mermaid diagram showing system before/after this phase
+   - **Acceptance Criteria**: What "done" looks like
+   - **Goals & Non-Goals**: Scope boundaries
+   - **Checklist**: Task IDs with CS scores
+
+   If the flight plan comes back without Departure→Destination or Domain Context, it's incomplete — regenerate.
+
 7) Capture directory layout at end of tasks.md:
    ```
    docs/plans/<ordinal>-<slug>/
