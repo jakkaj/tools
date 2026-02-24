@@ -38,9 +38,15 @@ $ARGUMENTS
 # Subtask mode (optional):
 # --subtask "<summary>"
 # --parent "T003"
+#
+# Fix mode (optional):
+# --fix "<summary>"               # Activates fix mode — lightweight tracked fix
+# --from-review "<abs path>"      # Load fixes from plan-7-v2 fix-tasks.md
+# --fix --list                    # List existing fixes
 
 ## MODE DETECTION
 
+If `--fix` provided → **Fix Mode** (jump to Fix section below).
 If `--subtask` provided → **Subtask Mode** (jump to Subtask section below).
 Otherwise → **Phase Mode** (continue).
 
@@ -241,6 +247,177 @@ S7) Register subtask in plan's Subtasks Registry (create section if missing)
 S8) Update parent task's Notes in tasks.md to reference subtask
 
 STOP: Do NOT edit code. Output subtask dossier and wait for human GO.
+
+---
+
+## FIX MODE
+
+Activated when `--fix` is provided. Generates a lightweight, tracked fix dossier — smaller than a subtask, with its own flight plan and execution log. For small, scoped work that still needs domain awareness, approval, and posterity.
+
+### Fix vs Subtask vs Phase
+
+| | Fix | Subtask | Phase |
+|---|---|---|---|
+| Size | 1-5 tasks | 3-10 tasks | 5-20 tasks |
+| Needs plan? | Optional | Yes | Yes |
+| Flight plan? | Yes (mini) | Yes | Yes |
+| Execution log? | Yes | Yes | Yes |
+| Code review? | Yes | Yes | Yes |
+
+### When to Use
+
+- Bug fix (1-3 files)
+- Addressing plan-7-v2 review findings
+- Small enhancement within an existing domain
+- Quick refactor with clear scope
+- Config/documentation fix that needs tracking
+
+### When NOT to Use
+
+- Touches 5+ domains → use a phase
+- Changes domain contracts → use a phase
+- Needs research/discovery → use a plan
+
+### Fix Flow
+
+F1) Resolve paths:
+   - If `--fix --list`: show existing fixes and exit
+   - If --plan provided: FIX_DIR = PLAN_DIR/fixes/
+   - If standalone (no --plan): FIX_DIR = docs/fixes/
+   - Create FIX_DIR if missing
+   - FIX_ORD = next available FX### ordinal (scan existing FX*.md files)
+   - FIX_SLUG = kebab-case summary
+   - FIX_FILE = ${FIX_DIR}/FX${ORD}-${FIX_SLUG}.md
+
+F2) If `--from-review` provided:
+   - Read the fix-tasks file from plan-7-v2 review
+   - Present fix tasks to user
+   - User selects which to address (may group related items)
+   - Use selected items to populate Problem and Tasks sections
+
+F3) Load domain context:
+   - Read `docs/domains/registry.md` and `docs/domains/domain-map.md` (if exist)
+   - Identify which domains this fix touches
+   - Read relevant `docs/domains/<slug>/domain.md` for contracts and composition
+   - If fix affects domain contracts → flag as higher risk in the dossier
+
+F4) Quick codebase check:
+   - Read the files that will be changed — verify they exist and belong to expected domains
+   - NO full pre-implementation audit (too heavy for a fix)
+   - NO prior-phase review (fixes are self-contained)
+
+F5) Check for relevant workshops:
+   - If --plan exists, check PLAN_DIR/workshops/ for relevant workshops
+   - Note any consumed workshops in the dossier
+
+F6) Write fix dossier (FIX_FILE):
+
+```markdown
+# Fix FX[ORD]: [Summary]
+
+**Created**: [today]
+**Status**: Proposed
+**Plan**: [link to parent plan, or "Standalone"]
+**Source**: [what prompted this — review finding ID, bug report, user request]
+**Domain(s)**: [domains touched with relationship]
+
+---
+
+## Problem
+
+[2-3 sentences: What's broken or missing? Why does it matter?]
+
+## Proposed Fix
+
+[2-5 sentences: What will be changed and how?]
+
+## Domain Impact
+
+| Domain | Relationship | What Changes |
+|--------|-------------|-------------|
+
+## Tasks
+
+| Status | ID | Task | Domain | Path(s) | Done When | Notes |
+|--------|-----|------|--------|---------|-----------|-------|
+| [ ] | FX[ORD]-1 | [task] | [domain] | [/abs/path] | [criteria] | |
+
+## Workshops Consumed
+
+[Links to relevant workshops, or "None"]
+
+## Acceptance
+
+- [ ] [testable criterion]
+
+## Discoveries & Learnings
+
+_Populated during implementation._
+
+| Date | Task | Type | Discovery | Resolution |
+|------|------|------|-----------|------------|
+```
+
+F7) Generate mini flight plan:
+   Write ${FIX_DIR}/FX${ORD}-${FIX_SLUG}.fltplan.md:
+
+```markdown
+# Flight Plan: Fix FX[ORD] — [Summary]
+
+**Fix**: [link to fix dossier]
+**Status**: Ready
+
+## What → Why
+
+**Problem**: [one sentence]
+**Fix**: [one sentence]
+
+## Domain Context
+
+| Domain | Relationship | What Changes |
+|--------|-------------|-------------|
+
+## Stages
+
+- [ ] [stage 1]
+- [ ] [stage 2]
+
+## Acceptance
+
+- [ ] [criterion]
+```
+
+F8) Create empty execution log:
+   ${FIX_DIR}/FX${ORD}-${FIX_SLUG}.log.md
+
+F9) Register fix in parent plan (if --plan provided):
+   - Check for `## Fixes` section in plan
+   - If missing, append it:
+     ```markdown
+     ## Fixes
+
+     | ID | Created | Summary | Domain(s) | Status | Source |
+     |----|---------|---------|-----------|--------|--------|
+     ```
+   - Add row for this fix
+
+STOP: Output fix dossier. Wait for user **APPROVE** before implementation.
+
+### After Approval
+
+```bash
+# Implement
+/plan-6-v2-implement-phase --fix "FX001" --plan "<PLAN_PATH>"
+# or standalone:
+/plan-6-v2-implement-phase --fix "FX001"
+
+# Review
+/plan-7-v2-code-review --fix "FX001" --plan "<PLAN_PATH>"
+```
+
+plan-6-v2 reads the fix dossier, implements tasks, updates execution log, updates domain.md/domain-map.md if needed, marks fix Complete.
+
+plan-7-v2 reviews the fix — same subagents scoped to fix files, validates domain compliance, produces review with handover brief.
 ```
 
 Next step: Run **/plan-6-v2-implement-phase --phase "<Phase N: Title>" --plan "<PLAN_PATH>"**
