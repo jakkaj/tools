@@ -26,6 +26,11 @@ After completing EACH task:
 1. ☑️ Tasks Table — `[ ]` → `[x]`
 2. 🎨 Architecture Map — node → `:::completed`
 3. 📝 Execution Log — append task entry with evidence
+4. ✈️ Flight Plan (`tasks.fltplan.md` or `FX###.fltplan.md`) — update:
+   - **Stages**: `[ ]` → `[~]` (starting) → `[x]` (done)
+   - **Flight Status Mermaid**: change task state class `pending` → `active` → `done` (or `blocked` if stuck)
+   - **Checklist**: `[ ]` → `[x]` for matching task ID
+   - When ALL stages complete: change `**Status**: Ready for takeoff` → `**Status**: Landed`
 
 DO NOT start the next task until updates are done.
 
