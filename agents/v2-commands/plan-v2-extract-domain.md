@@ -43,12 +43,14 @@ $ARGUMENTS
 If `--list` flag provided:
 - Read `docs/domains/registry.md` (if exists)
 - Display all registered domains with slug, type, status
+- If `docs/domains/domain-map.md` exists, show it too — the map gives the visual overview of how domains relate
 - If no registry exists, report "No domains registered yet"
 - Exit
 
 ## Step 1: Check for Existing Domain
 
 - Read `docs/domains/registry.md` if it exists
+- Read `docs/domains/domain-map.md` if it exists — understand the current domain topology, existing contract relationships, and where a new domain might fit
 - Check if a domain with matching slug already exists
 - If exists: report it and ask user whether to update or abort
 - Generate slug from concept: lowercase, replace spaces with hyphens, strip non-alphanumeric
@@ -287,6 +289,21 @@ flowchart LR
 2. Add the new domain node with its exposed contracts
 3. Add edges for dependencies (from domain.md § Dependencies)
 4. If existing domains now depend on the new domain, add those edges too
+5. Update the **Domain Health Summary** table:
+
+```markdown
+## Domain Health Summary
+
+| Domain | Contracts Out | Consumers | Contracts In | Providers | Status |
+|--------|--------------|-----------|-------------|-----------|--------|
+```
+
+For each domain on the map, fill in:
+- **Contracts Out**: What it exposes (from node label)
+- **Consumers**: Which domains have edges pointing TO this domain
+- **Contracts In**: What it consumes (from outgoing edges)
+- **Providers**: Which domains it has edges pointing FROM
+- **Status**: ✅ Healthy (has contracts, edges labeled, no circular business deps), ⚠️ Review (zero consumers for mature domain, or high fan-in), ❌ Problem (circular business dep, unlabeled edges, no contracts)
 
 ## Step 6: Report
 
