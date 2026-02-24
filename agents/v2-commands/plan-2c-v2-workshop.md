@@ -74,10 +74,10 @@ def resolve_plan(input):
 **--list mode**: Show existing workshops
 ```
 Workshops in docs/plans/003-workflow-service/:
-  1. cli-command-flows.md (CLI Flow) - Created 2024-01-15
-  2. workunit-data-model.md (Data Model) - Created 2024-01-16
+  001-cli-command-flows.md (CLI Flow) - Created 2024-01-15
+  002-workunit-data-model.md (Data Model) - Created 2024-01-16
   
-Run: /plan-2c-workshop 003-workflow-service "<topic>" to create new
+Run: /plan-2c-v2-workshop 003-workflow-service "<topic>" to create new
 ```
 
 **--from-spec mode**: Read spec's Workshop Opportunities and prompt user to select
@@ -95,11 +95,14 @@ Select topic number (or 'all' to create all): _
 
 **Direct topic mode**: Create workshop for specified topic
 
-### 3) Check for Existing Workshop
+### 3) Check for Existing Workshop & Determine Ordinal
 
-- Look for `${PLAN_DIR}/workshops/${topic-slug}.md`
-- If exists: Ask whether to update or create new
-- If not exists: Create new
+- Scan `${PLAN_DIR}/workshops/` for existing files matching `NNN-*.md` pattern
+- Determine next ordinal: highest NNN + 1 (zero-pad to 3 digits, start at 001)
+- Check if a workshop with matching topic-slug already exists (any ordinal)
+- If exists: Ask whether to update existing or create new
+- If not exists: Create new with next ordinal
+- WORKSHOP_FILE = `${PLAN_DIR}/workshops/${ORD}-${topic-slug}.md`
 
 ### 4) Gather Context
 
@@ -370,7 +373,7 @@ stateDiagram-v2
 
 ### 6) Output
 
-**Save to**: `${PLAN_DIR}/workshops/${topic-slug}.md`
+**Save to**: `${PLAN_DIR}/workshops/${ORD}-${topic-slug}.md`
 
 **Success message**:
 ```
