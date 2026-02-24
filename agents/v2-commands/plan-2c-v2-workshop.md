@@ -118,6 +118,7 @@ Select topic number (or 'all' to create all): _
 
 4. **Load domain context** (if `docs/domains/registry.md` exists)
    - Read spec's `## Target Domains` to understand which domains are relevant
+   - Read `docs/domains/domain-map.md` if it exists — understand how domains connect and what contracts flow between them
    - For domains this workshop topic relates to, read `docs/domains/<slug>/domain.md`
    - Note existing contracts and composition — the workshop design should respect domain boundaries
    - If the workshop is designing a new service/adapter/model, check which domain it belongs to

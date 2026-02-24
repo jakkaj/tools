@@ -36,6 +36,7 @@ Inputs:
 **Domain Loading**:
 - Read `## Target Domains` from spec → list of existing and NEW domains
 - If `docs/domains/registry.md` exists → read all registered domains
+- If `docs/domains/domain-map.md` exists → read the domain architecture diagram to understand current relationships and contract flows
 - For each existing domain in spec's target list → read `docs/domains/<slug>/domain.md`
   * Note: contracts (what's available to use), composition (what exists), dependencies
 - For each NEW domain → note the sketch from spec (Purpose, Boundary Owns/Excludes)
@@ -161,6 +162,7 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
   * Create `docs/domains/<slug>/domain.md` (use format from /extract-domain)
   * Create source directory
   * Update `docs/domains/registry.md`
+  * Update `docs/domains/domain-map.md` — add new domain node with exposed contracts and dependency edges
 
 ### Per-Phase Format
 

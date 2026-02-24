@@ -67,6 +67,8 @@ Updates to spec: Add `## Testing Strategy` with Approach, Rationale, Focus Areas
 
 ### Domain Review
 
+If `docs/domains/domain-map.md` exists, read it to understand the current domain topology before asking questions.
+
 Present the Target Domains from the spec:
 
 ```
@@ -85,10 +87,12 @@ Ask the user to confirm using ask_user:
 - Does the boundary look right?
 - Should any part be absorbed into an existing domain instead?
 - Are the contracts clear enough to proceed?
+- How will this domain connect on the domain map? (contracts in/out)
 
 **For existing domains**:
 - Will changes respect existing contracts?
 - Any contract-breaking changes needed? (flag for ADR)
+- Does the domain map show any topology concerns? (circular deps, high fan-in)
 
 **After Domain Review**: Update spec `## Target Domains` section with user's adjustments. If user identified new domain boundaries or merged domains, update the table and sketches accordingly.
 

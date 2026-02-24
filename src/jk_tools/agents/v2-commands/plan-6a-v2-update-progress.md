@@ -51,6 +51,7 @@ $ARGUMENTS
    - Log which domain(s) were affected and what changed
    - Note any new components added to domain composition
    - Note any contract changes
+   - Flag if `docs/domains/domain-map.md` needs updating (new contracts, new edges, new domains)
 
 7) Report what was updated.
 ```

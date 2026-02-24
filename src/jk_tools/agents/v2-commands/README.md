@@ -42,6 +42,7 @@ Domains are persistent, named business concept boundaries. Every source file bel
 ```
 docs/domains/
 ├── registry.md              # Master index of all domains
+├── domain-map.md            # Mermaid architecture diagram — domains as components with contract edges
 ├── auth/
 │   ├── domain.md            # Locked-down definition (required sections)
 │   └── *.md                 # Freeform notes, sketches, research
@@ -55,4 +56,6 @@ src/
 └── _platform/               # Mirrors docs/domains/_platform/
 ```
 
-See `plan-v2-extract-domain.md` for the full domain.md template and registry format.
+The **domain map** (`domain-map.md`) shows all domains as components with labeled contract edges between them. It validates that domains are truly first-class — if a domain can't be placed on the map with clear contracts in/out, it needs better definition.
+
+See `plan-v2-extract-domain.md` for the full domain.md template, registry format, and domain map format.

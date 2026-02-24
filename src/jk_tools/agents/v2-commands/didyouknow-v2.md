@@ -50,7 +50,7 @@ Build shared understanding between human and AI. In **default mode**, surface no
   * If analyzing plan → also read the spec
   * If analyzing tasks → also read the plan and spec
   * If analyzing code → read relevant docs if they exist
-- **Domain awareness**: If `docs/domains/registry.md` exists, scan relevant domain.md files for context. Note which domains the current artifact targets (from spec `## Target Domains` if present). This is background context — domain insights surface naturally alongside other lenses, not as a forced category.
+- **Domain awareness**: If `docs/domains/registry.md` exists, scan relevant domain.md files for context. If `docs/domains/domain-map.md` exists, read the topology to understand contract relationships and potential issues (circular deps, orphans, god domains). Note which domains the current artifact targets (from spec `## Target Domains` if present). This is background context — domain insights surface naturally alongside other lenses, not as a forced category.
 
 ### 2) ULTRA-DEEP THINKING (Most Critical Step)
 

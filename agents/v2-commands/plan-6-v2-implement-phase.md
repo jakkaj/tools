@@ -113,6 +113,12 @@ $ARGUMENTS
 
    f) **Update docs/domains/registry.md** if domain status changed.
 
+   g) **Update docs/domains/domain-map.md** if:
+      - New domain was created → add node with exposed contracts
+      - New contracts were added to existing domain → update node label
+      - New cross-domain dependency formed → add labeled edge
+      - Domain contracts changed → update the Health Summary table
+
 5) Output:
    - Execution Log with per-task entries (write incrementally)
    - Unified diffs for all touched files

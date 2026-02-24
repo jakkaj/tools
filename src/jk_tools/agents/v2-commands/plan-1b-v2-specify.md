@@ -34,6 +34,7 @@ $ARGUMENTS
 1b) Check for existing domains:
    - If `docs/domains/registry.md` exists:
      * Read the registry to understand what domains already exist
+     * Read `docs/domains/domain-map.md` if it exists — understand the current domain architecture and contract relationships
      * For each domain, scan `docs/domains/<slug>/domain.md` for relevant contracts and composition
      * Use existing domains to inform the Target Domains section
    - If no domain registry exists:

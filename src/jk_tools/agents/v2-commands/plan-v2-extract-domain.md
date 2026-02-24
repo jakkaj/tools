@@ -217,7 +217,78 @@ For infrastructure domains, use `_platform` as parent:
 | [Name] | _platform/[slug] | infrastructure | _platform | extracted | active |
 ```
 
-## Step 5: Report
+## Step 5: Update Domain Map
+
+Update `docs/domains/domain-map.md` (create if missing). This is a living Mermaid diagram showing all domains as components with their contract relationships.
+
+If `docs/domains/domain-map.md` does not exist, create it:
+
+```markdown
+# Domain Map
+
+> Auto-maintained by plan commands. Shows all domains and their contract relationships.
+> Domains are first-class components — this diagram is the system architecture at business level.
+
+```mermaid
+flowchart LR
+    classDef business fill:#E3F2FD,stroke:#2196F3,color:#000
+    classDef infra fill:#F3E5F5,stroke:#9C27B0,color:#000
+    classDef new fill:#FFF3E0,stroke:#FF9800,color:#000
+
+    %% Domains as components
+    %% Add domains here as they are discovered/created
+```
+
+## Legend
+
+- **Blue**: Business domains (user-facing capabilities)
+- **Purple**: Infrastructure domains (cross-cutting technical capabilities)
+- **Orange**: Newly added domains (change to blue/purple after first implementation)
+- **Solid arrows** (→): Contract dependency (A consumes B's contract)
+- **Labels on arrows**: Contract name being consumed
+```
+
+Then add the new domain to the diagram. Each domain is a node, and contract dependencies are labeled edges:
+
+```mermaid
+flowchart LR
+    classDef business fill:#E3F2FD,stroke:#2196F3,color:#000
+    classDef infra fill:#F3E5F5,stroke:#9C27B0,color:#000
+
+    %% Business domains
+    auth["🔐 auth\nIAuthService\nAuthEvents"]:::business
+    billing["💰 billing\nIBillingService"]:::business
+    notifications["📧 notifications\nINotificationService"]:::business
+
+    %% Infrastructure domains
+    _platform["⚙️ _platform\nILogger · IConfig"]:::infra
+    _platform_data["💾 _platform/data-access\nDatabaseConnection"]:::infra
+
+    %% Contract dependencies (A consumes B)
+    auth -->|DatabaseConnection| _platform_data
+    auth -->|ILogger| _platform
+    billing -->|IAuthService| auth
+    billing -->|ILogger| _platform
+    notifications -->|AuthEvents| auth
+    notifications -->|ILogger| _platform
+```
+
+**Diagram rules**:
+- Each domain node shows: emoji + slug + key contract names it EXPOSES (one per line)
+- Edges show which contract is being consumed, labeled with the contract name
+- Business domains use `:::business` (blue), infrastructure uses `:::infra` (purple)
+- New domains being added in this session use `:::new` (orange) temporarily
+- `_platform` children show as separate nodes with full slug
+- Keep it readable — if a domain has 5+ contracts, show top 2-3 and add "..."
+- Direction is LR (left-to-right) — infrastructure on the right, business on the left
+
+**When updating an existing map**:
+1. Read the current diagram from `docs/domains/domain-map.md`
+2. Add the new domain node with its exposed contracts
+3. Add edges for dependencies (from domain.md § Dependencies)
+4. If existing domains now depend on the new domain, add those edges too
+
+## Step 6: Report
 
 ```
 ✅ Domain extracted: <slug>
@@ -225,6 +296,7 @@ For infrastructure domains, use `_platform` as parent:
 - Contracts identified: N
 - Location: docs/domains/<slug>/domain.md
 - Registry: docs/domains/registry.md (updated)
+- Map: docs/domains/domain-map.md (updated)
 
 Note: No files were moved. Source Location in domain.md
 points to files in their current locations. A future plan

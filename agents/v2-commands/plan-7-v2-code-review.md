@@ -55,6 +55,7 @@ Only report issues that genuinely matter. No style nits."
 
 Read:
 - `docs/domains/registry.md` — all registered domains
+- `docs/domains/domain-map.md` — domain topology and contract relationships
 - `docs/domains/<slug>/domain.md` — for each domain touched
 - Plan's Domain Manifest — expected file→domain mapping
 - All changed files
@@ -72,6 +73,13 @@ Check:
    § Contracts updated if public interface changed
 5. **Registry currency**: docs/domains/registry.md reflects any new domains
 6. **No orphan files**: Every changed file maps to a domain in the manifest
+7. **Map currency**: docs/domains/domain-map.md reflects:
+   - All domains from registry have nodes
+   - New cross-domain dependencies have labeled edges
+   - New contracts appear in domain node labels
+   - Health Summary table is current
+   - No circular dependencies between business domains
+   - No unlabeled edges (hidden coupling)
 
 Output: Findings as SEVERITY | File | Rule Violated | Details | Fix"
 
@@ -129,6 +137,9 @@ Only flag genuine duplication, not incidental similarity."
 | Domain.md updated | ✅/❌ | [details] |
 | Registry current | ✅/❌ | [details] |
 | No orphan files | ✅/❌ | [details] |
+| Map nodes current | ✅/❌ | [all domains have nodes, new contracts shown] |
+| Map edges current | ✅/❌ | [new dependencies have labeled edges] |
+| No circular business deps | ✅/❌ | [no business→business cycles in map] |
 
 ## Anti-Reinvention
 

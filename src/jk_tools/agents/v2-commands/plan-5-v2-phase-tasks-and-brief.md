@@ -141,7 +141,7 @@ Otherwise → **Phase Mode** (continue).
    **Key findings from plan**:
    - [Finding N: brief + action required]
 
-   **Domain dependencies** (contracts this phase consumes):
+   **Domain dependencies** (contracts this phase consumes — from `docs/domains/domain-map.md`):
    - `[domain]`: [contract name] — [what we use it for]
    - Example: `_platform`: ILogger — logging throughout new service
    - Example: `auth`: IAuthService.authenticate() — verify user before processing
