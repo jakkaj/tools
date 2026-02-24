@@ -153,6 +153,45 @@ Only flag genuine duplication, not incidental similarity."
 **[PASS | PASS WITH NOTES | NEEDS FIXES]**
 
 [If NEEDS FIXES: list the critical/high items that must be addressed]
+
+## Handover Brief
+
+> Copy this section to the implementing agent. It has no context on the review —
+> only context on the work that was done before the review.
+
+**Review result**: [PASS | PASS WITH NOTES | NEEDS FIXES]
+
+**Plan**: [absolute path to plan.md]
+**Spec**: [absolute path to spec.md]
+**Phase**: [phase title, or "Simple Mode"]
+**Tasks dossier**: [absolute path to tasks.md, or "inline in plan"]
+**Execution log**: [absolute path to execution.log.md]
+**Review file**: [absolute path to saved review file]
+
+### Files Reviewed
+
+| File | Status | Domain | Action Needed |
+|------|--------|--------|---------------|
+| [absolute path] | ✅ Clean / ⚠️ Issues / ❌ Fix required | [domain] | [None / brief description] |
+
+### Required Fixes (if NEEDS FIXES)
+
+| # | File (absolute path) | What To Fix | Why |
+|---|---------------------|-------------|-----|
+| 1 | [/abs/path/to/file] | [specific fix description] | [finding reference] |
+
+### Domain Artifacts to Update (if any)
+
+| File (absolute path) | What's Missing |
+|---------------------|----------------|
+| [/abs/path/docs/domains/slug/domain.md] | [§ History not updated / § Contracts missing new interface] |
+| [/abs/path/docs/domains/domain-map.md] | [new edge needed / node contracts outdated] |
+| [/abs/path/docs/domains/registry.md] | [new domain not registered] |
+
+### Next Step
+
+[Exact command to run next — e.g., "/plan-6-v2-implement-phase --plan /abs/path --phase 'Phase 2'" for fixes,
+or "/plan-5-v2-phase-tasks-and-brief --phase 'Phase 3' --plan /abs/path" for next phase]
 ```
 
 6) Save review to PHASE_DIR (Full Mode) or PLAN_DIR (Simple Mode).
@@ -160,4 +199,4 @@ Only flag genuine duplication, not incidental similarity."
 STOP: This is a read-only review. Do NOT modify any code.
 ```
 
-Output: Structured review with domain compliance validation, anti-reinvention results, and verdict.
+Output: Structured review with domain compliance validation, anti-reinvention results, verdict, and handover brief with full absolute paths for agent continuity.
