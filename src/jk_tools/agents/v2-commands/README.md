@@ -22,6 +22,7 @@ These commands are **standalone rewrites** of select v1 commands from `agents/co
 | `plan-1b-v2-specify` | `plan-1b-specify` | Adds `## Target Domains` section to spec |
 | `plan-2-v2-clarify` | `plan-2-clarify` | Domain Review question for boundary validation |
 | `plan-3-v2-architect` | `plan-3-architect` | Lean output (≤500 lines), 2 research subagents, domain manifest |
+| `plan-4-v2-complete-the-plan` | `plan-4-complete-the-plan` | Domain completeness validation, no false positives on lean plan format |
 | `plan-5-v2-phase-tasks-and-brief` | `plan-5-phase-tasks-and-brief` | 7-column task table with Domain column, simplified prior-phase review |
 | `plan-6-v2-implement-phase` | `plan-6-implement-phase` | Domain placement rules, post-implementation domain.md updates |
 | `plan-6a-v2-update-progress` | `plan-6a-update-progress` | Domain context in progress tracking |
@@ -33,7 +34,7 @@ These commands are **standalone rewrites** of select v1 commands from `agents/co
 
 These work unchanged with domain-aware projects:
 
-`plan-0-constitution`, `plan-1a-explore`, `plan-2b-prep-issue`, `plan-3a-adr`, `plan-4-complete-the-plan`, `plan-5b-flightplan`, `plan-5c-requirements-flow`, `plan-6b-worked-example`, `plan-8-merge`, `code-concept-search`, `deepresearch`, `flowspace-research`, `tad`, `util-0-handover`
+`plan-0-constitution`, `plan-1a-explore`, `plan-2b-prep-issue`, `plan-3a-adr`, `plan-5b-flightplan`, `plan-5c-requirements-flow`, `plan-6b-worked-example`, `plan-8-merge`, `code-concept-search`, `deepresearch`, `flowspace-research`, `tad`, `util-0-handover`
 
 ## Domain System Overview
 
