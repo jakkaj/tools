@@ -221,6 +221,13 @@ Write `${REVIEW_FILE}` (create `reviews/` dir if needed):
 
 [If REQUEST_CHANGES: brief reason]
 
+**Key failure areas** (one sentence each, only if issues found):
+- **Implementation**: [e.g., "Missing error handling in auth token refresh path" — or omit if clean]
+- **Domain compliance**: [e.g., "billing imports auth internals instead of contracts" — or omit if clean]
+- **Reinvention**: [e.g., "New EmailSender duplicates existing NotificationService.send()" — or omit if clean]
+- **Testing**: [e.g., "3 acceptance criteria have no verification evidence" — or omit if clean]
+- **Doctrine**: [e.g., "Layer boundary violation in data access" — or omit if clean]
+
 ## B) Summary
 
 [3-5 sentences: overall quality, domain compliance status, reinvention check, testing evidence quality]
