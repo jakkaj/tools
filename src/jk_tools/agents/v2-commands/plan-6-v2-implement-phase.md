@@ -20,19 +20,45 @@ Log when you encounter: something unexpected, needed research, hit a trouble spo
 
 ---
 
-## 🛑 UPDATE PROGRESS AFTER EVERY TASK
+## 🛑 MANDATORY: UPDATE PROGRESS AFTER EVERY TASK — NO EXCEPTIONS
 
-After completing EACH task:
-1. ☑️ Tasks Table — `[ ]` → `[x]`
-2. 🎨 Architecture Map — node → `:::completed`
-3. 📝 Execution Log — append task entry with evidence
-4. ✈️ Flight Plan (`tasks.fltplan.md` or `FX###.fltplan.md`) — update:
-   - **Stages**: `[ ]` → `[~]` (starting) → `[x]` (done)
-   - **Flight Status Mermaid**: change task state class `pending` → `active` → `done` (or `blocked` if stuck)
-   - **Checklist**: `[ ]` → `[x]` for matching task ID
-   - When ALL stages complete: change `**Status**: Ready for takeoff` → `**Status**: Landed`
+The user watches the flight plan for live progress. Updating it is **highest priority**.
 
-DO NOT start the next task until updates are done.
+After EACH task you MUST update these locations before proceeding to the next task:
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Per-Task Progress Checklist — use this EVERY time, NO EXCEPTIONS      ┃
+┃                                                                       ┃
+┃ STARTING T00X:                                                        ┃
+┃ [ ] Tasks Table: [ ] → [~]                                            ┃
+┃ [ ] Architecture Map: T00X node → :::inprogress (orange)              ┃
+┃ [ ] Flight Plan § Stages: matching stage [ ] → [~]                    ┃
+┃ [ ] Flight Plan § Flight Status Mermaid: SN class pending → active    ┃
+┃ [ ] Flight Plan § Checklist: matching task [ ] → [~]                  ┃
+┃                                                                       ┃
+┃ COMPLETING T00X:                                                      ┃
+┃ [ ] Tasks Table: [~] → [x]                                           ┃
+┃ [ ] Architecture Map: T00X node → :::completed (green)                ┃
+┃ [ ] Architecture Map: File nodes touched → :::completed               ┃
+┃ [ ] Flight Plan § Stages: matching stage [~] → [x]                   ┃
+┃ [ ] Flight Plan § Flight Status Mermaid: SN class active → done       ┃
+┃ [ ] Flight Plan § Checklist: matching task [~] → [x]                  ┃
+┃ [ ] Execution Log: append task entry with evidence                    ┃
+┃ [ ] Discoveries table: add any gotchas/insights found                 ┃
+┃                                                                       ┃
+┃ IF BLOCKED:                                                           ┃
+┃ [ ] Flight Plan § Flight Status Mermaid: SN class → blocked (red)     ┃
+┃ [ ] (When unblocked: change back to active and continue)              ┃
+┃                                                                       ┃
+┃ ALL TASKS COMPLETE:                                                   ┃
+┃ [ ] Flight Plan § Status: "Ready for takeoff" → "Landed"             ┃
+┃                                                                       ┃
+┃ ✓ ALL UPDATES DONE → Proceed to next task                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+**Flight Plan location**: `tasks.fltplan.md` in the phase directory (Full Mode) or `FX###.fltplan.md` for fixes.
+
+DO NOT start the next task until ALL updates above are done.
 
 ---
 
@@ -74,6 +100,18 @@ $ARGUMENTS
 
 3) Execute tasks:
    Follow task order. Apply testing approach from plan:
+
+   ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+   ┃ 🛑 STOP! RE-READ "MANDATORY: UPDATE PROGRESS" SECTION ABOVE 🛑     ┃
+   ┃                                                                      ┃
+   ┃ After EACH task you MUST update ALL locations before proceeding:     ┃
+   ┃   1. Tasks Table checkbox                                            ┃
+   ┃   2. Architecture Map diagram nodes                                  ┃
+   ┃   3. Flight Plan (stages + Mermaid status + checklist)               ┃
+   ┃   4. Execution log entry                                             ┃
+   ┃                                                                      ┃
+   ┃ The user is watching the flight plan. Update it FIRST.               ┃
+   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
    **Full TDD**: RED-GREEN-REFACTOR loop per task
    **Lightweight**: Minimal validation tests for core functionality
