@@ -50,9 +50,17 @@ Create `${PLAN_DIR}/reviews/` directory if it doesn't exist.
 ## Step 2: Gather Diffs
 
 - If `--diff-file` provided: read it
-- Otherwise: compute diff from git
-  * Read execution.log.md for changed file list
-  * `git diff HEAD~1` or appropriate range for this phase's changes
+- Otherwise: compute diff from git using this detection strategy:
+
+  1. **Check for uncommitted changes first**: `git diff --stat` and `git diff --staged --stat`
+     - If uncommitted/staged changes exist → use `git diff` and `git diff --staged` for diffs
+  2. **If working tree is clean** (already committed): look at recent commit history
+     - Read execution.log.md for the commit hash or file list
+     - Find the commit(s) for this phase by scanning `git log --oneline -10` for phase-related messages
+     - Use `git diff <commit-before-phase>..HEAD` to get the full phase diff
+     - If unclear which commits belong to this phase, use the file list from execution.log.md or task table Path(s) column:
+       `git log --all --follow -- <file>` to find the relevant commits, then diff from the earliest
+  3. **Fallback**: If git history is unclear, read file list from task table Path(s) column and diff each file against its last committed state before the plan started
 - Build a file manifest: every file touched, with action (created/modified/deleted)
 - Save computed diff to `${PLAN_DIR}/reviews/_computed.diff` for reproducibility
 
