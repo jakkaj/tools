@@ -768,7 +768,7 @@ for source_file in sorted(source_dir.glob('*.md')):
                 desc = line.partition(':')[2].strip().strip('"').strip("'")
                 break
         content_body = content[fm_match.end():]
-    frontmatter = f'---\nname: "{name}"\ndescription: "{desc}"\n---\n\n'
+    frontmatter = f'---\nname: "{name}"\ndescription: "{desc}"\ntools:\n  - "*"\n---\n\n'
     dest_path = dest_dir / f"{source_file.stem}.agent.md"
     dest_path.write_text(frontmatter + content_body.lstrip(), encoding='utf-8')
     print(f"  [↻] {source_file.stem}.agent.md (v2)")
@@ -1133,6 +1133,7 @@ COPILOT_CLI_AGENT_PYTHON
         print_status "Generating Copilot CLI agents for v2-commands..."
         if ! $PYTHON_CMD - "${V2_SOURCE_DIR}" "${COPILOT_CLI_AGENTS_DIR}" <<'COPILOT_CLI_V2_PYTHON'
 import sys
+import re
 from pathlib import Path
 
 source_dir = Path(sys.argv[1])
@@ -1145,18 +1146,20 @@ for md_file in sorted(source_dir.glob("*.md")):
     agent_name = md_file.stem
     agent_file = target_dir / f"{agent_name}.agent.md"
     content = md_file.read_text()
-    # Extract description from frontmatter if present
+    # Extract description and strip original frontmatter
     desc = f"V2 domain-aware command: {agent_name}"
+    content_body = content
     if content.startswith("---"):
-        import re
         fm = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
         if fm:
             for line in fm.group(1).split('\n'):
                 if line.strip().startswith('description:'):
-                    desc = line.partition(':')[2].strip()
+                    desc = line.partition(':')[2].strip().strip('"').strip("'")
                     break
-    frontmatter = f"---\nname: {agent_name}\ndescription: {desc}\ntools: all\n---\n\n"
-    agent_file.write_text(frontmatter + content)
+            content_body = content[fm.end():]
+    # Use same YAML format as v1 generator: quoted values, tools array
+    frontmatter = f'---\nname: "{agent_name}"\ndescription: "{desc}"\ntools:\n  - "*"\n---\n\n'
+    agent_file.write_text(frontmatter + content_body.lstrip())
     print(f"  [↻ Copilot CLI] {md_file.name} -> {agent_file.name}")
 COPILOT_CLI_V2_PYTHON
         then
