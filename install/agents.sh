@@ -99,9 +99,18 @@ OPENCODE_DIR="${HOME}/.config/opencode/command"
 CODEX_DIR="${HOME}/.codex/prompts"
 COPILOT_GLOBAL_DIR="${HOME}/.config/github-copilot/prompts"
 # Copilot CLI (distinct from VS Code Copilot extension)
+# Support both XDG-derived and default ~/.copilot/ locations
 COPILOT_CLI_DIR="${XDG_CONFIG_HOME:-$HOME}/.copilot"
 COPILOT_CLI_AGENTS_DIR="${COPILOT_CLI_DIR}/agents"
 COPILOT_CLI_MCP_CONFIG="${COPILOT_CLI_DIR}/mcp-config.json"
+# If XDG_CONFIG_HOME is set and differs from default, also install to default location
+COPILOT_CLI_DEFAULT_DIR="${HOME}/.copilot"
+COPILOT_CLI_DEFAULT_AGENTS_DIR="${COPILOT_CLI_DEFAULT_DIR}/agents"
+if [ "${COPILOT_CLI_DIR}" = "${COPILOT_CLI_DEFAULT_DIR}" ]; then
+    COPILOT_CLI_HAS_ALT="false"
+else
+    COPILOT_CLI_HAS_ALT="true"
+fi
 SYSTEM_NAME="$(uname -s)"
 
 if [[ "${SYSTEM_NAME}" == "Darwin" ]]; then
@@ -1167,6 +1176,22 @@ COPILOT_CLI_V2_PYTHON
         fi
         v2_cli_count=$(find "${COPILOT_CLI_AGENTS_DIR}" -maxdepth 1 -type f \( -name "*v2*.md" -o -name "plan-v2-*" \) | wc -l | tr -d ' ')
         print_success "Generated ${v2_cli_count} v2 Copilot CLI agents"
+    fi
+
+    # Mirror Copilot CLI agents to default location if XDG override is active
+    if [ "${COPILOT_CLI_HAS_ALT}" = "true" ]; then
+        echo ""
+        print_status "XDG override detected — mirroring Copilot CLI agents to default location..."
+        mkdir_with_retry "${COPILOT_CLI_DEFAULT_AGENTS_DIR}"
+        if [ -d "${COPILOT_CLI_AGENTS_DIR}" ]; then
+            for agent_file in "${COPILOT_CLI_AGENTS_DIR}"/*.md; do
+                if [ -f "${agent_file}" ]; then
+                    cp_with_retry "${agent_file}" "${COPILOT_CLI_DEFAULT_AGENTS_DIR}/$(basename "${agent_file}")"
+                fi
+            done
+            default_count=$(find "${COPILOT_CLI_DEFAULT_AGENTS_DIR}" -maxdepth 1 -type f -name "*.md" | wc -l | tr -d ' ')
+            print_success "Mirrored ${default_count} agents to ${COPILOT_CLI_DEFAULT_AGENTS_DIR}"
+        fi
     fi
 
     echo ""
