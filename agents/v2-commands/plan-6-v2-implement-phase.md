@@ -162,6 +162,20 @@ $ARGUMENTS
       - New cross-domain dependency formed → add labeled edge
       - Domain contracts changed → update the Health Summary table
 
+   h) **Update domain.md § Concepts** (if contracts changed or new domain):
+
+      For NEW domains:
+        - Create Concepts table from implemented contracts
+        - Group related contracts into named concepts (verb phrases)
+        - Add narrative + code example per concept (base on actual implemented code)
+
+      For CHANGED contracts:
+        - Add new concepts to table if new capabilities introduced
+        - Update existing concept narratives if entry points changed
+        - Update code examples to match new signatures
+
+      For UNCHANGED contracts: no Concepts updates needed.
+
 5) Output:
    - Execution Log with per-task entries (write incrementally)
    - Unified diffs for all touched files

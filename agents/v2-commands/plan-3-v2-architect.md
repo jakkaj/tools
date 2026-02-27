@@ -38,7 +38,7 @@ Inputs:
 - If `docs/domains/registry.md` exists → read all registered domains
 - If `docs/domains/domain-map.md` exists → read the domain architecture diagram to understand current relationships and contract flows
 - For each existing domain in spec's target list → read `docs/domains/<slug>/domain.md`
-  * Note: contracts (what's available to use), composition (what exists), dependencies
+  * Note: concepts (what the domain offers — § Concepts table), contracts (what's available to use), composition (what exists), dependencies
 - For each NEW domain → note the sketch from spec (Purpose, Boundary Owns/Excludes)
 
 ## PHASE 1: Gates
@@ -85,8 +85,9 @@ Check:
 2. Codebase patterns relevant to this feature
 3. Integration points where new code connects to existing code
 4. **Anti-reinvention**: Does any capability being planned already exist in a domain?
+   Check `§ Concepts` tables across all domains — scan for concept names, entry points, and descriptions that match planned capabilities. A concept match is higher confidence than a code-level match.
 
-For each proposed new component, check domain contracts:
+For each proposed new component, check domain contracts and concepts:
 - EXISTING → reuse (report contract and location)
 - EXTEND → add to existing domain (report what to extend)
 - NEW → create fresh (confirm no duplication)

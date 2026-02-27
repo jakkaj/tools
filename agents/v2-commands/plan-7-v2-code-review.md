@@ -113,10 +113,11 @@ Launch **5 subagents** in parallel (single message with 5 Task tool calls):
 7. **Map currency**: docs/domains/domain-map.md reflects all domains, new edges labeled, contracts in node labels current, health summary table current
 8. **No circular business deps**: No business→business cycles in the domain map
 9. **No unlabeled edges**: Every dependency on the map has a contract label
+10. **Concepts documentation** (⚠️ Review): Domains with contracts have a `§ Concepts` section in domain.md. Level 1 minimum: table with Concept | Entry Point | What It Does. New contracts added in this phase appear in the Concepts table.
 
 **Output** (JSON array):
 ```json
-[{\"severity\": \"HIGH|MEDIUM|LOW\", \"check\": \"file-placement|contract-imports|dependency-direction|domain-md|registry|orphan|map-nodes|map-edges|circular-deps\", \"file\": \"...\", \"issue\": \"...\", \"fix\": \"...\"}]
+[{\"severity\": \"HIGH|MEDIUM|LOW\", \"check\": \"file-placement|contract-imports|dependency-direction|domain-md|registry|orphan|map-nodes|map-edges|circular-deps|concepts-docs\", \"file\": \"...\", \"issue\": \"...\", \"fix\": \"...\"}]
 ```"
 
 ### Subagent 3: Anti-Reinvention Check
@@ -128,7 +129,7 @@ Launch **5 subagents** in parallel (single message with 5 Task tool calls):
 - `docs/domains/domain-map.md` — to understand existing capabilities
 
 For each major new component (service, adapter, repository, handler):
-1. Run `/code-concept-search \"<component concept>\"` against the codebase
+1. Run `/code-concept-search-v2 \"<component concept>\"` against the codebase
 2. Check domain contracts for overlapping capabilities
 3. Flag if similar functionality exists in another domain
 
@@ -277,6 +278,7 @@ Universal (all approaches):
 | Map nodes current | ✅/❌ | |
 | Map edges current | ✅/❌ | |
 | No circular business deps | ✅/❌ | |
+| Concepts documented | ✅/⚠️/N/A | |
 
 ### E.3) Anti-Reinvention
 

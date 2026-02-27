@@ -83,6 +83,7 @@ Inputs: PLAN_PATH, SPEC_PATH (co-located as `<plan-dir>/<slug>-spec.md>`), rules
 - If domain map exists: plan's new domains and relationships are consistent with map topology
 - No circular business-domain dependencies introduced
 - Consumed domains (relationship: consume) have contracts identified
+- NEW domains with contracts have `§ Concepts` section planned (concepts should be identified during extraction or implementation)
 
 **Report** (JSON):
 ```json
