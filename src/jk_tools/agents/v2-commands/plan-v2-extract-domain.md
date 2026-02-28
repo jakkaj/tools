@@ -108,6 +108,32 @@ Ask the user to confirm/adjust using the ask_user tool:
 
 **Key principle**: The agent proposes, the user decides. Domain boundary identification is a collaborative conversation.
 
+## Step 3.5: Identify Concepts
+
+Group discovered contracts (from Subagent 2) into **named concepts** — consumer-facing capabilities that the domain offers. Each concept groups related contracts into one capability a consumer might search for.
+
+For each concept, identify:
+- **Concept name**: A verb phrase describing what consumers can do (e.g., "Subscribe to file changes", "Authenticate a user")
+- **Entry point**: The primary contract/function a consumer imports first
+- **What it does**: One sentence describing the capability
+
+**Grouping rules**:
+- Related contracts that serve one consumer use case = one concept
+- A single contract can be its own concept if it's independently useful
+- All concepts that a consumer might search for get a row — not limited to a "top 3"
+
+Present the proposed concepts to the user for confirmation:
+
+```
+Based on the contracts discovered, I'd group them into these concepts:
+
+| Concept | Entry Point | What It Does |
+|---------|-------------|-------------|
+| [verb phrase] | [primary contract] | [one line] |
+```
+
+Ask: "Do these concepts cover everything this domain offers? Should any be split, merged, or renamed?"
+
 ## Step 4: Write Domain Files
 
 ### 4a: Create domain.md
@@ -127,6 +153,26 @@ Create `docs/domains/<slug>/domain.md` (mkdir -p the directory):
 
 [1-3 sentences from user discussion: What business concept does this domain own?
 Why does it exist? What would break if it didn't?]
+
+## Concepts
+
+[What this domain offers to consumers. Scannable table + narrative per concept.
+Built from Step 3.5 — the confirmed concept groupings.]
+
+| Concept | Entry Point | What It Does |
+|---------|-------------|-------------|
+| [verb phrase from Step 3.5] | [primary contract/function] | [one line description] |
+
+### [Concept Name]
+
+[2-3 sentences: When would a consumer use this? What's the pattern?]
+
+​```[language]
+import { EntryPoint } from '@domains/[slug]';
+// 3-5 line usage example showing the happy path
+​```
+
+[Repeat for each concept identified in Step 3.5]
 
 ## Boundary
 
@@ -177,10 +223,12 @@ Primary: `[most common path prefix, or "scattered"]`
 
 **Required sections** (plan-7 validates these exist):
 - Purpose
+- Concepts (⚠️ Review if missing when contracts exist)
 - Boundary (Owns + Does NOT Own)
 - Contracts
 - Composition
 - Source Location
+- Dependencies
 - History
 
 **Additional files are welcome** in the domain folder — sketches, research notes, diagrams, API explorations. The domain.md is locked down; everything else is freeform.

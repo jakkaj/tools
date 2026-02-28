@@ -88,7 +88,7 @@ Otherwise → **Phase Mode** (continue).
 
    - Does the file exist? (create vs modify)
    - Is it in the correct domain's source tree?
-   - Run `/code-concept-search` for major new concepts to check for duplication
+   - Run `/code-concept-search-v2` for major new concepts to check for duplication
    - Flag contract changes (higher risk)
 
 5) **Write tasks.md** containing:
@@ -147,10 +147,11 @@ Otherwise → **Phase Mode** (continue).
    **Key findings from plan**:
    - [Finding N: brief + action required]
 
-   **Domain dependencies** (contracts this phase consumes — from `docs/domains/domain-map.md`):
-   - `[domain]`: [contract name] — [what we use it for]
-   - Example: `_platform`: ILogger — logging throughout new service
-   - Example: `auth`: IAuthService.authenticate() — verify user before processing
+   **Domain dependencies** (concepts and contracts this phase consumes — from `docs/domains/*/domain.md`):
+   - `[domain]`: [Concept Name] ([entry point]) — [what we use it for]
+   - Example: `_platform/events`: File change subscription (useFileChanges) — live file updates in tree
+   - Example: `_platform/state`: Read single state value (useGlobalState) — workflow status display
+   - Example: `auth`: User authentication (IAuthService.authenticate()) — verify user before processing
 
    **Domain constraints**:
    - [Import rules, dependency direction, contract boundaries]

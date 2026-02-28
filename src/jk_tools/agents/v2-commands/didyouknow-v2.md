@@ -68,6 +68,7 @@ Build shared understanding between human and AI. In **default mode**, surface no
 - **Security & Privacy** — exposed data, auth gaps, vulnerabilities?
 - **Deployment & Operations** — coordination needed, rollback risks?
 - **Domain Boundaries** — are concepts in the right domain? Reaching into another domain's internals? Missing contract? Duplicating something in another domain? Wrong dependency direction?
+- **Concept Documentation** — are domain concepts discoverable? Missing `§ Concepts` section in domain.md? Stale concepts that no longer match implementation? Concept reuse opportunity across domains? Related contracts scattered across domains that should be unified under one concept?
 
 **Domain insights are not mandatory.** They surface when genuinely relevant. If domains are clean, they may not make the top 5. That's fine.
 

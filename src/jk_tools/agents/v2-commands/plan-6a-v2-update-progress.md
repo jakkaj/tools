@@ -52,6 +52,8 @@ $ARGUMENTS
    - Note any new components added to domain composition
    - Note any contract changes
    - Flag if `docs/domains/domain-map.md` needs updating (new contracts, new edges, new domains)
+   - If contract changes recorded → flag "domain.md § Concepts update needed for <domain>"
+   - If new domain created → flag "domain.md § Concepts creation needed for <domain>"
 
 7) Report what was updated.
 ```

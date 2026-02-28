@@ -31,12 +31,13 @@ These commands are **standalone rewrites** of select v1 commands from `agents/co
 | `plan-7-v2-code-review` | `plan-7-code-review` | Domain Compliance Validator, anti-reinvention checks |
 | `plan-2c-v2-workshop` | `plan-2c-workshop` | Domain context in workshop design documents |
 | `didyouknow-v2` | `didyouknow` | Domain boundary/contract insights when relevant |
+| `plan-2b-v2-prep-issue` | `plan-2b-prep-issue` | Domain metadata, labels, cross-domain dependency warnings in issues |
 
 ## Commands That Don't Need V2
 
 These work unchanged with domain-aware projects:
 
-`plan-0-constitution`, `plan-2b-prep-issue`, `plan-5b-flightplan`, `plan-5c-requirements-flow`, `plan-6b-worked-example`, `plan-8-merge`, `code-concept-search`, `deepresearch`, `flowspace-research`, `util-0-handover`
+`plan-0-constitution`, `plan-5b-flightplan`, `plan-5c-requirements-flow`, `plan-6b-worked-example`, `plan-8-merge`, `code-concept-search`, `deepresearch`, `flowspace-research`, `util-0-handover`
 
 ## Domain System Overview
 
