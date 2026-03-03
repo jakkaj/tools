@@ -140,6 +140,12 @@ install_prerequisites() {
                 read -r
             fi
             ;;
+        MINGW*|MSYS*|CYGWIN*)
+            # Windows (Git Bash / MSYS2 / Cygwin)
+            # rustup handles Windows build tools automatically
+            print_status "Windows detected via Git Bash - skipping prerequisite installation"
+            print_status "rustup will configure the appropriate toolchain"
+            ;;
         *)
             print_error "Unsupported OS: $os_type"
             exit 1

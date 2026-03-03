@@ -119,7 +119,8 @@ install_codex() {
 
         print_status "Setting npm prefix to $npm_prefix..."
         npm config set prefix "$npm_prefix"
-        export PATH="$npm_prefix/bin:$PATH"
+        # On Windows, npm puts binaries directly in the prefix dir (no /bin/ subdirectory)
+        export PATH="$npm_prefix/bin:$npm_prefix:$PATH"
 
         # Install Codex CLI
         if npm install -g @openai/codex 2>/dev/null; then
@@ -168,7 +169,7 @@ install_codex() {
 
     # Verify installation
     local npm_prefix="$HOME/.npm-global"
-    if command -v codex >/dev/null 2>&1 || [ -x "$HOME/.codex/bin/codex" ] || [ -x "$npm_prefix/bin/codex" ]; then
+    if command -v codex >/dev/null 2>&1 || [ -x "$HOME/.codex/bin/codex" ] || [ -x "$npm_prefix/bin/codex" ] || [ -x "$npm_prefix/codex" ]; then
         print_success "Codex CLI installation verified"
         print_status "Run 'codex' to start and authenticate with ChatGPT plan or API key"
         return 0

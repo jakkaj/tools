@@ -92,7 +92,8 @@ install_claude_code() {
 
     print_status "Setting npm prefix to $npm_prefix..."
     npm config set prefix "$npm_prefix"
-    export PATH="$npm_prefix/bin:$PATH"
+    # On Windows, npm puts binaries directly in the prefix dir (no /bin/ subdirectory)
+    export PATH="$npm_prefix/bin:$npm_prefix:$PATH"
 
     if npm install -g @anthropic-ai/claude-code; then
         print_success "Claude Code CLI installed via npm to $npm_prefix"
@@ -115,7 +116,7 @@ install_claude_code() {
         source "$HOME/.zshrc" 2>/dev/null || true
     fi
 
-    if command -v claude >/dev/null 2>&1 || [ -x "$HOME/.claude/bin/claude" ] || [ -x "$npm_prefix/bin/claude" ]; then
+    if command -v claude >/dev/null 2>&1 || [ -x "$HOME/.claude/bin/claude" ] || [ -x "$npm_prefix/bin/claude" ] || [ -x "$npm_prefix/claude" ]; then
         print_success "Claude Code CLI installation verified"
         print_status "Run 'claude login' to authenticate"
         return 0

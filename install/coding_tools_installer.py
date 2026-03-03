@@ -452,6 +452,18 @@ Examples:
         help="Update already installed tools to latest versions"
     )
 
+    parser.add_argument(
+        "--verbose", "-v",
+        action="store_true",
+        help="Show detailed output during installation"
+    )
+
+    parser.add_argument(
+        "--no-auto-sudo",
+        action="store_true",
+        help="Disable automatic sudo retry on permission errors"
+    )
+
     args = parser.parse_args()
 
     try:
