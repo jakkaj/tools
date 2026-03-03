@@ -8,6 +8,7 @@ import os
 import sys
 import subprocess
 import platform
+import shutil
 import time
 from pathlib import Path
 from typing import List, Tuple, Optional
@@ -65,9 +66,11 @@ class SetupManager:
 
         self.scripts_path = self.script_dir / "scripts"
         self.install_path = self.script_dir / "install"
-        self.shell_config = Path.home() / ".zshrc"
         self.path_marker = "# Added by tools repository setup"
         self.os_type = self._detect_os()
+        self.is_windows = self.os_type == "Windows"
+        self.path_sep = ";" if self.is_windows else ":"
+        self.shell_config = Path.home() / ".zshrc"
         self.results: List[InstallResult] = []
 
         # Optional flags (set by main())
@@ -75,6 +78,11 @@ class SetupManager:
         self.commands_local = ""
         self.local_dir = str(Path.cwd())
         self.verbose = False
+
+        # Cache bash path on Windows
+        self._bash_path: Optional[str] = None
+        if self.is_windows:
+            self._bash_path = self._find_bash()
 
     def _detect_os(self) -> str:
         """Detect the operating system"""
@@ -87,6 +95,30 @@ class SetupManager:
             return "Windows"
         else:
             return "Unknown"
+
+    def _find_bash(self) -> Optional[str]:
+        """Find a usable bash executable on Windows"""
+        # Prefer Git Bash as it handles Windows paths natively
+        git_bash_paths = [
+            r"C:\Program Files\Git\bin\bash.exe",
+            r"C:\Program Files (x86)\Git\bin\bash.exe",
+        ]
+        for p in git_bash_paths:
+            if os.path.isfile(p):
+                return p
+
+        # Fall back to any bash on PATH (e.g. WSL bash)
+        bash = shutil.which("bash")
+        if bash:
+            return bash
+
+        return None
+
+    def _get_cargo_home(self) -> str:
+        """Get the Cargo home directory, OS-aware"""
+        if self.is_windows:
+            return str(Path.home() / ".cargo" / "bin")
+        return f"{os.environ.get('HOME', '')}/.cargo/bin"
 
     def _run_command(self, cmd: List[str], timeout: Optional[int] = None) -> Tuple[int, str, str]:
         """Run a command and return exit code, stdout, and stderr"""
@@ -113,16 +145,28 @@ class SetupManager:
                     continue
                 clean_env[k] = v
 
-            # Add Cargo to PATH
-            clean_env["PATH"] = f"{os.environ.get('HOME', '')}/.cargo/bin:{os.environ.get('PATH', '')}"
+            # Add Cargo to PATH (OS-aware separator)
+            cargo_home = self._get_cargo_home()
+            clean_env["PATH"] = f"{cargo_home}{self.path_sep}{os.environ.get('PATH', '')}"
 
-            # If executing a shell script, wrap with bash -p (privileged mode)
-            # -p tells bash to ignore BASH_ENV and ENV completely
-            # NOTE: Long options must come BEFORE short options for bash 3.2 compatibility
+            # If executing a shell script, wrap with bash
             if cmd and cmd[0].endswith('.sh'):
                 script = cmd[0]
                 args = cmd[1:]
-                cmd = ["/bin/bash", "--noprofile", "--norc", "-p", script, *args]
+                if self.is_windows:
+                    if not self._bash_path:
+                        return -1, "", (
+                            "No bash found on Windows. Install Git for Windows "
+                            "(https://git-scm.com) to get Git Bash, or install WSL."
+                        )
+                    cmd = [self._bash_path, "--noprofile", "--norc", "-p", script, *args]
+                else:
+                    # NOTE: Long options must come BEFORE short options for bash 3.2 compatibility
+                    cmd = ["/bin/bash", "--noprofile", "--norc", "-p", script, *args]
+
+            # If executing a Python script directly, prepend the interpreter
+            if cmd and cmd[0].endswith('.py'):
+                cmd = [sys.executable, *cmd]
 
             result = subprocess.run(
                 cmd,
@@ -147,7 +191,7 @@ class SetupManager:
                 if k in problematic_vars or k.startswith("BASH_FUNC_"):
                     continue
                 clean_env[k] = v
-            clean_env["PATH"] = f"{os.environ.get('HOME', '')}/.cargo/bin:{os.environ.get('PATH', '')}"
+            clean_env["PATH"] = f"{self._get_cargo_home()}{self.path_sep}{os.environ.get('PATH', '')}"
 
             result = subprocess.run(
                 [command, "--version"],
@@ -182,6 +226,18 @@ class SetupManager:
 
     def add_to_path(self) -> bool:
         """Add scripts directory to PATH"""
+        if self.is_windows:
+            # On Windows, add to the current session PATH only.
+            current_path = os.environ.get("PATH", "")
+            if str(self.scripts_path) not in current_path:
+                os.environ["PATH"] = f"{self.scripts_path};{current_path}"
+                console.print(f"[green]✓[/green] Scripts directory added to current session PATH")
+            else:
+                console.print(f"[yellow]•[/yellow] Scripts directory already in PATH")
+            console.print(f"[dim]  To persist, add to your User PATH via System Environment Variables:[/dim]")
+            console.print(f"[dim]  {self.scripts_path}[/dim]")
+            return True
+
         path_export = f'export PATH="{self.scripts_path}:$PATH"'
 
         # Check if already in shell config
@@ -210,6 +266,13 @@ class SetupManager:
         """Make all scripts in the scripts directory executable"""
         if not self.scripts_path.exists():
             return 0
+
+        if self.is_windows:
+            # chmod is not meaningful on Windows
+            script_count = sum(1 for s in self.scripts_path.iterdir() if s.is_file())
+            if script_count > 0:
+                console.print(f"[green]✓[/green] Found {script_count} script(s) (chmod not needed on Windows)")
+            return script_count
 
         script_count = 0
         for script in self.scripts_path.iterdir():
@@ -288,8 +351,9 @@ class SetupManager:
             action = "Updating" if update_mode else "Installing"
             progress.update(task_id, description=f"[cyan]{action} {name}...[/cyan]")
 
-        # Make installer executable
-        installer.chmod(0o755)
+        # Make installer executable (no-op on Windows)
+        if not self.is_windows:
+            installer.chmod(0o755)
 
         # Build command with update flag if needed
         cmd = [str(installer)]
@@ -543,13 +607,21 @@ class SetupManager:
             self.show_summary()
 
             # Final message
-            console.print(Panel(
-                "[green]Setup complete![/green]\n\n"
-                "To use the changes in your current shell:\n"
-                "  [cyan]source ~/.zshrc[/cyan]\n\n"
-                "Or simply open a new terminal window.",
-                border_style="green"
-            ))
+            if self.is_windows:
+                console.print(Panel(
+                    "[green]Setup complete![/green]\n\n"
+                    "Tools have been installed via Git Bash.\n"
+                    "Open a new terminal window to use the tools.",
+                    border_style="green"
+                ))
+            else:
+                console.print(Panel(
+                    "[green]Setup complete![/green]\n\n"
+                    "To use the changes in your current shell:\n"
+                    "  [cyan]source ~/.zshrc[/cyan]\n\n"
+                    "Or simply open a new terminal window.",
+                    border_style="green"
+                ))
 
 
 def main():
