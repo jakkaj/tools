@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
 Tools Repository Setup Manager
-An elegant Python-based setup system with rich terminal output
+An elegant Python-based setup system with rich terminal output.
+
+Uses ToolInstaller from installers.py for all tool installations —
+no bash dependency.
 """
 
 import os
 import sys
-import subprocess
 import platform
-import shutil
 import time
 from pathlib import Path
-from typing import List, Tuple, Optional
-from dataclasses import dataclass
+from typing import Callable, List, Optional, Tuple
 
 from rich.console import Console
 from rich.progress import (
@@ -25,43 +25,20 @@ from rich.progress import (
 )
 from rich.table import Table
 from rich.panel import Panel
-from rich.layout import Layout
-from rich.live import Live
 from rich.text import Text
 from rich import box
-from rich.syntax import Syntax
+
+from jk_tools.installers import ToolInstaller, InstallResult
 
 console = Console()
-
-@dataclass
-class InstallResult:
-    """Result of an installation attempt"""
-    name: str
-    success: bool
-    message: str
-    output: str
-    error: str
-    duration: float
-    version_before: Optional[str] = None
-    version_after: Optional[str] = None
-
 
 class SetupManager:
     """Manages the setup process for the tools repository"""
 
     def __init__(self, resource_root: Optional[Path] = None):
-        """
-        Initialize SetupManager
-
-        Args:
-            resource_root: Optional path to tools repository for dev mode.
-                          If None, uses package installation location.
-        """
         if resource_root:
-            # Dev mode: use provided local filesystem path
             self.script_dir = resource_root.resolve()
         else:
-            # Normal mode: use package installation location
             self.script_dir = Path(__file__).parent.resolve()
 
         self.scripts_path = self.script_dir / "scripts"
@@ -73,16 +50,14 @@ class SetupManager:
         self.shell_config = Path.home() / ".zshrc"
         self.results: List[InstallResult] = []
 
-        # Optional flags (set by main())
+        # Optional flags (set by cli.py)
         self.clear_mcp = False
         self.commands_local = ""
         self.local_dir = str(Path.cwd())
         self.verbose = False
 
-        # Cache bash path on Windows
-        self._bash_path: Optional[str] = None
-        if self.is_windows:
-            self._bash_path = self._find_bash()
+        # Cross-platform tool installer — no bash needed
+        self.installer = ToolInstaller(self.script_dir, verbose=self.verbose)
 
     def _detect_os(self) -> str:
         """Detect the operating system"""
@@ -95,127 +70,6 @@ class SetupManager:
             return "Windows"
         else:
             return "Unknown"
-
-    def _find_bash(self) -> Optional[str]:
-        """Find a usable bash executable on Windows"""
-        # Prefer Git Bash as it handles Windows paths natively
-        git_bash_paths = [
-            r"C:\Program Files\Git\bin\bash.exe",
-            r"C:\Program Files (x86)\Git\bin\bash.exe",
-        ]
-        for p in git_bash_paths:
-            if os.path.isfile(p):
-                return p
-
-        # Fall back to any bash on PATH (e.g. WSL bash)
-        bash = shutil.which("bash")
-        if bash:
-            return bash
-
-        return None
-
-    def _get_cargo_home(self) -> str:
-        """Get the Cargo home directory, OS-aware"""
-        if self.is_windows:
-            return str(Path.home() / ".cargo" / "bin")
-        return f"{os.environ.get('HOME', '')}/.cargo/bin"
-
-    def _run_command(self, cmd: List[str], timeout: Optional[int] = None) -> Tuple[int, str, str]:
-        """Run a command and return exit code, stdout, and stderr"""
-        try:
-            # Create clean environment to prevent BASH_ENV and other startup file interference
-            # Remove BASH_ENV and ENV entirely, AND use bash -p (privileged mode)
-            # See: https://www.gnu.org/software/bash/manual/bash.html
-
-            # Filter out problematic environment variables that could interfere with bash
-            # This includes both bash-specific and zsh-specific variables
-            problematic_vars = {
-                "BASH_ENV",      # Bash startup file for non-interactive shells
-                "ENV",           # POSIX shell startup file
-                "PROMPT_COMMAND",# Sometimes abused to run code before prompts
-                "CDPATH",        # Causes cd to search multiple directories
-                "BASH_FUNC_*",   # Exported bash functions (shellshock-related)
-                "ZDOTDIR",       # Zsh config directory (shouldn't affect bash, but be safe)
-            }
-
-            clean_env = {}
-            for k, v in os.environ.items():
-                # Skip problematic variables and bash function exports
-                if k in problematic_vars or k.startswith("BASH_FUNC_"):
-                    continue
-                clean_env[k] = v
-
-            # Add Cargo to PATH (OS-aware separator)
-            cargo_home = self._get_cargo_home()
-            clean_env["PATH"] = f"{cargo_home}{self.path_sep}{os.environ.get('PATH', '')}"
-
-            # If executing a shell script, wrap with bash
-            if cmd and cmd[0].endswith('.sh'):
-                script = cmd[0]
-                args = cmd[1:]
-                if self.is_windows:
-                    if not self._bash_path:
-                        return -1, "", (
-                            "No bash found on Windows. Install Git for Windows "
-                            "(https://git-scm.com) to get Git Bash, or install WSL."
-                        )
-                    cmd = [self._bash_path, "--noprofile", "--norc", "-p", script, *args]
-                else:
-                    # NOTE: Long options must come BEFORE short options for bash 3.2 compatibility
-                    cmd = ["/bin/bash", "--noprofile", "--norc", "-p", script, *args]
-
-            # If executing a Python script directly, prepend the interpreter
-            if cmd and cmd[0].endswith('.py'):
-                cmd = [sys.executable, *cmd]
-
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-                env=clean_env
-            )
-            return result.returncode, result.stdout, result.stderr
-        except subprocess.TimeoutExpired:
-            return -1, "", "Command timed out"
-        except Exception as e:
-            return -1, "", str(e)
-
-    def _get_version(self, command: str) -> Optional[str]:
-        """Get version from a command, handling different output formats"""
-        try:
-            # Use clean environment (same as _run_command)
-            problematic_vars = {"BASH_ENV", "ENV", "PROMPT_COMMAND", "CDPATH", "ZDOTDIR"}
-            clean_env = {}
-            for k, v in os.environ.items():
-                if k in problematic_vars or k.startswith("BASH_FUNC_"):
-                    continue
-                clean_env[k] = v
-            clean_env["PATH"] = f"{self._get_cargo_home()}{self.path_sep}{os.environ.get('PATH', '')}"
-
-            result = subprocess.run(
-                [command, "--version"],
-                capture_output=True,
-                text=True,
-                timeout=10,
-                env=clean_env
-            )
-            if result.returncode == 0:
-                # Clean up version output - remove extra whitespace and normalize
-                version = result.stdout.strip().split('\n')[0].strip()
-                # Handle different formats:
-                # "codex-cli 0.44.0" -> "0.44.0"
-                # "2.0.8 (Claude Code)" -> "2.0.8"
-                # "0.14.1" -> "0.14.1"
-                if command == "codex" and version.startswith("codex-cli "):
-                    return version.replace("codex-cli ", "")
-                elif command == "claude" and " (Claude Code)" in version:
-                    return version.replace(" (Claude Code)", "")
-                else:
-                    return version
-        except (subprocess.TimeoutExpired, subprocess.SubprocessError, FileNotFoundError):
-            pass
-        return None
 
     def check_prerequisites(self) -> bool:
         """Check if prerequisites are met"""
@@ -287,162 +141,64 @@ class SetupManager:
 
         return script_count
 
-    def get_installers(self) -> List[Path]:
-        """Get list of installer scripts in the correct order"""
-        # TODO: Phase 2+ - Replace bash script installers with Python CodingToolsInstaller
-        # from install.coding_tools_installer import CodingToolsInstaller
-        # installer = CodingToolsInstaller(console=console, update_mode=update_mode)
-        # installer.run()
-
-        if not self.install_path.exists():
-            return []
-
-        # Specified order for dependencies
-        install_order = [
-            "just.sh",
-            "rust.sh",
-            "code2prompt.sh",
-            "fs2.sh",       # FlowSpace - install before agents.sh (MCP server depends on it)
-            "agents.sh",
-            # "opencode.sh",  # Commented out - OpenCode installation disabled
-            "claude-code.sh",
-            "codex.sh",
-            "copilot-cli.sh",  # GitHub Copilot CLI
-            "aliases.py"
+    def get_install_steps(self) -> List[Tuple[str, Callable[[], InstallResult]]]:
+        """Return ordered list of (name, installer_function) tuples."""
+        i = self.installer
+        steps = [
+            ("just", i.install_just),
+            ("rust", i.install_rust),
+            ("code2prompt", i.install_code2prompt),
+            ("fs2", i.install_fs2),
+            ("agents", lambda: i.install_agents(
+                clear_mcp=self.clear_mcp,
+                commands_local=self.commands_local,
+                local_dir=self.local_dir,
+            )),
+            ("claude-code", i.install_claude_code),
+            ("codex", i.install_codex),
+            ("copilot-cli", i.install_copilot_cli),
+            ("aliases", i.install_aliases),
         ]
+        return steps
 
-        installers = []
+    def run_install_step(
+        self,
+        name: str,
+        fn: Callable[[], InstallResult],
+        progress: Optional[Progress] = None,
+        task_id: Optional[int] = None,
+    ) -> InstallResult:
+        """Run a single install step and update progress."""
+        if progress and task_id is not None:
+            progress.update(task_id, description=f"[cyan]Installing {name}...[/cyan]")
 
-        # Explicitly disabled installers
-        # - opencode.sh: OpenCode installation disabled
-        # - install-coding-stuff.sh: Redundant - same tools installed by individual scripts
-        #   (claude-code.sh, codex.sh). Also hangs on some systems at opencode.ai installer.
-        disabled_installers = ["opencode.sh", "install-coding-stuff.sh"]
-
-        # Add installers in specified order first
-        for name in install_order:
-            installer = self.install_path / name
-            if installer.exists():
-                installers.append(installer)
-
-        # Add any remaining installers (excluding disabled ones)
-        for installer in self.install_path.iterdir():
-            if installer.suffix in ['.sh', '.py'] and installer not in installers and installer.name not in disabled_installers:
-                installers.append(installer)
-
-        return installers
-
-    def run_installer(self, installer: Path, progress: Optional[Progress] = None, task_id: Optional[int] = None, update_mode: bool = False) -> InstallResult:
-        """Run a single installer script"""
-        name = installer.stem
-        start_time = time.time()
-
-        # Get version before installation for version-tracked tools
-        version_before = None
-        if name in ["codex", "claude-code"]:  # Removed opencode
-            if name == "codex":
-                version_before = self._get_version("codex")
-            elif name == "claude-code":
-                version_before = self._get_version("claude")
-            # elif name == "opencode":  # Commented out - OpenCode disabled
-            #     version_before = self._get_version("opencode")
+        result = fn()
 
         if progress and task_id is not None:
-            action = "Updating" if update_mode else "Installing"
-            progress.update(task_id, description=f"[cyan]{action} {name}...[/cyan]")
-
-        # Make installer executable (no-op on Windows)
-        if not self.is_windows:
-            installer.chmod(0o755)
-
-        # Build command with update flag if needed
-        cmd = [str(installer)]
-        if update_mode:
-            # Add update flag for installers that support it
-            updatable_installers = ["claude-code", "codex", "copilot-cli", "install-coding-stuff"]  # Removed opencode
-            if name in updatable_installers:
-                cmd.append("--update")
-
-        # Add --clear-mcp flag for agents installer if requested
-        if name == "agents" and hasattr(self, 'clear_mcp') and self.clear_mcp:
-            cmd.append("--clear-mcp")
-
-        # Pass the current Python interpreter to agents.sh so it uses the uvx environment
-        if name == "agents":
-            cmd.extend(["--python", sys.executable])
-
-        # Add --commands-local flags for agents installer if requested
-        if name == "agents" and hasattr(self, 'commands_local') and self.commands_local:
-            cmd.extend(["--commands-local", self.commands_local])
-            if hasattr(self, 'local_dir'):
-                cmd.extend(["--local-dir", self.local_dir])
-
-        # Add --no-auto-sudo flag if requested (for all installers)
-        if hasattr(self, 'no_auto_sudo') and self.no_auto_sudo:
-            cmd.append("--no-auto-sudo")
-
-        # Add --verbose flag if requested (for all installers that support it)
-        if hasattr(self, 'verbose') and self.verbose:
-            cmd.append("--verbose")
-
-        # Run the installer
-        returncode, stdout, stderr = self._run_command(cmd, timeout=300)
-
-        duration = time.time() - start_time
-        success = returncode == 0
-
-        # Get version after installation for version-tracked tools
-        version_after = None
-        if name in ["codex", "claude-code"]:  # Removed opencode
-            if name == "codex":
-                version_after = self._get_version("codex")
-            elif name == "claude-code":
-                version_after = self._get_version("claude")
-            # elif name == "opencode":  # Commented out - OpenCode disabled
-            #     version_after = self._get_version("opencode")
-
-        if success:
-            message = f"Successfully installed {name}"
-            if progress and task_id is not None:
+            if result.success:
                 progress.update(task_id, description=f"[green]✓ {name}[/green]")
-        else:
-            message = f"Failed to install {name}"
-            if progress and task_id is not None:
+            else:
                 progress.update(task_id, description=f"[red]✗ {name}[/red]")
 
-        return InstallResult(
-            name=name,
-            success=success,
-            message=message,
-            output=stdout,
-            error=stderr,
-            duration=duration,
-            version_before=version_before,
-            version_after=version_after
-        )
+        return result
 
     def install_tools(self, update_mode: bool = False) -> None:
         """Install all tools with progress tracking"""
-        # Check if we're in local-commands-only mode
         is_local_mode = hasattr(self, 'commands_local') and self.commands_local
 
         if is_local_mode:
-            # In local mode, only run agents.sh
-            agents_installer = self.install_path / "agents.sh"
-            if not agents_installer.exists():
-                console.print(f"[red]agents.sh installer not found at {agents_installer}[/red]")
-                return
-            installers = [agents_installer]
+            # In local mode, only run agents
+            steps = [("agents", lambda: self.installer.install_agents(
+                clear_mcp=self.clear_mcp,
+                commands_local=self.commands_local,
+                local_dir=self.local_dir,
+            ))]
             action = "install local commands"
         else:
-            # Standard mode: get all installers
-            installers = self.get_installers()
-            if not installers:
-                console.print("[yellow]No installers found[/yellow]")
-                return
+            steps = self.get_install_steps()
             action = "update" if update_mode else "install"
 
-        console.print(f"\n[bold cyan]Found {len(installers)} installer(s) to {action}[/bold cyan]\n")
+        console.print(f"\n[bold cyan]Found {len(steps)} installer(s) to {action}[/bold cyan]\n")
 
         with Progress(
             SpinnerColumn(),
@@ -452,13 +208,12 @@ class SetupManager:
             TimeRemainingColumn(),
             console=console,
         ) as progress:
-            # Sequential installation
             action_title = "Updating" if update_mode else "Installing"
-            overall_task = progress.add_task(f"[cyan]{action_title} tools...[/cyan]", total=len(installers))
+            overall_task = progress.add_task(f"[cyan]{action_title} tools...[/cyan]", total=len(steps))
 
-            for installer in installers:
-                task = progress.add_task(f"[cyan]{action_title} {installer.stem}...[/cyan]", total=1)
-                result = self.run_installer(installer, progress, task, update_mode)
+            for name, fn in steps:
+                task = progress.add_task(f"[cyan]{action_title} {name}...[/cyan]", total=1)
+                result = self.run_install_step(name, fn, progress, task)
                 self.results.append(result)
                 progress.update(task, completed=1)
                 progress.update(overall_task, advance=1)
@@ -544,6 +299,59 @@ class SetupManager:
                     console.print("[dim]Standard output:[/dim]")
                     console.print(Text(result.output[:500], style="dim"))
 
+    def dry_run(self) -> None:
+        """Show what would be installed and check prerequisites."""
+        console.print(Panel.fit(
+            "[bold cyan]Tools Repository Setup Manager[/bold cyan]\n"
+            f"[dim]OS: {self.os_type} | Path: {self.script_dir}[/dim]\n"
+            "[yellow]DRY RUN — no changes will be made[/yellow]",
+            border_style="cyan"
+        ))
+        console.print()
+
+        report = self.installer.preflight()
+
+        table = Table(title="Installation Plan", box=box.ROUNDED)
+        table.add_column("Tool", style="cyan", no_wrap=True)
+        table.add_column("Status", justify="center")
+        table.add_column("Action", no_wrap=False)
+        table.add_column("Prerequisites", no_wrap=False)
+
+        ready = skip = blocked = 0
+        for step in report:
+            # Status badge
+            if step["status"] == "skip":
+                status = "[green]✓ Installed[/green]"
+                skip += 1
+            elif step["status"] == "ready":
+                status = "[cyan]● Ready[/cyan]"
+                ready += 1
+            else:
+                status = "[red]✗ Blocked[/red]"
+                blocked += 1
+
+            # Prerequisites column
+            prereq_parts = []
+            for p in step["prereqs"]:
+                icon = "[green]✓[/green]" if p["found"] else "[red]✗[/red]"
+                prereq_parts.append(f"{icon} {p['name']}")
+            prereqs_str = ", ".join(prereq_parts) if prereq_parts else "[dim]none[/dim]"
+
+            # Action/reason
+            action = step.get("reason") or step["action"]
+
+            table.add_row(step["name"], status, action, prereqs_str)
+
+        console.print(table)
+        console.print()
+        console.print(f"[bold]Summary:[/bold]  "
+                      f"[cyan]{ready} ready[/cyan]  "
+                      f"[green]{skip} already installed[/green]  "
+                      f"[red]{blocked} blocked[/red]")
+        if blocked:
+            console.print("\n[yellow]Install missing prerequisites to unblock the blocked steps.[/yellow]")
+        console.print()
+
     def run(self, update_mode: bool = False) -> None:
         """Run the complete setup process"""
         # Check if we're in local-commands-only mode
@@ -610,7 +418,7 @@ class SetupManager:
             if self.is_windows:
                 console.print(Panel(
                     "[green]Setup complete![/green]\n\n"
-                    "Tools have been installed via Git Bash.\n"
+                    "Tools have been installed natively (no bash required).\n"
                     "Open a new terminal window to use the tools.",
                     border_style="green"
                 ))

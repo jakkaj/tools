@@ -69,6 +69,11 @@ Examples:
         action="store_true",
         help="Show detailed output and timing for each installation step"
     )
+    parser.add_argument(
+        "--dry-run", "-n",
+        action="store_true",
+        help="Show what would be installed and check prerequisites without making changes"
+    )
 
     args = parser.parse_args()
 
@@ -80,7 +85,10 @@ Examples:
         manager.verbose = args.verbose
         if args.local_dir:
             manager.local_dir = args.local_dir
-        manager.run(update_mode=args.update)
+        if args.dry_run:
+            manager.dry_run()
+        else:
+            manager.run(update_mode=args.update)
     except KeyboardInterrupt:
         console.print("\n[yellow]Setup interrupted by user[/yellow]")
         sys.exit(1)
