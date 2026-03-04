@@ -142,16 +142,21 @@ class ToolInstaller:
                         "Download binary from just.systems", "just")
 
     def _preflight_rust(self):
-        return self._pf("rust", "Rust toolchain (rustc, cargo, rustup)",
-                        ["curl"] if not self.is_windows else [],
+        prereqs = ["curl"] if not self.is_windows else []
+        desc = "Rust toolchain (rustc, cargo, rustup)"
+        if self.is_windows and not self._check_command("link"):
+            desc += " + MSVC build tools (auto-installed via winget)"
+        return self._pf("rust", desc, prereqs,
                         "Download and run rustup installer", "cargo")
 
     def _preflight_code2prompt(self):
         prereqs = ["cargo"]
-        if self.is_windows:
-            prereqs.append("link")  # MSVC linker
-        return self._pf("code2prompt", "Code-to-LLM-prompt converter (compiled from source)",
-                        prereqs, "cargo install code2prompt", "code2prompt")
+        desc = "Code-to-LLM-prompt converter (compiled from source)"
+        if self.is_windows and not self._check_command("link"):
+            prereqs.append("link")
+            desc += " — needs MSVC build tools (installed with rust step)"
+        return self._pf("code2prompt", desc, prereqs,
+                        "cargo install code2prompt", "code2prompt")
 
     def _preflight_fs2(self):
         return self._pf("fs2", "FlowSpace code intelligence + MCP server",
@@ -269,6 +274,27 @@ class ToolInstaller:
         if cargo_bin not in os.environ.get("PATH", ""):
             os.environ["PATH"] = cargo_bin + self.path_sep + os.environ.get("PATH", "")
 
+    def _install_msvc_build_tools(self) -> None:
+        """Install MSVC C++ build tools via winget (Windows only).
+
+        Required for ``cargo install`` to compile native code on Windows.
+        Uses ``winget`` which is pre-installed on Windows 10 1709+ and all
+        Windows 11 machines.
+        """
+        if not self._check_command("winget"):
+            return  # winget not available; install_code2prompt will report the error
+
+        self._run(
+            [
+                "winget", "install",
+                "--id", "Microsoft.VisualStudio.2022.BuildTools",
+                "-e", "--silent",
+                "--override",
+                "--wait --quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended",
+            ],
+            timeout=600,
+        )
+
     def _timed(self, name: str, fn) -> InstallResult:
         """Run *fn*, capture timing, return InstallResult."""
         start = time.time()
@@ -331,9 +357,14 @@ class ToolInstaller:
         return self._timed("just", _do)
 
     def install_rust(self) -> InstallResult:
-        """Install Rust via rustup."""
+        """Install Rust via rustup (and MSVC build tools on Windows)."""
         def _do():
             self._ensure_cargo_path()
+
+            # On Windows, ensure MSVC build tools are present (needed by cargo)
+            if self.is_windows and not self._check_command("link"):
+                self._install_msvc_build_tools()
+
             if self._check_command("cargo") and self._check_command("rustc"):
                 ver = self._get_version("rustc") or "unknown"
                 return True, f"Rust already installed ({ver})", "", ""
