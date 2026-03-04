@@ -147,8 +147,11 @@ class ToolInstaller:
                         "Download and run rustup installer", "cargo")
 
     def _preflight_code2prompt(self):
-        return self._pf("code2prompt", "Code-to-LLM-prompt converter",
-                        ["cargo"], "cargo install code2prompt", "code2prompt")
+        prereqs = ["cargo"]
+        if self.is_windows:
+            prereqs.append("link")  # MSVC linker
+        return self._pf("code2prompt", "Code-to-LLM-prompt converter (compiled from source)",
+                        prereqs, "cargo install code2prompt", "code2prompt")
 
     def _preflight_fs2(self):
         return self._pf("fs2", "FlowSpace code intelligence + MCP server",
@@ -373,6 +376,16 @@ class ToolInstaller:
                 return False, "cargo not found — install Rust first", "", "cargo not found"
 
             rc, out, err = self._run(["cargo", "install", "code2prompt"], timeout=600)
+
+            # Detect missing MSVC linker on Windows
+            if rc != 0 and self.is_windows and "link.exe" in err:
+                return False, (
+                    "cargo compile failed: MSVC linker (link.exe) not found. "
+                    "Install 'Build Tools for Visual Studio' from "
+                    "https://visualstudio.microsoft.com/visual-cpp-build-tools/ "
+                    "or run: rustup default stable-x86_64-pc-windows-gnu"
+                ), out, err
+
             if self._check_command("code2prompt"):
                 ver = self._get_version("code2prompt") or ""
                 return True, f"Successfully installed code2prompt {ver}", out, err
@@ -699,10 +712,12 @@ class ToolInstaller:
         perplexity_model = env_vars.get("PERPLEXITY_MODEL", "sonar")
         openrouter_key = env_vars.get("MCP_LLM_OPENROUTER_API_KEY", "")
 
-        # Check perplexity requirement
+        # Check perplexity — warn and disable if key is missing, don't fail
         servers_text = mcp_source.read_text(encoding="utf-8")
+        skip_perplexity = False
         if '"perplexity"' in servers_text and '"enabled": true' in servers_text:
             if not perplexity_key or perplexity_key == "your_perplexity_api_key_here":
+                skip_perplexity = True
                 env_file = self.home / ".jk-tools.env"
                 if not env_file.exists():
                     env_file.write_text(
@@ -712,10 +727,6 @@ class ToolInstaller:
                         "# MCP_LLM_OPENROUTER_API_KEY=your_key_here\n",
                         encoding="utf-8",
                     )
-                return False, (
-                    f"Perplexity MCP server is enabled but PERPLEXITY_API_KEY is not set.\n"
-                    f"Edit {env_file} and add your API key, or disable Perplexity in servers.json."
-                )
 
         # Substitute env vars
         if openrouter_key:
@@ -770,6 +781,8 @@ class ToolInstaller:
             if not isinstance(config, dict):
                 continue
             if name.startswith("_") or not config.get("enabled", True):
+                continue
+            if skip_perplexity and name == "perplexity":
                 continue
 
             server_type = self._normalize_type(config.get("type")) or "local"
@@ -852,7 +865,10 @@ class ToolInstaller:
         self._backup(codex_global_path)
         self._write_toml(codex_global_path, codex_cfg)
 
-        return True, "MCP configuration updated"
+        msg = "MCP configuration updated"
+        if skip_perplexity:
+            msg += " (Perplexity skipped — set PERPLEXITY_API_KEY in ~/.jk-tools.env to enable)"
+        return True, msg
 
     def _install_local_commands(
         self, cli_list: str, target_dir: str, v2_source: Path,
