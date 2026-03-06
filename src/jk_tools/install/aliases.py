@@ -8,7 +8,7 @@ Example: generate-codebase-md.sh -> gcm
 
 import os
 import sys
-import subprocess
+import shutil
 from pathlib import Path
 
 def print_status(msg):
@@ -54,11 +54,7 @@ def generate_alias(script_name):
 
 def check_command_exists(cmd):
     """Check if a command already exists in the system."""
-    try:
-        subprocess.run(['which', cmd], capture_output=True, check=True)
-        return True
-    except subprocess.CalledProcessError:
-        return False
+    return shutil.which(cmd) is not None
 
 def get_existing_aliases():
     """Read existing aliases from ~/.tools_aliases."""
@@ -131,11 +127,13 @@ def main():
     
     print_status(f"Scanning scripts in: {scripts_path}")
     
-    # Get all executable files in scripts directory
+    # Get all script files in scripts directory
     scripts = []
     for file in scripts_path.iterdir():
-        if file.is_file() and os.access(file, os.X_OK):
-            scripts.append(file)
+        if file.is_file():
+            # On Windows os.access(X_OK) is unreliable; include all script files
+            if sys.platform == "win32" or os.access(file, os.X_OK):
+                scripts.append(file)
     
     if not scripts:
         print_status("No executable scripts found")
