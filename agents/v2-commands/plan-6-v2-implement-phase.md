@@ -97,6 +97,37 @@ $ARGUMENTS
      * Read `## Target Domains` from spec
      * Read `## Domain Manifest` from plan
      * For each domain being modified, read `docs/domains/<slug>/domain.md`
+   - **Load harness context** (if `docs/project-rules/harness.md` exists):
+     * Read harness.md — boot command, health check, interaction methods, observe capabilities, maturity level
+
+2a) **Pre-Phase Harness Validation** (if harness.md exists):
+
+   Before starting ANY task, validate the harness is operational:
+
+   **Stage 1 — Boot Check** (5s if running, 60s cold boot):
+   Run health check from harness.md. If healthy → "Already running" (skip boot).
+   If not responding → run boot command, retry health check (30 × 2s = 60s max).
+
+   **Stage 2 — Interact Check** (5s, single attempt):
+   Send test input per harness.md § Interact. Verify a response is received.
+
+   **Stage 3 — Observe Check** (5s, single attempt):
+   Capture evidence per harness.md § Observe. Verify evidence is non-empty.
+
+   **Verdict**:
+   - ✅ HEALTHY → proceed to tasks
+   - ⚠️ SLOW (boot > 45s) → proceed with note
+   - ❌ UNHEALTHY → **stop and ask human**: "Retry" / "Continue without harness" / "Abort"
+   - 🔴 UNAVAILABLE (no boot command) → note and proceed with standard testing
+
+   Log validation result to EXEC_LOG (check table: Boot/Interact/Observe status + duration).
+   If human overrides an unhealthy harness, log the override reason.
+
+   **Special case — Phase 0 "Build Harness"**: Skip pre-phase validation (harness doesn't exist yet).
+   Instead, run validation at END of Phase 0 to confirm harness works.
+
+   After ALL phase tasks complete: update `docs/project-rules/harness.md § History` with what changed.
+   Use harness observe capabilities for evidence capture throughout implementation when available.
 
 3) Execute tasks:
    Follow task order. Apply testing approach from plan:

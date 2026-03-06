@@ -96,6 +96,19 @@ Ask the user to confirm using ask_user:
 
 **After Domain Review**: Update spec `## Target Domains` section with user's adjustments. If user identified new domain boundaries or merged domains, update the table and sketches accordingly.
 
+### Harness Readiness
+
+Check if `docs/project-rules/harness.md` exists:
+
+**If harness exists**: Report current maturity level (L0–L4) and ask:
+- "The project has an agent harness at L[N]. Is it sufficient for this feature, or does it need updating?"
+
+**If no harness exists**: Ask the user:
+- "This project has no agent harness (Boot → Interact → Observe feedback loop). Without one, the agent validates changes via unit tests and manual verification only."
+- Choices: "Build harness as Phase 0 (Recommended)" / "Continue without harness" / "Feature doesn't need a harness"
+
+**After Harness Review**: Capture answer in spec `## Clarifications`. If user chose "Build harness as Phase 0", note this for plan-3-v2-architect. If user overrode, document the override reason.
+
 ### Additional Questions (as needed)
 
 Draw from these categories based on spec gaps:

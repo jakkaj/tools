@@ -188,7 +188,32 @@ Only flag genuine duplication, not incidental similarity."
 [{\"severity\": \"HIGH|MEDIUM|LOW\", \"file\": \"...\", \"rule\": \"...\", \"issue\": \"...\", \"fix\": \"...\"}]
 ```"
 
-**Wait for all 5 subagents to complete.**
+### Subagent 6: Harness Live Validator (if `docs/project-rules/harness.md` exists)
+"Boot the harness and validate the phase's changes actually work by exercising the running software.
+
+**This is read-only** — you are gathering evidence, not modifying code.
+
+**Read**:
+- `docs/project-rules/harness.md` — boot command, health check, interaction methods, observe capabilities
+- Phase acceptance criteria from spec
+- Execution log evidence from plan-6
+
+**Execute**:
+1. **Boot**: Run health check. If not running, boot using harness.md § Boot command. Wait for healthy.
+2. **Interact**: Exercise the phase's changes through the harness interaction methods (send requests, trigger actions relevant to what this phase built/changed).
+3. **Observe**: Capture evidence — response bodies, screenshots, terminal output — that demonstrates the changes work.
+4. **Validate**: Compare observed behavior against phase acceptance criteria. Does the running software reflect the code changes?
+
+**If harness boot fails**: Report 'HARNESS_UNAVAILABLE' — do NOT block the review. Fall back to static analysis findings from other subagents. Note: 'Live validation skipped — harness unhealthy'.
+
+**If no harness.md**: Skip this subagent entirely. Report N/A.
+
+**Output** (JSON):
+```json
+{\"harness_status\": \"HEALTHY|UNHEALTHY|UNAVAILABLE\", \"checks\": [{\"ac\": \"AC-N\", \"method\": \"how tested\", \"result\": \"PASS|FAIL|SKIP\", \"evidence\": \"what was observed\"}], \"summary\": \"...\"}
+```"
+
+**Wait for all subagents to complete.** (5 subagents if no harness, 6 if harness exists)
 
 ## Step 4: Synthesize Results
 
@@ -294,6 +319,14 @@ Universal (all approaches):
 
 ### E.5) Doctrine Compliance
 [Subagent 5 findings, or "N/A — no project-rules found"]
+
+### E.6) Harness Live Validation
+[Subagent 6 findings, or "N/A — no harness configured"]
+
+If harness was available:
+- Harness status: [HEALTHY/UNHEALTHY/UNAVAILABLE]
+- Checks performed: [list of ACs validated live]
+- Evidence: [what was observed — responses, screenshots, behavior]
 
 ## F) Coverage Map
 

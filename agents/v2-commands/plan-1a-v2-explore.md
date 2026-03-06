@@ -214,6 +214,19 @@ Before launching research, check for existing domain system:
   * Note "No domain registry found — subagents will discover domain-like boundaries organically"
   * The Domain & Boundary Scout subagent (below) will identify potential domains even without a registry
 
+### 2c) Load Harness Context
+
+Check for agent harness (Boot → Interact → Observe feedback loop):
+
+- If `docs/project-rules/harness.md` exists:
+  * Read it — note project type, maturity level (L0–L4), boot command, health check, interaction methods, observe capabilities
+  * Include harness status in the research dossier output (§ Harness Status section)
+  * Pass harness context to subagents so they can reference available validation infrastructure
+- If no harness exists:
+  * Note "No agent harness found — agents cannot autonomously validate running software"
+  * Add to research dossier **Workshop Opportunities**: suggest running `/harness-v2 --create` to establish the agent feedback loop
+  * The research dossier should note what a harness would need for this project type (boot, interact, observe patterns)
+
 ### 3) Launch Parallel Research Subagents
 
 **IMPORTANT**: Use **parallel subagent execution** for comprehensive and efficient research.
