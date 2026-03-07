@@ -156,7 +156,19 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
 
 ## Phases
 
-[Generate phases following these principles:]
+### Phase Index
+
+[Generate this index AFTER designing all phases — it is the quick-reference summary at the top]
+
+| Phase | Title | Primary Domain | Objective (1 line) | Depends On |
+|-------|-------|---------------|-------------------|------------|
+| 0 | Build Harness | — | [if applicable] | None |
+| 1 | ... | ... | ... | ... |
+| N | ... | ... | ... | Phase N-1 |
+
+---
+
+[Then generate each phase in detail below, following these principles:]
 
 ### Phase Design Principles
 
