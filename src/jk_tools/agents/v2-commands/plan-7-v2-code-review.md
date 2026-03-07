@@ -33,8 +33,8 @@ $ARGUMENTS
 - PHASE_DIR = `${PLAN_DIR}/tasks/${PHASE_SLUG}`
 - PHASE_DOC = `${PHASE_DIR}/tasks.md`
 - EXEC_LOG = `${PHASE_DIR}/execution.log.md`
-- REVIEW_FILE = `${PLAN_DIR}/reviews/review.${PHASE_SLUG}.md`
-- FIX_FILE = `${PLAN_DIR}/reviews/fix-tasks.${PHASE_SLUG}.md` (only if REQUEST_CHANGES)
+- REVIEW_FILE = `${PHASE_DIR}/reviews/review.${PHASE_SLUG}.md`
+- FIX_FILE = `${PHASE_DIR}/reviews/fix-tasks.${PHASE_SLUG}.md` (only if REQUEST_CHANGES)
 
 **Simple Mode** artifact resolution:
 - PLAN = provided --plan
@@ -45,7 +45,9 @@ $ARGUMENTS
 - REVIEW_FILE = `${PLAN_DIR}/reviews/review.md`
 - FIX_FILE = `${PLAN_DIR}/reviews/fix-tasks.md` (only if REQUEST_CHANGES)
 
-Create `${PLAN_DIR}/reviews/` directory if it doesn't exist.
+Create the `reviews/` directory if it doesn't exist:
+- **Full Mode**: `${PHASE_DIR}/reviews/`
+- **Simple Mode**: `${PLAN_DIR}/reviews/`
 
 ## Step 2: Gather Diffs
 
@@ -62,7 +64,7 @@ Create `${PLAN_DIR}/reviews/` directory if it doesn't exist.
        `git log --all --follow -- <file>` to find the relevant commits, then diff from the earliest
   3. **Fallback**: If git history is unclear, read file list from task table Path(s) column and diff each file against its last committed state before the plan started
 - Build a file manifest: every file touched, with action (created/modified/deleted)
-- Save computed diff to `${PLAN_DIR}/reviews/_computed.diff` for reproducibility
+- Save computed diff to `${REVIEW_DIR}/reviews/_computed.diff` for reproducibility (where REVIEW_DIR = PHASE_DIR in Full Mode, PLAN_DIR in Simple Mode)
 
 ## Step 3: Launch Review Subagents (Parallel)
 
@@ -419,14 +421,14 @@ Apply in order. Re-run review after fixes.
 - **Patches are hints only**: Unified diff snippets in report, not applied
 - **Report is deterministic**: Quote minimal context, use absolute paths throughout
 - **Domain map validation is mandatory**: If domain-map.md exists, it MUST be checked
-- **ALWAYS write review file**: Never just output to console — write the file to `${PLAN_DIR}/reviews/`
+- **ALWAYS write review file**: Never just output to console — write the file to the phase's `reviews/` directory (Full Mode: `${PHASE_DIR}/reviews/`, Simple Mode: `${PLAN_DIR}/reviews/`)
 - **ALWAYS include Handover Brief**: The next agent needs full context with absolute paths
 ```
 
 Acceptance criteria for this command:
-- Review file written to `${PLAN_DIR}/reviews/` with sections A-H
+- Review file written to phase `reviews/` directory with sections A-H
 - Fix tasks file written (if REQUEST_CHANGES) with ordered fixes and patch hints
-- Computed diff saved to `${PLAN_DIR}/reviews/_computed.diff`
+- Computed diff saved to phase `reviews/_computed.diff`
 - Every finding has absolute file path, severity, and concrete fix
 - Domain compliance table has 9 checks with ✅/❌ status
 - Coverage map shows per-AC confidence scores
