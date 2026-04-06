@@ -357,13 +357,122 @@ class SetupManager:
             version_after=version_after
         )
 
+    def _install_local_commands_python(self) -> InstallResult:
+        """Pure Python implementation of local commands installation.
+        Used on Windows where bash is unavailable, and as a fallback on all platforms.
+        """
+        import re
+        import shutil
+        start_time = time.time()
+
+        cli_list = self.commands_local
+        target_dir = Path(self.local_dir)
+        v2_source = self.script_dir / "agents" / "v2-commands"
+
+        if not v2_source.exists():
+            return InstallResult("agents", False, "v2-commands source directory not found", "", "v2-commands not found", 0.0)
+
+        source_files = sorted(v2_source.glob("*.md"))
+        if not source_files:
+            return InstallResult("agents", False, "No .md files found in v2-commands", "", "No source files", 0.0)
+
+        skip_files = {"README.md", "GETTING-STARTED.md", "changes.md", "codebase.md"}
+        output_lines = []
+
+        # Claude — raw copy
+        if "claude" in cli_list:
+            claude_dir = target_dir / ".claude" / "commands"
+            claude_dir.mkdir(parents=True, exist_ok=True)
+            # Cleanup old plan commands
+            for old in claude_dir.glob("plan-[0-9]*.md"):
+                old.unlink()
+            count = 0
+            for src in source_files:
+                shutil.copy2(src, claude_dir / src.name)
+                count += 1
+            output_lines.append(f"Claude: {count} commands -> {claude_dir}")
+
+        # OpenCode — raw copy
+        if "opencode" in cli_list:
+            opencode_dir = target_dir / ".opencode" / "command"
+            opencode_dir.mkdir(parents=True, exist_ok=True)
+            for old in opencode_dir.glob("plan-[0-9]*.md"):
+                old.unlink()
+            count = 0
+            for src in source_files:
+                shutil.copy2(src, opencode_dir / src.name)
+                count += 1
+            output_lines.append(f"OpenCode: {count} commands -> {opencode_dir}")
+
+        # GitHub Copilot (VS Code) — rename to .prompt.md
+        if "ghcp" in cli_list:
+            ghcp_dir = target_dir / ".github" / "prompts"
+            ghcp_dir.mkdir(parents=True, exist_ok=True)
+            for old in ghcp_dir.glob("plan-[0-9]*.prompt.md"):
+                old.unlink()
+            count = 0
+            for src in source_files:
+                prompt_name = src.stem + ".prompt.md"
+                shutil.copy2(src, ghcp_dir / prompt_name)
+                count += 1
+            output_lines.append(f"GitHub Copilot: {count} prompts -> {ghcp_dir}")
+
+        # Copilot CLI — skills format: <name>/SKILL.md
+        if "copilot-cli" in cli_list:
+            skills_dir = target_dir / ".github" / "skills"
+            skills_dir.mkdir(parents=True, exist_ok=True)
+            # Cleanup old skill directories
+            for old_skill in skills_dir.glob("plan-[0-9]*"):
+                if old_skill.is_dir():
+                    shutil.rmtree(old_skill)
+            # Migrate: clean old .github/agents/*.agent.md
+            old_agents_dir = target_dir / ".github" / "agents"
+            if old_agents_dir.exists():
+                for old_agent in old_agents_dir.glob("*.agent.md"):
+                    old_agent.unlink()
+                try:
+                    old_agents_dir.rmdir()
+                except OSError:
+                    pass  # Not empty — user has custom files
+            count = 0
+            for src in source_files:
+                if src.name in skip_files:
+                    continue
+                content = src.read_text(encoding="utf-8")
+                name = src.stem.lower().replace(" ", "-")
+                desc = f"Command: {name}"
+                fm_match = re.match(r"^---\s*\n(.*?)\n---\s*\n", content, re.DOTALL)
+                content_body = content
+                if fm_match:
+                    for line in fm_match.group(1).split("\n"):
+                        if line.strip().startswith("description:"):
+                            desc = line.partition(":")[2].strip().strip('"').strip("'")
+                            break
+                    content_body = content[fm_match.end():]
+                frontmatter = f'---\nname: {name}\ndescription: "{desc}"\n---\n\n'
+                skill_dir = skills_dir / name
+                skill_dir.mkdir(parents=True, exist_ok=True)
+                (skill_dir / "SKILL.md").write_text(frontmatter + content_body.lstrip(), encoding="utf-8")
+                count += 1
+            output_lines.append(f"Copilot CLI: {count} skills -> {skills_dir}")
+
+        duration = time.time() - start_time
+        message = "Local commands installed: " + "; ".join(output_lines)
+        return InstallResult("agents", True, message, "\n".join(output_lines), "", duration)
+
     def install_tools(self, update_mode: bool = False) -> None:
         """Install all tools with progress tracking"""
         # Check if we're in local-commands-only mode
         is_local_mode = hasattr(self, 'commands_local') and self.commands_local
 
         if is_local_mode:
-            # In local mode, only run agents.sh
+            # On Windows (or if bash unavailable), use pure Python implementation
+            if self.os_type == "Windows":
+                console.print("[dim]Using Python-native installer (Windows)[/dim]\n")
+                result = self._install_local_commands_python()
+                self.results.append(result)
+                return
+            # On Unix, run agents.sh via bash
             agents_installer = self.install_path / "agents.sh"
             if not agents_installer.exists():
                 console.print(f"[red]agents.sh installer not found at {agents_installer}[/red]")
