@@ -167,7 +167,7 @@ uvx jk-tools --commands-local claude --local-dir ~/my-project
 | **Claude Code** | `.claude/commands/` | ✅ Yes | ✅ Fully supported |
 | **OpenCode** | `.opencode/command/` | ✅ Yes | ✅ Fully supported |
 | **GitHub Copilot** | `.github/prompts/*.prompt.md` | ⚠️ Manual attach | ✅ Supported |
-| **Copilot CLI** | `.github/agents/*.agent.md` | ✅ Yes | ✅ Fully supported |
+| **Copilot CLI** | `.github/skills/<name>/SKILL.md` | ✅ Yes | ✅ Fully supported |
 | **Codex** | N/A | ❌ No | ❌ Not supported |
 
 #### Local Installation Behavior
@@ -189,7 +189,7 @@ uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local c
 # Install GitHub Copilot prompts from GitHub
 uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local ghcp
 
-# Install Copilot CLI agents from GitHub
+# Install Copilot CLI skills from GitHub
 uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local copilot-cli
 
 # Install to specific directory
@@ -213,10 +213,10 @@ uvx --force-reinstall --from git+https://github.com/jakkaj/tools jk-tools-setup 
 
 #### Copilot CLI Notes
 
-- Files are created with `.agent.md` extension (e.g., `tad.md` → `tad.agent.md`)
-- Agents are stored in `.github/agents/` directory
-- Copilot CLI auto-discovers local agents when run from project directory
-- YAML frontmatter includes `name` and `description` fields (tools default to all)
+- Skills are installed as `SKILL.md` inside named subdirectories (e.g., `plan-1a-v2-explore/SKILL.md`)
+- Skills are stored in `.github/skills/` directory
+- Copilot CLI auto-discovers local skills and exposes them as `/skill-name` slash commands
+- YAML frontmatter includes `name` and `description` fields (both required)
 
 #### GitHub Copilot (VS Code) Notes
 
