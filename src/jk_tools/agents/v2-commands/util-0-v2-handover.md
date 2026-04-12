@@ -30,9 +30,14 @@ Context protection: Obey strict caps; keep strings short (≤12 words) and lists
 
 Deterministic: Natural sort for IDs; consistent key order.
 
+Entity preservation: File paths, function names, task IDs, decision IDs, and CLI commands MUST be preserved VERBATIM. Never paraphrase these — copy exactly or write “?”.
+
 Two‑Stage Generation (single response)
 
-Internal consolidation (silent): Do a quick chronological mental pass of the conversation/session to recover: user’s explicit requests (quote key lines), your actions, decisions, code touchpoints, and current focus.
+Internal consolidation (silent): Think forward — what will the receiving agent need to DO next?
+  1. Ask: “What 5 questions will the next agent ask in their first 30 seconds?”
+  2. Recover: user’s explicit requests (quote key lines), decisions + rationale, code state, failed attempts, and blockers that answer those questions.
+  3. Identify ≤5 immutable facts and ≤3 verbatim user constraints for the anchors section.
 
 Emit summary: Output one artifact in the requested format using the schema below. If near --max, drop lowest‑priority sections in the Trim Order.
 
@@ -65,8 +70,8 @@ code:{
 }
 
 decisions:{
-  adrs:[["ADR-####","<constraint>", "affects <area>", "<domain|cross-domain — optional>"], ...≤4],
-  other:[["<id>","<decision>", "<impact>"], ...≤6]
+  adrs:[["ADR-####","<constraint>", "affects <area>", "<domain — optional>", "<why ≤8w>"], ...≤4],
+  other:[["<id>","<decision>", "<impact>", "<why ≤8w>"], ...≤6]
 }
 
 tasks:{
@@ -77,6 +82,13 @@ tasks:{
 tests:{unit:"pass|fail|mixed|?", integ:"pass|fail|mixed|?", cov:"<%|?>", notes:"<≤80 chars>"}
 
 risks:[["<risk>", "<mitigation>", "<watch>", "<domain — optional>"], ...≤5]
+
+fails:[["<approach tried>","<why it failed>","<lesson learned>"], ...≤4]
+
+anchors:{
+  immutable:["<fact that must survive re-summarization>", ...≤5],
+  user_verbatim:["<exact user constraint quote>", ...≤3]
+}
 
 next:{
   task:"<id>",
@@ -89,8 +101,10 @@ next:{
 refs:{plan:"<path> §<anchor|?>", tasks_file:"<absolute-path-to-tasks.md|?>", log:"<.../execution.log.md|?>", paths:["<key dir/file>", ...≤5]}
 
 
-Trim Order (when hitting --max): code.hot → code.domain_dirs → risks → concepts.keys → decisions.other → tasks.pend → code.files → tests.notes → refs.paths.
-Never trim: m, intent.primary, timeline.just_completed, timeline.current, next (including next.tasks_file), m.domain (when present).
+Trim Order (when hitting --max): code.hot → code.domain_dirs → fails → risks → concepts.keys → decisions.other → tasks.pend → code.files → tests.notes → refs.paths → anchors.immutable.
+Never trim: m, intent.primary, timeline.just_completed, timeline.current, next (including next.tasks_file), m.domain (when present), anchors.user_verbatim.
+
+Budget guide (approximate): intent+timeline ≈20%, code+decisions ≈35%, tasks ≈20%, next+refs ≈15%, risks+concepts+fails+anchors ≈10%.
 
 B) --format lean (readable Markdown, still tight)
 # Handover
@@ -115,8 +129,8 @@ Plan: <path> • Phase: <name> • Feature: <slug> • Progress: <x/y or %> • 
 - Domain dirs (≤6): <domain> → <dir>
 
 ## 5) Decisions & ADRs
-- ADR‑#### — <constraint> — Affects: <area> — Domain: <slug> (≤4)
-- Other decisions (≤6): <id> — <decision> — Impact: <≤12 words>
+- ADR‑#### — <constraint> — Affects: <area> — Domain: <slug> — Why: <≤8 words> (≤4)
+- Other decisions (≤6): <id> — <decision> — Impact: <≤12 words> — Why: <≤8 words>
 
 ## 6) Tasks Snapshot
 - Done (≤8): <ids…>
@@ -132,14 +146,21 @@ Plan: <path> • Phase: <name> • Feature: <slug> • Progress: <x/y or %> • 
 ## 8) Risks (≤5)
 - <risk> — Mitigation: <short> — Watch: <signal> — Domain: <slug, if scoped>
 
-## 9) Next Steps
+## 9) Failed Attempts (≤4)
+- <approach tried> — Failed: <why> — Lesson: <what it taught>
+
+## 10) Anchors (anti‑drift)
+- Immutable facts (≤5): <facts that must survive re-summarization>
+- User constraints (verbatim, ≤3): “<exact user quote>”
+
+## 11) Next Steps
 - Immediate: <task‑id> — <why>
   - Tasks file: <absolute-path-to-tasks.md>
   - Validation: <≤3 criteria>
   - Resume: `/plan-6-v2-implement-phase --phase "<phase>" --plan "<path>" --task "<id>"`
 - Then (≤4): T0xx — <one‑liner> (deps: <ids>)
 
-## 10) References
+## 12) References
 - Plan: <path> §<anchor|?>
 - Tasks file: <absolute-path-to-tasks.md|?>
 - Phase log: <.../execution.log.md|?>
@@ -147,18 +168,18 @@ Plan: <path> • Phase: <name> • Feature: <slug> • Progress: <x/y or %> • 
 
 C) --format json (expanded keys; mirrors compact/lean)
 
-Keys: meta, intent, timeline, concepts, code, decisions, tasks, tests, risks, next, refs.
+Keys: meta, intent, timeline, concepts, code, decisions, tasks, tests, risks, fails, anchors, next, refs.
 Values follow the same caps and semantics as compact.
 
 Size & Priority Policy
 
 Global cap: --max (default 1400; hard stop 1600).
 
-Section caps: Concepts ≤6; Files ≤8; Hot ≤6; DomainDirs ≤6; Decisions(other) ≤6; ADRs ≤4; Done ≤8; In‑Progress ≤5; Pending ≤10; Blocked ≤3; CritDeps ≤5; Risks ≤5; Then ≤4.
+Section caps: Concepts ≤6; Files ≤8; Hot ≤6; DomainDirs ≤6; Decisions(other) ≤6; ADRs ≤4; Done ≤8; In‑Progress ≤5; Pending ≤10; Blocked ≤3; CritDeps ≤5; Risks ≤5; Fails ≤4; Anchors.immutable ≤5; Anchors.user_verbatim ≤3; Then ≤4.
 
 Strings: Prefer ≤12 words. Use IDs and pointers over prose.
 
-Required fields even when trimmed: meta, intent.primary, timeline.current, next (task/why/validate/cmd).
+Required fields even when trimmed: meta, intent.primary, timeline.current, next (task/why/validate/cmd), anchors.user_verbatim.
 
 Normalization
 
@@ -200,8 +221,8 @@ code:{
 }
 
 decisions:{
-  adrs:[["ADR-0001","domain types above repo","services/routers","realtime"]],
-  other:[["DEC-telemetry","/telemetry collects client stats","observability"],["DEC-ephemeral","mint per Start click","stateless svc call"]]
+  adrs:[["ADR-0001","domain types above repo","services/routers","realtime","prevents circular imports"]],
+  other:[["DEC-telemetry","/telemetry collects client stats","observability","needed for latency debugging"],["DEC-ephemeral","mint per Start click","stateless svc call","avoids key caching security risk"]]
 }
 
 tasks:{
@@ -211,7 +232,14 @@ tasks:{
 
 tests:{unit:"mixed", integ:"pass", cov:"~50%", notes:"RED→GREEN expected after T032"}
 
-risks:[["mic permission denial","UI prompt/handle NotAllowedError","browser console","realtime"],["region mismatch","derive from AZURE_OPENAI_REGION","403/connect-failed","auth"]] 
+risks:[["mic permission denial","UI prompt/handle NotAllowedError","browser console","realtime"],["region mismatch","derive from AZURE_OPENAI_REGION","403/connect-failed","auth"]]
+
+fails:[["REST polling",">500ms latency per round-trip","WebSocket/WebRTC mandatory"],["raw WebSocket without SDK","auth token refresh not handled","use Azure SDK for token lifecycle"]]
+
+anchors:{
+  immutable:["PostgreSQL for JSONB support","WebRTC over WebSocket for <100ms","domain types above repo layer"],
+  user_verbatim:["“no key caching”","“get webrtc working end-to-end”"]
+}
 
 next:{
   task:"T032",
@@ -232,15 +260,17 @@ Constraints:
 - If unsure, output "?" and add a pointer in Refs rather than guessing.
 - Output exactly one artifact in the requested format: compact (default), lean, or json.
 - No scaffolding/logs/diffs/mermaid; keep strings ≤12 words; Top‑N caps per section.
+- File paths, function names, task IDs, decision IDs, and CLI commands MUST be verbatim. Never paraphrase — copy exactly or write “?”.
 - Domain fields are optional — include them when the project uses the domain system (`docs/domains/` exists) or when `--domain` is provided. Tag concepts, ADRs, and risks with `[domain]` when known.
 
 Method:
-1) Internally review the session chronologically to recall: explicit user requests (quote briefly), your actions, decisions, code touchpoints, state, just completed work, current focus, and domain boundaries touched.
-2) Emit the summary using the chosen format and schema. Apply Trim Order when near the cap: code.hot → code.domain_dirs → risks → concepts.keys → decisions.other → tasks.pend → code.files → tests.notes → refs.paths.
-3) Never trim: meta, primary intent, timeline.just_completed, timeline.current, next (including next.tasks_file), meta.domain (when present).
+1) Think forward: “What 5 questions will the next agent ask in their first 30 seconds?” Then recover user requests (quote briefly), decisions + rationale, code state, failed attempts, blockers, and ≤5 immutable facts that answer those questions.
+2) Emit the summary using the chosen format and schema. Apply Trim Order when near the cap: code.hot → code.domain_dirs → fails → risks → concepts.keys → decisions.other → tasks.pend → code.files → tests.notes → refs.paths → anchors.immutable.
+3) Never trim: meta, primary intent, timeline.just_completed, timeline.current, next (including next.tasks_file), meta.domain (when present), anchors.user_verbatim.
+4) Budget guide: intent+timeline ≈20%, code+decisions ≈35%, tasks ≈20%, next+refs ≈15%, risks+concepts+fails+anchors ≈10%.
 
 Content (by format):
-- **compact**: Emit HOVR/2 block with sections: m, intent, timeline, concepts, code, decisions, tasks, tests, risks, next, refs. Include domain_dirs in code and domain tags in concepts/ADRs/risks when known.
-- **lean**: Emit Markdown with 10 sections mirroring the compact data. Include Domain fields in headers and list items.
+- **compact**: Emit HOVR/2 block with sections: m, intent, timeline, concepts, code, decisions, tasks, tests, risks, fails, anchors, next, refs. Include domain_dirs in code and domain tags in concepts/ADRs/risks when known.
+- **lean**: Emit Markdown with 12 sections mirroring the compact data. Include Domain fields in headers and list items.
 - **json**: Emit JSON with full-word keys mirroring the compact data. Include domain, domain_dirs, and domain tags.
 
