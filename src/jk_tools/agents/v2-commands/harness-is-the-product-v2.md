@@ -1,6 +1,5 @@
 ---
-name: harness-is-the-product
-description: "Re-ground the session on the core philosophy — the harness is the product, velocity compounding matters, and every code change is an exercise that should make the development infrastructure better. Run at session start or when context drifts."
+description: Re-ground the session on the core philosophy — the harness is the product, velocity compounding matters, and every code change is an exercise that should make the development infrastructure better. Run at session start or when context drifts.
 ---
 
 # The Harness is the Product

@@ -4,7 +4,7 @@ description: Launch parallel GPT-5.4 subagents to validate whatever was just pro
 
 Please deep think / ultrathink as this is a complex task.
 
-# validate-v1
+# validate-v2
 
 **Universal post-action validation** — launches parallel GPT-5.4 subagents to cross-check whatever artifact was just produced. Works on any output: tasks dossier, code changes, plan, spec, workshop, or any structured document.
 

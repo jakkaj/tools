@@ -659,14 +659,33 @@ install_local_commands() {
         echo ""
     fi
 
-    # Copilot CLI (uses .github/agents/ for local project agents)
+    # Copilot CLI (uses .github/skills/<name>/SKILL.md for local project skills)
     if [[ "$cli_list" == *"copilot-cli"* ]]; then
-        local copilot_cli_local_dir="${target_dir}/.github/agents"
+        local copilot_cli_local_dir="${target_dir}/.github/skills"
         mkdir_with_retry "${copilot_cli_local_dir}"
-        cleanup_plan_commands "${copilot_cli_local_dir}" "plan-[0-9]*.agent.md"
-        print_status "Installing Copilot CLI agents to ${copilot_cli_local_dir}"
 
-        # Use Python to generate agent files with YAML frontmatter from v2-commands
+        # Clean old plan-* skill directories for idempotent re-runs
+        for old_skill_dir in "${copilot_cli_local_dir}"/plan-[0-9]*/; do
+            [ -d "$old_skill_dir" ] && rm -rf "$old_skill_dir"
+        done
+
+        # Migrate: clean old .github/agents/plan-*.agent.md if present
+        local old_agents_dir="${target_dir}/.github/agents"
+        if [ -d "${old_agents_dir}" ]; then
+            for old_agent in "${old_agents_dir}"/plan-[0-9]*.agent.md; do
+                [ -f "$old_agent" ] && rm -f "$old_agent"
+            done
+            # Remove other known v2-command agent files from old format
+            for old_agent in "${old_agents_dir}"/*.agent.md; do
+                [ -f "$old_agent" ] && rm -f "$old_agent"
+            done
+            # Remove old agents dir if empty
+            rmdir "${old_agents_dir}" 2>/dev/null || true
+        fi
+
+        print_status "Installing Copilot CLI skills to ${copilot_cli_local_dir}"
+
+        # Use Python to generate SKILL.md files in per-skill directories from v2-commands
         $PYTHON_CMD - "${V2_SOURCE_DIR}" "${copilot_cli_local_dir}" <<'COPILOT_CLI_LOCAL_PYTHON'
 import sys
 import re
@@ -674,7 +693,8 @@ from pathlib import Path
 
 source_dir = Path(sys.argv[1])
 dest_dir = Path(sys.argv[2])
-skip_files = {'README.md', 'GETTING-STARTED.md'}
+skip_files = {'README.md', 'GETTING-STARTED.md', 'changes.md', 'codebase.md'}
+count = 0
 for source_file in sorted(source_dir.glob('*.md')):
     if source_file.name in skip_files:
         continue
@@ -689,14 +709,17 @@ for source_file in sorted(source_dir.glob('*.md')):
                 desc = line.partition(':')[2].strip().strip('"').strip("'")
                 break
         content_body = content[fm_match.end():]
-    frontmatter = f'---\nname: "{name}"\ndescription: "{desc}"\ntools:\n  - "*"\n---\n\n'
-    dest_path = dest_dir / f"{source_file.stem}.agent.md"
+    frontmatter = f'---\nname: {name}\ndescription: "{desc}"\n---\n\n'
+    skill_dir = dest_dir / name
+    skill_dir.mkdir(parents=True, exist_ok=True)
+    dest_path = skill_dir / "SKILL.md"
     dest_path.write_text(frontmatter + content_body.lstrip(), encoding='utf-8')
-    print(f"  [↻] {source_file.stem}.agent.md")
+    print(f"  [↻] {name}/SKILL.md")
+    count += 1
 COPILOT_CLI_LOCAL_PYTHON
 
-        copilot_cli_local_count=$(find "${copilot_cli_local_dir}" -maxdepth 1 -type f -name "*.agent.md" | wc -l | tr -d ' ')
-        print_success "Installed ${copilot_cli_local_count} agents to ${copilot_cli_local_dir}"
+        copilot_cli_local_count=$(find "${copilot_cli_local_dir}" -mindepth 2 -maxdepth 2 -type f -name "SKILL.md" | wc -l | tr -d ' ')
+        print_success "Installed ${copilot_cli_local_count} skills to ${copilot_cli_local_dir}"
 
         echo ""
     fi
@@ -731,8 +754,8 @@ COPILOT_CLI_LOCAL_PYTHON
         echo "  ${target_dir}/.github/prompts/ (${file_count} .prompt.md files)"
     fi
     if [[ "$cli_list" == *"copilot-cli"* ]]; then
-        local copilot_cli_local_count=$(find "${target_dir}/.github/agents" -maxdepth 1 -type f -name "*.agent.md" 2>/dev/null | wc -l | tr -d ' ')
-        echo "  ${target_dir}/.github/agents/ (${copilot_cli_local_count} .agent.md files)"
+        local copilot_cli_local_count=$(find "${target_dir}/.github/skills" -mindepth 2 -maxdepth 2 -type f -name "SKILL.md" 2>/dev/null | wc -l | tr -d ' ')
+        echo "  ${target_dir}/.github/skills/ (${copilot_cli_local_count} skills)"
     fi
     echo ""
     print_status "Tip: Commit these directories to version control to share with team"
