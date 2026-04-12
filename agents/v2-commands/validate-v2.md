@@ -152,7 +152,7 @@ End with a one-line verdict:
 /validate
 
 # Validate a specific file
-/validate --artifact docs/plans/036/tasks/phase-2/tasks.md
+/validate --artifact docs/plans/my-feature/tasks/phase-2/tasks.md
 ```
 
 The skill auto-detects what to validate. You almost never need flags.

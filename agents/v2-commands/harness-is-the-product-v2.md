@@ -2,7 +2,9 @@
 description: Re-ground the session on the core philosophy — the harness is the product, velocity compounding matters, and every code change is an exercise that should make the development infrastructure better. Run at session start or when context drifts.
 ---
 
-# The Harness is the Product
+# harness-is-the-product-v2
+
+## The Harness is the Product
 
 **Run this skill when starting a session, when the agent seems to be optimizing for task completion over infrastructure improvement, or when you need to re-ground on WHY you're doing this.**
 
@@ -24,7 +26,7 @@ $ARGUMENTS
 Look for these files in the project — they define the philosophy. Not all projects will have all of them:
 
 1. **AGENTS.md** (repo root) — Look for any "harness" or "infrastructure as product" section. This is the constitution.
-2. **Experiment tracking files** (e.g. `ISE/experiments/`, `docs/experiments/`) — Look for a meta-experiment that tracks velocity compounding or development infrastructure improvement.
+2. **Experiment tracking files** (e.g. `docs/experiments/`, `experiments/`) — Look for a meta-experiment that tracks velocity compounding or development infrastructure improvement.
 3. **Agent/harness documentation** (e.g. `harness/`, `docs/harness/`, agent config files) — Look for self-improvement contracts, difficulty ledgers, or retrospective patterns.
 
 If none of these exist, that's fine — the principles still apply. Report what you find and adapt.
@@ -106,9 +108,9 @@ End with a clear, conversational statement that grounds the session. Not a lectu
 
 ## What This Skill is NOT
 
-- It is NOT a planning tool (use plan-3)
-- It is NOT a validation tool (use validate-v1)
-- It is NOT a code review (use plan-7)
+- It is NOT a planning tool (use plan-3-v2-architect)
+- It is NOT a validation tool (use validate-v2)
+- It is NOT a code review (use plan-7-v2-code-review)
 - It IS the philosophical backbone that makes all other skills serve the right goal
 
 ---
