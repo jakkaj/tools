@@ -52,11 +52,14 @@ After EACH task you MUST update these locations before proceeding to the next ta
 ┃                                                                       ┃
 ┃ ALL TASKS COMPLETE:                                                   ┃
 ┃ [ ] Flight Plan § Status: "Ready for takeoff" → "Landed"             ┃
+┃ [ ] Plan-Level Flight Plan: update Journey Map, Phases table,         ┃
+┃     and append Flight Log entry (see plan-5b-flightplan § Plan-Level) ┃
 ┃                                                                       ┃
 ┃ ✓ ALL UPDATES DONE → Proceed to next task                            ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-**Flight Plan location**: `tasks.fltplan.md` in the phase directory (Full Mode) or `FX###.fltplan.md` for fixes.
+**Phase Flight Plan location**: `tasks.fltplan.md` in the phase directory (Full Mode) or `FX###.fltplan.md` for fixes.
+**Plan-Level Flight Plan location**: `<slug>.fltplan.md` in the plan root directory.
 
 DO NOT start the next task until ALL updates above are done.
 

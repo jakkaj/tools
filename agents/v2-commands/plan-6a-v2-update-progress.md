@@ -55,7 +55,19 @@ $ARGUMENTS
    - If contract changes recorded → flag "domain.md § Concepts update needed for <domain>"
    - If new domain created → flag "domain.md § Concepts creation needed for <domain>"
 
-7) Report what was updated.
+7) Update plan-level Flight Plan (if it exists):
+   - Locate `${PLAN_DIR}/<slug>.fltplan.md`
+   - If `--status completed` and this is the last task in a phase:
+     * Update Journey Map: phase node class → `done`
+     * Update Phases Overview table: status → Complete
+     * Append Flight Log entry with phase summary and key changes
+   - If `--status in_progress` and this is the first task in a phase:
+     * Update Journey Map: phase node class → `active`
+     * Update Phases Overview table: status → In Progress
+     * Update plan-level Status: "Ready" → "In Progress" (if first phase starting)
+   - Check off any acceptance criteria this phase satisfies
+
+8) Report what was updated.
 ```
 
 This command is the **single source of truth** for progress updates. Always delegate progress tracking to this command rather than manually editing task tables.

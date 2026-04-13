@@ -310,3 +310,9 @@ Before writing the plan, verify:
 
 Next step (Full Mode): Run **/plan-4-complete-the-plan** to validate readiness.
 Next step (Simple Mode): Run **/plan-6-v2-implement-phase --plan "<PLAN_PATH>"**
+
+### Auto-Generate Plan-Level Flight Plan
+
+After writing the plan, auto-call `/plan-5b-flightplan --plan "${PLAN_PATH}"` (no --phase flag = plan-level mode).
+
+This regenerates `${PLAN_DIR}/<slug>.fltplan.md` with full phase data, architecture vision, and journey map. Status becomes "Ready". If a flight plan already exists from plan-1b, it is enriched — the Flight Log section is preserved.

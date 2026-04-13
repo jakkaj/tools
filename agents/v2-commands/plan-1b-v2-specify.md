@@ -120,6 +120,14 @@ Gates:
 - If empty description, ERROR.
 
 Output: SPEC_FILE ready for clarification.
+
+6) Generate plan-level Flight Plan:
+   - Auto-call `/plan-5b-flightplan --plan "${SPEC_FILE}"` (no --phase flag = plan-level mode)
+   - This creates `${PLAN_DIR}/<slug>.fltplan.md` — the executive overview
+   - At this stage, status will be "Specifying" with minimal content
+   - The flight plan will be enriched when `/plan-3` runs
+
+Output: SPEC_FILE + Flight Plan at plan root.
 ```
 
 Next steps:

@@ -1,5 +1,5 @@
 ---
-description: Generate a consumable Flight Plan (.fltplan.md) summarizing what a phase will do, with before/after architecture diagrams. Auto-called by plan-5 or run standalone.
+description: Generate a consumable Flight Plan (.fltplan.md) at phase or plan level. Phase-level is auto-called by plan-5. Plan-level is auto-called by plan-1b/plan-3 for executive overview.
 ---
 
 Please deep think / ultrathink as this requires synthesizing multiple sources into a clear, simple output.
@@ -10,19 +10,24 @@ Please deep think / ultrathink as this requires synthesizing multiple sources in
 
 **What this command does**: Generates a short, highly readable Flight Plan (`.fltplan.md`) for a single phase — the "boarding pass" that tells you where you are, where you're going, and exactly what will happen along the way.
 
-**When to use**: Automatically called at the end of `/plan-5`. Can also be run standalone to regenerate or update a Flight Plan after changes.
+**When to use**:
+- **Phase-level**: Automatically called at the end of `/plan-5`. Can also be run standalone.
+- **Plan-level**: Automatically called at the end of `/plan-1b` (spec) or `/plan-3` (plan). Produces an executive overview of the entire feature — perfect for sharing, printing to PDF, or stakeholder updates.
 
 **Why it exists**: Plans and task dossiers are long. The Flight Plan distills everything into a document you can scan in 30 seconds and share with anyone.
 
 ### Input → Output
 
 ```
-INPUT:
-  --phase "Phase 2: Core Implementation"
-  --plan "/abs/path/docs/plans/3-feature-x/feature-x-plan.md"
+PHASE-LEVEL (per-phase detail):
+  INPUT:  --phase "Phase 2: Core Implementation"
+          --plan "/abs/path/docs/plans/3-feature-x/feature-x-plan.md"
+  OUTPUT: docs/plans/3-feature-x/tasks/phase-2-core-implementation/tasks.fltplan.md
 
-OUTPUT:
-  docs/plans/3-feature-x/tasks/phase-2-core-implementation/tasks.fltplan.md
+PLAN-LEVEL (executive overview):
+  INPUT:  --plan "/abs/path/docs/plans/3-feature-x/feature-x-plan.md"
+          (no --phase flag = plan-level mode)
+  OUTPUT: docs/plans/3-feature-x/feature-x.fltplan.md
 ```
 
 ### Sample Output
@@ -160,6 +165,181 @@ flowchart LR
 
 Not active for this plan.
 ```
+
+---
+
+## Plan-Level Flight Plan (Executive Overview)
+
+When called **without `--phase`** (or auto-called by `/plan-1b` or `/plan-3`), generate a plan-level flight plan at the plan root. This is the "one-pager" — the document you print to PDF and share.
+
+### Plan-Level Path
+
+```
+FLTPLAN_FILE = PLAN_DIR/<slug>.fltplan.md
+```
+
+### Plan-Level Source Materials
+
+- Read SPEC (`*-spec.md`) for: feature description, acceptance criteria, scope, risks
+- Read PLAN (`*-plan.md`) for: phases, task tables, domain manifest, key findings (if plan-3 has run)
+- If only spec exists (called from plan-1b): generate from spec alone
+- If plan exists (called from plan-3): generate from both spec and plan
+
+### Plan-Level Template
+
+```markdown
+# Flight Plan: <Feature Name>
+
+**Spec**: [<slug>-spec.md](./<slug>-spec.md)
+**Plan**: [<slug>-plan.md](./<slug>-plan.md) (or "Pending — run /plan-3")
+**Generated**: <ISO date>
+**Status**: Specifying | Planning | Ready | In Progress | Complete
+
+---
+
+## The Mission
+
+**What we're building**: <2-3 sentence plain-English summary of the feature.
+Write for someone who has never seen the spec. What does a user/developer
+get when this is done?>
+
+**Why it matters**: <1 sentence on the value — why are we doing this?>
+
+---
+
+## Where We Are → Where We're Headed
+
+Use a concrete, visual before/after comparison. Show counts, components,
+and what changes — like a dashboard diff. Use colored indicators:
+
+  🔵 = unchanged   🟢 = enhanced   🟡 = modified   🔴 = new
+
+Example style (adapt to the feature):
+```
+TODAY:                          AFTER this plan:
+3 hooks, ~22 entities           4 hooks, ~70+ entities
+
+🔵 Auth → Login (same)          🔵 Auth → Login (same)
+🟡 API → 3 endpoints            🟡 API → 8 endpoints (5 new)
+❌ No batch processing           🔴 BatchService (NEW) → all entities
+```
+
+Make it visual, concrete, and instantly scannable. Show real numbers.
+For architecture changes, include a Mermaid before/after:
+
+```mermaid
+flowchart LR
+    classDef existing fill:#E8F5E9,stroke:#4CAF50,color:#000
+    classDef changed fill:#FFF3E0,stroke:#FF9800,color:#000
+    classDef new fill:#E3F2FD,stroke:#2196F3,color:#000
+
+    subgraph Current["Current State"]
+        A[Component]:::existing
+        B[Component]:::existing
+    end
+
+    subgraph Target["After All Phases"]
+        C[Component]:::existing
+        D[Component]:::changed
+        E[New Component]:::new
+    end
+```
+
+**Legend**: existing (green) | changed (orange) | new (blue)
+
+---
+
+## Scope
+
+**Goals**:
+- <bullet list from spec/plan>
+
+**Non-Goals**:
+- <bullet list from spec/plan>
+
+---
+
+## Journey Map
+
+```mermaid
+flowchart LR
+    classDef done fill:#4CAF50,stroke:#388E3C,color:#fff
+    classDef active fill:#FFC107,stroke:#FFA000,color:#000
+    classDef ready fill:#9E9E9E,stroke:#757575,color:#fff
+
+    S[Specify]:::done --> P[Plan]:::done
+    P --> P1[Phase 1: Title]:::ready
+    P1 --> P2[Phase 2: Title]:::ready
+    P2 --> P3[Phase 3: Title]:::ready
+    P3 --> D[Done]:::ready
+```
+
+**Legend**: green = done | yellow = active | grey = not started
+
+---
+
+## Phases Overview
+
+| Phase | Title | Tasks | CS | Status |
+|-------|-------|-------|----|--------|
+| 1 | <Title> | <count> | CS-<N> | Pending |
+| 2 | <Title> | <count> | CS-<N> | Pending |
+| 3 | <Title> | <count> | CS-<N> | Pending |
+
+---
+
+## Acceptance Criteria
+
+- [ ] <from spec — the top-level success criteria>
+- [ ] <keep to 8 items max>
+
+---
+
+## Key Risks
+
+| Risk | Mitigation |
+|------|-----------|
+| <from spec/plan> | <mitigation> |
+
+---
+
+## Flight Log
+
+<!-- Updated by /plan-6 and /plan-6a after each phase completes -->
+
+_No phases completed yet._
+```
+
+### Plan-Level Generation Rules
+
+1. **From plan-1b** (spec only): Generate with status "Specifying". Journey Map shows only Specify as done. "Where We're Headed" shows target state from spec. Phases Overview says "Run /plan-3 to generate phases."
+2. **From plan-3** (spec + plan): Generate with status "Ready". Journey Map shows Specify and Plan as done, all phases as ready. Full "Where We Are / Where We're Headed" with concrete numbers. Full Phases Overview with task counts and CS scores.
+3. **Regeneration-safe**: Overwrite existing fltplan. Preserve the Flight Log section (append-only).
+
+### How /plan-6 and /plan-6a Update the Plan-Level Flight Plan
+
+When completing phases, update the plan-level fltplan:
+
+1. **Journey Map**: Change current phase node class: `ready` → `active` (starting) or `active` → `done` (complete).
+2. **Phases Overview table**: Update Status column: Pending → In Progress → Complete.
+3. **Acceptance Criteria**: Check off criteria that this phase satisfies.
+4. **Flight Log**: Append a compact entry:
+
+```markdown
+### Phase N: <Title> — Complete (<ISO date>)
+
+**What was done**: <2-3 sentence summary of what this phase delivered>
+
+**Key changes**:
+- <file or component> — <what changed>
+- <file or component> — <what changed>
+
+**Decisions made**: <any notable decisions, or "None">
+```
+
+5. **Status**: Update as work progresses: "Ready" → "In Progress" (first phase starts) → "Complete" (all phases done).
+
+The Flight Log grows over time into a complete history of what was built — the executive-friendly changelog.
 
 ---
 
