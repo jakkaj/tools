@@ -126,6 +126,14 @@ main() {
         echo ""
     fi
 
+    # Install Claude Code status line (idempotent)
+    STATUSLINE_INSTALLER="${SCRIPT_DIR}/install/claude-statusline.sh"
+    if [ -f "${STATUSLINE_INSTALLER}" ]; then
+        print_status "Installing Claude Code status line..."
+        bash "${STATUSLINE_INSTALLER}"
+        echo ""
+    fi
+
     if [ "$USE_UVX" = true ]; then
         print_status "Detected uvx - using modern execution mode"
         echo ""
