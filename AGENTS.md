@@ -216,7 +216,6 @@ uvx --force-reinstall --from git+https://github.com/jakkaj/tools jk-tools-setup 
 
 - Global setup installs personal skills to `~/.copilot/skills/<name>/SKILL.md`
 - Local project setup installs shared skills to `.github/skills/<name>/SKILL.md`
-- Compatibility agent files may also be generated under `~/.copilot/agents/`
 - Copilot CLI auto-discovers skills and exposes them as `/skill-name` slash commands
 - YAML frontmatter includes `name` and `description` fields (both required)
 

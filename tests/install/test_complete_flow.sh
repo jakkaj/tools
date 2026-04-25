@@ -81,6 +81,11 @@ if [[ "${skill_source_count}" -ne "${skill_count}" ]]; then
     exit 1
 fi
 
+if find "${TMP_HOME}/.copilot/agents" -maxdepth 1 -type f -name "*.agent.md" 2>/dev/null | grep -q .; then
+    echo "Unexpected Copilot CLI agent files were generated."
+    exit 1
+fi
+
 if ! grep -q "\[✓ Idempotent\]" "${SECOND_RUN_LOG}"; then
     echo "Missing idempotency summary indicator in second run output."
     echo "--- Second run log ---"

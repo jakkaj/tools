@@ -7,7 +7,7 @@
 Research (plan-1a-explore) confirmed:
 - Local `.agent.md` files only surface via `/agent` menu — no direct `/slash-command` invocation
 - The **skills** format (`.github/skills/<name>/SKILL.md`) provides direct `/skill-name` slash-command invocation with auto-discovery
-- Global agents (`~/.copilot/agents/*.agent.md`) already work for slash commands — no change needed there
+- Historical note: global agents (`~/.copilot/agents/*.agent.md`) previously worked for slash commands, but Copilot CLI 1.0.36 made personal skills (`~/.copilot/skills/<name>/SKILL.md`) the reliable global format.
 - The transformation is structurally similar: same frontmatter fields, just directory-per-skill layout and fixed `SKILL.md` filename
 
 ## Summary
@@ -16,7 +16,7 @@ When users run `uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --
 
 **WHAT**: Switch the `--commands-local copilot-cli` output format from flat `.github/agents/*.agent.md` files to `.github/skills/<name>/SKILL.md` directory-per-skill layout. This enables Copilot CLI's auto-discovery of skills as direct slash commands.
 
-Follow-up: Copilot CLI 1.0.36 also requires this skills format for reliable global discovery, so default setup now installs personal skills to `~/.copilot/skills/<name>/SKILL.md` in addition to compatibility agent files under `~/.copilot/agents/`.
+Follow-up: Copilot CLI 1.0.36 also requires this skills format for reliable global discovery, so default setup now installs personal skills to `~/.copilot/skills/<name>/SKILL.md` and cleans up old generated `~/.copilot/agents/*.agent.md` files.
 
 **WHY**: Teams sharing commands via git repos need the same direct `/command-name` invocation experience that global installs provide. Without this, project-local Copilot CLI commands require navigating the `/agent` menu — a friction point that makes the shared commands less discoverable and slower to use.
 
@@ -74,7 +74,7 @@ Follow-up: Copilot CLI 1.0.36 also requires this skills format for reliable glob
 7. The `copilot-cli` option works when combined with other targets: `--commands-local claude,opencode,ghcp,copilot-cli`
 8. Old `.github/agents/plan-*.agent.md` files are cleaned up during install (migration)
 9. AGENTS.md documentation reflects the new `.github/skills/` path for local Copilot CLI install
-10. No changes to global Copilot CLI install behavior (`~/.copilot/agents/` remains as-is)
+10. Global Copilot CLI install uses personal skills at `~/.copilot/skills/<name>/SKILL.md`
 
 ## Risks & Assumptions
 

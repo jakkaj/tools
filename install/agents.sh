@@ -101,12 +101,10 @@ COPILOT_GLOBAL_DIR="${HOME}/.config/github-copilot/prompts"
 # Copilot CLI (distinct from VS Code Copilot extension)
 # Support both XDG-derived and default ~/.copilot/ locations
 COPILOT_CLI_DIR="${XDG_CONFIG_HOME:-$HOME}/.copilot"
-COPILOT_CLI_AGENTS_DIR="${COPILOT_CLI_DIR}/agents"
 COPILOT_CLI_SKILLS_DIR="${COPILOT_CLI_DIR}/skills"
 COPILOT_CLI_MCP_CONFIG="${COPILOT_CLI_DIR}/mcp-config.json"
 # If XDG_CONFIG_HOME is set and differs from default, also install to default location
 COPILOT_CLI_DEFAULT_DIR="${HOME}/.copilot"
-COPILOT_CLI_DEFAULT_AGENTS_DIR="${COPILOT_CLI_DEFAULT_DIR}/agents"
 COPILOT_CLI_DEFAULT_SKILLS_DIR="${COPILOT_CLI_DEFAULT_DIR}/skills"
 if [ "${COPILOT_CLI_DIR}" = "${COPILOT_CLI_DEFAULT_DIR}" ]; then
     COPILOT_CLI_HAS_ALT="false"
@@ -161,6 +159,43 @@ cleanup_plan_commands() {
     if [ "${count}" -gt 0 ]; then
         print_status "Cleaned ${count} old plan command(s) from ${dir}"
     fi
+}
+
+cleanup_copilot_cli_agents() {
+    local source_dir="$1"
+    local agent_dir="$2"
+
+    if [ ! -d "${agent_dir}" ]; then
+        return 0
+    fi
+
+    local count=0
+    local file filename stem old_agent
+    for file in "${source_dir}"/*.md; do
+        if [ ! -f "${file}" ]; then
+            continue
+        fi
+
+        filename=$(basename "${file}")
+        case "${filename}" in
+            README.md|GETTING-STARTED.md)
+                continue
+                ;;
+        esac
+
+        stem="${filename%.md}"
+        old_agent="${agent_dir}/${stem}.agent.md"
+        if [ -f "${old_agent}" ]; then
+            rm -f "${old_agent}"
+            count=$((count + 1))
+        fi
+    done
+
+    if [ "${count}" -gt 0 ]; then
+        print_status "Removed ${count} old Copilot CLI agent file(s) from ${agent_dir}"
+    fi
+
+    rmdir "${agent_dir}" 2>/dev/null || true
 }
 
 generate_copilot_cli_skills() {
@@ -918,16 +953,6 @@ main() {
         print_status "Copilot CLI directory already exists: ${COPILOT_CLI_DIR}"
     fi
 
-    if [ ! -d "${COPILOT_CLI_AGENTS_DIR}" ]; then
-        if mkdir_with_retry "${COPILOT_CLI_AGENTS_DIR}"; then
-            print_success "Created Copilot CLI agents directory: ${COPILOT_CLI_AGENTS_DIR}"
-        else
-            print_error "Could not create Copilot CLI agents directory: ${COPILOT_CLI_AGENTS_DIR} (continuing)"
-        fi
-    else
-        print_status "Copilot CLI agents directory already exists: ${COPILOT_CLI_AGENTS_DIR}"
-    fi
-
     if [ ! -d "${COPILOT_CLI_SKILLS_DIR}" ]; then
         if mkdir_with_retry "${COPILOT_CLI_SKILLS_DIR}"; then
             print_success "Created Copilot CLI skills directory: ${COPILOT_CLI_SKILLS_DIR}"
@@ -961,7 +986,10 @@ main() {
     cleanup_plan_commands "${CODEX_DIR}" "plan-[0-9]*.md"
     cleanup_plan_commands "${VSCODE_PROJECT_DIR}" "plan-[0-9]*.md"
     cleanup_plan_commands "${COPILOT_GLOBAL_DIR}" "plan-[0-9]*.prompt.md"
-    cleanup_plan_commands "${COPILOT_CLI_AGENTS_DIR}" "plan-[0-9]*.agent.md"
+    cleanup_copilot_cli_agents "${V2_SOURCE_DIR}" "${COPILOT_CLI_DIR}/agents"
+    if [ "${COPILOT_CLI_HAS_ALT}" = "true" ]; then
+        cleanup_copilot_cli_agents "${V2_SOURCE_DIR}" "${COPILOT_CLI_DEFAULT_DIR}/agents"
+    fi
     echo ""
 
     # Install v2-commands (sole source) to all targets
@@ -997,49 +1025,7 @@ main() {
         fi
     fi
 
-    # Generate Copilot CLI agent files from v2-commands (sole source)
-    echo ""
-    print_status "Generating Copilot CLI agents with YAML frontmatter..."
-    if ! $PYTHON_CMD - "${V2_SOURCE_DIR}" "${COPILOT_CLI_AGENTS_DIR}" <<'COPILOT_CLI_AGENT_PYTHON'
-import sys
-import re
-from pathlib import Path
-
-source_dir = Path(sys.argv[1])
-target_dir = Path(sys.argv[2])
-target_dir.mkdir(parents=True, exist_ok=True)
-
-skip_files = {"README.md", "GETTING-STARTED.md"}
-
-for md_file in sorted(source_dir.glob("*.md")):
-    if md_file.name in skip_files:
-        continue
-    agent_name = md_file.stem
-    agent_file = target_dir / f"{agent_name}.agent.md"
-    content = md_file.read_text(encoding="utf-8")
-    # Extract description and strip original frontmatter
-    desc = f"Command: {agent_name}"
-    content_body = content
-    if content.startswith("---"):
-        fm = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
-        if fm:
-            for line in fm.group(1).split('\n'):
-                if line.strip().startswith('description:'):
-                    desc = line.partition(':')[2].strip().strip('"').strip("'")
-                    break
-            content_body = content[fm.end():]
-    frontmatter = f'---\nname: "{agent_name}"\ndescription: "{desc}"\ntools:\n  - "*"\n---\n\n'
-    agent_file.write_text(frontmatter + content_body.lstrip(), encoding="utf-8")
-    print(f"  [↻ Copilot CLI] {md_file.name} -> {agent_file.name}")
-COPILOT_CLI_AGENT_PYTHON
-    then
-        print_error "Failed to generate Copilot CLI agents"
-    fi
-
-    copilot_cli_agent_count=$(find "${COPILOT_CLI_AGENTS_DIR}" -maxdepth 1 -type f -name "*.agent.md" | wc -l | tr -d ' ')
-    print_success "Generated ${copilot_cli_agent_count} Copilot CLI agents"
-
-    # Generate Copilot CLI personal skills from v2-commands (primary source for CLI 1.0.36+)
+    # Generate Copilot CLI personal skills from v2-commands
     echo ""
     print_status "Generating Copilot CLI personal skills..."
     if ! generate_copilot_cli_skills "${V2_SOURCE_DIR}" "${COPILOT_CLI_SKILLS_DIR}"; then
@@ -1050,20 +1036,10 @@ COPILOT_CLI_AGENT_PYTHON
     copilot_cli_skill_count=$(find "${COPILOT_CLI_SKILLS_DIR}" -mindepth 2 -maxdepth 2 -type f -name "SKILL.md" | wc -l | tr -d ' ')
     print_success "Generated ${copilot_cli_skill_count} Copilot CLI personal skills"
 
-    # Mirror Copilot CLI agents to default location if XDG override is active
+    # Mirror Copilot CLI skills to default location if XDG override is active
     if [ "${COPILOT_CLI_HAS_ALT}" = "true" ]; then
         echo ""
-        print_status "XDG override detected — mirroring Copilot CLI agents and skills to default location..."
-        mkdir_with_retry "${COPILOT_CLI_DEFAULT_AGENTS_DIR}"
-        if [ -d "${COPILOT_CLI_AGENTS_DIR}" ]; then
-            for agent_file in "${COPILOT_CLI_AGENTS_DIR}"/*.md; do
-                if [ -f "${agent_file}" ]; then
-                    cp_with_retry "${agent_file}" "${COPILOT_CLI_DEFAULT_AGENTS_DIR}/$(basename "${agent_file}")"
-                fi
-            done
-            default_count=$(find "${COPILOT_CLI_DEFAULT_AGENTS_DIR}" -maxdepth 1 -type f -name "*.md" | wc -l | tr -d ' ')
-            print_success "Mirrored ${default_count} agents to ${COPILOT_CLI_DEFAULT_AGENTS_DIR}"
-        fi
+        print_status "XDG override detected — mirroring Copilot CLI skills to default location..."
         if ! generate_copilot_cli_skills "${V2_SOURCE_DIR}" "${COPILOT_CLI_DEFAULT_SKILLS_DIR}"; then
             print_error "Failed to mirror Copilot CLI skills to default location"
             exit 1
@@ -1095,7 +1071,6 @@ COPILOT_CLI_AGENT_PYTHON
     echo "  ${CODEX_DIR}"
     echo "  ${VSCODE_PROJECT_DIR}"
     echo "  ${COPILOT_GLOBAL_DIR}"
-    echo "  ${COPILOT_CLI_AGENTS_DIR}"
     echo "  ${COPILOT_CLI_SKILLS_DIR}"
     echo "======================================"
 }

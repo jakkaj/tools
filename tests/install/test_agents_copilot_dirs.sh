@@ -168,6 +168,11 @@ if [[ "${status}" -eq 0 ]]; then
             status=1
         fi
     done
+
+    if find "${TMP_HOME}/.copilot/agents" -maxdepth 1 -type f -name "*.agent.md" 2>/dev/null | grep -q .; then
+        echo "Unexpected Copilot CLI agent files were generated in ${TMP_HOME}/.copilot/agents"
+        status=1
+    fi
 fi
 
 if [[ "${status}" -ne 0 ]]; then
@@ -187,5 +192,10 @@ popd >/dev/null
 
 validate_skills_dir "${SOURCE_DIR}" "${XDG_CONFIG_DIR}/.copilot/skills"
 validate_skills_dir "${SOURCE_DIR}" "${COPILOT_CLI_SKILLS_DIR}"
+
+if find "${XDG_CONFIG_DIR}/.copilot/agents" "${TMP_HOME}/.copilot/agents" -maxdepth 1 -type f -name "*.agent.md" 2>/dev/null | grep -q .; then
+    echo "Unexpected Copilot CLI agent files were generated after XDG mirror run"
+    exit 1
+fi
 
 echo "Copilot directory validation passed."

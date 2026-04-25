@@ -13,10 +13,10 @@
 The `--commands-local` feature in `jk-tools-setup` installs AI assistant command files into project-local directories so teams can share them via git. It currently supports Claude, OpenCode, GitHub Copilot (VS Code), and Copilot CLI — but Copilot CLI local uses the `.agent.md` format which only exposes commands via the `/agent` menu, not as direct `/slash-commands`.
 
 ### Business Purpose
-Users want `uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local copilot-cli` to install commands that work as `/plan-1a-v2-explore` directly in Copilot CLI — identical to how global install works from `~/.copilot/agents/`. The fix: install as **skills** (`.github/skills/<name>/SKILL.md`) instead of agents (`.github/agents/*.agent.md`).
+Users want `uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local copilot-cli` to install commands that work as `/plan-1a-v2-explore` directly in Copilot CLI. The fix: install as **skills** (`.github/skills/<name>/SKILL.md`) instead of agents (`.github/agents/*.agent.md`). Follow-up for Copilot CLI 1.0.36: global installs also use personal skills at `~/.copilot/skills/<name>/SKILL.md`.
 
 ### Key Insights
-1. **Local `.agent.md` files don't get slash-command promotion** — only `/agent` → pick from list. Global agents DO get slash commands.
+1. **Local `.agent.md` files don't get slash-command promotion** — only `/agent` → pick from list. Global agents previously worked but are superseded by personal skills for Copilot CLI 1.0.36+.
 2. **Skills format gives direct `/skill-name` invocation** — both locally and globally, with auto-discovery.
 3. **The transformation is straightforward** — same frontmatter fields (`name`, `description`), just different directory structure (flat → directory-per-skill) and filename (`.agent.md` → `SKILL.md`).
 
@@ -113,7 +113,7 @@ Key differences from `.agent.md`:
 | `setup_manager.py:575` | Help text already includes copilot-cli ✅ | None |
 
 ### What Stays the Same
-- **Global install** (`~/.copilot/agents/*.agent.md`) — keep as-is (already works for slash commands)
+- **Global install target semantics** — v2 commands remain globally available, now through `~/.copilot/skills/<name>/SKILL.md`
 - **CLI parsing** — `copilot-cli` is already a valid option
 - **Source files** — `agents/v2-commands/*.md` unchanged
 - **Other CLI targets** — Claude, OpenCode, ghcp unchanged
@@ -182,10 +182,10 @@ Key differences from `.agent.md`:
 **What**: Users upgrading from agent-based local install will have `.github/agents/*.agent.md`. The new installer should optionally clean those up.
 **Required Action**: Add cleanup of old `.github/agents/plan-*.agent.md` when switching to skills
 
-### 🚨 Critical Finding 03: Global Install Should Stay As Agents
+### 🚨 Critical Finding 03: Global Install Should Use Skills
 **Impact**: High
-**What**: Global `~/.copilot/agents/*.agent.md` already gives slash-command invocation. Don't change global — only change local.
-**Required Action**: Only modify the `--commands-local copilot-cli` path
+**What**: This research originally found global `~/.copilot/agents/*.agent.md` sufficient, but Copilot CLI 1.0.36 no longer reliably surfaces that path. Global installs should use `~/.copilot/skills/<name>/SKILL.md`.
+**Required Action**: Generate personal skills globally and clean up old generated `.agent.md` files.
 
 ## Recommendations
 
@@ -193,10 +193,10 @@ Key differences from `.agent.md`:
 1. **Modify `install/agents.sh:662-699`** — replace agent-writing Python with skill-writing Python
 2. **Add migration cleanup** — remove old `.github/agents/plan-*.agent.md` if they exist
 3. **Update docs** — AGENTS.md table showing `.github/skills/` for local copilot-cli
-4. **Keep global unchanged** — `~/.copilot/agents/*.agent.md` works fine
+4. **Use skills globally** — `~/.copilot/skills/<name>/SKILL.md` is the reliable Copilot CLI 1.0.36+ format
 
 ### Key Design Decisions
-- **Skills only for local, agents for global** — because that's what works for each context
+- **Skills for local and global Copilot CLI** — `.github/skills` for projects, `~/.copilot/skills` for personal/global installs
 - **No `tools` field in SKILL.md** — skills don't use the same tools restriction model
 - **Consider `allowed-tools: shell`** — if you want skills to run bash without confirmation
 - **Directory cleanup** — use `rm -rf .github/skills/plan-*` pattern for idempotent cleanup
