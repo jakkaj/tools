@@ -138,6 +138,7 @@ To add a new agent command:
    - `~/.config/opencode/command/my-new-command.md`
    - `~/.codex/prompts/my-new-command.md`
    - `~/.config/github-copilot/prompts/my-new-command.prompt.md`
+   - `~/.copilot/skills/my-new-command/SKILL.md`
    - `src/jk_tools/agents/commands/my-new-command.md` (for distribution)
 
 ### Installing Commands Locally (Project-Specific)
@@ -146,7 +147,7 @@ By default, commands are installed globally (user home directory). You can also 
 
 #### Global Installation (Default)
 ```bash
-# Installs to ~/.claude/commands, ~/.config/opencode/command, etc.
+# Installs to ~/.claude/commands, ~/.config/opencode/command, ~/.copilot/skills, etc.
 uvx jk-tools
 ./setup.sh
 ```
@@ -213,9 +214,10 @@ uvx --force-reinstall --from git+https://github.com/jakkaj/tools jk-tools-setup 
 
 #### Copilot CLI Notes
 
-- Skills are installed as `SKILL.md` inside named subdirectories (e.g., `plan-1a-v2-explore/SKILL.md`)
-- Skills are stored in `.github/skills/` directory
-- Copilot CLI auto-discovers local skills and exposes them as `/skill-name` slash commands
+- Global setup installs personal skills to `~/.copilot/skills/<name>/SKILL.md`
+- Local project setup installs shared skills to `.github/skills/<name>/SKILL.md`
+- Compatibility agent files may also be generated under `~/.copilot/agents/`
+- Copilot CLI auto-discovers skills and exposes them as `/skill-name` slash commands
 - YAML frontmatter includes `name` and `description` fields (both required)
 
 #### GitHub Copilot (VS Code) Notes

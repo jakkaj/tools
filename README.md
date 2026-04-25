@@ -38,7 +38,7 @@ cd tools
 ## Features
 
 - **Automatic tool installation**: Rust, cargo tools, AI CLI clients
-- **Agent command sync**: Deploys slash commands to Claude, OpenCode, Codex, and VS Code
+- **Agent command sync**: Deploys slash commands to Claude, OpenCode, Codex, VS Code, and Copilot CLI
 - **MCP server configuration**: Automatically configures Model Context Protocol servers
 - **Cross-platform**: Works on macOS, Linux, and Windows (WSL/Git Bash)
 - **Idempotent**: Safe to run multiple times
@@ -54,11 +54,14 @@ Install AI CLI commands to your project directory without full setup:
 # Install GitHub Copilot commands from GitHub
 uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local ghcp
 
+# Install Copilot CLI project skills from GitHub
+uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local copilot-cli
+
 # Install Claude commands
 uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local claude
 
 # Install multiple CLI commands at once
-uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local claude,ghcp,opencode
+uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local claude,ghcp,opencode,copilot-cli
 
 # Install to specific directory
 uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local ghcp --local-dir ~/my-project
@@ -77,7 +80,10 @@ uvx --force-reinstall --from git+https://github.com/jakkaj/tools jk-tools-setup 
 - `claude` → `.claude/commands/` (auto-discovered by Claude Code)
 - `opencode` → `.opencode/command/` (auto-discovered by OpenCode)
 - `ghcp` → `.github/prompts/*.prompt.md` (attach manually in IDE)
+- `copilot-cli` → `.github/skills/<name>/SKILL.md` (auto-discovered by Copilot CLI)
 - `codex` → Not supported (use global installation only)
+
+Global setup also installs Copilot CLI personal skills to `~/.copilot/skills/<name>/SKILL.md` so v2 commands are available as `/skill-name` slash commands in fresh Copilot CLI sessions.
 
 See [CLAUDE.md](CLAUDE.md) for full documentation.
 

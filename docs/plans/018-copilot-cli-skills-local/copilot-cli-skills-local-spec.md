@@ -16,6 +16,8 @@ When users run `uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --
 
 **WHAT**: Switch the `--commands-local copilot-cli` output format from flat `.github/agents/*.agent.md` files to `.github/skills/<name>/SKILL.md` directory-per-skill layout. This enables Copilot CLI's auto-discovery of skills as direct slash commands.
 
+Follow-up: Copilot CLI 1.0.36 also requires this skills format for reliable global discovery, so default setup now installs personal skills to `~/.copilot/skills/<name>/SKILL.md` in addition to compatibility agent files under `~/.copilot/agents/`.
+
 **WHY**: Teams sharing commands via git repos need the same direct `/command-name` invocation experience that global installs provide. Without this, project-local Copilot CLI commands require navigating the `/agent` menu — a friction point that makes the shared commands less discoverable and slower to use.
 
 ## Goals
@@ -28,8 +30,7 @@ When users run `uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --
 
 ## Non-Goals
 
-- Changing the global Copilot CLI install (it already works via `~/.copilot/agents/`)
-- Adding Copilot CLI skills as a global install target (agents work fine globally)
+- Historical note: this local-scope plan originally excluded global Copilot CLI install changes because `~/.copilot/agents/` worked at the time. That assumption was superseded by Copilot CLI 1.0.36, so global personal skills are now handled separately.
 - Modifying the source command files in `agents/v2-commands/`
 - Adding skills support for other CLI targets (Claude, OpenCode — they don't use this format)
 - Building automated tests for `--commands-local` (desirable but separate scope)

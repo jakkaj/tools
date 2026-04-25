@@ -102,10 +102,12 @@ COPILOT_GLOBAL_DIR="${HOME}/.config/github-copilot/prompts"
 # Support both XDG-derived and default ~/.copilot/ locations
 COPILOT_CLI_DIR="${XDG_CONFIG_HOME:-$HOME}/.copilot"
 COPILOT_CLI_AGENTS_DIR="${COPILOT_CLI_DIR}/agents"
+COPILOT_CLI_SKILLS_DIR="${COPILOT_CLI_DIR}/skills"
 COPILOT_CLI_MCP_CONFIG="${COPILOT_CLI_DIR}/mcp-config.json"
 # If XDG_CONFIG_HOME is set and differs from default, also install to default location
 COPILOT_CLI_DEFAULT_DIR="${HOME}/.copilot"
 COPILOT_CLI_DEFAULT_AGENTS_DIR="${COPILOT_CLI_DEFAULT_DIR}/agents"
+COPILOT_CLI_DEFAULT_SKILLS_DIR="${COPILOT_CLI_DEFAULT_DIR}/skills"
 if [ "${COPILOT_CLI_DIR}" = "${COPILOT_CLI_DEFAULT_DIR}" ]; then
     COPILOT_CLI_HAS_ALT="false"
 else
@@ -159,6 +161,53 @@ cleanup_plan_commands() {
     if [ "${count}" -gt 0 ]; then
         print_status "Cleaned ${count} old plan command(s) from ${dir}"
     fi
+}
+
+generate_copilot_cli_skills() {
+    local source_dir="$1"
+    local dest_dir="$2"
+
+    $PYTHON_CMD - "${source_dir}" "${dest_dir}" <<'COPILOT_CLI_SKILLS_PYTHON'
+import json
+import re
+import shutil
+import sys
+from pathlib import Path
+
+source_dir = Path(sys.argv[1])
+dest_dir = Path(sys.argv[2])
+dest_dir.mkdir(parents=True, exist_ok=True)
+
+skip_files = {"README.md", "GETTING-STARTED.md", "changes.md", "codebase.md"}
+source_files = [source_file for source_file in sorted(source_dir.glob("*.md")) if source_file.name not in skip_files]
+
+for source_file in source_files:
+    name = source_file.stem.lower().replace(" ", "-")
+    skill_dir = dest_dir / name
+    if skill_dir.is_dir():
+        shutil.rmtree(skill_dir)
+    elif skill_dir.exists():
+        skill_dir.unlink()
+
+for source_file in source_files:
+    content = source_file.read_text(encoding="utf-8")
+    name = source_file.stem.lower().replace(" ", "-")
+    desc = f"Command: {name}"
+    fm_match = re.match(r"^---\s*\n(.*?)\n---\s*\n", content, re.DOTALL)
+    content_body = content
+    if fm_match:
+        for line in fm_match.group(1).split("\n"):
+            if line.strip().startswith("description:"):
+                desc = line.partition(":")[2].strip().strip('"').strip("'")
+                break
+        content_body = content[fm_match.end():]
+    frontmatter = f"---\nname: {name}\ndescription: {json.dumps(desc)}\n---\n\n"
+    skill_dir = dest_dir / name
+    skill_dir.mkdir(parents=True, exist_ok=True)
+    dest_path = skill_dir / "SKILL.md"
+    dest_path.write_text(frontmatter + content_body.lstrip(), encoding="utf-8")
+    print(f"  [↻ Copilot CLI Skill] {name}/SKILL.md")
+COPILOT_CLI_SKILLS_PYTHON
 }
 
 generate_mcp_configs() {
@@ -685,38 +734,10 @@ install_local_commands() {
 
         print_status "Installing Copilot CLI skills to ${copilot_cli_local_dir}"
 
-        # Use Python to generate SKILL.md files in per-skill directories from v2-commands
-        $PYTHON_CMD - "${V2_SOURCE_DIR}" "${copilot_cli_local_dir}" <<'COPILOT_CLI_LOCAL_PYTHON'
-import sys
-import re
-from pathlib import Path
-
-source_dir = Path(sys.argv[1])
-dest_dir = Path(sys.argv[2])
-skip_files = {'README.md', 'GETTING-STARTED.md', 'changes.md', 'codebase.md'}
-count = 0
-for source_file in sorted(source_dir.glob('*.md')):
-    if source_file.name in skip_files:
-        continue
-    content = source_file.read_text(encoding='utf-8')
-    name = source_file.stem.lower().replace(' ', '-')
-    desc = f"Command: {name}"
-    fm_match = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
-    content_body = content
-    if fm_match:
-        for line in fm_match.group(1).split('\n'):
-            if line.strip().startswith('description:'):
-                desc = line.partition(':')[2].strip().strip('"').strip("'")
-                break
-        content_body = content[fm_match.end():]
-    frontmatter = f'---\nname: {name}\ndescription: "{desc}"\n---\n\n'
-    skill_dir = dest_dir / name
-    skill_dir.mkdir(parents=True, exist_ok=True)
-    dest_path = skill_dir / "SKILL.md"
-    dest_path.write_text(frontmatter + content_body.lstrip(), encoding='utf-8')
-    print(f"  [↻] {name}/SKILL.md")
-    count += 1
-COPILOT_CLI_LOCAL_PYTHON
+        if ! generate_copilot_cli_skills "${V2_SOURCE_DIR}" "${copilot_cli_local_dir}"; then
+            print_error "Failed to generate Copilot CLI local skills"
+            exit 1
+        fi
 
         copilot_cli_local_count=$(find "${copilot_cli_local_dir}" -mindepth 2 -maxdepth 2 -type f -name "SKILL.md" | wc -l | tr -d ' ')
         print_success "Installed ${copilot_cli_local_count} skills to ${copilot_cli_local_dir}"
@@ -907,6 +928,16 @@ main() {
         print_status "Copilot CLI agents directory already exists: ${COPILOT_CLI_AGENTS_DIR}"
     fi
 
+    if [ ! -d "${COPILOT_CLI_SKILLS_DIR}" ]; then
+        if mkdir_with_retry "${COPILOT_CLI_SKILLS_DIR}"; then
+            print_success "Created Copilot CLI skills directory: ${COPILOT_CLI_SKILLS_DIR}"
+        else
+            print_error "Could not create Copilot CLI skills directory: ${COPILOT_CLI_SKILLS_DIR} (continuing)"
+        fi
+    else
+        print_status "Copilot CLI skills directory already exists: ${COPILOT_CLI_SKILLS_DIR}"
+    fi
+
     # v2-commands is now the sole source of truth (v1 agents/commands/ is deprecated)
     if [ ! -d "${V2_SOURCE_DIR}" ]; then
         print_error "v2-commands directory not found: ${V2_SOURCE_DIR}"
@@ -930,7 +961,7 @@ main() {
     cleanup_plan_commands "${CODEX_DIR}" "plan-[0-9]*.md"
     cleanup_plan_commands "${VSCODE_PROJECT_DIR}" "plan-[0-9]*.md"
     cleanup_plan_commands "${COPILOT_GLOBAL_DIR}" "plan-[0-9]*.prompt.md"
-    cleanup_plan_commands "${COPILOT_CLI_AGENTS_DIR}" "plan-[0-9]*.md"
+    cleanup_plan_commands "${COPILOT_CLI_AGENTS_DIR}" "plan-[0-9]*.agent.md"
     echo ""
 
     # Install v2-commands (sole source) to all targets
@@ -1008,10 +1039,21 @@ COPILOT_CLI_AGENT_PYTHON
     copilot_cli_agent_count=$(find "${COPILOT_CLI_AGENTS_DIR}" -maxdepth 1 -type f -name "*.agent.md" | wc -l | tr -d ' ')
     print_success "Generated ${copilot_cli_agent_count} Copilot CLI agents"
 
+    # Generate Copilot CLI personal skills from v2-commands (primary source for CLI 1.0.36+)
+    echo ""
+    print_status "Generating Copilot CLI personal skills..."
+    if ! generate_copilot_cli_skills "${V2_SOURCE_DIR}" "${COPILOT_CLI_SKILLS_DIR}"; then
+        print_error "Failed to generate Copilot CLI personal skills"
+        exit 1
+    fi
+
+    copilot_cli_skill_count=$(find "${COPILOT_CLI_SKILLS_DIR}" -mindepth 2 -maxdepth 2 -type f -name "SKILL.md" | wc -l | tr -d ' ')
+    print_success "Generated ${copilot_cli_skill_count} Copilot CLI personal skills"
+
     # Mirror Copilot CLI agents to default location if XDG override is active
     if [ "${COPILOT_CLI_HAS_ALT}" = "true" ]; then
         echo ""
-        print_status "XDG override detected — mirroring Copilot CLI agents to default location..."
+        print_status "XDG override detected — mirroring Copilot CLI agents and skills to default location..."
         mkdir_with_retry "${COPILOT_CLI_DEFAULT_AGENTS_DIR}"
         if [ -d "${COPILOT_CLI_AGENTS_DIR}" ]; then
             for agent_file in "${COPILOT_CLI_AGENTS_DIR}"/*.md; do
@@ -1022,6 +1064,12 @@ COPILOT_CLI_AGENT_PYTHON
             default_count=$(find "${COPILOT_CLI_DEFAULT_AGENTS_DIR}" -maxdepth 1 -type f -name "*.md" | wc -l | tr -d ' ')
             print_success "Mirrored ${default_count} agents to ${COPILOT_CLI_DEFAULT_AGENTS_DIR}"
         fi
+        if ! generate_copilot_cli_skills "${V2_SOURCE_DIR}" "${COPILOT_CLI_DEFAULT_SKILLS_DIR}"; then
+            print_error "Failed to mirror Copilot CLI skills to default location"
+            exit 1
+        fi
+        default_skill_count=$(find "${COPILOT_CLI_DEFAULT_SKILLS_DIR}" -mindepth 2 -maxdepth 2 -type f -name "SKILL.md" | wc -l | tr -d ' ')
+        print_success "Mirrored ${default_skill_count} skills to ${COPILOT_CLI_DEFAULT_SKILLS_DIR}"
     fi
 
     echo ""
@@ -1046,6 +1094,9 @@ COPILOT_CLI_AGENT_PYTHON
     echo "  ${OPENCODE_DIR}"
     echo "  ${CODEX_DIR}"
     echo "  ${VSCODE_PROJECT_DIR}"
+    echo "  ${COPILOT_GLOBAL_DIR}"
+    echo "  ${COPILOT_CLI_AGENTS_DIR}"
+    echo "  ${COPILOT_CLI_SKILLS_DIR}"
     echo "======================================"
 }
 

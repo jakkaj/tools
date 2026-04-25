@@ -9,7 +9,9 @@
 
 ## Summary
 
-Local `--commands-local copilot-cli` installs currently create `.github/agents/*.agent.md` files, which only surface via Copilot CLI's `/agent` picker menu — not as direct `/slash-commands`. This plan switches the local format to `.github/skills/<name>/SKILL.md` (directory-per-skill layout), which Copilot CLI auto-discovers as direct `/skill-name` slash commands. Global install stays unchanged.
+Local `--commands-local copilot-cli` installs currently create `.github/agents/*.agent.md` files, which only surface via Copilot CLI's `/agent` picker menu — not as direct `/slash-commands`. This plan switches the local format to `.github/skills/<name>/SKILL.md` (directory-per-skill layout), which Copilot CLI auto-discovers as direct `/skill-name` slash commands.
+
+Follow-up: Copilot CLI 1.0.36 also requires the same skills format for reliable global discovery, so global setup now installs personal skills to `~/.copilot/skills/<name>/SKILL.md` while keeping `~/.copilot/agents` as a compatibility fallback.
 
 ## Target Domains
 
