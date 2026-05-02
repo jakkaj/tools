@@ -8,29 +8,46 @@ MODEL=$(echo "$input" | jq -r '.model.display_name // .model.id // "?"')
 CWD=$(echo "$input" | jq -r '.workspace.current_dir // "."')
 DIR=$(basename "$CWD")
 
-# Effort: env var (catches session-only `max`) → stdin JSON (future-proofing)
-# → project local → project → user settings.
+# Effort precedence:
+#   1. $CLAUDE_CODE_EFFORT_LEVEL env var (catches session-only `max` exports)
+#   2. Per-session transcript: last `/effort` invocation in this session's
+#      transcript_path. This is the authoritative per-session signal — stdin's
+#      `.effort.level` claims to be session-scoped per the docs but in practice
+#      leaks across tabs because Claude Code persists effort globally.
+#   3. stdin `.effort.level` (handles object or string) — fallback for sessions
+#      where `/effort` was never invoked (initial state from settings).
+#   4. settings files (project-local, project, user)
+#   5. fallback `auto`
 EFFORT=""
 if [ -n "$CLAUDE_CODE_EFFORT_LEVEL" ]; then
   EFFORT="$CLAUDE_CODE_EFFORT_LEVEL"
 else
-  # Check stdin for any effort-ish field (newer CC versions may expose it).
-  # `.effort` may be a string ("xhigh") or an object ({"level":"xhigh"}); handle both.
-  v=$(echo "$input" | jq -r '
-    .effort_level // .effortLevel //
-    (.effort | if type=="object" then .level
-               elif type=="string" then .
-               else empty end) //
-    empty' 2>/dev/null)
-  if [ -n "$v" ]; then
-    EFFORT="$v"
-  else
-    for f in "$CWD/.claude/settings.local.json" "$CWD/.claude/settings.json" "$HOME/.claude/settings.json"; do
-      if [ -f "$f" ]; then
-        v=$(jq -r '.effortLevel // empty' "$f" 2>/dev/null)
-        if [ -n "$v" ]; then EFFORT="$v"; break; fi
-      fi
-    done
+  TRANSCRIPT=$(echo "$input" | jq -r '.transcript_path // empty' 2>/dev/null)
+  if [ -n "$TRANSCRIPT" ] && [ -f "$TRANSCRIPT" ]; then
+    EFFORT=$(jq -rc 'select(.type=="user"
+                            and (.message.content // "" | type=="string")
+                            and (.message.content | test("<command-name>/effort</command-name>")))
+                     | .message.content
+                     | capture("<command-args>(?<v>[^<]+)</command-args>")
+                     | .v' "$TRANSCRIPT" 2>/dev/null | tail -1)
+  fi
+  if [ -z "$EFFORT" ]; then
+    v=$(echo "$input" | jq -r '
+      .effort_level // .effortLevel //
+      (.effort | if type=="object" then .level
+                 elif type=="string" then .
+                 else empty end) //
+      empty' 2>/dev/null)
+    if [ -n "$v" ]; then
+      EFFORT="$v"
+    else
+      for f in "$CWD/.claude/settings.local.json" "$CWD/.claude/settings.json" "$HOME/.claude/settings.json"; do
+        if [ -f "$f" ]; then
+          v=$(jq -r '.effortLevel // empty' "$f" 2>/dev/null)
+          if [ -n "$v" ]; then EFFORT="$v"; break; fi
+        fi
+      done
+    fi
   fi
 fi
 EFFORT=${EFFORT:-auto}
