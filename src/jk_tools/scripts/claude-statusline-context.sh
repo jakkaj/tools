@@ -14,8 +14,14 @@ EFFORT=""
 if [ -n "$CLAUDE_CODE_EFFORT_LEVEL" ]; then
   EFFORT="$CLAUDE_CODE_EFFORT_LEVEL"
 else
-  # Check stdin for any effort-ish field (newer CC versions may expose it)
-  v=$(echo "$input" | jq -r '.effort_level // .effortLevel // .effort // empty' 2>/dev/null)
+  # Check stdin for any effort-ish field (newer CC versions may expose it).
+  # `.effort` may be a string ("xhigh") or an object ({"level":"xhigh"}); handle both.
+  v=$(echo "$input" | jq -r '
+    .effort_level // .effortLevel //
+    (.effort | if type=="object" then .level
+               elif type=="string" then .
+               else empty end) //
+    empty' 2>/dev/null)
   if [ -n "$v" ]; then
     EFFORT="$v"
   else
