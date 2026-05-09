@@ -55,6 +55,8 @@ The hypothesis: each successive development phase should be faster than the last
 
 This is literal, not metaphorical. Each fix compounds.
 
+**If the project uses minih**: The difficulty ledger has first-class tooling. Agents report structured difficulties in `retrospective.difficulties` (category, description, workaround, severity). Run `minih difficulties` to see all reported friction across all agents, auto-assigned as MH-001, MH-002, etc. The pipeline is A→B→C: agents report (A), humans review the aggregated view (B), resolved items get curated into the preamble's Known Difficulties table (C), and future agents read them on startup.
+
 #### Principle 3: Encode, Don't Document
 
 A wiki paragraph that says "remember to do X" is worth nothing. An automated step that does X for you is worth everything.

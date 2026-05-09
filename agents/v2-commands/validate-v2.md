@@ -6,13 +6,13 @@ Please deep think / ultrathink as this is a complex task.
 
 # validate-v2
 
-**Universal post-action validation** — launches parallel GPT-5.4 subagents to cross-check whatever artifact was just produced. Works on any output: tasks dossier, code changes, plan, spec, workshop, or any structured document.
+**Universal post-action validation** — launches parallel subagents using the current session model to cross-check whatever artifact was just produced. Works on any output: tasks dossier, code changes, plan, spec, workshop, or any structured document.
 
 ## Philosophy
 
 > "Every artifact deserves a second pair of eyes before the human sees it."
 
-This skill is the automated equivalent of asking 3 senior engineers to review your work in parallel. Each agent has a different lens. They run on GPT-5.4 for high reasoning quality. Results are synthesized and actionable fixes applied immediately.
+This skill is the automated equivalent of asking 3 senior engineers to review your work in parallel. Each agent has a different lens. They use whatever model is currently powering the session so validation quality tracks the active environment. Results are synthesized and actionable fixes applied immediately.
 
 ---
 
@@ -22,9 +22,9 @@ User input:
 $ARGUMENTS
 # No flags required — auto-detects what to validate from context.
 # Optional: --artifact <path> to specify a file to validate
-# Optional: --scope <narrow|broad> to control agent count and model (default: broad = 3 agents)
-#   narrow: fewer agents, default model (faster for specs/plans)
-#   broad: full agents, gpt-5.4 (thorough for code/tasks)
+# Optional: --scope <narrow|broad> to control agent count (default: broad = 3 agents)
+#   narrow: fewer agents using the current session model (faster for specs/plans)
+#   broad: full agents using the current session model (thorough for code/tasks)
 ```
 
 ## How It Works
@@ -169,7 +169,7 @@ For **Plan** validation, also challenge CS (complexity) scores:
 
 Launch all agents in parallel using the `task` tool with:
 - `agent_type: "explore"` (read-only validation)
-- `model: "gpt-5.4"` for code/tasks validation, default model for specs/plans (or when `--scope narrow`)
+- current session model; do not hard-code a model override. If the task tool inherits the active model by omitting `model`, omit the `model` field.
 - `mode: "background"` (parallel execution)
 
 Structure each agent prompt using this 6-section template:
@@ -402,4 +402,3 @@ The skill auto-detects what to validate. You almost never need flags.
 - FC3 (LOW) — Legacy `.vscode/validate-v2.md`: delete or header-mark.
 
 **Overall**: ⚠️ VALIDATED WITH FIXES — ready for dogfooding; open items are tightening passes, not blockers.
-

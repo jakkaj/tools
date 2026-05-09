@@ -27,6 +27,7 @@ These commands are **standalone rewrites** of select v1 commands from `agents/co
 | `plan-4-v2-complete-the-plan` | `plan-4-complete-the-plan` | Domain completeness validation, no false positives on lean plan format |
 | `plan-5-v2-phase-tasks-and-brief` | `plan-5-phase-tasks-and-brief` | 7-column task table with Domain column, simplified prior-phase review |
 | `plan-6-v2-implement-phase` | `plan-6-implement-phase` | Domain placement rules, post-implementation domain.md updates |
+| `plan-6-v2-implement-phase-companion` | *(new — sibling of plan-6-v2)* | Same as plan-6-v2 + parallel `code-review-companion` (Power-On-Mode via `minih`). Companion reviews each commit live; **supersedes `/plan-7-v2-code-review`** for projects with a companion agent. |
 | `plan-6a-v2-update-progress` | `plan-6a-update-progress` | Domain context in progress tracking |
 | `plan-7-v2-code-review` | `plan-7-code-review` | Domain Compliance Validator, anti-reinvention checks |
 | `plan-2c-v2-workshop` | `plan-2c-workshop` | Domain context in workshop design documents |

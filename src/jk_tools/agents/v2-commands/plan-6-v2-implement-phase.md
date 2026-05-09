@@ -2,13 +2,13 @@
 description: Implement exactly one approved phase or subtask using the testing approach from the plan, with domain placement rules. V2 standalone rewrite.
 ---
 
+
 Please deep think / ultrathink as this is a complex task.
 
 # plan-6-v2-implement-phase
 
 Implement **exactly one** approved phase or subtask using the **testing approach from the plan**. Apply domain placement rules. Update domain.md files after implementation.
 
----
 
 ## 📝 LOG DISCOVERIES AS YOU GO
 
@@ -18,7 +18,6 @@ Throughout implementation, capture discoveries in:
 
 Log when you encounter: something unexpected, needed research, hit a trouble spot, found a gotcha, made a decision, introduced debt, or gained an insight.
 
----
 
 ## 🛑 MANDATORY: UPDATE PROGRESS AFTER EVERY TASK — NO EXCEPTIONS
 
@@ -63,7 +62,6 @@ After EACH task you MUST update these locations before proceeding to the next ta
 
 DO NOT start the next task until ALL updates above are done.
 
----
 
 ```md
 User input:
@@ -219,6 +217,24 @@ $ARGUMENTS
    - Suggested commit message
 
 6) Auto-run plan-6a-v2-update-progress for each completed task.
+
+   For the **final task of the phase**, call 6a with the orchestrator
+   retrospective payload so 6a Step 8 fires:
+   ```bash
+   /plan-6a-v2-update-progress \
+     --plan "<PLAN_PATH>" \
+     --phase "<Phase N: Title>" \
+     --task "<final-task-id>" \
+     --status completed \
+     --retrospective '<json>'
+   ```
+
+   Construct the retrospective JSON based on session experience —
+   schema is in `/plan-6a-v2-update-progress/SKILL.md` Step 8a. Use
+   OH-XXX prefix for difficulty IDs.
+
+   No `--companion-run-id` is passed (this skill runs without a
+   companion), so 6a Step 9 (companion debrief) is skipped.
 
 STOP: Report phase complete. Suggest next step.
 ```
