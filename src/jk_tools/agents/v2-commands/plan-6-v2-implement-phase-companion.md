@@ -213,8 +213,8 @@ Brief once. Don't re-brief mid-phase unless the scope materially changes (in whi
      * Read `## Target Domains` from spec
      * Read `## Domain Manifest` from plan
      * For each domain being modified, read `docs/domains/<slug>/domain.md`
-   - **Load harness context** (if `docs/project-rules/harness.md` exists):
-     * Read harness.md — boot command, health check, interaction methods, observe capabilities, maturity level
+   - **Load agent harness context** (if `docs/project-rules/agent-harness.md` or legacy `harness.md` exists):
+     * Read the agent harness governance doc — boot command, health check, interaction methods, observe capabilities, maturity level
 
 ## 2a) Pre-Phase Harness Validation (if harness.md exists)
 

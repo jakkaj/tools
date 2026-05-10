@@ -96,18 +96,18 @@ Ask the user to confirm using ask_user:
 
 **After Domain Review**: Update spec `## Target Domains` section with user's adjustments. If user identified new domain boundaries or merged domains, update the table and sketches accordingly.
 
-### Harness Readiness
+### Agent Harness Readiness
 
-Check if `docs/project-rules/harness.md` exists:
+Check if `docs/project-rules/agent-harness.md` (or legacy `harness.md`) exists:
 
-**If harness exists**: Report current maturity level (L0–L4) and ask:
+**If agent harness exists**: Report current maturity level (L0–L4) and ask:
 - "The project has an agent harness at L[N]. Is it sufficient for this feature, or does it need updating?"
 
-**If no harness exists**: Ask the user:
-- "This project has no agent harness (Boot → Interact → Observe feedback loop). Without one, the agent validates changes via unit tests and manual verification only."
-- Choices: "Build harness as Phase 0 (Recommended)" / "Continue without harness" / "Feature doesn't need a harness"
+**If no agent harness exists**: Ask the user:
+- "This project has no agent harness (Boot → Interact → Observe feedback loop). Without one, the agent validates changes via unit tests and manual verification only. Note: this is the agent-side feedback layer — it sits on top of the project's engineering harness (justfile/Makefile/dev script) and assumes that substrate already works."
+- Choices: "Build agent harness as Phase 0 (Recommended)" / "Continue without agent harness" / "Feature doesn't need an agent harness"
 
-**After Harness Review**: Capture answer in spec `## Clarifications`. If user chose "Build harness as Phase 0", note this for plan-3-v2-architect. If user overrode, document the override reason.
+**After Agent Harness Review**: Capture answer in spec `## Clarifications`. If user chose "Build agent harness as Phase 0", note this for plan-3-v2-architect. If user overrode, document the override reason.
 
 ### Additional Questions (as needed)
 

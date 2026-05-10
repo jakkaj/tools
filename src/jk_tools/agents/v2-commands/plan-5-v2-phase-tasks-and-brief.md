@@ -90,12 +90,12 @@ Otherwise → **Phase Mode** (continue).
    - Is it in the correct domain's source tree?
    - Run `/code-concept-search-v2` for major new concepts to check for duplication
    - Flag contract changes (higher risk)
-   - **Harness health check** (if `docs/project-rules/harness.md` exists):
-     * Run health check command from harness.md — is the harness operational?
-     * If Phase 0 is "Build Harness" and this is Phase 0: skip (harness doesn't exist yet)
-     * If healthy → note in Context Brief: "Harness available at L[N]"
-     * If unhealthy → flag: "⚠️ Harness unhealthy — plan-6 will validate before implementation"
-     * If no harness → note: "No agent harness — implementation will use standard testing only"
+   - **Agent harness health check** (if `docs/project-rules/agent-harness.md` or legacy `harness.md` exists):
+     * Run health check command from the agent harness governance doc — is the agent harness operational?
+     * If Phase 0 is "Build Agent Harness" and this is Phase 0: skip (agent harness doesn't exist yet)
+     * If healthy → note in Context Brief: "Agent harness available at L[N]"
+     * If unhealthy → flag: "⚠️ Agent harness unhealthy — plan-6 will validate before implementation"
+     * If no agent harness → note: "No agent harness — implementation will use standard testing only"
 
 5) **Write tasks.md** containing:
 
@@ -162,14 +162,14 @@ Otherwise → **Phase Mode** (continue).
    **Domain constraints**:
    - [Import rules, dependency direction, contract boundaries]
 
-   **Harness context** (if `docs/project-rules/harness.md` exists):
-   - **Boot**: [command from harness.md] — health check: [health URL/command]
+   **Agent harness context** (if `docs/project-rules/agent-harness.md` or legacy `harness.md` exists):
+   - **Boot**: [command from agent-harness.md] — health check: [health URL/command]
    - **Interact**: [primary interaction method] — [example endpoint/command]
    - **Observe**: [evidence capture method] — evidence dir: [path]
    - **Maturity**: L[N] — [brief status note]
-   - **Pre-phase validation**: Agent MUST validate harness at start of implementation (Boot → Interact → Observe)
+   - **Pre-phase validation**: Agent MUST validate the agent harness at start of implementation (Boot → Interact → Observe)
 
-   If no harness: "No agent harness configured. Agent will use standard testing approach from plan."
+   If no agent harness: "No agent harness configured. Agent will use standard testing approach from plan."
 
    **Reusable from prior phases**:
    - [Test fixtures, helpers, patterns available]

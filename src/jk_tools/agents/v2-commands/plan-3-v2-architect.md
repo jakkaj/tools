@@ -41,10 +41,10 @@ Inputs:
   * Note: concepts (what the domain offers — § Concepts table), contracts (what's available to use), composition (what exists), dependencies
 - For each NEW domain → note the sketch from spec (Purpose, Boundary Owns/Excludes)
 
-**Harness Loading**:
-- If `docs/project-rules/harness.md` exists → read maturity level, boot command, health check, interaction methods
-- Check spec `## Clarifications` for harness decisions (from plan-2): "Build harness as Phase 0" / "Continue without" / "Not needed"
-- If harness needed but doesn't exist → plan MUST include Phase 0: Build Harness (unless user overrode)
+**Agent Harness Loading**:
+- If `docs/project-rules/agent-harness.md` (or legacy `harness.md`) exists → read maturity level, boot command, health check, interaction methods
+- Check spec `## Clarifications` for agent harness decisions (from plan-2): "Build agent harness as Phase 0" / "Continue without" / "Not needed"
+- If agent harness needed but doesn't exist → plan MUST include Phase 0: Build Agent Harness (unless user overrode)
 
 ## PHASE 1: Gates
 
@@ -176,7 +176,7 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
 - Multi-domain phases are permitted but each domain-touch is a separate task group
 - Domain creation phases come BEFORE domain extension phases
 - Composition/wiring phases (connecting domains) come LAST
-- **If harness is needed and doesn't exist**: Phase 0 is "Build Harness" — this is the prerequisite that enables agent autonomy for all subsequent phases. Phase 0 creates `docs/project-rules/harness.md` and implements Boot + Interact + Observe capabilities. Target maturity: L2 minimum (auto boot + API interaction). If user overrode harness in plan-2, skip Phase 0 and note override in plan.
+- **If agent harness is needed and doesn't exist**: Phase 0 is "Build Agent Harness" — this is the prerequisite that enables agent autonomy for all subsequent phases. Phase 0 creates `docs/project-rules/agent-harness.md` and implements Boot + Interact + Observe capabilities. Target maturity: L2 minimum (auto boot + API interaction). If user overrode agent harness in plan-2, skip Phase 0 and note override in plan.
 - For each NEW domain, first phase includes domain setup task:
   * Create `docs/domains/<slug>/domain.md` (use format from /extract-domain)
   * Create source directory

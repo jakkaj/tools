@@ -1,13 +1,16 @@
 ---
-description: Create or validate the agent harness for the current project. Detects project type, generates docs/project-rules/harness.md, and verifies Boot/Interact/Observe capabilities.
+description: Create or validate the agent harness for the current project. Detects project type, generates docs/project-rules/agent-harness.md (legacy name harness.md still supported on read), and verifies Boot/Interact/Observe capabilities.
 ---
 
-# harness-v2
+# agent-harness-v2
 
 Create or validate the **agent harness** — the automated Boot → Interact → Observe → Validate feedback loop that lets an agent iterate on running software in 30-60 second cycles.
 
-**Harness governance**: `docs/project-rules/harness.md`
-**Harness dossier**: Three capabilities (Boot, Interact, Observe), maturity model (L0–L4), 7 design principles.
+**Agent harness governance**: `docs/project-rules/agent-harness.md` (new projects). Legacy name `docs/project-rules/harness.md` is still read as a fallback for projects that haven't migrated yet — see Step 0 for the read order and Step 6 for the migration advisory.
+
+**Layering**: the agent harness sits **on top of** the engineering harness (the project's `justfile`/`Makefile`/`package.json scripts.dev` boot command, test runner, etc.). The Boot command this skill records IS the engineering harness substrate. If no engineering harness exists, raise that as a finding before attempting to build the agent harness — Boot can't work without something to boot.
+
+**Agent harness dossier**: Three capabilities (Boot, Interact, Observe), maturity model (L0–L4), 7 design principles.
 
 ---
 
@@ -16,7 +19,7 @@ Create or validate the **agent harness** — the automated Boot → Interact →
 ```
 $ARGUMENTS
 # Flags:
-# --create     Force CREATE mode (even if harness.md exists)
+# --create     Force CREATE mode (even if agent-harness.md exists)
 # --validate   Force VALIDATE mode
 # --status     Quick maturity report (no changes)
 # (no flags)   Auto-detect: CREATE if missing, VALIDATE if exists
@@ -29,11 +32,19 @@ $ARGUMENTS
 ### Step 0: Mode Detection
 
 ```
-Check: docs/project-rules/harness.md exists?
-  ├── YES + no --create flag  → VALIDATE mode
-  ├── NO  + no --validate flag → CREATE mode
-  ├── --create                 → CREATE mode (overwrites)
-  ├── --validate               → VALIDATE mode (error if missing)
+Check governance file (read order: new path first, legacy fallback):
+  1. docs/project-rules/agent-harness.md  ← new canonical path
+  2. docs/project-rules/harness.md        ← legacy fallback (pre-rename)
+
+If found at legacy path: log a one-line migration advisory in this skill's
+output ("📁 Legacy filename detected — consider `git mv harness.md
+agent-harness.md`") but do NOT modify the file. Continue normally.
+
+Mode resolution:
+  ├── EXISTS + no --create flag  → VALIDATE mode
+  ├── MISSING + no --validate flag → CREATE mode
+  ├── --create                 → CREATE mode (writes to agent-harness.md)
+  ├── --validate               → VALIDATE mode (error if missing at both paths)
   └── --status                 → STATUS mode (read-only report)
 ```
 
@@ -60,14 +71,16 @@ Scan the codebase for signature files and classify:
 Output: `{ type: string, confidence: 0-1, signature_files: string[] }`
 
 **Subagent 2: Interaction Surface Probe**
-Search for existing harness-related infrastructure:
+Search for existing engineering-harness infrastructure that the agent harness will sit on top of:
 - Health endpoints (grep: `/health`, `/api/health`, `healthcheck`)
 - Boot scripts (`justfile`, `Makefile`, `docker-compose.yml`, `scripts/`)
-- Test harnesses (`playwright.config`, `cypress.config`, `harness.*`)
+- Engineering test harnesses (`playwright.config`, `cypress.config`, etc.) — these are evidence the project already has a runnable substrate.
 - Existing `AGENT_BOOTSTRAP.md` or similar quick-start docs
 - Auth configuration (`.env`, token files, profile directories)
 
 Output: `{ boot_candidates: string[], health_urls: string[], existing_bootstrap: string|null, auth_hints: string[] }`
+
+**If `boot_candidates` is empty**: the engineering harness substrate is missing or undiscoverable. Raise as a finding in Step 2 before proceeding — agent harness creation needs at least one runnable boot command.
 
 #### Step 2: Present & Confirm
 
@@ -99,9 +112,9 @@ Possible questions (ask only if needed):
 - Q: Primary interaction method? (HTTP API / Browser automation / Terminal / Both)
 - Q: Where should evidence files go? (default: `./scratch/evidence/`)
 
-#### Step 4: Generate harness.md
+#### Step 4: Generate agent-harness.md
 
-Write to `docs/project-rules/harness.md` using this governance format:
+Write to `docs/project-rules/agent-harness.md` (new canonical path) using this governance format. If a legacy `docs/project-rules/harness.md` exists, do NOT overwrite or migrate it automatically — write the new file alongside and emit the migration advisory in Step 6 so the user can choose when to `git mv` and remove the legacy.
 
 ```markdown
 # Agent Harness
@@ -184,33 +197,41 @@ Mark the current maturity level based on what's actually working (not aspiration
 
 #### Step 5: Validate (post-create)
 
-After generating harness.md, run the VALIDATE flow (below) to confirm it works. Report results.
+After generating agent-harness.md, run the VALIDATE flow (below) to confirm it works. Report results.
 
 #### Step 6: Report
 
 ```
-✅ Harness created:
+✅ Agent harness created:
 
-  Governance:   docs/project-rules/harness.md
+  Governance:   docs/project-rules/agent-harness.md
   Type:         [type] ([framework])
   Maturity:     L[N] ([description])
   Checklist:    [X/15] items verified
 
   Next steps:
-  - Review harness.md and adjust as needed
-  - Run /harness-v2 --validate after changes
+  - Review agent-harness.md and adjust as needed
+  - Run /agent-harness-v2 --validate after changes
   - Pipeline commands (plan-1a, plan-5, plan-6) will auto-discover this file
+```
+
+If a legacy `docs/project-rules/harness.md` was found during Step 0, append:
+
+```
+  📁 Legacy filename detected: docs/project-rules/harness.md still present.
+     Consider migrating: git mv docs/project-rules/harness.md docs/project-rules/agent-harness.md
+     (Old file is still read as fallback; this advisory is informational, not blocking.)
 ```
 
 ---
 
 ### VALIDATE Mode
 
-#### Step 1: Read Harness Config
+#### Step 1: Read Agent Harness Config
 
-Read `docs/project-rules/harness.md`. Parse: boot command, health check, interaction method, observe method, current maturity level.
+Read `docs/project-rules/agent-harness.md` (or fall back to legacy `docs/project-rules/harness.md` and emit the migration advisory). Parse: boot command, health check, interaction method, observe method, current maturity level.
 
-If file is missing or unparseable → error with suggestion to run `/harness-v2 --create`.
+If both paths are missing or unparseable → error with suggestion to run `/agent-harness-v2 --create`.
 
 #### Step 2: Execute 3-Stage Validation
 
@@ -218,21 +239,21 @@ Run checks using bash tool:
 
 **Stage 1: Boot Check** (5s if running, 60s cold boot)
 ```
-1. Check if already running: run health check command from harness.md
+1. Check if already running: run health check command from agent-harness.md
    ├── Healthy → "Already running" (skip boot)
    └── Not responding → Run boot command, retry health check (30 × 2s = 60s max)
 ```
 
 **Stage 2: Interact Check** (5s, single attempt)
 ```
-1. Send test input per harness.md § Interact
+1. Send test input per agent-harness.md § Interact
    ├── Response received → ✅
    └── No response / error → ❌ (log specific error)
 ```
 
 **Stage 3: Observe Check** (5s, single attempt)
 ```
-1. Capture evidence per harness.md § Observe
+1. Capture evidence per agent-harness.md § Observe
    ├── Evidence non-empty and readable → ✅
    └── Empty or failed → ❌
 ```
@@ -244,17 +265,17 @@ Run checks using bash tool:
 | **✅ HEALTHY** | All 3 checks pass, boot ≤ 45s |
 | **⚠️ SLOW** | All 3 checks pass, boot > 45s |
 | **❌ UNHEALTHY** | Any check fails |
-| **🔴 UNAVAILABLE** | No harness.md or no boot command |
+| **🔴 UNAVAILABLE** | No agent-harness.md (or legacy harness.md) and no boot command |
 
 #### Step 4: Update Maturity & Report
 
-Update harness.md `## Maturity Assessment` to reflect current reality.
+Update agent-harness.md `## Maturity Assessment` to reflect current reality.
 Update `**Maturity Level**` header field.
 Append validation result to `## History` table.
 
 Report:
 ```
-🔍 Harness Validation Report:
+🔍 Agent Harness Validation Report:
 
   Boot:      [✅/❌] [detail] ([duration])
   Interact:  [✅/❌] [detail] ([duration])
@@ -272,15 +293,15 @@ Report:
 
 Quick read-only report — no validation, no changes.
 
-Read harness.md and report: project type, maturity level, last validation date, checklist completion. No harness boots or health checks.
+Read agent-harness.md (or legacy harness.md, with migration advisory) and report: project type, maturity level, last validation date, checklist completion. No agent harness boots or health checks.
 
 ---
 
-## Anti-Patterns (from harness dossier)
+## Anti-Patterns (from agent harness dossier)
 
-When generating harness.md, warn against:
-- **"Tests Are Enough"** — unit tests pass while real app is broken
-- **"The Agent Can Figure It Out"** — agents need explicit boot/interact/observe instructions
-- **"We'll Add the Harness Later"** — harness first, features second
+When generating agent-harness.md, warn against:
+- **"Tests Are Enough"** — unit tests (engineering harness signal) pass while the running app the agent harness exercises is broken. These are different signals; you need both.
+- **"The Agent Can Figure It Out"** — agents need explicit Boot/Interact/Observe instructions
+- **"We'll Add the Agent Harness Later"** — agent harness first (after engineering harness exists), features second
 - **"Screenshot Everything"** — prefer structured output over screenshots
 - **"One Process Per Terminal"** — single entry point, single shutdown handler
