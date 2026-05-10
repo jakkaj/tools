@@ -127,8 +127,8 @@ $ARGUMENTS
    **Special case — Phase 0 "Build Harness"**: Skip pre-phase validation (harness doesn't exist yet).
    Instead, run validation at END of Phase 0 to confirm harness works.
 
-   After ALL phase tasks complete: update `docs/project-rules/harness.md § History` with what changed.
-   Use harness observe capabilities for evidence capture throughout implementation when available.
+   After ALL phase tasks complete: update the agent harness governance doc § History (`docs/project-rules/agent-harness.md`, or legacy `harness.md`) with what changed.
+   Use the agent harness Boot/Interact/Observe capabilities for evidence capture throughout implementation when available.
 
 3) Execute tasks:
    Follow task order. Apply testing approach from plan:

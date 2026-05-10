@@ -242,8 +242,8 @@ Brief once. Don't re-brief mid-phase unless the scope materially changes (in whi
    **Special case — Phase 0 "Build Harness"**: Skip pre-phase validation (harness doesn't exist yet).
    Instead, run validation at END of Phase 0 to confirm harness works.
 
-   After ALL phase tasks complete: update `docs/project-rules/harness.md § History` with what changed.
-   Use harness observe capabilities for evidence capture throughout implementation when available.
+   After ALL phase tasks complete: update the agent harness governance doc § History (`docs/project-rules/agent-harness.md`, or legacy `harness.md`) with what changed.
+   Use the agent harness Boot/Interact/Observe capabilities for evidence capture throughout implementation when available.
 
 ## 3) Execute tasks
 
@@ -430,4 +430,4 @@ STOP: Report phase complete. Suggest next step.
 
 **Next step**: Move on to the next phase. Run `/plan-5-v2-phase-tasks-and-brief --phase "<Phase N+1: Title>" --plan "<PLAN_PATH>"` to generate that phase's tasks dossier, then re-run this skill.
 
-If the companion produced a **magicWand** in its farewell, consider filing it as a fix dossier or backlog item *before* starting the next phase — that's how the harness improves itself.
+If the companion produced a **magicWand** in its farewell, consider filing it as a fix dossier or backlog item *before* starting the next phase — that's how the agent harness improves itself.

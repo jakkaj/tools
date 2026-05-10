@@ -10,6 +10,14 @@ description: Re-ground the session on the core philosophy — the harness is the
 
 This is not a utility. This is a philosophy skill. Every other skill produces artifacts. This one ensures those artifacts serve the right goal.
 
+> **Two harnesses, one principle.** This skill applies to both:
+> - **Engineering harness** = recipes, build, test, seed, env — the dev-loop substrate (`justfile`, `Makefile`, `package.json scripts`, seed scripts, dev server boot, test runners). What developers and CI run.
+> - **Agent harness** = Boot/Interact/Observe loop, governance doc (`docs/project-rules/agent-harness.md`), minih runtime, retro ledger, agent-readable preamble. The agent-facing layer built **on top of** the engineering harness.
+>
+> **The layering contract**: agent harness depends on engineering harness. Boot needs a runnable boot command. Observe needs structured output. You can have engineering harness without agent harness; you cannot have agent harness without engineering harness.
+>
+> Throughout this skill, principles are tagged `(E)` for engineering harness, `(A)` for agent harness, `(both)` for both.
+
 ---
 
 ```md
@@ -35,15 +43,17 @@ If none of these exist, that's fine — the principles still apply. Report what 
 
 Think deeply about these principles. Don't just recite them — understand WHY they matter:
 
-#### Principle 1: The Harness is the Product
+#### Principle 1: The Harness is the Product `(E)`
 
 Development infrastructure — CLI tools, build scripts, test harnesses, `just`/`make` recipes, seed scripts, environment setup — is not scaffolding. It is the first-class product of engineering work. Every experiment, every plan, every code change should improve it.
 
 **What this means in practice**: When you're about to write a one-off script, stop. Can it be a recipe instead? When you hit a problem, don't just work around it — encode the fix. When you run manual steps, ask: should this be automated?
 
-**The test**: If a brand new agent session started right now with zero context, could it get from zero to working in under 5 minutes using only automated recipes? Every time the answer is "no," there's work to do.
+**The test (engineering harness)**: If a developer or CI runner started with zero context, could they get the dev loop running and tests green in under 5 minutes using only automated recipes? Every time the answer is "no," there's engineering harness work to do.
 
-#### Principle 2: Track Velocity Compounding
+**The test (agent harness)**: If a brand new agent session started right now with zero context, could it Boot, Interact, Observe, and produce evidence within 60 seconds using only `docs/project-rules/agent-harness.md` (or legacy `harness.md`)? Every time the answer is "no," there's agent harness work to do.
+
+#### Principle 2: Track Velocity Compounding `(A)`
 
 The meta-question isn't whether a specific feature works. It's whether your development infrastructure **compounds velocity** across iterations.
 
@@ -57,7 +67,7 @@ This is literal, not metaphorical. Each fix compounds.
 
 **If the project uses minih**: The difficulty ledger has first-class tooling. Agents report structured difficulties in `retrospective.difficulties` (category, description, workaround, severity). Run `minih difficulties` to see all reported friction across all agents, auto-assigned as MH-001, MH-002, etc. The pipeline is A→B→C: agents report (A), humans review the aggregated view (B), resolved items get curated into the preamble's Known Difficulties table (C), and future agents read them on startup.
 
-#### Principle 3: Encode, Don't Document
+#### Principle 3: Encode, Don't Document `(both)`
 
 A wiki paragraph that says "remember to do X" is worth nothing. An automated step that does X for you is worth everything.
 
@@ -70,13 +80,21 @@ Prefer:
 
 **Executable knowledge > prose.**
 
-#### Principle 4: Measure Velocity
+**Where does the encoded fix live?** Pick the right home:
+
+- **Build / test / dev-loop friction** → engineering harness. The fix lives in a `justfile`/`Makefile` recipe, a seed script, a fixture, a CI step, an env config.
+- **Agent-side friction** (skill confusion, missing context, prompt regression, retro ledger gap, companion drift) → agent harness. The fix lives in a skill/prompt edit, the agent-readable preamble, a minih difficulty entry, the agent harness governance doc.
+- **Cross-cutting** (e.g. a flaky test that confuses both humans and the companion) → fix in both, link them.
+
+If you can't decide which harness owns the fix, you're probably about to write prose instead of code. Stop and pick a side.
+
+#### Principle 4: Measure Velocity `(both)`
 
 Note how long things take. Not for estimates — for evidence. If Phase 2 was faster than Phase 1, that's data proving the infrastructure is working.
 
 Velocity data goes into experiment tracking. It's how you know if the approach is succeeding.
 
-#### Principle 5: Agents are Real Users
+#### Principle 5: Agents are Real Users `(A)`
 
 If the project uses automated agents (test agents, smoke tests, CI bots), they aren't test scripts. They're real users of the infrastructure. Their failures and feedback — especially "magic wand" wishes — are the most honest feedback the infrastructure gets.
 
