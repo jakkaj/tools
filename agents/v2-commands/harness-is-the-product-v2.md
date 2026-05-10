@@ -35,7 +35,7 @@ Look for these files in the project — they define the philosophy. Not all proj
 
 1. **AGENTS.md** (repo root) — Look for any "harness" or "infrastructure as product" section. This is the constitution.
 2. **Experiment tracking files** (e.g. `docs/experiments/`, `experiments/`) — Look for a meta-experiment that tracks velocity compounding or development infrastructure improvement.
-3. **Agent/harness documentation** (e.g. `harness/`, `docs/harness/`, agent config files) — Look for self-improvement contracts, difficulty ledgers, or retrospective patterns.
+3. **Agent harness documentation** (e.g. `docs/project-rules/agent-harness.md` or legacy `harness.md`, `docs/harness/`, agent config files) — Look for self-improvement contracts, difficulty ledgers, or retrospective patterns.
 
 If none of these exist, that's fine — the principles still apply. Report what you find and adapt.
 

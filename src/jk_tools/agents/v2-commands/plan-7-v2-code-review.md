@@ -323,10 +323,10 @@ Universal (all approaches):
 [Subagent 5 findings, or "N/A — no project-rules found"]
 
 ### E.6) Harness Live Validation
-[Subagent 6 findings, or "N/A — no harness configured"]
+[Subagent 6 findings, or "N/A — no agent harness configured"]
 
-If harness was available:
-- Harness status: [HEALTHY/UNHEALTHY/UNAVAILABLE]
+If the agent harness was available:
+- Agent harness status: [HEALTHY/UNHEALTHY/UNAVAILABLE]
 - Checks performed: [list of ACs validated live]
 - Evidence: [what was observed — responses, screenshots, behavior]
 

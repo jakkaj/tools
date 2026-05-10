@@ -86,12 +86,12 @@ $ARGUMENTS
       Parse the JSON. Expected shape (mirrors agent-side schema for symmetry):
       ```json
       {
-        "magicWand": "If you could change one thing about this phase or the harness that drove it, what would it be?",
-        "magicWandTarget": "harness | project | coordination | testing | docs",
+        "magicWand": "If you could change one thing about this phase, the agent harness, or the engineering harness substrate that drove it, what would it be?",
+        "magicWandTarget": "agent-harness | engineering-harness | project | coordination | testing | docs",
         "difficulties": [
           {
             "id": "OH-001",
-            "category": "harness | review-flow | tooling | coordination | debug | docs",
+            "category": "agent-harness | engineering-harness | review-flow | tooling | coordination | debug | docs",
             "description": "...",
             "workaround": "...",
             "severity": "blocker | annoying | minor"
@@ -101,18 +101,28 @@ $ARGUMENTS
         "notes": "Optional — anything else."
       }
       ```
+
+      Both `magicWandTarget` and `difficulties[].category` distinguish
+      `agent-harness` (Boot/Interact/Observe loop, governance doc, minih
+      runtime) from `engineering-harness` (justfile/Makefile/dev script,
+      test runner, seed scripts). Bare `harness` is not a valid value —
+      future readers should be able to route the feedback to the right
+      home without re-deriving which layer is meant.
       Use OH-XXX prefix for orchestrator difficulty IDs (mirrors MH-XXX
       for agent-side).
 
    b) **If `--retrospective` flag was NOT provided**:
       Prompt the caller (or, in interactive mode, the user) with these
       five questions:
-        1. magicWand — one thing you'd change about this phase or the
-           harness that drove it
-        2. magicWandTarget — which surface (harness/project/coordination/
-           testing/docs) does the wand point at
+        1. magicWand — one thing you'd change about this phase, the
+           agent harness, or the engineering harness substrate
+        2. magicWandTarget — which surface (agent-harness /
+           engineering-harness / project / coordination / testing / docs)
+           does the wand point at. Bare "harness" is not a valid value;
+           pick the layer.
         3. difficulties[] — concrete friction you hit (with workaround
-           + severity)
+           + severity); same agent-harness vs engineering-harness
+           distinction applies to the `category` field
         4. workedWell — what went smoothly that should be preserved
            (optional but encouraged)
         5. notes — anything else (optional)
@@ -148,7 +158,8 @@ $ARGUMENTS
          at this skill as the writer.
 
    d) **Surface significant findings as follow-up candidates**:
-      If `magicWandTarget == "harness"` or any `difficulty.severity == "blocker"`,
+      If `magicWandTarget` is `agent-harness` or `engineering-harness`,
+      or any `difficulty.severity == "blocker"`,
       print a stderr note recommending the caller file a fix dossier
       via `/plan-5-v2-phase-tasks-and-brief --fix "<summary>"`.
       Do NOT auto-create dossiers; surface only.
