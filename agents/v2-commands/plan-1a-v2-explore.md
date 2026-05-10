@@ -214,19 +214,36 @@ Before launching research, check for existing domain system:
   * Note "No domain registry found — subagents will discover domain-like boundaries organically"
   * The Domain & Boundary Scout subagent (below) will identify potential domains even without a registry
 
-### 2c) Load Agent Harness Context
+### 2c) Load Harness Context (engineering + agent, two-part check)
 
-Check for agent harness (Boot → Interact → Observe feedback loop):
+Two-part check, in order. The agent harness is a layer **on top of** the engineering harness; the substrate must exist before the overlay can be designed or validated.
+
+**Part 1 — Engineering harness substrate** (does a runnable boot command exist?):
+
+Look for any of:
+- `justfile`, `Makefile` with a dev/serve/run target
+- `package.json scripts.dev` / `scripts.start`
+- `docker-compose.yml` (top-level service)
+- `pyproject.toml` (`[tool.poetry.scripts]`, `uv run` script entries)
+- `Cargo.toml` binary, `go.mod` `cmd/`, etc.
+- Any project-conventional dev script (`bin/dev`, `scripts/start.sh`, etc.)
+
+Outcomes:
+- **Substrate present**: note the discovered boot command for the dossier; proceed to Part 2.
+- **Substrate missing or broken** (no boot command, or no obvious health signal): **surface as a P0 research finding** — agent harness work is blocked until the engineering harness is adequate. Engineering harness design is per-project (no v2 skill creates one); the dossier should flag this as a prerequisite for any subsequent plan-3 Phase 0.
+
+**Part 2 — Agent harness governance** (Boot → Interact → Observe feedback loop):
 
 - If `docs/project-rules/agent-harness.md` (or legacy `harness.md`) exists:
   * Read it — note project type, maturity level (L0–L4), boot command, health check, interaction methods, observe capabilities
   * Include agent harness status in the research dossier output (§ Agent Harness Status section)
   * Pass agent harness context to subagents so they can reference available validation infrastructure
   * If only the legacy `harness.md` is present, note "legacy filename — consider migrating to `agent-harness.md`" but do NOT modify the file from this read-only research command
-- If no agent harness exists:
+- If no agent harness exists **but Part 1 substrate is present**:
   * Note "No agent harness found — agents cannot autonomously validate running software"
-  * Add to research dossier **Workshop Opportunities**: suggest running `/agent-harness-v2 --create` to establish the agent feedback loop on top of the project's engineering harness
+  * Add to research dossier **Workshop Opportunities**: suggest running `/agent-harness-v2 --create` to establish the agent feedback loop on top of the existing engineering harness substrate
   * The research dossier should note what an agent harness would need for this project type (boot, interact, observe patterns)
+- If no agent harness exists **and Part 1 substrate is missing**: the engineering harness gap from Part 1 takes precedence — `/agent-harness-v2 --create` cannot succeed without a runnable boot command. Note both gaps and recommend resolving Part 1 first.
 
 ### 3) Launch Parallel Research Subagents
 

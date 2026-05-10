@@ -162,7 +162,7 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
 
 | Phase | Title | Primary Domain | Objective (1 line) | Depends On |
 |-------|-------|---------------|-------------------|------------|
-| 0 | Build Harness | — | [if applicable] | None |
+| 0 | Build Agent Harness | — | [if applicable] | None |
 | 1 | ... | ... | ... | ... |
 | N | ... | ... | ... | Phase N-1 |
 
@@ -177,18 +177,20 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
 - Domain creation phases come BEFORE domain extension phases
 - Composition/wiring phases (connecting domains) come LAST
 - **If agent harness is needed and doesn't exist**: Phase 0 is "Build Agent Harness" — this is the prerequisite that enables agent autonomy for all subsequent phases. Phase 0 creates `docs/project-rules/agent-harness.md` and implements Boot + Interact + Observe capabilities. Target maturity: L2 minimum (auto boot + API interaction). If user overrode agent harness in plan-2, skip Phase 0 and note override in plan.
+
+  **Engineering harness prerequisite**: The agent harness sits **on top of** the engineering harness — Phase 0 assumes a working engineering harness substrate (a boot command like `just dev`, `pnpm dev`, `docker compose up` that returns a healthy state in under 60 seconds, plus a test runner). If plan-1a research surfaced that no engineering harness exists, or the existing one has no runnable boot command, that gap must be resolved BEFORE Phase 0 begins. Surface it as a P0 finding in the plan (Key Findings, Critical impact). Do not attempt to design the agent harness on top of an absent substrate. Engineering harness design is per-project (justfile/Makefile/dev script) and not modeled as a phase here — defer to the project's own conventions.
 - For each NEW domain, first phase includes domain setup task:
   * Create `docs/domains/<slug>/domain.md` (use format from /extract-domain)
   * Create source directory
   * Update `docs/domains/registry.md`
   * Update `docs/domains/domain-map.md` — add new domain node with exposed contracts and dependency edges
 
-### Harness Strategy (include in plan output if harness is relevant)
+### Agent Harness Strategy (include in plan output if agent harness is relevant)
 
-If harness exists or Phase 0 builds one, add this section to the plan:
+If an agent harness exists or Phase 0 builds one, add this section to the plan:
 
 ```markdown
-## Harness Strategy
+## Agent Harness Strategy
 - **Current Maturity**: L[N]
 - **Target Maturity**: L[N] (by end of Phase [N])
 - **Boot Command**: [command]
@@ -198,7 +200,9 @@ If harness exists or Phase 0 builds one, add this section to the plan:
 - **Pre-Phase Validation**: Required at start of every phase (Boot → Interact → Observe)
 ```
 
-If no harness and user overrode, note: "Harness: Not applicable (user override — [reason from plan-2])."
+(Engineering harness strategy — recipes, build, seed, test infrastructure — is project-specific and lives in the project's `justfile` / `Makefile` / `package.json scripts` etc. This section addresses the agent-facing layer only. If the engineering harness has gaps that block agent harness work, those should already appear as Critical findings in Key Findings per the Phase 0 prerequisite.)
+
+If no agent harness and user overrode, note: "Agent Harness: Not applicable (user override — [reason from plan-2])."
 
 ### Per-Phase Format
 
