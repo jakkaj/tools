@@ -1,91 +1,61 @@
 # JK Tools
 
-Centralized setup and utility scripts for developer tooling across macOS, Linux, and Windows (WSL/Git Bash).
+A repository of AI-assistant **skills** (in the `skills/<category>/` layout consumed by [`npx skills`](https://github.com/vercel-labs/skills)) plus a setup script for the developer tools that support them.
 
-## Quick Start
+The skills are the product. `./setup.sh` installs MCP servers and developer tooling; **it does not install skills**.
 
-### Modern Approach (uvx - Recommended)
+## Install the skills
 
-Run directly from GitHub without cloning:
+Skills are distributed via `npx skills@latest`. The most common one-liner — install everything globally for Claude Code:
 
 ```bash
+npx skills@latest add jakkaj/tools -a claude-code -g
+```
+
+For all install patterns (other CLIs, project-local, single-skill, multi-CLI, universal), see **[INSTALL.md](./INSTALL.md)**.
+
+For an annotated catalog of every skill, see **[README_AGENTS.md](./README_AGENTS.md)**.
+
+## Install the dev tooling (optional)
+
+If you want the developer-tool setup (Rust, code2prompt, FlowSpace, Claude Code CLI, Codex CLI, GitHub Copilot CLI, MCP server configuration):
+
+```bash
+# Modern (uvx)
 uvx --from git+https://github.com/jakkaj/tools jk-tools-setup
-```
 
-Or from a local clone:
-
-```bash
-./setup.sh
-```
-
-If you have `uvx` installed, it will automatically use the modern execution mode.
-
-### Traditional Approach (pip)
-
-```bash
+# From a local clone
 git clone https://github.com/jakkaj/tools.git
 cd tools
 ./setup.sh
 ```
 
-## What It Does
+`./setup.sh` is idempotent and safe to re-run. It does **not** touch your skill installs.
 
-- Installs and configures developer tools (Rust, Just, code2prompt, Claude Code, Codex, OpenCode, etc.)
-- Sets up agent commands and MCP server configurations for AI assistants
-- Creates convenient aliases for scripts
-- Manages PATH and shell configuration
+## What `./setup.sh` does
 
-## Features
+- Installs developer tools: Rust, code2prompt, FlowSpace, just, Claude Code CLI, Codex CLI, GitHub Copilot CLI
+- Configures MCP servers across the above CLIs and VS Code
+- Adds `scripts/` to PATH and creates `jk-` aliases
+- Installs the Claude Code status line
 
-- **Automatic tool installation**: Rust, cargo tools, AI CLI clients
-- **Agent command sync**: Deploys slash commands to Claude, OpenCode, Codex, VS Code, and Copilot CLI
-- **MCP server configuration**: Automatically configures Model Context Protocol servers
-- **Cross-platform**: Works on macOS, Linux, and Windows (WSL/Git Bash)
-- **Idempotent**: Safe to run multiple times
-- **Update mode**: `jk-tools-setup --update` to update existing tools
-- **Local command installation**: Install commands to project directories for version control
-- **Plan ordinal tool**: `plan-ordinal` (alias: `jk-po`) scans all git branches to prevent plan numbering collisions
+## Previously used `./setup.sh` to install skills?
 
-## Installing Commands Locally
+`./setup.sh` used to fan the legacy v2 command files out into five CLI-specific locations under `$HOME`. That behaviour is gone — those files are now stale but harmless. See **[MIGRATION.md](./MIGRATION.md)** for an optional cleanup recipe.
 
-Install AI CLI commands to your project directory without full setup:
+## Repository structure (high level)
 
-```bash
-# Install GitHub Copilot commands from GitHub
-uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local ghcp
+| Path | What |
+|---|---|
+| `skills/SDD/` | The 27 spec-driven-development pipeline skills (plan-*, validate, harness, didyouknow, etc.) |
+| `skills/general/` | Domain-generic skills (grill-me) |
+| `skills/personal/` | Personal / non-coding skills (shopping-hunter) |
+| `agents/commands/` | DEPRECATED v1 commands. See `agents/commands/DEPRECATED.md`. |
+| `agents/commands-lite/` | DEPRECATED lite-pipeline commands. See `agents/commands-lite/DEPRECATED.md`. |
+| `agents/mcp/servers.json` | MCP server source-of-truth (installed by `./setup.sh`) |
+| `install/`, `scripts/` | Dev-tool installers and utility scripts |
 
-# Install Copilot CLI project skills from GitHub
-uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local copilot-cli
-
-# Install Claude commands
-uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local claude
-
-# Install multiple CLI commands at once
-uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local claude,ghcp,opencode,copilot-cli
-
-# Install to specific directory
-uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local ghcp --local-dir ~/my-project
-
-# Force reinstall to get latest version
-uvx --force-reinstall --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local ghcp
-```
-
-**What gets installed:**
-- ✅ Command/prompt files ONLY
-- ❌ NO MCP server configuration
-- ❌ NO global setup
-- ❌ NO other tools installation
-
-**Supported CLIs:**
-- `claude` → `.claude/commands/` (auto-discovered by Claude Code)
-- `opencode` → `.opencode/command/` (auto-discovered by OpenCode)
-- `ghcp` → `.github/prompts/*.prompt.md` (attach manually in IDE)
-- `copilot-cli` → `.github/skills/<name>/SKILL.md` (auto-discovered by Copilot CLI)
-- `codex` → Not supported (use global installation only)
-
-Global setup also installs Copilot CLI personal skills to `~/.copilot/skills/<name>/SKILL.md` so v2 commands are available as `/skill-name` slash commands in fresh Copilot CLI sessions.
-
-See [CLAUDE.md](CLAUDE.md) for full documentation.
+See **[CLAUDE.md](./CLAUDE.md)** for the contributor-facing dev guide (how to add or edit a skill).
 
 ## Development
 

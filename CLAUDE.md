@@ -1,393 +1,126 @@
-# Tools Repository
+# CLAUDE.md — Contributor / Dev Guide
 
-A centralized collection of utility scripts and tools for consistent development environments across machines.
+This file targets contributors and AI coding assistants working **on** this repository (editing skills, running dev tooling, debugging the sync flow). It is a near-mirror of [`AGENTS.md`](./AGENTS.md) (the AGENTS-convention name for the same role). For the public/user-facing skill catalog, see [`README_AGENTS.md`](./README_AGENTS.md). For install patterns, see [`INSTALL.md`](./INSTALL.md).
 
-## Platform Support
+---
 
-- **macOS** (Intel and Apple Silicon)
-- **Linux** (Ubuntu, Debian, Fedora, Arch, and other major distributions)
-- **Windows** (via WSL or Git Bash)
+## What this repo is
 
-## Purpose
+A skills repository, plus a dev-tooling installer. The skills are the product:
 
-This repository serves as a single source of truth for commonly used tools, scripts, and utilities that enhance productivity across different development environments. It provides a quick and reliable way to set up these tools on any supported platform with automatic installation of required dependencies.
+- **Skills source-of-truth**: `skills/<category>/<slug>/SKILL.md` (top-level, mirrors `mattpocock/skills`).
+- **Distribution**: via `npx skills@latest add jakkaj/tools` (Vercel Labs CLI). There is no in-repo skill installer.
+- **Dev-tooling installer** (`./setup.sh`): installs Rust, code2prompt, FlowSpace, Claude Code CLI, Codex CLI, GitHub Copilot CLI, and configures MCP servers. Does **not** install skills.
 
-## Quick Setup
-
-```bash
-git clone <repository-url> ~/github/tools
-cd ~/github/tools
-./setup.sh
-source ~/.zshrc
-```
-
-## What It Does
-
-- **Centralized Tool Management**: Keep all your custom scripts and tools in one version-controlled location
-- **Automatic Tool Installation**: Installs required tools (Rust, code2prompt, etc.) automatically
-- **Cross-Platform Support**: Works seamlessly on Linux, macOS, and Windows (WSL/Git Bash)
-- **Instant Availability**: Automatically adds tools to your PATH for immediate use
-- **Idempotent Setup**: Safe to run the setup script multiple times without side effects
-- **Portable Configuration**: Easy to clone and set up on new machines or environments
-
-## Repository Structure
+## Layout
 
 ```
-tools/
-├── setup.sh           # Main setup script - PATH, permissions, and tool installation
-├── scripts/           # Executable tools and utilities (SOURCE OF TRUTH)
-│   └── sync-to-dist.sh # Syncs all source files to src/jk_tools/ for packaging
-├── install/           # Tool installation scripts (SOURCE OF TRUTH)
-│   ├── rust.sh        # Installs Rust and Cargo via rustup
-│   ├── code2prompt.sh # Installs code2prompt via cargo
-│   └── agents.sh      # Syncs to dist + installs commands to Claude/OpenCode/Codex CLIs
-├── agents/            # AI agent assets (SOURCE OF TRUTH)
-│   ├── commands/      # Markdown command definitions (edit here)
-│   ├── mcp/           # Canonical MCP server definitions (edit here)
-│   └── settings.local.json # Settings for agent commands (edit here)
-├── src/jk_tools/      # Distribution package (AUTO-SYNCED - DO NOT EDIT)
-│   ├── agents/        # Mirrored from agents/ (auto-synced)
-│   ├── scripts/       # Mirrored from scripts/ (auto-synced)
-│   ├── install/       # Mirrored from install/ (auto-synced)
-│   ├── setup_manager.py # Mirrored from root (auto-synced)
-│   ├── __init__.py    # Package-only file
-│   └── cli.py         # Package-only entry point
-├── scratch/           # Temporary workspace (gitignored)
-├── AGENTS.md          # This file - documentation
-└── LICENSE            # Repository license
+/
+├── skills/                     # Source-of-truth for skills (SKILL.md per skill)
+│   ├── SDD/                    # 27 spec-driven-development pipeline skills
+│   ├── general/                # 1 skill (grill-me)
+│   └── personal/               # 1 skill (shopping-hunter)
+├── agents/
+│   ├── commands/               # DEPRECATED v1 commands (DEPRECATED.md inside)
+│   ├── commands-lite/          # DEPRECATED lite-pipeline commands (DEPRECATED.md inside)
+│   ├── mcp/servers.json        # MCP server source-of-truth
+│   └── settings.local.json     # Shared agent settings
+├── docs/
+│   ├── plans/                  # Plan folders (NNN-slug/) produced by the SDD pipeline
+│   └── skills-pipeline/        # Documentation for the SDD pipeline (README, getting-started, etc.)
+├── install/                    # Per-tool installer scripts (rust.sh, agents.sh, ...)
+├── scripts/                    # Utility scripts (sync-to-dist, migrate-skills, check-skill-slugs, ...)
+├── src/jk_tools/               # Auto-synced distribution mirror — DO NOT EDIT
+├── setup.sh                    # Entry-point dev-tooling installer
+├── setup_manager.py            # Python orchestrator (rich progress, runs install/*.sh)
+└── pyproject.toml              # Package metadata (jk-tools-setup CLI)
 ```
 
-## Tool Installation
+## Adding or editing a skill
 
-The setup script automatically checks for and installs required tools. Each tool has its own installation script in the `install/` directory.
+1. **Pick (or create) a category** under `skills/`. Existing categories: `SDD/`, `general/`, `personal/`. A new category is fine — it's just a subdirectory.
+2. **Create the skill folder** with the kebab-case slug as the folder name: `skills/<category>/<my-skill>/SKILL.md`.
+3. **Write the frontmatter**. Two fields are required:
 
-### Currently Automated Tools
-
-- **Rust & Cargo**: The Rust programming language and package manager
-- **code2prompt**: CLI tool to convert codebases into LLM prompts
-- **Agent Commands**: Custom commands for Claude, OpenCode, and Codex AI assistants
-- **Agent MCP Config**: Shared Serena MCP server config deployed to Codex CLI, Claude CLI, OpenCode CLI, and VS Code (global + project files)
-
-### VS Code MCP Configuration
-
-- Global config: `~/Library/Application Support/Code/User/mcp.json` on macOS, `~/.config/Code/User/mcp.json` on Linux
-- Project config: `./.vscode/mcp.json` (auto-generated by the installer)
-- Remote environments still require updating the remote user config via VS Code's "MCP: Open Remote User Configuration" command
-
-## Source/Distribution Paradigm
-
-**IMPORTANT**: This repository uses a source/distribution model for packaging.
-
-### Source of Truth (Edit These)
-- `agents/` - Agent commands, MCP configs, settings
-- `scripts/` - Utility scripts
-- `install/` - Installation scripts
-- `setup_manager.py` - Setup manager
-- `.vscode/` - VS Code planning commands
-
-### Distribution Copy (Never Edit)
-- `src/jk_tools/` - Auto-synced mirror for Python package distribution
-- This directory is automatically synchronized by `./setup.sh`
-- **DO NOT** edit files in `src/jk_tools/` - they will be overwritten
-
-### How Syncing Works
-
-When you run `./setup.sh`, it:
-1. **Syncs source → distribution** using `scripts/sync-to-dist.sh`
-2. Copies all files from root directories to `src/jk_tools/`
-3. Then installs tools to user directories (~/.claude/commands, etc.)
-
-**No manual sync needed!** Just edit the source files and run `./setup.sh`.
-
-### What Gets Synced
-
-✅ **Automatically synced:**
-- `agents/commands/*.md` → `src/jk_tools/agents/commands/`
-- `agents/mcp/` → `src/jk_tools/agents/mcp/`
-- `agents/settings.local.json` → `src/jk_tools/agents/`
-- `scripts/` → `src/jk_tools/scripts/`
-- `install/` → `src/jk_tools/install/`
-- `setup_manager.py` → `src/jk_tools/setup_manager.py`
-- `.vscode/plan-*.md` and other planning commands → `src/jk_tools/.vscode/`
-
-❌ **Not synced (package-only):**
-- `src/jk_tools/__init__.py`
-- `src/jk_tools/cli.py`
-
-❌ **Not synced (project-specific):**
-- `.vscode/settings.json`
-- `.vscode/mcp.json`
-
-### Adding New Agent Commands
-
-To add a new agent command:
-
-1. **Create the command file** in `agents/commands/`:
-   ```bash
-   # Create new command
-   nano agents/commands/my-new-command.md
+   ```yaml
+   ---
+   name: my-skill            # MUST match the leaf folder name
+   description: |
+     One or two sentences describing when this skill triggers and what it does.
+     This is what an LLM reads to decide whether to invoke the skill.
+   ---
    ```
 
-2. **Run setup** to sync and install:
+   Optional fields supported by Anthropic SKILL.md: `model`, `tags`, `version`, `license`, `allowed-tools`, `icon`. The Vercel `npx skills` CLI tolerates extra fields.
+
+4. **Body**: everything after the closing `---` is the skill content. Markdown-rendered by the host CLI.
+5. **Verify slug uniqueness** — `npx skills` flattens by slug at install time, so collisions across categories silently overwrite. Run:
+
    ```bash
-   ./setup.sh
+   scripts/check-skill-slugs.sh
    ```
 
-3. **Command is now available** in:
-   - `~/.claude/commands/my-new-command.md`
-   - `~/.config/opencode/command/my-new-command.md`
-   - `~/.codex/prompts/my-new-command.md`
-   - `~/.config/github-copilot/prompts/my-new-command.prompt.md`
-   - `src/jk_tools/agents/commands/my-new-command.md` (for distribution)
+   Exits 0 if no duplicates, 1 if any are found.
 
-### Installing Commands Locally (Project-Specific)
+6. **Commit**. No further sync step is required — skills are read directly from `skills/` by the Vercel CLI.
 
-By default, commands are installed globally (user home directory). You can also install commands locally to a project directory for version control and team sharing:
+## Editing existing v2 skills
 
-#### Global Installation (Default)
-```bash
-# Installs to ~/.claude/commands, ~/.config/opencode/command, etc.
-uvx jk-tools
-./setup.sh
-```
+The 27 SDD skills were migrated from the legacy v2 command set by `scripts/migrate-skills.py` (retained in `scripts/` for replay/audit). To edit a skill, just edit `skills/SDD/<slug>/SKILL.md` directly. Body is byte-identical to the legacy source; the frontmatter has been normalized to `name:` + `description:` only.
 
-#### Local Installation (Project-Specific)
-```bash
-# Install commands locally to current directory
-uvx jk-tools --commands-local claude,opencode,ghcp
+## Source / distribution sync
 
-# Install to specific directory
-uvx jk-tools --commands-local claude --local-dir ~/my-project
-```
+The `src/jk_tools/` tree is an auto-synced mirror used for Python packaging (the `jk-tools-setup` console script published from this repo). It is regenerated by `scripts/sync-to-dist.sh` whenever you run `./setup.sh` from a git checkout.
 
-#### Supported Local Paths
+- **Edit**: source files in `agents/`, `scripts/`, `install/`, `setup_manager.py`.
+- **Never edit**: anything under `src/jk_tools/`. Changes there will be overwritten on the next sync.
+- **Trigger sync manually**: `./scripts/sync-to-dist.sh`.
 
-| CLI Tool | Local Directory | Auto-Discovery | Status |
-|----------|----------------|----------------|--------|
-| **Claude Code** | `.claude/commands/` | ✅ Yes | ✅ Fully supported |
-| **OpenCode** | `.opencode/command/` | ✅ Yes | ✅ Fully supported |
-| **GitHub Copilot** | `.github/prompts/*.prompt.md` | ⚠️ Manual attach | ✅ Supported |
-| **Codex** | N/A | ❌ No | ❌ Not supported |
+The sync **no longer mirrors any skill content**. Skills are published directly from the top-level `skills/` tree via `npx skills`.
 
-#### Local Installation Behavior
-
-**What gets installed:**
-- ✅ Command/prompt files ONLY
-- ❌ NO MCP server configuration
-- ❌ NO global setup
-- ❌ NO other tools installation
-
-**Examples:**
-```bash
-# Install from local repository (for development)
-uvx jk-tools-setup --commands-local claude
-
-# Install from GitHub (for production use)
-uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local claude
-
-# Install GitHub Copilot commands from GitHub
-uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local ghcp
-
-# Install to specific directory
-uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local claude --local-dir ~/my-project
-
-# Install multiple CLIs at once
-uvx --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local claude,ghcp,opencode
-
-# Force reinstall to get latest version
-uvx --force-reinstall --from git+https://github.com/jakkaj/tools jk-tools-setup --commands-local ghcp
-
-# Result (Claude example):
-# ./
-# └── .claude/
-#     └── commands/
-#         ├── plan-0-constitution.md
-#         ├── plan-1-specify.md
-#         ├── tad.md
-#         └── ... (14 command files)
-```
-
-#### GitHub Copilot Notes
-
-- Files are renamed with `.prompt.md` extension (e.g., `tad.md` → `tad.prompt.md`)
-- Use the paperclip icon in your IDE to attach prompts
-- Alternatively, create `.github/copilot-instructions.md` for auto-loaded instructions
-
-#### Codex Limitation
-
-Codex does not currently support project-local commands (requested feature: GitHub issue #4734).
-
-**Workarounds:**
-1. Use global commands only: `~/.codex/prompts/`
-2. Set per-project: `CODEX_HOME=$(pwd)/.codex/`
-3. Use third-party tool: [cx-prompts](https://github.com/Hotion13/cx-prompts)
-
-#### Version Control
-
-Local commands can be committed to git for team sharing:
+## Running the dev-tooling installer
 
 ```bash
-# Add local commands to git
-git add .claude/commands/
-git add .opencode/command/
-git add .github/prompts/
-
-git commit -m "Add local AI CLI commands"
-git push
+./setup.sh                       # idempotent; safe to re-run
+uvx --from . jk-tools-setup      # via uvx, modern mode (no clone needed)
+uvx --from . jk-tools-setup -u   # update mode for tracked tools
 ```
 
-Team members will automatically have access to project-specific commands after cloning.
+The installer:
 
-### Adding New Tools
+1. Syncs source files to the `src/jk_tools/` mirror (dev mode only).
+2. Installs the Claude Code status line.
+3. Runs `setup_manager.py`, which adds `scripts/` to PATH, makes scripts executable, and runs each script in `install/` in dependency order (just → rust → code2prompt → fs2 → agents.sh → claude-code → codex → copilot-cli → aliases).
+4. `install/agents.sh` writes MCP server configs to Claude, OpenCode, Codex, VS Code, and Copilot CLI. It does **not** copy any skill files.
 
-To add a new tool to the repository:
+## Testing changes
 
-1. **For scripts/utilities**: Place in `scripts/` directory
-2. **For tools requiring installation**: Create an install script in `install/` directory
-   - Name it `install/<toolname>.sh`
-   - Follow the pattern of existing install scripts
-   - Check if installed → Install if needed → Verify installation
-3. Run `./setup.sh` to apply changes (syncs and installs)
-4. Commit and push to share across your machines
+- **Slug-collision check**: `scripts/check-skill-slugs.sh`
+- **Body byte-diff** (after re-running migration): `python3 scripts/migrate-skills.py` (idempotent — `[skip] <slug>` on every entry if no source changes).
+- **MCP smoke**: run `./setup.sh` in a sandbox and confirm MCP config files appear in `~/.claude.json`, `~/.codex/config.toml`, `~/.config/opencode/opencode.json`, etc.
+- **Skills smoke** (against pushed branch): `npx skills@latest add jakkaj/tools --skill <slug> -a claude-code -g` and inspect `~/.claude/skills/<slug>/SKILL.md`.
 
-### Tool Development Guidelines
+## Plan folders
 
-When creating new tools, follow these conventions:
+Non-trivial changes follow the SDD pipeline in `docs/plans/NNN-<slug>/`. Each plan folder typically contains:
 
-1. **Help System**:
-   - Must support `--help` flag for detailed documentation
-   - Should show help when called with no parameters (if safe to do so)
-   - Include: NAME, SYNOPSIS, DESCRIPTION, PARAMETERS, OPTIONS, EXAMPLES
-   - Format for both human and AI readability
+- `<slug>-spec.md` — feature spec (WHAT/WHY)
+- `<slug>-plan.md` — implementation plan (HOW)
+- `<slug>.fltplan.md` — flight plan / executive overview
+- `research-dossier.md` — pre-spec research (optional)
+- `workshops/` — design workshops (optional)
+- `execution.log.md` — implementation log
 
-2. **Naming**:
-   - Use descriptive names with dashes (e.g., `analyze-dependencies.sh`)
-   - Aliases will be auto-generated with `jk-` prefix
+Ordinals are allocated via `scripts/plan-ordinal.py` (alias `jk-po`), which scans every git branch to avoid collisions.
 
-3. **Documentation**:
-   - Include purpose and use cases
-   - Provide real-world examples
-   - List dependencies and requirements
-   - Specify expected output format
+## Deprecated directories
 
-4. **Integration**:
-   - Make tools composable with Unix pipes
-   - Use exit codes appropriately (0 for success, non-zero for errors)
-   - Support common flags like `--help`, `--version`, `--verbose`
+`agents/commands/` (v1) and `agents/commands-lite/` (lite pipeline) are retained for reference only. Each has a `DEPRECATED.md` pointer at the new layout. Do not add new content to either; they are slated for deletion.
 
-## Benefits
+## Pointers
 
-- **Consistency**: Same tools available on all your development machines
-- **Version Control**: Track changes and improvements to your tools over time
-- **Quick Onboarding**: Set up a new machine with all your tools in seconds
-- **No Manual PATH Management**: Automatic PATH configuration for all tools
-- **Clean Separation**: Keeps custom tools separate from system utilities
-
-## Usage
-
-After setup, any script in the `scripts/` directory can be called directly from anywhere in your terminal without specifying the full path.
-
-### Discovering Available Tools
-
-To see all available tools and their descriptions:
-```bash
-jk-tools        # List all tools with descriptions
-jk-jt           # Short alias for jk-tools
-jk-tools -v     # Verbose mode with full help text
-```
-
-### Getting Help
-
-All tools follow a consistent help convention:
-```bash
-<tool-name> --help    # Get detailed help for any tool
-jk-gcm --help         # Example: help for generate-codebase-md
-```
-
-### Tool Aliases
-
-Tools with dashes in their names automatically get `jk-` prefixed aliases:
-- `generate-codebase-md.sh` → `jk-gcm`
-- `jk-tools.sh` → `jk-jt`
-- Future tools follow the same pattern
-
-### For AI Assistants / LLMs
-
-When working with this repository, AI assistants should:
-
-1. **Discover available tools**: Run `jk-tools` to see all available utilities
-2. **Understand tool purpose**: Each tool has comprehensive help via `--help`
-3. **Use aliases**: Prefer short aliases (e.g., `jk-gcm`) for efficiency
-4. **Check requirements**: Tools list their dependencies in help text
-5. **Use scratch directory**: Output temporary files to `./scratch/` to keep repo clean
-6. **Git commands - READ ONLY**: You may use any git command to read repository state (e.g., `git status`, `git diff`, `git log`, `git show`), but **NEVER** modify git state (no `git add`, `git commit`, `git push`, `git checkout`, etc.) unless explicitly requested by the user
-
-Example workflow for an AI assistant:
-```bash
-# 1. Discover what tools are available
-jk-tools
-
-# 2. Get detailed help for a specific tool
-jk-gcm --help
-
-# 3. Use the tool with appropriate parameters
-jk-gcm ./scratch/analysis ./src
-
-# 4. Process the generated markdown
-cat ./scratch/analysis/codebase.md
-```
-
-## Agent Commands: Full & Lite Variants
-
-The `agents/commands/` directory contains two highly cohesive command sets:
-
-- `agents/commands/` — **Full pipeline** (24 commands, all features including FlowSpace, PlanPak, footnotes, constitution gates)
-- `agents/commands-lite/` — **Lite pipeline** (10 commands, standard tools only — no FlowSpace, PlanPak, or specialized infrastructure)
-
-**⚠️ IMPORTANT**: These two sets are different versions of the same workflow. When making changes to shared commands (plan-1a, 1b, 3, 5, 5b, 6, 7, didyouknow, plan-2c-workshop, deepresearch), always consider whether the change applies to both variants and keep them in sync. They are highly cohesive — a bug fix or flow improvement in one likely needs to be reflected in the other.
-
-## Maintenance
-
-### Daily Workflow
-- **Edit source files**: Only edit files in root directories (agents/, scripts/, install/)
-- **Never edit** `src/jk_tools/` - it's auto-synced
-- **Run setup**: `./setup.sh` syncs and installs everything
-
-### Syncing
-- **Automatic**: `./setup.sh` syncs source → distribution automatically
-- **Manual sync only**: `./scripts/sync-to-dist.sh` (if needed without install)
-- **No manual copying needed**: Everything is handled automatically
-
-### Version Control
-- Pull latest changes: `git pull`
-- Add new tools: Copy to `scripts/` and run `./setup.sh`
-- Update existing tools: Edit in place and commit changes
-- Share across machines: Push to remote and pull on other machines
-- **Commit both**: Source files AND synced `src/jk_tools/` files
-
-## Scratch Directory (Ephemeral Workspace)
-
-Use a top-level `scratch/` directory in this repository for temporary experiments, throwaway scripts, notes, or generated files you do **not** want tracked by Git.
-
-### Why
-- Keeps the repo clean of WIP and exploratory artifacts
-- Avoids accidental commits of large or sensitive temporary files
-- Provides an easy, predictable location for ad-hoc work
-
-### Usage
-```bash
-mkdir -p scratch
-cd scratch
-# Create or copy experimental files here
-```
-
-You can freely create, modify, and delete anything inside `scratch/` without impacting version control. The path is ignored via `.gitignore`.
-
-### Guidelines
-- Never store the only copy of important work here—it's untracked
-- Safe to wipe/recreate at any time
-- Use subfolders if juggling multiple experiments
-- If something becomes valuable, move it into a tracked location (e.g. `scripts/`) before committing
-
-### Automation Tip
-Add helpers or prototypes here first; once stable, promote them into `scripts/` and run `./setup.sh`.
+- **Public skill catalog**: [`README_AGENTS.md`](./README_AGENTS.md)
+- **In-repo agent guide (alt path)**: [`AGENTS.md`](./AGENTS.md) — kept in sync with this file for the AGENTS-convention name
+- **Install patterns**: [`INSTALL.md`](./INSTALL.md)
+- **Cleanup for previous setup.sh users**: [`MIGRATION.md`](./MIGRATION.md)
+- **SDD pipeline reference**: [`docs/skills-pipeline/README.md`](./docs/skills-pipeline/README.md)

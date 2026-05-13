@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 
-# Install agent commands and MCP server configs for Claude CLI, OpenCode CLI, Codex CLI, and VS Code
-# This script also syncs all source files to the distribution package (src/jk_tools/)
+# Install MCP server configurations for Claude CLI, OpenCode CLI, Codex CLI,
+# Copilot CLI, and VS Code.
+#
+# Skills are NOT installed by this script. They live at /skills/ and are
+# distributed via `npx skills@latest add jakkaj/tools` (see /INSTALL.md).
 #
 # Usage: agents.sh [OPTIONS]
-#   --clear-mcp: Clear all existing MCP servers before installing new ones
-#   --commands-local <clis>: Install commands locally (comma-separated: claude,opencode,ghcp,codex,copilot-cli)
-#   --local-dir <path>: Target directory for local commands (default: current directory)
-#   --no-auto-sudo: Disable automatic sudo retry on permission errors
+#   --clear-mcp:     Clear all existing MCP servers before installing new ones
+#   --no-auto-sudo:  Disable automatic sudo retry on permission errors
+#   --python <cmd>:  Override the Python interpreter (used by setup_manager.py)
 
 # set -e  # Disabled to allow proper error handling and prevent killing parent process
 
@@ -23,21 +25,17 @@ else
     mkdir_with_retry() { mkdir -p "$1"; }
     cp_with_retry() { cp -r "$1" "$2"; }
 fi
-SOURCE_DIR="${REPO_ROOT}/agents/commands"
-V2_SOURCE_DIR="${REPO_ROOT}/agents/v2-commands"
+
 SYNC_SCRIPT="${REPO_ROOT}/scripts/sync-to-dist.sh"
 MCP_SOURCE="${REPO_ROOT}/agents/mcp/servers.json"
 
-# Determine the correct Python command to use
-# When running via uvx, setup_manager.py passes --python with the correct interpreter
+# Determine the correct Python command to use.
+# When running via uvx, setup_manager.py passes --python with the correct interpreter.
 get_python_cmd() {
-    # Use the override if provided (passed from setup_manager.py when running via uvx)
     if [ -n "${PYTHON_OVERRIDE:-}" ]; then
         echo "${PYTHON_OVERRIDE}"
-    # If we're in a uv-managed environment (VIRTUAL_ENV set by uv), use uv run
     elif [ -n "${VIRTUAL_ENV:-}" ] && command -v uv >/dev/null 2>&1; then
         echo "uv run python"
-    # Check if uv is available and we can run python with it
     elif command -v uv >/dev/null 2>&1 && uv run python --version >/dev/null 2>&1; then
         echo "uv run python"
     else
@@ -47,8 +45,6 @@ get_python_cmd() {
 
 # Parse command line arguments
 CLEAR_MCP=false
-COMMANDS_LOCAL=""
-LOCAL_DIR="${PWD}"
 PYTHON_OVERRIDE=""
 
 while [[ $# -gt 0 ]]; do
@@ -56,14 +52,6 @@ while [[ $# -gt 0 ]]; do
         --clear-mcp)
             CLEAR_MCP=true
             shift
-            ;;
-        --commands-local)
-            COMMANDS_LOCAL="$2"
-            shift 2
-            ;;
-        --local-dir)
-            LOCAL_DIR="$2"
-            shift 2
             ;;
         --no-auto-sudo)
             export AUTO_SUDO_ENABLED=false
@@ -94,25 +82,15 @@ elif [ -f "${HOME}/.jk-tools.env" ]; then
 elif [ -f "${REPO_ROOT}/.env" ]; then
     ENV_FILE="${REPO_ROOT}/.env"
 fi
-TARGET_DIR="${HOME}/.claude/commands"
-OPENCODE_DIR="${HOME}/.config/opencode/command"
-CODEX_DIR="${HOME}/.codex/prompts"
-COPILOT_GLOBAL_DIR="${HOME}/.config/github-copilot/prompts"
-# Copilot CLI (distinct from VS Code Copilot extension)
-# Support both XDG-derived and default ~/.copilot/ locations
-COPILOT_CLI_DIR="${XDG_CONFIG_HOME:-$HOME}/.copilot"
-COPILOT_CLI_SKILLS_DIR="${COPILOT_CLI_DIR}/skills"
-COPILOT_CLI_MCP_CONFIG="${COPILOT_CLI_DIR}/mcp-config.json"
-# If XDG_CONFIG_HOME is set and differs from default, also install to default location
-COPILOT_CLI_DEFAULT_DIR="${HOME}/.copilot"
-COPILOT_CLI_DEFAULT_SKILLS_DIR="${COPILOT_CLI_DEFAULT_DIR}/skills"
-if [ "${COPILOT_CLI_DIR}" = "${COPILOT_CLI_DEFAULT_DIR}" ]; then
-    COPILOT_CLI_HAS_ALT="false"
-else
-    COPILOT_CLI_HAS_ALT="true"
-fi
-SYSTEM_NAME="$(uname -s)"
 
+# MCP target locations
+# Copilot CLI (distinct from VS Code Copilot extension) keeps mcp-config.json
+# under XDG_CONFIG_HOME or ~/.copilot/. We do not write skills here — that is
+# the responsibility of `npx skills add`.
+COPILOT_CLI_DIR="${XDG_CONFIG_HOME:-$HOME}/.copilot"
+COPILOT_CLI_MCP_CONFIG="${COPILOT_CLI_DIR}/mcp-config.json"
+
+SYSTEM_NAME="$(uname -s)"
 if [[ "${SYSTEM_NAME}" == "Darwin" ]]; then
     VSCODE_USER_DIR="${HOME}/Library/Application Support/Code/User"
 else
@@ -122,128 +100,10 @@ VSCODE_USER_CONFIG="${VSCODE_USER_DIR}/mcp.json"
 VSCODE_PROJECT_DIR="${REPO_ROOT}/.vscode"
 VSCODE_PROJECT_CONFIG="${VSCODE_PROJECT_DIR}/mcp.json"
 
-print_status() {
-    echo "[*] $1"
-}
-
-print_success() {
-    echo "[✓] $1"
-}
-
-print_error() {
-    echo "[✗] $1" >&2
-}
-
-print_warning() {
-    echo "[⚠] $1"
-}
-
-# Remove stale plan-<number>-* files from a target directory before copying fresh ones.
-# Only matches plan command files (plan-0-*, plan-5a-*, etc.), not planpak.md or other commands.
-cleanup_plan_commands() {
-    local dir="$1"
-    local pattern="$2"  # e.g., "plan-[0-9]*.md" or "plan-[0-9]*.prompt.md"
-
-    if [ ! -d "${dir}" ]; then
-        return 0
-    fi
-
-    local count=0
-    for file in "${dir}"/${pattern}; do
-        if [ -f "${file}" ]; then
-            rm -f "${file}"
-            count=$((count + 1))
-        fi
-    done
-
-    if [ "${count}" -gt 0 ]; then
-        print_status "Cleaned ${count} old plan command(s) from ${dir}"
-    fi
-}
-
-cleanup_copilot_cli_agents() {
-    local source_dir="$1"
-    local agent_dir="$2"
-
-    if [ ! -d "${agent_dir}" ]; then
-        return 0
-    fi
-
-    local count=0
-    local file filename stem old_agent
-    for file in "${source_dir}"/*.md; do
-        if [ ! -f "${file}" ]; then
-            continue
-        fi
-
-        filename=$(basename "${file}")
-        case "${filename}" in
-            README.md|GETTING-STARTED.md)
-                continue
-                ;;
-        esac
-
-        stem="${filename%.md}"
-        old_agent="${agent_dir}/${stem}.agent.md"
-        if [ -f "${old_agent}" ]; then
-            rm -f "${old_agent}"
-            count=$((count + 1))
-        fi
-    done
-
-    if [ "${count}" -gt 0 ]; then
-        print_status "Removed ${count} old Copilot CLI agent file(s) from ${agent_dir}"
-    fi
-
-    rmdir "${agent_dir}" 2>/dev/null || true
-}
-
-generate_copilot_cli_skills() {
-    local source_dir="$1"
-    local dest_dir="$2"
-
-    $PYTHON_CMD - "${source_dir}" "${dest_dir}" <<'COPILOT_CLI_SKILLS_PYTHON'
-import json
-import re
-import shutil
-import sys
-from pathlib import Path
-
-source_dir = Path(sys.argv[1])
-dest_dir = Path(sys.argv[2])
-dest_dir.mkdir(parents=True, exist_ok=True)
-
-skip_files = {"README.md", "GETTING-STARTED.md", "changes.md", "codebase.md"}
-source_files = [source_file for source_file in sorted(source_dir.glob("*.md")) if source_file.name not in skip_files]
-
-for source_file in source_files:
-    name = source_file.stem.lower().replace(" ", "-")
-    skill_dir = dest_dir / name
-    if skill_dir.is_dir():
-        shutil.rmtree(skill_dir)
-    elif skill_dir.exists():
-        skill_dir.unlink()
-
-for source_file in source_files:
-    content = source_file.read_text(encoding="utf-8")
-    name = source_file.stem.lower().replace(" ", "-")
-    desc = f"Command: {name}"
-    fm_match = re.match(r"^---\s*\n(.*?)\n---\s*\n", content, re.DOTALL)
-    content_body = content
-    if fm_match:
-        for line in fm_match.group(1).split("\n"):
-            if line.strip().startswith("description:"):
-                desc = line.partition(":")[2].strip().strip('"').strip("'")
-                break
-        content_body = content[fm_match.end():]
-    frontmatter = f"---\nname: {name}\ndescription: {json.dumps(desc)}\n---\n\n"
-    skill_dir = dest_dir / name
-    skill_dir.mkdir(parents=True, exist_ok=True)
-    dest_path = skill_dir / "SKILL.md"
-    dest_path.write_text(frontmatter + content_body.lstrip(), encoding="utf-8")
-    print(f"  [↻ Copilot CLI Skill] {name}/SKILL.md")
-COPILOT_CLI_SKILLS_PYTHON
-}
+print_status()  { echo "[*] $1"; }
+print_success() { echo "[✓] $1"; }
+print_error()   { echo "[✗] $1" >&2; }
+print_warning() { echo "[⚠] $1"; }
 
 generate_mcp_configs() {
     local mcp_source="$1"
@@ -655,179 +515,9 @@ PYTHON
     return $?
 }
 
-install_local_commands() {
-    local cli_list="$1"
-    local target_dir="$2"
-
-    echo "======================================"
-    echo "   Local Commands Installation        "
-    echo "======================================"
-    echo ""
-    print_status "Installing commands locally to: ${target_dir}"
-    print_status "Target CLIs: ${cli_list}"
-    echo ""
-
-    # v2-commands is the sole source of truth
-    if [ ! -d "${V2_SOURCE_DIR}" ]; then
-        print_error "Source directory not found: ${V2_SOURCE_DIR}"
-        exit 1
-    fi
-
-    # Count files to copy
-    file_count=$(find "${V2_SOURCE_DIR}" -maxdepth 1 -name "*.md" -type f | wc -l | tr -d ' ')
-
-    if [ "${file_count}" -eq 0 ]; then
-        print_error "No .md files found in ${V2_SOURCE_DIR}"
-        exit 1
-    fi
-
-    print_status "Found ${file_count} command file(s) to copy (v2-commands)"
-    echo ""
-
-    # Claude
-    if [[ "$cli_list" == *"claude"* ]]; then
-        local claude_dir="${target_dir}/.claude/commands"
-        mkdir_with_retry "${claude_dir}"
-        cleanup_plan_commands "${claude_dir}" "plan-[0-9]*.md"
-        print_status "Installing Claude commands to ${claude_dir}"
-
-        for file in "${V2_SOURCE_DIR}"/*.md; do
-            if [ -f "${file}" ]; then
-                filename=$(basename "${file}")
-                cp_with_retry "${file}" "${claude_dir}/${filename}"
-                echo "  [↻] ${filename}"
-            fi
-        done
-
-        print_success "Installed ${file_count} commands to ${claude_dir}"
-        echo ""
-    fi
-
-    # OpenCode
-    if [[ "$cli_list" == *"opencode"* ]]; then
-        local opencode_dir="${target_dir}/.opencode/command"
-        mkdir_with_retry "${opencode_dir}"
-        cleanup_plan_commands "${opencode_dir}" "plan-[0-9]*.md"
-        print_status "Installing OpenCode commands to ${opencode_dir}"
-
-        for file in "${V2_SOURCE_DIR}"/*.md; do
-            if [ -f "${file}" ]; then
-                filename=$(basename "${file}")
-                cp_with_retry "${file}" "${opencode_dir}/${filename}"
-                echo "  [↻] ${filename}"
-            fi
-        done
-
-        print_success "Installed ${file_count} commands to ${opencode_dir}"
-        echo ""
-    fi
-
-    # GitHub Copilot
-    if [[ "$cli_list" == *"ghcp"* ]]; then
-        local ghcp_dir="${target_dir}/.github/prompts"
-        mkdir_with_retry "${ghcp_dir}"
-        cleanup_plan_commands "${ghcp_dir}" "plan-[0-9]*.prompt.md"
-        print_status "Installing GitHub Copilot prompts to ${ghcp_dir}"
-
-        for file in "${V2_SOURCE_DIR}"/*.md; do
-            if [ -f "${file}" ]; then
-                filename=$(basename "${file}")
-                prompt_name="${filename%.md}.prompt.md"
-                cp_with_retry "${file}" "${ghcp_dir}/${prompt_name}"
-                echo "  [↻] ${filename} -> ${prompt_name}"
-            fi
-        done
-
-        print_success "Installed ${file_count} prompts to ${ghcp_dir}"
-        print_status "Note: Use paperclip icon in IDE to attach .prompt.md files"
-        echo ""
-    fi
-
-    # Copilot CLI (uses .github/skills/<name>/SKILL.md for local project skills)
-    if [[ "$cli_list" == *"copilot-cli"* ]]; then
-        local copilot_cli_local_dir="${target_dir}/.github/skills"
-        mkdir_with_retry "${copilot_cli_local_dir}"
-
-        # Clean old plan-* skill directories for idempotent re-runs
-        for old_skill_dir in "${copilot_cli_local_dir}"/plan-[0-9]*/; do
-            [ -d "$old_skill_dir" ] && rm -rf "$old_skill_dir"
-        done
-
-        # Migrate: clean old .github/agents/plan-*.agent.md if present
-        local old_agents_dir="${target_dir}/.github/agents"
-        if [ -d "${old_agents_dir}" ]; then
-            for old_agent in "${old_agents_dir}"/plan-[0-9]*.agent.md; do
-                [ -f "$old_agent" ] && rm -f "$old_agent"
-            done
-            # Remove other known v2-command agent files from old format
-            for old_agent in "${old_agents_dir}"/*.agent.md; do
-                [ -f "$old_agent" ] && rm -f "$old_agent"
-            done
-            # Remove old agents dir if empty
-            rmdir "${old_agents_dir}" 2>/dev/null || true
-        fi
-
-        print_status "Installing Copilot CLI skills to ${copilot_cli_local_dir}"
-
-        if ! generate_copilot_cli_skills "${V2_SOURCE_DIR}" "${copilot_cli_local_dir}"; then
-            print_error "Failed to generate Copilot CLI local skills"
-            exit 1
-        fi
-
-        copilot_cli_local_count=$(find "${copilot_cli_local_dir}" -mindepth 2 -maxdepth 2 -type f -name "SKILL.md" | wc -l | tr -d ' ')
-        print_success "Installed ${copilot_cli_local_count} skills to ${copilot_cli_local_dir}"
-
-        echo ""
-    fi
-
-    # Codex (warn not supported)
-    if [[ "$cli_list" == *"codex"* ]]; then
-        echo ""
-        print_warning "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        print_warning "Codex does not support local/project commands"
-        print_warning "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        print_status "Codex only supports global commands at ~/.codex/prompts/"
-        print_status "This is a known limitation (GitHub issue #4734)"
-        print_status ""
-        print_status "Workarounds:"
-        print_status "  1. Use global commands only (current setup)"
-        print_status "  2. Set CODEX_HOME=\$(pwd)/.codex/ per project"
-        print_status "  3. Use third-party tool: cx-prompts (hardlinks)"
-        echo ""
-    fi
-
-    echo "======================================"
-    print_success "Local commands installation complete!"
-    echo ""
-    echo "Commands installed to:"
-    if [[ "$cli_list" == *"claude"* ]]; then
-        echo "  ${target_dir}/.claude/commands/ (${file_count} files)"
-    fi
-    if [[ "$cli_list" == *"opencode"* ]]; then
-        echo "  ${target_dir}/.opencode/command/ (${file_count} files)"
-    fi
-    if [[ "$cli_list" == *"ghcp"* ]]; then
-        echo "  ${target_dir}/.github/prompts/ (${file_count} .prompt.md files)"
-    fi
-    if [[ "$cli_list" == *"copilot-cli"* ]]; then
-        local copilot_cli_local_count=$(find "${target_dir}/.github/skills" -mindepth 2 -maxdepth 2 -type f -name "SKILL.md" 2>/dev/null | wc -l | tr -d ' ')
-        echo "  ${target_dir}/.github/skills/ (${copilot_cli_local_count} skills)"
-    fi
-    echo ""
-    print_status "Tip: Commit these directories to version control to share with team"
-    echo "======================================"
-}
-
 main() {
-    # If --commands-local is provided, ONLY install commands locally (no MCP, no global)
-    if [ -n "$COMMANDS_LOCAL" ]; then
-        install_local_commands "$COMMANDS_LOCAL" "$LOCAL_DIR"
-        exit 0
-    fi
-
-    # Default behavior: Global installation with MCP setup
     echo "======================================"
-    echo "     Agent Commands Setup Script      "
+    echo "       MCP Server Setup Script        "
     echo "======================================"
     echo ""
 
@@ -849,11 +539,10 @@ main() {
     fi
     echo ""
 
-    # Sync all source files to distribution package (only in dev mode)
-    # Dev mode = running from local git repository
-    # Packaged mode = installed via uvx/pip (sync not needed, already packaged)
+    # Sync source files to distribution package (dev mode only).
+    # Dev mode = running from a local git checkout.
+    # Packaged mode = installed via uvx/pip; nothing to sync.
     if [ -f "${REPO_ROOT}/.git/config" ]; then
-        # Dev mode: running from local git repository
         if [ -f "${SYNC_SCRIPT}" ]; then
             print_status "Running comprehensive sync to distribution package..."
             "${SYNC_SCRIPT}"
@@ -863,189 +552,16 @@ main() {
             exit 1
         fi
     else
-        # Packaged mode: installed via uvx/pip, skip sync (already packaged)
         print_status "Running in packaged mode (sync not needed)"
     fi
 
-    print_status "Copilot global directory target: ${COPILOT_GLOBAL_DIR}"
-
-    # Check if source directory exists
-    if [ ! -d "${SOURCE_DIR}" ]; then
-        print_error "Source directory not found: ${SOURCE_DIR}"
-        exit 1
-    fi
-    echo ""
-
-    # Create target directories if they don't exist
-    if [ ! -d "${TARGET_DIR}" ]; then
-        if mkdir_with_retry "${TARGET_DIR}"; then
-            print_success "Created directory: ${TARGET_DIR}"
-        else
-            print_error "Failed to create directory: ${TARGET_DIR}"
-            exit 1
-        fi
-    else
-        print_status "Target directory already exists: ${TARGET_DIR}"
-    fi
-
-    if [ ! -d "${OPENCODE_DIR}" ]; then
-        if mkdir_with_retry "${OPENCODE_DIR}"; then
-            print_success "Created directory: ${OPENCODE_DIR}"
-        else
-            print_error "Failed to create directory: ${OPENCODE_DIR}"
-            exit 1
-        fi
-    else
-        print_status "OpenCode directory already exists: ${OPENCODE_DIR}"
-    fi
-
-    if [ ! -d "${CODEX_DIR}" ]; then
-        if mkdir_with_retry "${CODEX_DIR}"; then
-            print_success "Created directory: ${CODEX_DIR}"
-        else
-            print_error "Failed to create directory: ${CODEX_DIR}"
-            exit 1
-        fi
-    else
-        print_status "Codex directory already exists: ${CODEX_DIR}"
-    fi
-
-    if [ ! -d "${VSCODE_USER_DIR}" ]; then
-        if mkdir_with_retry "${VSCODE_USER_DIR}"; then
-            print_success "Created VS Code user directory: ${VSCODE_USER_DIR}"
-        else
-            print_error "Failed to create VS Code user directory: ${VSCODE_USER_DIR}"
-            exit 1
-        fi
-    else
-        print_status "VS Code user directory already exists: ${VSCODE_USER_DIR}"
-    fi
-
-    if [ ! -d "${VSCODE_PROJECT_DIR}" ]; then
-        if mkdir_with_retry "${VSCODE_PROJECT_DIR}"; then
-            print_success "Created VS Code project directory: ${VSCODE_PROJECT_DIR}"
-        else
-            print_error "Failed to create VS Code project directory: ${VSCODE_PROJECT_DIR}"
-            exit 1
-        fi
-    else
-        print_status "VS Code project directory already exists: ${VSCODE_PROJECT_DIR}"
-    fi
-
-    if [ ! -d "${COPILOT_GLOBAL_DIR}" ]; then
-        if mkdir_with_retry "${COPILOT_GLOBAL_DIR}"; then
-            print_success "Created Copilot global directory: ${COPILOT_GLOBAL_DIR}"
-        else
-            print_error "Could not create Copilot global directory: ${COPILOT_GLOBAL_DIR} (continuing)"
-        fi
-    else
-        print_status "Copilot global directory already exists: ${COPILOT_GLOBAL_DIR}"
-    fi
-
-    # Copilot CLI directories (distinct from VS Code Copilot extension)
+    # Ensure the Copilot CLI dir exists (for MCP config write).
     if [ ! -d "${COPILOT_CLI_DIR}" ]; then
         if mkdir_with_retry "${COPILOT_CLI_DIR}"; then
             print_success "Created Copilot CLI directory: ${COPILOT_CLI_DIR}"
         else
             print_error "Could not create Copilot CLI directory: ${COPILOT_CLI_DIR} (continuing)"
         fi
-    else
-        print_status "Copilot CLI directory already exists: ${COPILOT_CLI_DIR}"
-    fi
-
-    if [ ! -d "${COPILOT_CLI_SKILLS_DIR}" ]; then
-        if mkdir_with_retry "${COPILOT_CLI_SKILLS_DIR}"; then
-            print_success "Created Copilot CLI skills directory: ${COPILOT_CLI_SKILLS_DIR}"
-        else
-            print_error "Could not create Copilot CLI skills directory: ${COPILOT_CLI_SKILLS_DIR} (continuing)"
-        fi
-    else
-        print_status "Copilot CLI skills directory already exists: ${COPILOT_CLI_SKILLS_DIR}"
-    fi
-
-    # v2-commands is now the sole source of truth (v1 agents/commands/ is deprecated)
-    if [ ! -d "${V2_SOURCE_DIR}" ]; then
-        print_error "v2-commands directory not found: ${V2_SOURCE_DIR}"
-        exit 1
-    fi
-
-    file_count=$(find "${V2_SOURCE_DIR}" -maxdepth 1 -name "*.md" -type f | wc -l | tr -d ' ')
-
-    if [ "${file_count}" -eq 0 ]; then
-        print_error "No .md files found in ${V2_SOURCE_DIR}"
-        exit 1
-    fi
-
-    print_status "Found ${file_count} command file(s) to copy (v2-commands)"
-    echo ""
-
-    # Clean stale plan commands from all global targets before copying
-    print_status "Cleaning stale plan commands..."
-    cleanup_plan_commands "${TARGET_DIR}" "plan-[0-9]*.md"
-    cleanup_plan_commands "${OPENCODE_DIR}" "plan-[0-9]*.md"
-    cleanup_plan_commands "${CODEX_DIR}" "plan-[0-9]*.md"
-    cleanup_plan_commands "${VSCODE_PROJECT_DIR}" "plan-[0-9]*.md"
-    cleanup_plan_commands "${COPILOT_GLOBAL_DIR}" "plan-[0-9]*.prompt.md"
-    cleanup_copilot_cli_agents "${V2_SOURCE_DIR}" "${COPILOT_CLI_DIR}/agents"
-    if [ "${COPILOT_CLI_HAS_ALT}" = "true" ]; then
-        cleanup_copilot_cli_agents "${V2_SOURCE_DIR}" "${COPILOT_CLI_DEFAULT_DIR}/agents"
-    fi
-    echo ""
-
-    # Install v2-commands (sole source) to all targets
-    print_status "Installing v2-commands..."
-    for file in "${V2_SOURCE_DIR}"/*.md; do
-        if [ -f "${file}" ]; then
-            filename=$(basename "${file}")
-            cp_with_retry "${file}" "${TARGET_DIR}/${filename}"
-            cp_with_retry "${file}" "${OPENCODE_DIR}/${filename}"
-            cp_with_retry "${file}" "${CODEX_DIR}/${filename}"
-            cp_with_retry "${file}" "${VSCODE_PROJECT_DIR}/${filename}"
-            copilot_prompt_name="${filename%.md}.prompt.md"
-            cp_with_retry "${file}" "${COPILOT_GLOBAL_DIR}/${copilot_prompt_name}"
-            echo "  [↻] ${filename} (→ Claude/OpenCode/Codex/VS Code/Copilot)"
-        fi
-    done
-    print_success "Installed ${file_count} command files"
-
-    # Idempotency check
-    copilot_global_count=$(find "${COPILOT_GLOBAL_DIR}" -maxdepth 1 -type f -name "*.prompt.md" | wc -l | tr -d ' ')
-    if [ "${copilot_global_count}" -eq "${file_count}" ]; then
-        echo "[✓ Idempotent] Copilot prompts mirrored (${copilot_global_count} of ${file_count} sources)"
-    else
-        print_warning "[Idempotent] Copilot prompt count mismatch (sources=${file_count}, global=${copilot_global_count})"
-        if [ "${copilot_global_count}" -gt "${file_count}" ]; then
-            echo "  Extra files in ${COPILOT_GLOBAL_DIR}:"
-            for global_file in "${COPILOT_GLOBAL_DIR}"/*.prompt.md; do
-                base_name=$(basename "${global_file}" .prompt.md)
-                if [ ! -f "${V2_SOURCE_DIR}/${base_name}.md" ]; then
-                    echo "    - $(basename "${global_file}")"
-                fi
-            done
-        fi
-    fi
-
-    # Generate Copilot CLI personal skills from v2-commands
-    echo ""
-    print_status "Generating Copilot CLI personal skills..."
-    if ! generate_copilot_cli_skills "${V2_SOURCE_DIR}" "${COPILOT_CLI_SKILLS_DIR}"; then
-        print_error "Failed to generate Copilot CLI personal skills"
-        exit 1
-    fi
-
-    copilot_cli_skill_count=$(find "${COPILOT_CLI_SKILLS_DIR}" -mindepth 2 -maxdepth 2 -type f -name "SKILL.md" | wc -l | tr -d ' ')
-    print_success "Generated ${copilot_cli_skill_count} Copilot CLI personal skills"
-
-    # Mirror Copilot CLI skills to default location if XDG override is active
-    if [ "${COPILOT_CLI_HAS_ALT}" = "true" ]; then
-        echo ""
-        print_status "XDG override detected — mirroring Copilot CLI skills to default location..."
-        if ! generate_copilot_cli_skills "${V2_SOURCE_DIR}" "${COPILOT_CLI_DEFAULT_SKILLS_DIR}"; then
-            print_error "Failed to mirror Copilot CLI skills to default location"
-            exit 1
-        fi
-        default_skill_count=$(find "${COPILOT_CLI_DEFAULT_SKILLS_DIR}" -mindepth 2 -maxdepth 2 -type f -name "SKILL.md" | wc -l | tr -d ' ')
-        print_success "Mirrored ${default_skill_count} skills to ${COPILOT_CLI_DEFAULT_SKILLS_DIR}"
     fi
 
     echo ""
@@ -1055,23 +571,18 @@ main() {
     else
         print_error "MCP configuration failed - see error above"
         echo ""
-        echo "Agent commands were installed successfully, but MCP server configuration"
-        echo "requires additional setup. Please follow the instructions above."
+        echo "MCP server configuration requires additional setup. Please follow"
+        echo "the instructions above."
         echo ""
         exit 1
     fi
 
     echo ""
     echo "======================================"
-    print_success "Setup complete!"
+    print_success "MCP setup complete!"
     echo ""
-    echo "Copied ${file_count} agent command file(s) to:"
-    echo "  ${TARGET_DIR}"
-    echo "  ${OPENCODE_DIR}"
-    echo "  ${CODEX_DIR}"
-    echo "  ${VSCODE_PROJECT_DIR}"
-    echo "  ${COPILOT_GLOBAL_DIR}"
-    echo "  ${COPILOT_CLI_SKILLS_DIR}"
+    echo "Note: Skills are installed separately. See INSTALL.md for"
+    echo "      'npx skills add jakkaj/tools' patterns."
     echo "======================================"
 }
 

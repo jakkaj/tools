@@ -158,5 +158,15 @@ main() {
     fi
 }
 
+post_install_note() {
+    echo ""
+    echo "======================================"
+    echo "Note: Skills are installed separately."
+    echo "      Run: npx skills@latest add jakkaj/tools -a <cli>"
+    echo "      See INSTALL.md for the full pattern catalog."
+    echo "======================================"
+}
+
 # Pass all arguments to main
 main "$@"
+post_install_note
