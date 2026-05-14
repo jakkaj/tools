@@ -30,6 +30,10 @@ help:
     @echo "  just dev           - Run in development mode"
     @echo "  just shell         - Activate development shell"
     @echo ""
+    @echo "Skills (via npx skills):"
+    @echo "  just install-skills        - Install all skills globally to every CLI"
+    @echo "  just install-skills-local  - Install all skills project-local to every CLI"
+    @echo ""
 
 # Complete development environment setup
 setup: venv install
@@ -207,6 +211,20 @@ dev-cycle: clean setup test
 ci: check-deps clean setup test test-uvx lint build
     @echo ""
     @echo "✅ All CI checks passed!"
+
+# Install all skills globally to every supported CLI (Claude Code, Codex, OpenCode, Copilot CLI, Pi)
+install-skills:
+    @echo "Installing all skills globally to every supported CLI..."
+    npx skills@latest add jakkaj/tools \
+        -a claude-code -a codex -a opencode -a github-copilot -a pi -g
+    @echo "✅ Skills installed globally"
+
+# Install all skills project-local (writes to ./.claude/skills, ./.codex/skills, ./.opencode/skills, ./.agents/skills, ./.pi/skills)
+install-skills-local:
+    @echo "Installing all skills project-local to every supported CLI..."
+    npx skills@latest add jakkaj/tools \
+        -a claude-code -a codex -a opencode -a github-copilot -a pi
+    @echo "✅ Skills installed project-local"
 
 # Create a release build with checks
 release: ci
