@@ -1,18 +1,30 @@
-# Flight Plan: Self-Improving Difficulty Ledger Skill (`self-improve-v2` + `plan-8a-compound-harvest`)
+# Flight Plan: Compounding Value System
+
+> **First-class concept**: "Compounding Value System" is the formal name; **`compound`** is the slug. A peer category in this repo's skills graph alongside SDD, general, and personal.
 
 **Spec**: [difficulty-ledger-skill-spec.md](./difficulty-ledger-skill-spec.md)
-**Plan**: Pending — run `/plan-3-v2-architect` (after the four queued workshops)
-**Generated**: 2026-05-16 · **Last clarified**: 2026-05-16 (Session 1, 8 questions, Mode locked to Simple)
-**Status**: Clarified — workshops queued
+**Plan**: Pending — run `/plan-3-v2-architect` (after the four queued workshops; all critical Open Questions now resolved)
+**Generated**: 2026-05-16 · **Last clarified**: 2026-05-16 (Session 1: 8 Qs; Session 2: compound restructure; Session 3: plan-6 + plan-6-companion compound integration; Session 4: branding lock — Compounding Value System; Session 5: 4-question lock — engineering-harness Interpretation A, flat naming, retros auto-migrate, Principle 2 wording)
+**Status**: Specifying — workshops queued; Group E unblocked
 **Mode**: Simple (single phase with grouped tasks; plan-4/plan-5 optional)
 
 ---
 
 ## The Mission
 
-**What we're building**: Two paired portable skills that close both ends of the difficulty-ledger loop. **`self-improve-v2`** (producer) turns every agent session into a contributor — silently captures user-source and agent-source friction, then surfaces a single soft prompt at session end with one-keystroke options to save / fix-task / plan / encoded-knowledge / dismiss. **`plan-8a-compound-harvest`** (consumer; pipeline slot 8a between `plan-7-v2-code-review` and `plan-8-v2-merge`) reads accumulated ledger entries, curates them, flags stale ones, and surfaces a prioritised improvement-suggestion summary the user can route into fix-tasks or full plans.
+**What we're building**: The **Compounding Value System** — a three-layer architecture (philosophy / substrate / meta-loop) that closes both ends of the compounding-value loop and earns its place as a first-class concept (peer to SDD / general / personal) in this repo's skills graph. The three layers:
 
-**Why it matters**: The compounding-velocity premise of `harness-is-the-product-v2` Principle 2 — "every difficulty catalogued is a gift to future sessions" — is currently broken in this repo. Producers exist (`plan-6a`, minih) but no SDD skill reads from `docs/retros/`. The producer + consumer pair closes both ends of the loop and makes "encode, don't document" something every session does, not something one philosophy doc gestures at.
+1. **Philosophy** — `harness-is-the-product-v2` (existing skill, unchanged content; small Principle 2 wording update). States the principle: *the harness is the product; encode, don't document; gifts to your future self*.
+2. **Substrate** — `engineering-harness-v2` (renamed from `agent-harness-v2`). Audits + scaffolds the engineering harness (justfile, dev scripts, tests). Its template's `## Known Difficulties` section auto-seeds from the compound ledger.
+3. **Meta-loop** — the **compound family**: 4 small re-entrant skills under `skills/compound/`:
+   - `compound-0-setup` — scaffold + re-check
+   - `compound-1-track` — silent log + magic-wand check during work
+   - `compound-2-bubble` — session-end soft prompt with `[s/t/p/e/d/a]` menu
+   - `compound-3-harvest` — periodic curation + `[r/w/s]` lifecycle ops
+
+Every self-improvement artifact (difficulty entries, magic-wand entries, gift entries, insights, sessions, indices, convention guide, opt-out sentinel) lives under **`docs/compound/`** — one umbrella, one schema, one integration surface.
+
+**Why it matters**: The compounding-value promise of `harness-is-the-product-v2` Principle 2 is currently broken. Producers exist (`plan-6a`, minih) but no SDD skill reads from the ledger. The compound family closes both ends and makes "encode, don't document" something every session does, not something one philosophy doc gestures at. The framing is **compounding value** (broader than minih's "compounding velocity") — every captured entry compounds value session-over-session, like compound interest.
 
 ---
 
@@ -20,101 +32,149 @@
 
 ```
 TODAY:                                            AFTER this plan:
-29 SDD skills                                     31 skills (2 new: self-improve-v2 +
-                                                                  plan-8a-compound-harvest)
-1 ledger producer (plan-6a, phase-end only)       2 ledger producers (+ self-improve-v2,
+29 SDD skills                                     33 skills:
+                                                    + 4 new compound (skills/compound/)
+                                                    + 1 renamed (engineering-harness-v2)
+1 ledger producer (plan-6a, phase-end only)       2 ledger producers (+ compound-1-track,
                                                                        every session)
-0 ledger readers                                  2 readers (plan-1a Subagent 7 +
-                                                             plan-8a-compound-harvest)
-docs/retros/ empty                                docs/retros/ scaffolded + README + sessions/
-AGENTS.md silent on the loop                      AGENTS.md "Self-Improvement Loop" section
-                                                  (D7 voice; mirrored in CLAUDE.md)
-0 sessions outside plan-6 contribute entries      Every session in any CLI can contribute
-No portable, non-minih producer                   Portable producer + harvester in 5 CLIs
+0 ledger readers                                  3 readers:
+                                                    + compound-3-harvest (periodic curation)
+                                                    + plan-1a Subagent 7 (research-time)
+                                                    + engineering-harness-v2 template
+                                                      (boot-time § Known Difficulties)
+docs/retros/ (empty / unused convention)          docs/compound/ scaffolded:
+                                                    README.md (convention guide)
+                                                    _session-buffer.md (transient)
+                                                    _LEDGER.md (auto-rebuilt index)
+                                                    sessions/<date>-<branch>.md
+                                                    .disabled (opt-out sentinel)
+AGENTS.md silent on the system                    AGENTS.md "Compounding Value System" section
+                                                  (D7 voice; mirrored in CLAUDE.md;
+                                                   describes all 3 layers; names the
+                                                   slug `compound` as the umbrella)
+0 sessions outside plan-6 contribute entries      Every session in any of 5 CLIs can contribute
+No portable, non-minih producer                   compound family works in 5 CLIs without minih
 No bubble-up UX in the skill set                  Soft end-of-session prompt: [s/t/p/e/d/a]
 Encoded fixes invisible / un-staged               Encoded fixes staged as scratch/*.diff
-agent-harness.md template silent on difficulties  Template seeds § Known Difficulties from ledger
-No way to triage accumulated learnings            plan-8a-compound-harvest curates after reviews
+agent-harness.md silent on prior difficulties     engineering-harness.md template seeds
+                                                  § Known Difficulties from ledger
+No three-layer architecture documented            Three-layer stack explicit in AGENTS.md
+                                                  + workshop 003 + cross-skill references
 
-🔵 plan-6a → docs/retros/<plan>.md (unchanged)    🔵 plan-6a → docs/retros/<plan>.md (unchanged)
-🔵 minih → docs/retros/<agent>.md (unchanged)     🔵 minih → docs/retros/<agent>.md (unchanged)
-❌ No reader of docs/retros/                       🟡 plan-1a Subagent 7 reads docs/retros/+legacy
-❌ No portable producer                            🔴 self-improve-v2 → docs/retros/ (NEW)
-❌ No harvest/curate consumer                      🔴 plan-8a-compound-harvest reads + curates (NEW)
-❌ No bubble-up                                    🔴 [s/t/p/e/d/a] menu at session end (NEW)
-❌ No agent self-introspection contract            🔴 magic-wand check at natural pauses (NEW)
-❌ agent-harness.md silent on prior difficulties   🟡 § Known Difficulties seeded from ledger
+🔵 plan-6a → docs/retros/<plan>.md (existing)     🔵 plan-6a → docs/compound/<plan>.md
+                                                     (one-line path update)
+🔵 minih → docs/retros/<agent>.md (existing)      🔵 minih → docs/compound/<agent>.md
+❌ No reader of the ledger                         🟡 plan-1a Subagent 7 reads docs/compound/
+                                                     + legacy ## Discoveries
+❌ No portable producer                            🔴 compound-1-track silent log + magic-wand
+❌ No harvest/curate consumer                      🔴 compound-3-harvest reads + curates +
+                                                     status mutations
+❌ No bubble-up                                    🔴 compound-2-bubble session-end soft prompt
+❌ No agent self-introspection contract            🔴 magic-wand check at natural pauses
+❌ No three-layer system                           🔴 philosophy / substrate / meta-loop
+                                                     stack documented
+❌ agent-harness.md template silent on friction    🟡 § Known Difficulties seeded from ledger
+❌ One unified producer + consumer (proposed       🟢 Four small focused re-entrant skills
+   gifts-v2 + plan-8a-compound-harvest)              (compound-0/1/2/3); cleaner separation
 ```
 
 ```mermaid
-flowchart LR
+flowchart TB
+    classDef philosophy fill:#FFE0B2,stroke:#E65100,stroke-width:2px,color:#000
+    classDef substrate fill:#C8E6C9,stroke:#1B5E20,stroke-width:2px,color:#000
+    classDef metaloop fill:#BBDEFB,stroke:#0D47A1,stroke-width:2px,color:#000
     classDef existing fill:#E8F5E9,stroke:#4CAF50,color:#000
     classDef changed fill:#FFF3E0,stroke:#FF9800,color:#000
     classDef new fill:#E3F2FD,stroke:#2196F3,color:#000
 
     subgraph Current["Current State (write-only journal)"]
-        P6A1[plan-6a writes]:::existing
-        MH1[minih auto-harvest]:::existing
-        RT1[(docs/retros/)]:::existing
-        S71[plan-1a Subagent 7]:::existing
-        DL1[## Discoveries & Learnings legacy tables]:::existing
+        C_HRN[harness-is-the-product-v2<br/>philosophy]:::existing
+        C_AGH[agent-harness-v2<br/>substrate]:::existing
+        C_P6A[plan-6a writes]:::existing
+        C_MIN[minih auto-harvest]:::existing
+        C_RT[(docs/retros/)]:::existing
+        C_S7[plan-1a Subagent 7<br/>reads ## Discoveries only]:::existing
 
-        P6A1 --> RT1
-        MH1 --> RT1
-        S71 --> DL1
+        C_P6A --> C_RT
+        C_MIN --> C_RT
     end
 
-    subgraph Target["After All Phases (closed loop)"]
-        GV[self-improve-v2 producer]:::new
-        BUB[bubble-up menu]:::new
-        SCR[scratch/encode-*.diff]:::new
-        HV[plan-8a-compound-harvest curator]:::new
-        P6A2[plan-6a writes]:::existing
-        MH2[minih auto-harvest]:::existing
-        RT2[(docs/retros/)]:::changed
-        S72[plan-1a Subagent 7]:::changed
-        DL2[## Discoveries & Learnings legacy tables]:::existing
-        AGM[AGENTS.md Self-Improvement Loop]:::new
-        AHV[agent-harness.md template § Known Difficulties]:::changed
-        JF[justfile retro recipes]:::changed
+    subgraph Target["After All Phases (closed three-layer loop)"]
+        %% Philosophy
+        T_HRN[harness-is-the-product-v2<br/>PHILOSOPHY]:::philosophy
+        %% Substrate
+        T_ENG[engineering-harness-v2<br/>SUBSTRATE]:::substrate
+        T_EHM[/engineering-harness.md<br/>§ Known Difficulties seeded/]:::changed
+        %% Meta-loop
+        T_C0[compound-0-setup]:::metaloop
+        T_C1[compound-1-track]:::metaloop
+        T_C2[compound-2-bubble]:::metaloop
+        T_C3[compound-3-harvest]:::metaloop
+        %% Surfaces
+        T_LDG[(docs/compound/)]:::new
+        T_SCR[(scratch/encode-*.diff)]:::new
+        T_AGM[/AGENTS.md / CLAUDE.md<br/>§ Compounding Value System/]:::new
+        %% Pipeline
+        T_P6A[plan-6a writes]:::changed
+        T_P6[plan-6-implement-phase<br/>calls compound-1-track]:::changed
+        T_P6C[plan-6-companion<br/>+ farewell envelope mapping]:::changed
+        T_MIN[minih auto-harvest]:::existing
+        T_S7[plan-1a Subagent 7<br/>reads docs/compound/<br/>+ legacy]:::changed
 
-        GV --> RT2
-        GV --> BUB
-        BUB --> SCR
-        P6A2 --> RT2
-        MH2 --> RT2
-        RT2 --> S72
-        RT2 --> HV
-        RT2 --> AHV
-        S72 --> DL2
-        AGM -.documents.-> GV
-        AGM -.documents.-> HV
-        JF -.points at.-> GV
+        T_C0 -->|scaffolds| T_LDG
+        T_C0 -->|stages diffs| T_SCR
+        T_C0 -.hands off.-> T_ENG
+        T_C1 -->|append entries| T_LDG
+        T_LDG -->|reads buffer| T_C2
+        T_C2 -->|saves to scope files| T_LDG
+        T_C2 -->|stages diffs| T_SCR
+        T_LDG -->|reads all scope files| T_C3
+        T_C3 -->|status mutations| T_LDG
+        T_C3 -->|stages diffs| T_SCR
+        T_LDG -->|reads| T_S7
+        T_LDG -->|seeds template| T_EHM
+        T_ENG -->|produces| T_EHM
+        T_P6A -->|paired retros| T_LDG
+        T_P6 -.calls during work.-> T_C1
+        T_P6C -.calls during work.-> T_C1
+        T_P6C -->|farewell envelope mapped to compound entries| T_P6A
+        T_MIN -->|auto-harvest| T_LDG
+        T_AGM -.documents.-> T_HRN
+        T_AGM -.documents.-> T_ENG
+        T_AGM -.documents.-> T_C0
+        T_AGM -.documents.-> T_C1
+        T_AGM -.documents.-> T_C2
+        T_AGM -.documents.-> T_C3
     end
 ```
 
-**Legend**: existing (green, unchanged) | changed (orange, modified) | new (blue, created)
+**Legend**: 🟧 philosophy | 🟩 substrate | 🟦 meta-loop | 🟢 existing/unchanged | 🟧 changed | 🟦 new
 
 ---
 
 ## Scope
 
 **Goals**:
-- Every session in any supported CLI contributes to the ledger (not just `plan-6` invocations)
-- Agent self-introspects at natural pauses ("if I had a magic wand right now?") — the most honest friction signal
-- Silent during work, single soft prompt at end (never blocks mid-flow, never asks twice)
+- Three-layer self-improvement architecture (philosophy / substrate / meta-loop) explicit and documented
+- Every session in any supported CLI contributes to `docs/compound/` ledger (not just plan-6 invocations)
+- Agent self-introspects at natural pauses ("if I had a magic wand right now?") — most honest friction signal
+- Silent during work, single soft prompt at end (no mid-session interruptions, never asks twice)
 - One-keystroke escalation: save / fix-task / plan / encoded-knowledge / dismiss
 - Encoded fixes staged as reviewable diffs in `scratch/` — never auto-applied (suggest, don't mandate)
-- Close the read-side gap: at minimum `plan-1a-v2-explore` Subagent 7 reads `docs/retros/`
+- Periodic curation (`compound-3-harvest`) keeps the ledger current and surfaces accumulated improvements
+- Read-side gap closed: 3 readers (compound-3-harvest, plan-1a Subagent 7, engineering-harness.md template seed)
 - Portable across Claude Code, Codex, Copilot CLI, Pi, OpenCode (no minih runtime dependency)
 - AGENTS.md / CLAUDE.md describe the loop as an operational contract a fresh agent grasps in <60s
+- "Compounding value" framing threaded throughout (not minih's narrower "compounding velocity")
 
 **Non-Goals**:
-- Not a runtime; not a daemon; no session state outside the buffer file
-- Not a replacement for minih's auto-harvest (interoperates by writing to the same directory)
+- Not a runtime; no daemons; no session state outside ledger files
+- Not a replacement for minih's auto-harvest (interoperates by writing to the same `docs/compound/`)
 - Not auto-applying any fix (every encoded change is a staged diff for user review)
 - Not mid-session prompting (bubble-up at session end is the only user-facing surface)
-- Not a JSON Schema validator in v1; not a `self-improve-v2 import-minih` importer in v1; not a cross-plan analytics tool in v1
+- Not a JSON Schema validator in v1; not a `compound import-minih` importer in v1; not cross-plan analytics beyond `_LEDGER.md`
+- Not modifying `plan-3-v2-architect` or `plan-7-v2-code-review` in v1 (deferred)
+- Not a separate `compound-1-explore` skill (Stage 1 read fulfilled by plan-1a Subagent 7 + engineering-harness.md template seed; cross-skill leak accepted)
 
 ---
 
@@ -126,10 +186,11 @@ flowchart LR
     classDef active fill:#FFC107,stroke:#FFA000,color:#000
     classDef ready fill:#9E9E9E,stroke:#757575,color:#fff
 
-    S[Specify]:::done --> C[Clarify]:::done
-    C --> W[Workshops x4]:::ready
-    W --> P[Plan]:::ready
-    P --> SP[Single phase: Implement]:::ready
+    S[Specify]:::done --> C[Clarify x5 sessions]:::done
+    C --> WD[Workshops x3 done]:::done
+    WD --> WQ[Workshops x4 queued]:::ready
+    WQ --> P[Plan]:::ready
+    P --> SP[Single phase: 6 task groups]:::ready
     SP --> DT[Dogfood + Compounding Test]:::ready
     DT --> D[Done]:::ready
 ```
@@ -144,30 +205,36 @@ flowchart LR
 
 | Group | Scope | Status |
 |-------|-------|--------|
-| A | Four workshops (schema · CLI flow · AGENTS.md voice · harvest companion behaviour) | Pending |
-| B | Build `self-improve-v2` (producer): `log` / `bubble` / `init` modes, `docs/retros/` scaffold, `_LEDGER.md` rebuild | Pending |
-| C | Build `plan-8a-compound-harvest` (consumer): read-pass, dedup/cluster/age-order, staleness heuristics, prioritised summary, ledger-hygiene | Pending |
-| D | Docs + harness: AGENTS.md / CLAUDE.md / README_AGENTS.md / justfile + `agent-harness-v2` template § Known Difficulties | Pending |
-| E | Reader updates: `plan-1a-v2-explore` Subagent 7 reads `docs/retros/` | Pending |
-| F | Dogfood week + Compounding Test evaluation; calibrate self-introspection + harvest-staleness heuristics | Pending |
+| A | Four queued workshops (schema · CLI flow · AGENTS.md voice · harvest behavior) | Pending |
+| B | Build `compound-0-setup` + `docs/compound/` scaffold + `_LEDGER.md` rebuild logic | Pending |
+| C | Build `compound-1-track` + `compound-2-bubble` (per-session producer pair) | Pending |
+| D | Build `compound-3-harvest` (consumer-side periodic skill with `[r/w/s]` lifecycle ops) | Pending |
+| E | Substrate + governance + pipeline integration (Q5.1 resolved as Interpretation A — cosmetic): rename `agent-harness-v2` → `engineering-harness-v2` (skill content unchanged), rename governance doc + legacy fallback, template `§ Known Difficulties` seed, AGENTS.md / CLAUDE.md / README_AGENTS.md / justfile updates, `harness-is-the-product-v2` Principle 2 wording ("Track Velocity Compounding" → "Track Compounding Value") + disambiguation softening (engineering harness becomes umbrella), 8 SDD skills' agent-harness terminology cascade, plan-6a one-line path update, plan-1a Subagent 7 reader update, plan-6 + plan-6-companion compound integration | Pending |
+| F | Dogfood week + Compounding Test evaluation; calibrate self-introspection + harvest staleness heuristics; file vibe regressions as compound-1-track entries against the skills themselves | Pending |
 
-**Spec-level complexity score**: CS-3 (medium). Breakdown: S=2, I=0, D=1, N=1, F=0, T=1.
+**Spec-level complexity score**: CS-3 (medium). Breakdown: S=2, I=0, D=1, N=1, F=0, T=1. Confidence: 0.80.
 
-**Mode tension note**: Six task groups in one phase is wide. `/plan-3-v2-architect` may surface this and recommend Full Mode instead. The user's clarification chose Simple — the architect should respect that unless wide-but-shallow proves unworkable.
+**Mode tension note**: six task groups in one phase is wide. `/plan-3-v2-architect` may surface this and recommend Full Mode instead. The user's clarification chose Simple — the architect should respect that unless wide-but-shallow proves unworkable.
 
 ---
 
 ## Acceptance Criteria
 
-(Top-level criteria pulled from the spec's 15 ACs — the load-bearing ones for "the loop closed and the vibe was right.")
+(Top-level criteria pulled from the spec's 28 ACs — the load-bearing ones for "the loop closed and the vibe was right".)
 
-- [ ] **AC1**: No-op session (no friction encountered) shows no prompt at session end
-- [ ] **AC2**: Multi-friction session shows a single soft bubble-up at session end with `[s/t/p/e/d/a]` actions and per-entry encoding hints
-- [ ] **AC3**: Agent self-introspects at natural pauses with self-prompt rate ≤ 1 per 5 minutes; entries-per-session averages ≤ 5
-- [ ] **AC9**: `plan-1a-v2-explore` Subagent 7 reads `docs/retros/` in addition to legacy `## Discoveries & Learnings` tables
-- [ ] **AC10**: 1-week dogfood Compounding Test passes — ≥1 `[t/p/e]` action chosen, ≥1 entry marked `status: encoded`, ≥1 session that started by reading the ledger, user did not disable the skill
-- [ ] **AC12**: Portable across all 5 supported CLIs with no minih dependency
-- [ ] **AC13**: None of the 7 anti-vibes from the workshop is triggered (verified by walkthrough of the 3 imagined sessions)
+- [ ] **AC4/7**: No-friction session is silent (no entries logged; no prompt at session end)
+- [ ] **AC8**: Multi-friction session shows a single soft bubble at session end with `[s/t/p/e/d/a]` actions and per-entry encoding hints
+- [ ] **AC6**: Agent self-introspects at natural pauses with self-prompt rate ≤ 1 per 5 minutes; entries-per-session averages ≤ 5
+- [ ] **AC10**: `[e]ncode` stages a unified diff in `scratch/encode-<id>-<target>.diff`; nothing auto-applied
+- [ ] **AC13–17**: `compound-3-harvest` reads all scope files, dedups, clusters, age-orders, flags stale entries, presents prioritised top-10 with `[s/t/p/e/d/a/r/w/s]` actions, mutates status in-place
+- [ ] **AC18–20**: `engineering-harness-v2` rename + governance doc rename + `§ Known Difficulties` template seed
+- [ ] **AC21**: `plan-1a-v2-explore` Subagent 7 reads `docs/compound/` in addition to legacy `## Discoveries & Learnings`
+- [ ] **AC22**: `plan-6a-v2-update-progress` path updated `docs/retros/` → `docs/compound/`
+- [ ] **AC23**: `docs/compound/.disabled` sentinel honoured (silent no-op)
+- [ ] **AC24**: Portable across all 5 supported CLIs with no minih dependency
+- [ ] **AC25**: None of the 7 anti-vibes triggered (verified by walking 3 imagined sessions)
+- [ ] **AC26–27**: AGENTS.md + CLAUDE.md describe the loop as an operational contract; three-layer stack documented
+- [ ] **AC28**: 1-week dogfood Compounding Test passes (≥1 `[t/p/e]` action chosen, ≥1 entry encoded, ≥1 session reads ledger, user did not disable)
 
 ---
 
@@ -175,10 +242,11 @@ flowchart LR
 
 | Risk | Mitigation |
 |------|-----------|
-| **R1 — Agent compliance with `log` is too low** (medium/high). If agents systematically forget to call `log`, the buffer stays empty and the skill is a no-op. | D1 hybrid trigger (agent-self-invoked default + manual `/self-improve-v2 bubble` escape); modified pipeline skills include explicit `log` reminders at natural friction points; Compounding Test signal #1 measures this directly at 1 week. |
-| **R3 — Reader-side updates land but don't surface entries usefully** (medium/high). Subagent 7 reads the new ledger but presents entries dryly → users don't act on them. | Phase 4 includes calibration of Subagent 7's surfacing logic; Compounding Test signal #3 measures this directly. Optional follow-up workshop on reader-side surfacing UX if dogfood reveals issues. |
-| **R7 — User dismisses the bubble-up every time** (medium/high; this is anti-vibe 3 in motion). | D5 "terse + one-line encoding hint per entry" is the primary defense. If dismiss-rate >80% after 1 week, encoding hints need iteration — possibly a follow-up workshop. |
-| **R2 — Self-introspection over-fires** (low/medium; anti-vibe 7). Agent runs the magic-wand check too often, buffer fills with low-quality entries. | Workshop trigger heuristics are concrete (not vibes); calibration target ≤1 per 5min; AC#3 measures explicitly. Tighten heuristics in Phase 5 if entry-rate exceeds threshold. |
+| **R1 — Agent compliance with `compound-1-track` is too low** (medium/high). Buffer empty → loop is no-op. | Hybrid trigger (agent-self-invoked default + manual `/compound-2-bubble` escape); pipeline skills include explicit `compound-1-track` log reminders at natural friction points; Compounding Test signal #1 measures at 1 week. |
+| **R3 — Reader-side updates land but readers don't surface entries usefully** (medium/high). | Group F dogfood week + Compounding Test signal #3 measures directly. Optional follow-up workshop on reader-side surfacing UX if dogfood reveals issues. |
+| ~~**R8 — `engineering-harness-v2` rename interpretation ambiguity**~~ | **RESOLVED in Session 5 (Q5.1)**: Interpretation A (cosmetic). Skill content unchanged; "engineering harness" becomes the broader umbrella. Cascade work (8 SDD skills + harness-is-the-product-v2 disambiguation softening + legacy filename fallback) added to Group E scope. |
+| **R4 — User dismisses the bubble-up every time** (medium/high; anti-vibe 3). | D5 from workshop 001 ("terse + one-line encoding hint per entry") is the primary defense. If dismiss-rate >80% after 1 week, encoding hints need iteration. |
+| **R2 — Self-introspection over-fires** (low/medium; anti-vibe 7). | Concrete trigger heuristics; calibration target ≤1 per 5min; AC#6 measures explicitly. Tighten in Group F if entry-rate exceeds threshold. |
 
 ---
 
