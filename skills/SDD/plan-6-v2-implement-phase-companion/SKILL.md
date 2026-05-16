@@ -31,7 +31,7 @@ The companion replaces `/plan-7-v2-code-review` for projects that have one. **Do
 
 ## 🛟 If you don't know minih
 
-This skill drives the companion through `minih` (the canonical companion harness). If you're unfamiliar with minih, self-onboard with these resources — *do this BEFORE Step 0*:
+This skill drives the companion through `minih` (the canonical companion runtime). If you're unfamiliar with minih, self-onboard with these resources — *do this BEFORE Step 0*:
 
 | Resource | URL / command | When |
 |---|---|---|
@@ -215,31 +215,31 @@ Brief once. Don't re-brief mid-phase unless the scope materially changes (in whi
    - **Load agent harness context** (if `docs/project-rules/agent-harness.md` or legacy `harness.md` exists):
      * Read the agent harness governance doc — boot command, health check, interaction methods, observe capabilities, maturity level
 
-## 2a) Pre-Phase Harness Validation (if harness.md exists)
+## 2a) Pre-Phase Agent Harness Validation (if `docs/project-rules/agent-harness.md`, or legacy `harness.md`, exists)
 
-   Before starting ANY task, validate the harness is operational:
+   Before starting ANY task, validate the agent harness is operational:
 
    **Stage 1 — Boot Check** (5s if running, 60s cold boot):
-   Run health check from harness.md. If healthy → "Already running" (skip boot).
+   Run health check from agent-harness.md. If healthy → "Already running" (skip boot).
    If not responding → run boot command, retry health check (30 × 2s = 60s max).
 
    **Stage 2 — Interact Check** (5s, single attempt):
-   Send test input per harness.md § Interact. Verify a response is received.
+   Send test input per agent-harness.md § Interact. Verify a response is received.
 
    **Stage 3 — Observe Check** (5s, single attempt):
-   Capture evidence per harness.md § Observe. Verify evidence is non-empty.
+   Capture evidence per agent-harness.md § Observe. Verify evidence is non-empty.
 
    **Verdict**:
    - ✅ HEALTHY → proceed to tasks
    - ⚠️ SLOW (boot > 45s) → proceed with note
-   - ❌ UNHEALTHY → **stop and ask human**: "Retry" / "Continue without harness" / "Abort"
+   - ❌ UNHEALTHY → **stop and ask human**: "Retry" / "Continue without agent harness" / "Abort"
    - 🔴 UNAVAILABLE (no boot command) → note and proceed with standard testing
 
    Log validation result to EXEC_LOG (check table: Boot/Interact/Observe status + duration).
-   If human overrides an unhealthy harness, log the override reason.
+   If human overrides an unhealthy agent harness, log the override reason.
 
-   **Special case — Phase 0 "Build Harness"**: Skip pre-phase validation (harness doesn't exist yet).
-   Instead, run validation at END of Phase 0 to confirm harness works.
+   **Special case — Phase 0 "Build Agent Harness"**: Skip pre-phase validation (agent harness doesn't exist yet).
+   Instead, run validation at END of Phase 0 to confirm the agent harness works.
 
    After ALL phase tasks complete: update the agent harness governance doc § History (`docs/project-rules/agent-harness.md`, or legacy `harness.md`) with what changed.
    Use the agent harness Boot/Interact/Observe capabilities for evidence capture throughout implementation when available.

@@ -49,23 +49,19 @@ Development infrastructure — CLI tools, build scripts, test harnesses, `just`/
 
 **What this means in practice**: When you're about to write a one-off script, stop. Can it be a recipe instead? When you hit a problem, don't just work around it — encode the fix. When you run manual steps, ask: should this be automated?
 
-**The test (engineering harness)**: If a developer or CI runner started with zero context, could they get the dev loop running and tests green in under 5 minutes using only automated recipes? Every time the answer is "no," there's engineering harness work to do.
+**The test**: If a developer or CI runner started with zero context, could they get the dev loop running and tests green in under 5 minutes using only automated recipes? Every time the answer is "no," there's harness work to do.
 
-**The test (agent harness)**: If a brand new agent session started right now with zero context, could it Boot, Interact, Observe, and produce evidence within 60 seconds using only `docs/project-rules/agent-harness.md` (or legacy `harness.md`)? Every time the answer is "no," there's agent harness work to do.
-
-#### Principle 2: Track Velocity Compounding `(A)`
+#### Principle 2: Track Velocity Compounding `(both)`
 
 The meta-question isn't whether a specific feature works. It's whether your development infrastructure **compounds velocity** across iterations.
 
 The hypothesis: each successive development phase should be faster than the last. If it's not, the infrastructure isn't doing its job.
 
-**The difficulty ledger** is the mechanism (if the project uses one). Every time an agent or developer hits friction — a confusing error, a missing tool, a flaky process, an undocumented gotcha — it gets recorded. Then it gets FIXED. Not documented. Fixed. Encoded as executable knowledge.
+**The difficulty ledger** is the mechanism (if the project uses one). Every time a developer or agent hits friction — a confusing error, a missing tool, a flaky process, an undocumented gotcha — it gets recorded. Then it gets FIXED. Not documented. Fixed. Encoded as executable knowledge.
 
 > Every difficulty catalogued is a gift to future sessions.
 
 This is literal, not metaphorical. Each fix compounds.
-
-**If the project uses minih**: The difficulty ledger has first-class tooling. Agents report structured difficulties in `retrospective.difficulties` (category, description, workaround, severity). Run `minih difficulties` to see all reported friction across all agents, auto-assigned as MH-001, MH-002, etc. The pipeline is A→B→C: agents report (A), humans review the aggregated view (B), resolved items get curated into the preamble's Known Difficulties table (C), and future agents read them on startup.
 
 #### Principle 3: Encode, Don't Document `(both)`
 
@@ -99,6 +95,10 @@ Velocity data goes into experiment tracking. It's how you know if the approach i
 If the project uses automated agents (test agents, smoke tests, CI bots), they aren't test scripts. They're real users of the infrastructure. Their failures and feedback — especially "magic wand" wishes — are the most honest feedback the infrastructure gets.
 
 When an agent says "I wish I could see X in error messages," that's a feature request from your most honest user. Treat it that way.
+
+**Agent-harness specifics**: An agent harness adds a Boot/Interact/Observe loop on top of the engineering harness so agents can autonomously validate running software. The test: if a brand new agent session started right now with zero context, could it Boot, Interact, Observe, and produce evidence within 60 seconds using only `docs/project-rules/agent-harness.md` (or legacy `harness.md`)? Every "no" is agent-harness work to do.
+
+**If the project uses minih**: The difficulty ledger has first-class tooling. Agents report structured difficulties in `retrospective.difficulties` (category, description, workaround, severity). Run `minih difficulties` to see all reported friction across all agents, auto-assigned as MH-001, MH-002, etc. The pipeline is A→B→C: agents report (A), humans review the aggregated view (B), resolved items get curated into the preamble's Known Difficulties table (C), and future agents read them on startup.
 
 ### Step 3: Check Current State
 
