@@ -133,3 +133,18 @@ Use “reduce checkout abandonment by 15% within 60 days” as the primary metri
 
 Current assumption:
 I’m assuming this plan is primarily about conversion improvement, not platform cleanup.
+```
+
+## Length and pacing
+
+Cap each turn at one screen of text. Terse, not chatty.
+
+Per turn:
+- Question: 1 line.
+- Why this matters: 2–3 lines max.
+- Recommended answer: 2–4 lines max — the recommendation, not the defense.
+- Current assumption: 1–2 lines.
+
+No multi-paragraph "why" sections. No nested option lists (a, b, c…) inside a recommendation. No preamble before the question. No "your call" footer epilogue. If a turn renders longer than ~25 lines, cut.
+
+Verbose grill turns turn the skill into a lecture. Pointed interrogation, not essay-style argument.
