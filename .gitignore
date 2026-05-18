@@ -1,5 +1,8 @@
 # Ignore ephemeral scratch workspace directory
 scratch/
+# Local tooling state — not part of the repo
+.chainglass/
+.serena/
 opencode.json
 opencode.json.backup*
 # Ignore VS Code workspace artifacts
