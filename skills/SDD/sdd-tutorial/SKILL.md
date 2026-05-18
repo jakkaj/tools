@@ -70,7 +70,7 @@ Then run checks in this order:
 
 Checks 1-4 are gating. Checks 5-6 are advisory. Stop at the first gating failure, explain remediation, and do not write state.
 
-If check 2 fails, use the minimal install guidance from `references/installation-check.md`: point to <https://microsoft.github.io/hve-core/docs/getting-started/install>, list the four required commands, list the expected install surfaces, say no tutorial state was created, and ask the learner to rerun `/sdd-tutorial` after the commands resolve.
+If check 2 fails, use the recovery path from `references/installation-check.md`: run or hand off to `install-hve-core-rpiv` when that skill is available, do not create tutorial state, then rerun or resume this preflight after installation. If the installer skill is unavailable or fails, keep the tutorial blocked and show the official HVE Core install guide as fallback.
 
 Branch refusal copy:
 

@@ -25,10 +25,10 @@ The tutorial starts with a visible orientation turn, then runs checks. State is 
 
 > HVE Core RPI/RPIV is not installed or not visible in this environment yet.
 >
-> Install/check guide: <https://microsoft.github.io/hve-core/docs/getting-started/install>
+> I will run or hand off to `install-hve-core-rpiv` to install local skill-shaped RPIV commands from the current authoritative HVE Core source. No tutorial state has been created yet.
 >
 > Required commands before this tutorial can continue: `/task-research`, `/task-plan`, `/task-implement`, `/task-review`.
 >
-> Expected install surfaces: `.github/agents/hve-core/`, `.github/prompts/hve-core/`, or equivalent user-level agent/prompt locations exposed by your chat tool.
+> Expected install surfaces: `.github/agents/hve-core/`, `.github/prompts/hve-core/`, `.agents/skills/task-*`, `.pi/skills/task-*`, or equivalent user-level locations exposed by your chat tool.
 >
-> I don't see those in this repo right now, so no tutorial state was created. Once the four commands resolve, rerun `/sdd-tutorial`.
+> After installation succeeds, I will rerun or resume preflight before creating tutorial state. If installer recovery fails, use <https://microsoft.github.io/hve-core/docs/getting-started/install> and rerun `/sdd-tutorial` once the commands resolve.

@@ -113,7 +113,7 @@ Skills live at the top of the repository, mirroring the `mattpocock/skills` conv
 
 ```
 skills/
-├── SDD/           # 28 spec-driven-development pipeline skills
+├── SDD/           # 29 spec-driven-development pipeline skills
 ├── general/       # domain-generic skills
 └── personal/      # personal / non-coding skills
 ```
@@ -124,7 +124,7 @@ Categories are organizational only. They do **not** affect install commands — 
 
 ## Skill catalog
 
-### `SDD/` — Spec-Driven Development (28 skills)
+### `SDD/` — Spec-Driven Development (29 skills)
 
 The active workflow for non-trivial feature work. Use these for any change large enough to benefit from explicit specification, clarification, architecture, and phase-based implementation. Each step produces an artifact that the next step consumes.
 
@@ -150,6 +150,7 @@ The active workflow for non-trivial feature work. Use these for any change large
 | `plan-v2-extract-domain` | Collaboratively identify and formalize a codebase concept as a named domain. |
 | `validate-v2` | Launch parallel subagents to validate produced work with structured lens coverage. |
 | `sdd-tutorial` | Coach a learner through one branch-based SDD/RPIV loop with orientation, preflight, task selection, RPIV handoffs, reflection, and resume. |
+| `install-hve-core-rpiv` | Install or update local skill-shaped HVE Core RPI/RPIV task skills from the current authoritative HVE Core source. |
 | `engineering-harness-v2` (renamed from `agent-harness-v2`) | Create or validate the engineering harness — substrate + agent-facing Boot/Interact/Observe overlay. Produces `engineering-harness.md` (legacy `agent-harness.md` / `harness.md` still read as fallback); template auto-seeds `## Known Difficulties` from the compound ledger. |
 | `harness-is-the-product-v2` | Re-ground the session on the core philosophy — the harness is the product; every difficulty is a gift; encode-don't-document. |
 | `code-concept-search-v2` | Find a concept in the codebase by walking through code like a human engineer. |

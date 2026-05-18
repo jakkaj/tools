@@ -42,7 +42,7 @@ source ~/.zshrc
 tools/
 ├── setup.sh           # Dev-tooling installer entrypoint (PATH, MCP, Rust, code2prompt, …)
 ├── skills/            # SOURCE OF TRUTH for skills (published via `npx skills`)
-│   ├── SDD/           #   27 spec-driven-development pipeline skills
+│   ├── SDD/           #   29 spec-driven-development pipeline skills
 │   ├── general/       #   domain-generic skills (grill-me)
 │   └── personal/      #   personal / non-coding skills (shopping-hunter)
 ├── scripts/           # Executable tools and utilities (SOURCE OF TRUTH)
