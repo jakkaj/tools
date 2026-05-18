@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/jakkaj/tools/blob/main/skills/compound/schemas/retro.schema.json",
+  "title": "Retro",
+  "description": "A universal retrospective — produced by minih agents, compound skills, and other agentic workflows. One retro per run/session.",
+  "type": "object",
+  "required": ["schema_version", "retro_id", "agent", "started_at"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+(\\.\\d+)?$",
+      "description": "SemVer of the retro schema this document conforms to. Readers MUST reject unknown major versions."
+    },
+    "retro_id": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?Z-[a-z][a-z0-9-]*-[a-f0-9]{4,8}$",
+      "description": "Unique retro identifier: <ISO 8601 UTC timestamp>-<agent-slug>-<short hex hash>. Example: 2026-05-16T07:30:00Z-myagent-a8f3"
+    },
+    "agent": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "maxLength": 64,
+      "description": "Slug of the agent that produced this retro. Lowercase kebab-case."
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Producer-specific run identifier. Minih uses ISO timestamp format with hyphens. Optional."
+    },
+    "plan_id": {
+      "type": ["string", "null"],
+      "description": "Optional plan/session identifier this retro belongs to. Used for grouping across runs."
+    },
+    "started_at": { "type": "string", "format": "date-time" },
+    "ended_at": { "type": "string", "format": "date-time" },
+    "duration_ms": { "type": "integer", "minimum": 0 },
+    "summary": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "One-paragraph summary of what the agent did this run. Optional."
+    },
+    "entries": {
+      "type": "array",
+      "default": [],
+      "items": { "$ref": "#/$defs/Entry" }
+    },
+    "system": {
+      "type": "object",
+      "description": "Namespaced system-specific top-level extensions. Readers ignore unknown namespaces.",
+      "additionalProperties": { "type": "object" }
+    }
+  },
+  "$defs": {
+    "Entry": {
+      "type": "object",
+      "required": ["id", "kind", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Z]+-\\d{3,}$",
+          "description": "Short entry ID, scoped within this retro. Convention: <PREFIX>-<3+ digit number>. Recommended prefixes: DL (difficulty), MW (magic-wand), GFT (gift), INS (insight), COORD (coordination), SUGG (improvement-suggestion), CONF (confusion)."
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "difficulty",
+            "magic-wand",
+            "gift",
+            "insight",
+            "coordination",
+            "improvement-suggestion",
+            "confusion"
+          ],
+          "description": "Semantic kind of this entry. Determines which sibling fields are meaningful."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 2000,
+          "description": "Free-text description of the entry. Required."
+        },
+        "target": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "What the entry is about. Conventional values: project | tooling | plan | skill | doc | infra | minih | coordination. Custom values allowed."
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["blocking", "degrading", "annoying"],
+          "description": "Recommended for kind=difficulty; meaningless for other kinds."
+        },
+        "workaround": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Optional. What you did to get past the issue (typically for kind=difficulty)."
+        },
+        "suggested_encoding": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Optional hint for compound's encoding flow. Free-text. Examples: 'justfile recipe', 'plan-1b plan', 'docs/how article', 'SKILL.md edit'."
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[^:]+:[A-Z]+-\\d{3,}$",
+            "description": "Global reference to another entry: <retro_id>:<entry_id>"
+          },
+          "description": "Optional. Cross-retro entry pointers."
+        },
+        "system": {
+          "type": "object",
+          "description": "Namespaced per-entry system-specific extensions. Readers ignore unknown namespaces.",
+          "additionalProperties": { "type": "object" }
+        }
+      }
+    }
+  }
+}
