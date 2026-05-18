@@ -2,7 +2,18 @@
 
 Offer these only when the learner has no safe task, proposes one red task, or cannot narrow a yellow task after two attempts.
 
-Each task is language-neutral, touches 1-3 files, avoids secrets/auth/payment/deployments, and has one done-when condition.
+Prefer F0 first when the learner cannot think of something. It lives under the repo's gitignored `scratch/` folder, so it is safe for classroom practice without committing toy code. The other tasks are language-neutral options for learners who prefer to practice on tracked repo content. Every task avoids secrets/auth/payment/deployments and has one done-when condition.
+
+## F0 — Scratch Chalk Prime CLI
+
+Use this copy when offering it:
+
+> No problem — we can use the gitignored `scratch/` folder for a safe toy exercise. A good default is `scratch/chalk-prime-cli/`: create a small Node CLI that uses `chalk` to list every prime number under 1000 in a polished, pleasant terminal UI. It gives us enough real code to research, plan, implement, and review without touching product files.
+
+**Goal**: Create a simple Node CLI in `scratch/chalk-prime-cli/` that uses `chalk` to display all prime numbers under 1000 in a nice-looking terminal UI.
+**File scope**: `scratch/chalk-prime-cli/` only.
+**Done when**: Running the CLI prints every prime number under 1000, does not print non-primes, and uses `chalk` formatting for a readable UI.
+**Skills exercised**: sandbox scoping, dependency awareness, small algorithm implementation, terminal UX, verification.
 
 ## F1 — README Try It Section
 
@@ -58,7 +69,10 @@ Each task is language-neutral, touches 1-3 files, avoids secrets/auth/payment/de
 | Tag | Covered by |
 |-----|------------|
 | docs | F1, F4, F6 |
-| pure-code | F2, F3 |
+| scratch | F0 |
+| cli | F0, F7 |
+| node | F0 |
+| pure-code | F0, F2, F3 |
 | tests | F2, F5 |
 | config | F4, F7 |
 | contributor-experience | F1, F6, F7 |
