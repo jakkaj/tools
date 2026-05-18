@@ -255,3 +255,17 @@ Tasks ordered by dependency chain:
 - Risks: 7 (4 from spec + 3 new to this plan)
 
 **Next step**: run `/plan-6-v2-implement-phase --plan ./docs/plans/023-difficulty-ledger-skill/difficulty-ledger-skill-plan.md` to begin implementation (or `/plan-4-v2-complete-the-plan --plan ...` for an optional readiness validation pass first).
+
+---
+
+## Fixes
+
+Post-launch fixes from external review of the shipped compound + engineering-harness skill family (2026-05-18). Each fix references workshop 007 for the authoritative scope decision and emits compound retro entries on landing (kind: improvement-suggestion).
+
+| ID | Created | Summary | Domain(s) | Status | Source |
+|----|---------|---------|-----------|--------|--------|
+| [FX001](./fixes/FX001-group-a-quick-wins.md) | 2026-05-18 | Group A — taxonomy filter widen (RV-001) + `--json` / `just compound-value` (RV-002) + encode validation footer (RV-003) | engineering-harness + compound + scripts | Proposed | [workshop 007 § Group A](./workshops/007-post-launch-review-fixes.md) |
+
+**Queued (not yet generated)**:
+- **FX002** — Group B: optional `evidence:` schema pointers with v1.1.0 schema bump (RV-004) + reduce mandatory confirmation in engineering-harness-v2 CREATE mode (RV-005). See [workshop 007 § Group B](./workshops/007-post-launch-review-fixes.md).
+- **FX003** (or plan 025) — Group C: cluster → regression-proof opt-in pattern (RV-006) + scripts substrate for harvest deterministic logic (RV-007). **Dogfood-deferred** until plan 023 T028 signal. See [workshop 007 § Group C](./workshops/007-post-launch-review-fixes.md).
