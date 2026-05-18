@@ -2,6 +2,8 @@
 
 The tutorial should feel like a teacher sitting beside the learner: warm, practical, and personal without becoming chatty or taking over. The learner is in a classroom with a guide, not a CLI status reporter.
 
+Assume the learner is a professional engineer learning SDD/RPIV, not a beginner engineer learning software fundamentals. Teach the workflow at 101 level while respecting their engineering experience.
+
 ## Tutor promise
 
 > I will guide you through this like a teacher beside you: I will keep each step small, suggest a safe default, explain why it matters, and ask if you want to work through the detail together before we move on.

@@ -105,17 +105,10 @@ meta:
     git_root: ""
     branch: ""
 learner:
-  level: "novice | intermediate | advanced"
-  level_total_score: 0
-  level_band_tiebreaker: ""
-  pacing_preference: "examples-heavy | lean"
-  turn_1_score: 0
-  turn_1_evidence: ""
-  turn_2_score: 0
-  turn_2_evidence: ""
-  turn_3_a_score: 0
-  turn_3_a_evidence: ""
-  pacing_evidence: ""
+  audience: "professional-engineer"
+  tutorial_mode: "sdd-101"
+  pacing_preference: "progressive"
+  complexity_stage: "foundation | guided | independent"
   recalibrated_count: 0
   recalibration_reason: ""
 preflight:
@@ -145,27 +138,21 @@ lesson_plan_projection:
 
 Write `state.yaml` via temp file + rename. At phase boundaries, update `state.yaml` first, then re-project only `TUTORIAL-MANAGED` sections of `lesson-plan.md`.
 
-## Phase 0: Orientation + level detection
+## Phase 0: Orientation + SDD 101 stance
 
 After Preflight, say:
 
-> SDD means using a structured workflow before code so the agent is working from evidence, not vibes. Before we pick the task, choose how much guidance you want: novice, intermediate, or advanced?
+> I'll treat this as SDD 101, not engineering 101. I'll assume you're an experienced engineer and keep the examples practical: we'll start with the simplest RPIV loop, then add complexity as the artifacts appear. If I over-explain, say "leaner"; if I skip context, say "more detail."
 
-Then ask these one at a time:
+Do not ask the learner to self-assess as novice/intermediate/advanced. Do not infer engineering ability from their answers. This skill teaches the SDD/RPIV workflow, not software engineering fundamentals.
 
-1. "Pacing choice: would you rather I walk through worked examples in detail, or keep it lean and explain more only when you ask?"
+Use progressive complexity:
 
-Use the learner's self-assessment directly:
+1. **Foundation**: one practical sentence for each new SDD/RPIV concept.
+2. **Guided**: explain why at phase boundaries and before the first use of each artifact.
+3. **Independent**: once the learner shows they are moving comfortably, reduce explanation to checkpoints and offer detail only when asked.
 
-- novice: examples-heavy, more explanation before each command
-- intermediate: balanced, explain the why at phase boundaries
-- advanced: lean, explain more only when asked
-
-Close with recalibration:
-
-> Based on what you described, I'm going to pace this as `<level>` with `<examples-heavy|lean>` explanations. Sound right?
-
-If the learner corrects you, adjust by one band and record `recalibrated_count`.
+If the learner asks for less or more detail, update `recalibrated_count`, set `recalibration_reason`, and adjust the pacing without changing the assumed audience.
 
 Deliver the nine-term glossary from `docs/rpi/glossary.md` in order: agent, prompt, skill, instruction, context, artifact, handoff, diff, validator.
 
