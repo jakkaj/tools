@@ -1,6 +1,6 @@
 # Preflight Checklist
 
-The tutorial starts with a visible orientation turn, then runs checks. State is not written until all gating checks pass.
+The tutorial starts with a visible orientation turn, then runs checks. State is not written until all gating checks pass and the learner confirms the Phase 3 task micro-spec.
 
 ## Opening turn
 
@@ -19,21 +19,28 @@ The tutorial starts with a visible orientation turn, then runs checks. State is 
 
 ## Protected branch copy
 
-> You're on `<branch>` — that's a protected branch in most teams' workflow, and SDD will produce code changes I shouldn't risk landing there. Easiest fix: branch off it. Want to run `git checkout -b sdd-tutorial-<learner-slug>` now, or pick your own branch name?
+> You're on `<branch>` — that's a protected branch in most teams' workflow, and SDD will produce code changes I shouldn't risk landing there. Easiest fix: branch off it. Want to run `git checkout -b sdd-tutorial-workshop` now, or pick your own branch name?
+
+## Preflight pass copy
+
+Use this after gating checks pass. Do not ask for the learner slug or create local tutorial state yet; the label is chosen after the learner confirms the problem.
+
+> Good news: the repo is open, RPIV is available, you're on a safe branch, and the working tree is clean. I won't ask for the progress-folder label yet; it will be more meaningful once we pick the problem, so we can name it after what you're actually working on. Next we'll do a quick pacing calibration.
 
 ## Learner folder copy
 
-Use this after gating checks pass, before creating local tutorial state.
+Use this after the learner confirms the Phase 3 micro-spec, before creating local tutorial state.
 
-> Good news: the repo, RPIV commands, branch, and working tree all look ready. Before we start the lesson, I need one small local label for your tutorial progress folder under `.copilot-tracking/sdd-tutorial/`.
+> Now we have the problem: `<short task summary>`. This is the right moment to name your local progress folder because the label can match what you're learning on.
 >
-> I suggest `<suggested-slug>` because it matches this branch. You can press Enter to use that, or type another short label like `jordan-rpiv`, `workshop-run`, or `first-sdd-loop`.
+> I suggest `<task-derived-slug>`. Press Enter to use that, or type another short label like `rpiv-docs-fix`, `first-sdd-loop`, or `workshop-task`.
 
 Slug guidance:
 
-- Suggest the current branch slug first when it is safe and readable.
+- Suggest a slug derived from the confirmed task topic first.
+- Otherwise suggest the current branch slug when it is safe and readable.
 - Otherwise suggest the repo slug.
-- If neither is safe/readable, suggest `sdd-tutorial`.
+- If none are safe/readable, suggest `sdd-tutorial`.
 - Accept blank, "yes", "use that", or similar confirmation as approval of the suggested slug.
 - Normalize the final slug to lowercase kebab-case.
 - Do not expose this as a storage-schema question; frame it as saving lesson progress locally.

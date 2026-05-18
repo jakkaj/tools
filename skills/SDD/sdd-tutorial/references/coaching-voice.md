@@ -50,6 +50,7 @@ Each tutor turn may contain only one learner decision request. If you offer deep
 - "Type this command yourself..."
 - "Paste the output path it reports..."
 - "I suggest `<default>` because..."
+- "Now that we've chosen the problem, I suggest `<task-derived-slug>` because it matches what you're working on."
 - "Want to work through a concrete example together before we move on?"
 - "Want to narrow that to a green-sized slice?"
 - "We can work on a real branch without pushing or merging."

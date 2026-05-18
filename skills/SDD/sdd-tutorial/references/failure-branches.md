@@ -13,5 +13,5 @@ The live skill handles these branches inline.
 | F-07 | Learner says "just do it for me" | Skip one level of explanation, but keep learner in control; recalibrate if repeated. |
 | F-08 | Learner disappears mid-phase | On resume, detect stale timestamp and resume from the boundary. |
 | F-09 | Resume state points to missing files | Offer re-run, re-point, continue-with-warning, or fresh start. |
-| F-10 | Protected branch | Block and offer `git checkout -b sdd-tutorial-<learner-slug>`. |
+| F-10 | Protected branch | Block and offer `git checkout -b sdd-tutorial-workshop`, or let the learner choose a branch name. |
 | F-11 | Red task category | Refuse until a green task is chosen; logging only with consent. |
