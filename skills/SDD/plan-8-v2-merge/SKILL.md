@@ -1028,3 +1028,24 @@ Main has no new commits since you branched ${DAYS_AGO} days ago.
 
 Your branch is up to date. No merge needed.
 ```
+
+---
+
+## Compound integration
+
+This skill participates in the **Compounding Value System** (`skills/compound/`).
+
+**Sentinel**: Before any compound call below, check `docs/compound/.disabled` — if present, silently skip everything in this section.
+
+**At start**:
+- Check `docs/compound/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/compound-2-bubble` BEFORE the merge analysis.
+
+**During merge analysis**:
+- Silently call `compound-1-track` per its trigger heuristics. Merge-specific triggers: rebase conflicts that needed manual resolution; squash decisions that lost information; CI failures during the merge gate.
+- Calibration: ≤1 self-prompt per 5min; ≤5 entries per session.
+
+**At end** (pipeline endpoint — plan-completion reflection moment):
+- Auto-fire `/compound-2-bubble` — drains the buffer.
+- Auto-fire `/compound-3-harvest` — this is the plan-completion reflection moment; the user gets a curated view of all friction encountered across the plan's lifetime. Filter scope: `--plan <slug>` derived from the branch/cwd.
+
+See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md) and § The Four Firing Sites.

@@ -133,3 +133,19 @@ Output: SPEC_FILE + Flight Plan at plan root.
 Next steps:
 - **If Workshop Opportunities identified**: Consider running **/plan-2c-workshop**
 - **Otherwise**: Run **/plan-2-v2-clarify** for ≤8 high-impact questions
+
+---
+
+## Compound integration
+
+This skill participates in the **Compounding Value System** (`skills/compound/`).
+
+**Sentinel**: Before any compound call below, check `docs/compound/.disabled` — if present, silently skip everything in this section.
+
+**At start**: Check `docs/compound/_buffers/<agent>.session-buffer.md` (where `<agent>` is the calling CLI's slug — claude-code, codex, github-copilot, opencode, pi, or a companion slug). If non-empty from a prior session, fire `/compound-2-bubble` BEFORE this skill's primary work — clears cross-session carryover.
+
+**During spec writing**: silently call `compound-1-track` per its trigger heuristics (any friction observed while drafting — spec template ambiguity, conflicting source material, missing prior research, magic-wand reflex at natural pauses). Calibration: ≤1 self-prompt per 5min; ≤5 entries per session (anti-vibe 7).
+
+**At end**: this skill CHAINS to plan-2 — no end-of-skill `compound-2-bubble` here. The bubble fires at plan-2's logical pause (or further downstream). Buffer entries accumulate across the chain until a logical pause is reached.
+
+See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md) for the full per-skill table; [`skills/compound/`](../../compound/) for the producer/consumer skill bodies.

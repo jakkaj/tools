@@ -149,14 +149,27 @@ The active workflow for non-trivial feature work. Use these for any change large
 | `plan-8-v2-merge` | Analyze upstream changes from `main` and generate a merge plan. |
 | `plan-v2-extract-domain` | Collaboratively identify and formalize a codebase concept as a named domain. |
 | `validate-v2` | Launch parallel subagents to validate produced work with structured lens coverage. |
-| `agent-harness-v2` | Create or validate the agent harness for the current project. |
-| `harness-is-the-product-v2` | Re-ground the session on the core philosophy — the harness is the product. |
+| `engineering-harness-v2` (renamed from `agent-harness-v2`) | Create or validate the engineering harness — substrate + agent-facing Boot/Interact/Observe overlay. Produces `engineering-harness.md` (legacy `agent-harness.md` / `harness.md` still read as fallback); template auto-seeds `## Known Difficulties` from the compound ledger. |
+| `harness-is-the-product-v2` | Re-ground the session on the core philosophy — the harness is the product; every difficulty is a gift; encode-don't-document. |
 | `code-concept-search-v2` | Find a concept in the codebase by walking through code like a human engineer. |
 | `deepresearch-v2` | Craft structured research prompts for deep-research agents. |
 | `didyouknow-v2` | Surface critical insights conversationally to build shared understanding. |
 | `flowspace-research-v2` | FlowSpace-first codebase research with parallel subagent exploration. |
 | `htmlify-v2` | Convert markdown, specs, plans, or findings into polished static HTML documents. |
 | `util-0-v2-handover` | Generate a domain-aware handover document for LLM agent continuity. |
+
+### `compound/` — Compounding Value System (4 skills)
+
+The meta-loop that closes the compounding-value gap left by `harness-is-the-product-v2` — every session in any supported CLI silently logs friction; soft prompts at session end route encodable entries; periodic curation surfaces accumulated learnings. Universal `.retro.md` contract in `skills/compound/schemas/` so minih + compound + ad-hoc scripts speak the same language. Opt-out via `touch docs/compound/.disabled`.
+
+| Slug | One-line purpose |
+|---|---|
+| `compound-0-setup` | Scaffold `docs/compound/` once per repo + reversible split-migration from legacy `docs/retros/*.md`. Idempotent. |
+| `compound-1-track` | Silent producer — append friction/magic-wand entries to per-agent session buffer during work. Never prompts. |
+| `compound-2-bubble` | Session-end soft prompt — `[s/t/p/e/d/a]` actions; wraps entries in universal retro envelope; writes one `.retro.md` per save. |
+| `compound-3-harvest` | Curator — scans all retros; clusters by kind+target; flags stale; prints top-10 to terminal. NO on-disk indexes. Runtime filters (`--plan`/`--agent`/`--since`/`--kind`). |
+
+See [`docs/plans/023-difficulty-ledger-skill/`](./docs/plans/023-difficulty-ledger-skill/) for the design history (spec + 6 workshops + implementation plan).
 
 ### `general/` — Domain-generic (1 skill)
 

@@ -614,3 +614,18 @@ Shows list of Workshop Opportunities from spec, user selects which to create.
 /plan-2c-workshop 003-workflow-service --list
 ```
 Shows all workshops in the plan folder with their types and status.
+---
+
+## Compound integration
+
+This skill participates in the **Compounding Value System** (`skills/compound/`).
+
+**Sentinel**: Before any compound call below, check `docs/compound/.disabled` — if present, silently skip everything in this section.
+
+**At start**: Check `docs/compound/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/compound-2-bubble` BEFORE this skill's primary work.
+
+**During workshop creation**: silently call `compound-1-track` per its trigger heuristics (any friction observed while drafting — workshop template ambiguity, decision-space gaps, missing related-workshop context, magic-wand reflex at natural pauses). Calibration: ≤1 self-prompt per 5min; ≤5 entries per session.
+
+**At end**: this skill CHAINS back to plan-2 or plan-3 — no end-of-skill `compound-2-bubble` here. The bubble fires at the chained skill's logical pause.
+
+See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md).

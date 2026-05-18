@@ -190,25 +190,25 @@ Only flag genuine duplication, not incidental similarity."
 [{\"severity\": \"HIGH|MEDIUM|LOW\", \"file\": \"...\", \"rule\": \"...\", \"issue\": \"...\", \"fix\": \"...\"}]
 ```"
 
-### Subagent 6: Agent Harness Live Validator (if `docs/project-rules/agent-harness.md` or legacy `harness.md` exists)
+### Subagent 6: Agent Harness Live Validator (if `docs/project-rules/engineering-harness.md` or legacy `agent-harness.md` / `harness.md` exists)
 "Boot the agent harness and validate the phase's changes actually work by exercising the running software.
 
 **This is read-only** — you are gathering evidence, not modifying code.
 
 **Read**:
-- `docs/project-rules/agent-harness.md` (or legacy `harness.md`) — boot command, health check, interaction methods, observe capabilities
+- `docs/project-rules/engineering-harness.md` (or legacy `agent-harness.md` / `harness.md`) — boot command, health check, interaction methods, observe capabilities
 - Phase acceptance criteria from spec
 - Execution log evidence from plan-6
 
 **Execute**:
-1. **Boot**: Run health check. If not running, boot using agent-harness.md § Boot command. Wait for healthy.
+1. **Boot**: Run health check. If not running, boot using engineering-harness.md § Boot command. Wait for healthy.
 2. **Interact**: Exercise the phase's changes through the agent harness interaction methods (send requests, trigger actions relevant to what this phase built/changed).
 3. **Observe**: Capture evidence — response bodies, screenshots, terminal output — that demonstrates the changes work.
 4. **Validate**: Compare observed behavior against phase acceptance criteria. Does the running software reflect the code changes?
 
 **If agent harness boot fails**: Report 'HARNESS_UNAVAILABLE' — do NOT block the review. Fall back to static analysis findings from other subagents. Note: 'Live validation skipped — agent harness unhealthy'.
 
-**If neither agent-harness.md nor legacy harness.md exists**: Skip this subagent entirely. Report N/A.
+**If neither engineering-harness.md nor legacy agent-harness.md / harness.md exists**: Skip this subagent entirely. Report N/A.
 
 **Output** (JSON):
 ```json
@@ -437,3 +437,26 @@ Acceptance criteria for this command:
 - If REQUEST_CHANGES: fix tasks file created with severity-ordered fixes
 
 Next step: Apply fixes from fix-tasks file, then re-run `/plan-7-v2-code-review`.
+
+---
+
+## Compound integration
+
+This skill participates in the **Compounding Value System** (`skills/compound/`).
+
+**Sentinel**: Before any compound call below, check `docs/compound/.disabled` — if present, silently skip everything in this section.
+
+**At start**:
+- Check `docs/compound/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/compound-2-bubble` BEFORE the code review.
+
+**During code review**:
+- Silently call `compound-1-track` per its trigger heuristics. Code-review-specific triggers: a finding that's hard to express in a single severity bucket; a finding where the agent had to re-read a file multiple times to understand it; a finding the spec implies but doesn't make explicit.
+- Calibration: ≤1 self-prompt per 5min; ≤5 entries per session.
+
+**Spot-check (T030 audit folded in)**: as part of the cross-cutting review, spot-check 2-3 auto-firing SDD skills for sentinel + buffer-check coverage. Use `grep -l 'docs/compound/.disabled' skills/SDD/<sample-skills>/SKILL.md` and similar. If any sampled skill is missing the sentinel check, file a finding.
+
+**At end** (logical pause — review complete):
+- Auto-fire `/compound-2-bubble` — drains the buffer.
+- Auto-fire `/compound-3-harvest` — preserved for the rare solo `/plan-6` flow (workshop 004 § Walkthrough B). In the dominant flow (`/plan-6-companion`), harvest already fired at the companion's final-phase debrief; running it again here is idempotent (no on-disk indexes to drift; terminal print only).
+
+See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md).
