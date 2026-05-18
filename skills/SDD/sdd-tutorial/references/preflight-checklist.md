@@ -21,11 +21,19 @@ The tutorial starts with a visible orientation turn, then runs checks. State is 
 
 > You're on `<branch>` — that's a protected branch in most teams' workflow, and SDD will produce code changes I shouldn't risk landing there. Easiest fix: branch off it. Want to run `git checkout -b sdd-tutorial-workshop` now, or pick your own branch name?
 
+## Dirty working tree copy
+
+> I see existing changes in the working tree. SDD can still continue if those are intentional, but I don't want to mix tutorial work into someone else's edits.
+>
+> If these changes are yours and safe to keep while we practice, say "these are intentional". Otherwise, commit, stash, or discard them first, then rerun `/sdd-tutorial`. I won't create tutorial state until this is clear.
+
 ## Preflight pass copy
 
-Use this after gating checks pass. Do not ask for the learner slug or create local tutorial state yet; the label is chosen after the learner confirms the problem.
+Use this after gating checks pass. Do not ask for the learner slug or create local tutorial state yet; the label is chosen after the learner confirms the problem. Describe the working-tree result accurately: say "working tree is clean" only when it is clean; if dirty changes were acknowledged, say "working tree changes are acknowledged as intentional."
 
 > Good news: the repo is open, RPIV is available, you're on a safe branch, and the working tree is clean. I won't ask for the progress-folder label yet; it will be more meaningful once we pick the problem, so we can name it after what you're actually working on. Next we'll do a quick pacing calibration.
+>
+> If dirty changes were acknowledged, replace "working tree is clean" with "working tree changes are acknowledged as intentional."
 
 ## Learner folder copy
 

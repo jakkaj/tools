@@ -78,10 +78,16 @@ Branch refusal copy:
 
 > You're on `<branch>` — that's a protected branch in most teams' workflow, and SDD will produce code changes I shouldn't risk landing there. Easiest fix: branch off it. Want to run `git checkout -b sdd-tutorial-workshop` now, or pick your own branch name?
 
+Dirty working tree copy:
+
+> I see existing changes in the working tree. SDD can still continue if those are intentional, but I don't want to mix tutorial work into someone else's edits.
+>
+> If these changes are yours and safe to keep while we practice, say "these are intentional". Otherwise, commit, stash, or discard them first, then rerun `/sdd-tutorial`. I won't create tutorial state until this is clear.
+
 If all gating checks pass, do not ask for a learner slug yet and do not create tutorial state yet. Switch into teacher mode:
 
 1. Briefly summarize what passed in plain language.
-2. Explain that the progress label will be easier to choose after the learner picks the problem.
+2. Describe the working-tree result accurately: say "working tree is clean" only when clean; if dirty changes were acknowledged, say "working tree changes are acknowledged as intentional."
 3. Continue into Phase 0 in memory; persistent state starts after Phase 3 task confirmation.
 
 Example:
@@ -185,7 +191,7 @@ Explain the artifact handoff habit: each phase produces a file that becomes the 
 
 Ask for a real repo task first:
 
-> Let's pick a small real task from this branch. What's one change you would be comfortable doing if it touched one to three files and had one clear done-when condition?
+> Let's pick a small real task from this branch. Aim for one to three files and one clear done-when condition — for example, a wording fix, a small docs correction, or a missing test around one helper. What's a change you'd be comfortable practicing on?
 
 Apply `references/scope-rubric.md`.
 

@@ -9,7 +9,7 @@ The live skill handles these branches inline.
 | F-03 | Artifact missing after dispatch | Offer re-run, re-point to a different path, or continue with a warning. |
 | F-04 | Repeated red or over-scoped task | Offer fallback catalogue; after repeated refusal, suggest pausing. |
 | F-05 | No tests or run command exists | Continue artifact-only and record a verification gap. |
-| F-06 | Dirty git state mid-tutorial | Pause for commit, stash, or explicit acknowledgement. |
+| F-06 | Dirty git state before or during tutorial | Pause with teacherly copy: explain that SDD can continue if the changes are intentional, ask for explicit acknowledgement, or suggest commit/stash/discard before rerun. Do not create state until clean or acknowledged. |
 | F-07 | Learner says "just do it for me" | Skip one level of explanation, but keep learner in control; recalibrate if repeated. |
 | F-08 | Learner disappears mid-phase | On resume, detect stale timestamp and resume from the boundary. |
 | F-09 | Resume state points to missing files | Offer re-run, re-point, continue-with-warning, or fresh start. |
