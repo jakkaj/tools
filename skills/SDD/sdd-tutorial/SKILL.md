@@ -243,11 +243,13 @@ progress:
   last_classroom_checkpoint_at: "<now>"
 ```
 
-Copy the lesson-plan template and project the module map.
+Copy the lesson-plan template and project the current state, module map, module checklists, artifacts table, and reflection/self-assessment table. Mark Module 1 setup items complete and Module 2 task-selection plus research-command items complete once the research command is issued.
 
 Then complete the classroom turn with the two-terminal handoff and stop:
 
 > Module 2 starts now: choosing the task gave us a concrete question, and Research turns that question into repo-grounded context before anyone writes code.
+>
+> Lesson plan created: `.copilot-tracking/sdd-tutorial/<learner-slug>/lesson-plan.md`. Skim the Module Checklists now so you can see where we are; the learner comments and self-assessment sections are yours to edit as we go.
 >
 > Keep this terminal as the classroom. In a second work terminal, type this command yourself: `/task-research <your confirmed task topic>`.
 >
@@ -298,9 +300,9 @@ For `/sdd-tutorial --resume [learner-slug]`:
 3. Summarise current phase, learner pacing, branch, and artifact status.
 4. Check recorded artifact paths still exist when possible.
 5. If an artifact is missing, offer re-run, re-point, continue-with-warning, or start fresh.
-6. Re-project only `TUTORIAL-MANAGED` lesson-plan sections from state.
+6. Re-project only `TUTORIAL-MANAGED` lesson-plan sections from state, including module map, module checklists, artifact paths, and tutor-captured reflection/self-assessment rows.
 7. Preserve `LEARNER-OWNED` sections verbatim.
-8. Resume at the recorded phase boundary.
+8. Mention the lesson plan path and current module checklist once, then resume at the recorded phase boundary.
 
 Never read learner-owned reflection during a live session. At resume, inspect only markers needed to preserve the file.
 
