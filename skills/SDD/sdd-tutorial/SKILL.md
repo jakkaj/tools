@@ -149,19 +149,17 @@ Write `state.yaml` via temp file + rename. At phase boundaries, update `state.ya
 
 After Preflight, say:
 
-> SDD means using a structured workflow before code so the agent is working from evidence, not vibes. By the end, you'll have run one small RPIV loop and have the artifacts to show what happened. Quick context-setting question to start: tell me about a feature, fix, or refactor you've shipped recently where you used an AI assistant — how did you decide what to ask it, when did you ask, and when did you write code yourself?
+> SDD means using a structured workflow before code so the agent is working from evidence, not vibes. Before we pick the task, choose how much guidance you want: novice, intermediate, or advanced?
 
 Then ask these one at a time:
 
-1. "Follow-up: when AI-assisted work gets stuck — the agent's going in circles, or it's writing plausible-but-wrong code, or you don't know how to get back on track — what do you usually do?"
-2. "Last context question: imagine I ask you to add a small feature spanning about three files to a repo you don't know well. What's your first concrete move?"
-3. "One more — short one. As we go through the tutorial, would you rather I show worked examples in detail and walk you through each step, or move quickly and explain only when you ask?"
+1. "Pacing choice: would you rather I walk through worked examples in detail, or keep it lean and explain more only when you ask?"
 
-Classify from evidence, not self-labels:
+Use the learner's self-assessment directly:
 
-- 0-3 total: novice
-- 4-6 total: intermediate
-- 7-9 total: advanced
+- novice: examples-heavy, more explanation before each command
+- intermediate: balanced, explain the why at phase boundaries
+- advanced: lean, explain more only when asked
 
 Close with recalibration:
 
