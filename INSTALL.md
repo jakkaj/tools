@@ -12,7 +12,7 @@ Skills are grouped by purpose. Categories are organizational only — they do **
 
 | Category | What's in it | Count |
 |---|---|---|
-| `SDD/` | The spec-driven-development (SDD) pipeline — domain-aware plan, specify, clarify, architect, workshop, implement, review skills. The active workflow for non-trivial features. | 27 |
+| `SDD/` | The spec-driven-development (SDD) pipeline — domain-aware plan, specify, clarify, architect, workshop, implement, review skills. The active workflow for non-trivial features. | 28 |
 | `general/` | Domain-generic skills that work in any project (e.g. `grill-me` — relentlessly interrogates plans/designs until shared understanding). | 1 |
 | `personal/` | Personal / lifestyle / non-coding skills (e.g. `shopping-hunter` — product research and pricing dossiers). | 1 |
 
