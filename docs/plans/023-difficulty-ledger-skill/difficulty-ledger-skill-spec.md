@@ -37,11 +37,11 @@ The system is a **first-class concept** in this repo's skills graph. It joins th
    - `compound-2-bubble` — single soft prompt at session end with `[s/t/p/e/d/a]` action menu (save / fix-task / plan / encode / dismiss / all-save)
    - `compound-3-harvest` — periodic curation (typically post-`/plan-7-v2-code-review`): reads all ledger files, deduplicates, clusters, age-orders, surfaces a prioritised summary with `[s/t/p/e/d/a/r/w/s]` actions (the additional `[r/w/s]` are status-mutation lifecycle ops)
 
-**The umbrella concept**: every self-improvement artifact (difficulty entries, magic-wand entries, gift entries, insight entries, session buffer, per-plan ledger, per-session ledger, per-agent ledger from minih, auto-rebuilt index, convention guide, opt-out sentinel) lives under **`docs/compound/`**. One umbrella, one schema, one integration surface.
+**The umbrella concept**: every self-improvement artifact lives under **`docs/compound/`** in a minimal tree (per workshop 006): `agents/<slug>/<date>/T<HH-MM-SS>Z-<hash>.retro.md` per-run files, `_buffers/<agent>.session-buffer.md` transient buffers, `README.md` convention guide, optional `.disabled` opt-out sentinel. **NO on-disk index / rollup files** — cross-cutting views (per-plan, per-agent, dashboard) are computed at read time by `compound-3-harvest` and printed to the terminal. One umbrella, one schema (workshop 005), one canonical layout (workshop 006).
 
 **The integration model**: components communicate through file surfaces (`docs/compound/`, `scratch/`, governance docs), never through direct skill-to-skill calls. The schema (deferred to a follow-up workshop) is the inter-component contract.
 
-**Portability**: all skills work in any CLI consuming Anthropic SKILL.md (Claude Code, Codex CLI, Copilot CLI, Pi, OpenCode); no minih runtime dependency. Minih's auto-harvested files are read-compatible (write to the same `docs/compound/<agent-slug>.md`) but a formal importer is deferred to a follow-up plan.
+**Portability**: all skills work in any CLI consuming Anthropic SKILL.md (Claude Code, Codex CLI, Copilot CLI, Pi, OpenCode); no minih runtime dependency. Minih retros are read via the universal contract (workshop 005) with deterministic round-trip mapping; the importer is now in v1 (per workshop 005 § D9 reversal) via `minihToUniversal()` / `universalToMinih()` helpers. Minih continues to write its native `docs/retros/<slug>.md` until v2 (P3 migration); compound-3-harvest's back-compat reader picks those up alongside the canonical `docs/compound/agents/**/*.retro.md` files.
 
 ---
 
@@ -73,12 +73,12 @@ The system is a **first-class concept** in this repo's skills graph. It joins th
 ## Non-Goals
 
 - **Not a runtime.** No skill boots processes, owns daemons, or maintains state outside the ledger files.
-- **Not a replacement for minih's auto-harvest.** Minih continues to write to `docs/compound/<agent-slug>.md` where it's in use; the compound family writes per-plan and per-session files in the same directory using a compatible-by-superset schema.
-- **Not a minih importer in v1.** Converting minih's structured `retrospective.difficulties[]` into the portable schema is deferred to a follow-up plan.
+- **Not a replacement for minih's auto-harvest.** Minih continues to write its native `docs/retros/<slug>.md` (and per-plan ledger when `MINIH_PLAN_ID` set) until v2 P3 migration. Compound's back-compat reader (workshop 006 § D7) reads `docs/retros/*.md` alongside the canonical `docs/compound/agents/**/*.retro.md`. The universal-schema dual-write phase (workshop 005 P1) ships in v1.
+- ~~**Not a minih importer in v1.**~~ **REVERSED** by workshop 005 (universal retro contract): the minih ↔ universal round-trip is now an in-scope v1 deliverable, implemented as `minihToUniversal()` / `universalToMinih()` helpers under `skills/compound/lib/retro.ts`. plan-6a Step 9 calls the helper inline; minih's existing `retrospective.json` survives unchanged via dual-write (Migration Phase 1 per workshop 005 § Migration Path).
 - **Not auto-applying any fix.** Every encoded change is staged as a unified diff in `scratch/` for the user to review and `git apply`.
 - **Not mid-session prompting.** The bubble-up at session end is the only user-facing surface during a session. The agent's internal magic-wand self-check is silent to the user.
 - **Not a JSON Schema validator.** The ledger schema is YAML-fenced markdown — machine-parseable, not validated by a runtime in v1.
-- **Not a ledger dashboard / cross-plan analytics.** Beyond the auto-rebuilt `_LEDGER.md` index, deeper analytics are deferred to a follow-up plan.
+- **Not a ledger dashboard / cross-plan analytics.** Per workshop 006 KISS revision, there is no on-disk `_LEDGER.md` or other rollup file. `compound-3-harvest` computes cross-cutting views at read time (filters: `--plan` / `--agent` / `--since` / `--kind`) and prints to terminal. Deeper analytics are deferred to a follow-up plan.
 - **Not bureaucratic ceremony.** No rating prompts, no satisfaction surveys, no required free-form fields. Anti-vibes 1–7 from the vibe workshop are explicit rejections.
 - **Not a forced behavior.** A `docs/compound/.disabled` sentinel makes `compound-1-track` a silent no-op for projects that opt out.
 - **Not a separate `compound-1-explore` skill.** The Stage 1 (explore) read is fulfilled by `plan-1a-v2-explore` Subagent 7 + `engineering-harness.md § Known Difficulties` template seeding. Cross-skill domain leak accepted as a deliberate tradeoff.
@@ -100,11 +100,11 @@ This repository does not use the formal `docs/domains/` system (no `docs/domains
 | `skills/SDD/engineering-harness-v2/` | existing | **rename + modify** | Renamed from `agent-harness-v2`. Template gains `## Known Difficulties` seeded from `docs/compound/` ledger. **Rename interpretation pending** — see Open Q1. |
 | `docs/project-rules/engineering-harness.md` | existing | **rename** | Renamed from `agent-harness.md`. Produced + maintained by `engineering-harness-v2`. |
 | `skills/SDD/harness-is-the-product-v2/` | existing | **modify (small)** | Principle 2 wording updated from "Track Velocity Compounding" → "Track Compounding Value" to align with the compound family's framing. Content unchanged otherwise. |
-| `skills/SDD/plan-1a-v2-explore/` | existing | **modify** | Subagent 7 ("Prior Learnings Scout") extends to read `docs/compound/<plan-slug>.md`, `docs/compound/sessions/*.md`, and `docs/compound/<agent-slug>.md` in addition to the legacy `## Discoveries & Learnings` tables. |
+| `skills/SDD/plan-1a-v2-explore/` | existing | **modify** | Subagent 7 ("Prior Learnings Scout") extends to read `docs/compound/agents/**/*.retro.md` (canonical per workshop 006) AND `docs/retros/*.md` (minih legacy back-compat) in addition to the legacy `## Discoveries & Learnings` tables. Validates each retro frontmatter against `retro.schema.json` (workshop 005); skips malformed retros with a warning. |
 | `skills/SDD/plan-6a-v2-update-progress/` | existing | **modify (one-line)** | Step 8c hardcoded path updated from `docs/retros/` → `docs/compound/`. |
 | `skills/SDD/plan-6-v2-implement-phase/` | existing | **modify** | (a) Skill body adds compound vocabulary in the Track stage — explicitly invokes `compound-1-track` at natural friction points during implementation work (not just phase-end via plan-6a). (b) Cross-references `harness-is-the-product-v2` (philosophy) + `compound-0/1/2/3` family + `engineering-harness-v2` substrate. (c) End-of-phase output reminds the user to run `compound-2-bubble` (in addition to the existing plan-6a auto-call). |
 | `skills/SDD/plan-6-v2-implement-phase-companion/` | existing | **modify** | Same as `plan-6-v2-implement-phase` PLUS: (a) Skill body documents the **companion farewell envelope → compound entry mapping** (`farewell.retrospective.magicWand` → compound `type: magic-wand`; `farewell.retrospective.difficulties[]` → compound `type: difficulty`; `farewell.retrospective.workedWell` → compound `type: gift`). (b) Power-On-Mode protocol section explicitly frames the companion as a **second producer** of compound entries that lands via plan-6a Step 9's auto-harvest. (c) Cross-references the schema workshop's minih round-trip mapping rules. |
-| `docs/compound/` | **NEW** | **create** | The umbrella directory. Houses ledger files (per-plan, per-session, per-agent), `_session-buffer.md` (transient), `_LEDGER.md` (auto-rebuilt index), `README.md` (convention guide), `sessions/` subdir, and `.disabled` sentinel. |
+| `docs/compound/` | **NEW** | **create** | The umbrella directory. Minimal canonical tree per workshop 006: `README.md` (convention guide), `_buffers/<agent>.session-buffer.md` (transient per-agent buffers; gitignored), `agents/<slug>/<date>/T<HH-MM-SS>Z-<hash>.retro.md` (per-run universal `.retro.md` files; only source of truth), optional `.disabled` sentinel. **No on-disk index / `_LEDGER.md` / `sessions/` / per-plan-rollup files** — cross-cutting views computed at read time by `compound-3-harvest`. |
 | `AGENTS.md` · `CLAUDE.md` | existing | **modify** | Add a "Compounding Value System" operational-contract section (10–15 lines each, mirrored content; D7 voice from workshop 001). Names the three layers; points at the slug `compound` for folder/skill conventions. |
 | `README_AGENTS.md` | existing | **modify** | Add `compound/` category section ("Compounding Value System") + 4 catalog entries; add the `engineering-harness-v2` rename note. |
 | `justfile` | existing | **modify** | Add `retro` recipes (`just retro` / `just retro-log` / `just retro-index`) — likely doc-pointer recipes since `just` is shell-side and the skills are agent-side. |
@@ -126,7 +126,7 @@ This repository does not use the formal `docs/domains/` system (no `docs/domains
 #### `compound-2-bubble` (NEW)
 
 - **Purpose**: Single soft prompt at session end that surfaces all entries from `_session-buffer.md` with the `[s/t/p/e/d/a]` action menu and routes the user's choices.
-- **Boundary Owns**: the session-end prompt rendering; the action menu (save / task / plan / encode / dismiss / all-save); per-entry encoding-hint display; plan-aware destination logic (active plan's `<plan>.md` OR `sessions/<date>-<branch>.md`); staging encoded diffs in `scratch/encode-<id>-<target>.diff`; emitting copy-pasteable `/plan-5` and `/plan-1b` invocations; clearing the buffer after routing.
+- **Boundary Owns**: the session-end prompt rendering; the action menu (save / task / plan / encode / dismiss / all-save); per-entry encoding-hint display; plan-aware destination logic (writes one `.retro.md` per save action at `docs/compound/agents/<slug>/<date>/T<HH-MM-SS>Z-<hash>.retro.md` per workshop 006 § Path Resolver; sets frontmatter `plan_id` from cwd/branch detection when a plan is active, null otherwise); staging encoded diffs in `scratch/encode-<id>-<target>.diff`; emitting copy-pasteable `/plan-5` and `/plan-1b` invocations; clearing the buffer after routing.
 - **Boundary Excludes**: appending new entries (compound-1-track); harvesting cross-session entries (compound-3-harvest); applying any staged diff (user); generating `/plan-5` or `/plan-1b` content (it only emits invocation strings).
 
 #### `compound-3-harvest` (NEW)
@@ -138,7 +138,7 @@ This repository does not use the formal `docs/domains/` system (no `docs/domains
 #### `docs/compound/` (NEW directory)
 
 - **Purpose**: Single, repo-wide home for every self-improvement artifact from any source.
-- **Boundary Owns**: directory layout (`README.md`, `_session-buffer.md`, `_LEDGER.md`, `<plan-slug>.md`, `<agent-slug>.md`, `sessions/<date>-<branch>.md`, `.disabled`); the convention guide; the auto-rebuilt index; the opt-out sentinel semantics.
+- **Boundary Owns**: directory layout per workshop 006 (`README.md`, `_buffers/<agent>.session-buffer.md`, `agents/<slug>/<date>/T<HH-MM-SS>Z-<hash>.retro.md`, optional `.disabled`); the convention guide; the opt-out sentinel semantics. **No on-disk index files** (cross-cutting views are computed by `compound-3-harvest` at read time).
 - **Boundary Excludes**: the schema of individual entries (compound-1-track owns it; the schema workshop will lock specifics); the read logic of any consumer (each reader skill owns its own); how the directory is populated by minih (out of scope; we're write-compatible).
 
 ---
@@ -170,8 +170,8 @@ This repository does not use the formal `docs/domains/` system (no `docs/domains
   - Schema interop tension with minih (mitigated by superset schema; importer plan deferred)
 - **Phases** — Mode is **Simple** (resolved in Clarification Q1 of session 2026-05-16). Plan-3 will produce a single phase with grouped tasks rather than multi-phase. Six task groups within one phase:
   - **Group A — Workshops**: schema (Data Model), CLI flow (CLI Flow), AGENTS.md voice (Other), harvest behavior (Other). All four lock contracts before code lands.
-  - **Group B — Build `compound-0-setup` + `docs/compound/` scaffold + `_LEDGER.md` rebuild logic**.
-  - **Group C — Build `compound-1-track` + `compound-2-bubble`** (the producer-side per-session pair).
+  - **Group B — Build `compound-0-setup` + `docs/compound/` scaffold + `resolvePath()` / `slugify()` helpers + split-migration recipe** (per workshop 006).
+  - **Group C — Build `compound-1-track` + `compound-2-bubble`** (the producer-side per-session pair). Empty-buffer-only task-boundary self-prompt (per Q6.1).
   - **Group D — Build `compound-3-harvest`** (the consumer-side periodic skill).
   - **Group E — Substrate + governance + pipeline integration** (Q5.1 resolved as Interpretation A — cosmetic): rename `agent-harness-v2` → `engineering-harness-v2` (skill content unchanged; produces Boot/Interact/Observe doc as before), rename governance doc `agent-harness.md` → `engineering-harness.md` (with legacy filename fallback for backwards compat), template `## Known Difficulties` seeding, AGENTS.md / CLAUDE.md / README_AGENTS.md / justfile updates, `harness-is-the-product-v2` Principle 2 wording update ("Track Velocity Compounding" → "Track Compounding Value"), `harness-is-the-product-v2` "Two harnesses, one principle" callout softened (engineering harness becomes the umbrella; substrate vs agent become sub-aspects), `(E)`/`(A)`/`(both)` tag system collapsed, **8 SDD pipeline skills' agent-harness references updated** to use the broader "engineering harness" terminology + the renamed governance-doc path, plan-6a one-line path update, plan-1a Subagent 7 reader update, **plan-6 + plan-6-companion compound integration** (compound vocabulary in skill bodies, `compound-1-track` calls during work, companion farewell envelope → compound entry mapping documented).
   - **Group F — Dogfood + Compounding Test**: use both producer + harvest in this repo for a week; calibrate self-introspection heuristics; calibrate harvest staleness thresholds; file vibe regressions as `compound-1-track` entries against the skills themselves (delicious recursion).
@@ -235,9 +235,9 @@ This repository does not use the formal `docs/domains/` system (no `docs/domains
 
 ### `compound-0-setup` (scaffold + re-check)
 
-1. **First-run scaffold**: invoking `/compound-0-setup` in a repo with no `docs/compound/` directory creates the directory with `README.md` (convention guide), `_session-buffer.md` (empty), and the `sessions/` subdirectory. Stages diffs in `scratch/` for AGENTS.md / CLAUDE.md / README_AGENTS.md "Compounding Value System" sections and for justfile retro recipes.
+1. **First-run scaffold**: invoking `/compound-0-setup` in a repo with no `docs/compound/` directory creates the minimal canonical tree per workshop 006: `README.md` (convention guide), `_buffers/README.md` + `_buffers/.gitignore` (gitignores `*.session-buffer.md`), `agents/.gitkeep`. **No `sessions/` subdir; no `_LEDGER.md`; no `plans/` subdir.** Stages diffs in `scratch/` for AGENTS.md / CLAUDE.md / README_AGENTS.md "Compounding Value System" sections and for justfile retro recipes.
 
-1a. **First-run docs/retros/ migration** (per Clarification Q5.3): if `docs/retros/` exists in the repo (from minih auto-harvest or plan-6a's prior writes), `compound-0-setup` automatically moves all files to `docs/compound/` (preserving subdirectory structure) and writes a `docs/retros/.moved-to-compound` breadcrumb pointing at the new location. Auto-applied (not staged), justified because the destination is purely a rename of the directory the files were already destined for. Re-runs detect the breadcrumb and skip the migration. User can revert with `git mv` and `docs/retros/.disabled` if they object.
+1a. **First-run docs/retros/ migration** (per Clarification Q5.3, refined by workshop 006 § D9): if `docs/retros/` exists in the repo (from minih auto-harvest or plan-6a's prior writes), `compound-0-setup` automatically **splits** each `<slug>.md` (parsing on `^## \d{4}-\d{2}-\d{2}T` block delimiters) into one per-run `.retro.md` file under `docs/compound/agents/<slug>/<date>/T<HH-MM-SS>Z-<hash>.retro.md` using the workshop 005 `minihToUniversal()` mapping. Originals are renamed to `*.legacy.md` (reversible). Writes `docs/retros/.split-to-compound` breadcrumb. Auto-applied (not staged) — destination is purely a rename + format-upgrade of files already destined for the compound loop. Re-runs detect the breadcrumb and split only blocks not yet migrated (idempotent). User can revert with `git mv *.legacy.md *.md` and `git rm docs/retros/.split-to-compound`.
 2. **Hand-off to substrate layer**: after scaffold, `compound-0-setup` invokes `engineering-harness-v2` (or stages its invocation as a follow-up step the user runs) so the engineering-harness.md template is established with `## Known Difficulties` ready to seed.
 3. **Re-entrant re-check**: re-invoking `/compound-0-setup` in a repo where setup has already been done detects what's present, identifies what's missing or stale, and re-stages only the diffs needed. No destructive operations on existing files.
 
@@ -251,14 +251,14 @@ This repository does not use the formal `docs/domains/` system (no `docs/domains
 
 7. **Empty buffer is silent**: at session end, if `docs/compound/_session-buffer.md` is empty, no prompt appears.
 8. **Single soft prompt**: at session end, if the buffer has entries, the user sees one prompt listing all entries with one-line encoding hints per entry and a single `[s/t/p/e/d/a]` menu. No per-entry prompts; no mid-session prompts.
-9. **Default action preserves information**: pressing enter at the prompt = `[a]ll-save`; saves all entries to the appropriate scope file (active plan's `docs/compound/<plan-slug>.md` if a plan is detected from cwd or branch ordinal; else `docs/compound/sessions/<date>-<branch>.md`).
+9. **Default action preserves information**: pressing enter at the prompt = `[a]ll-save`; saves all entries by wrapping them in a universal retro envelope (workshop 005) and writing one `.retro.md` file at `docs/compound/agents/<slug>/<date>/T<HH-MM-SS>Z-<hash>.retro.md` per workshop 006 § Path Resolver. Frontmatter `plan_id` is set from cwd/branch detection (active plan) or `null` (no plan). No `<plan-slug>.md` or `sessions/<date>-<branch>.md` file is written — plan/session views are computed by `compound-3-harvest` filters at read time.
 10. **`[e]ncode` stages a reviewable diff**: choosing `[e]ncode` writes a candidate unified diff to `scratch/encode-<entry-id>-<target-shortname>.diff` and prints the `git apply scratch/...` command. Nothing is auto-applied.
 11. **`[t]ask` and `[p]lan` emit copy-pasteable invocations**: choosing `[t]ask` prints a ready-to-run `/plan-5-v2-phase-tasks-and-brief --fix "<entry summary>"` invocation seeded from the entry; choosing `[p]lan` prints `/plan-1b-v2-specify "<entry summary>"`.
 12. **Buffer cleared after routing**: after the user makes a choice (any of `[s/t/p/e/d/a]`), `_session-buffer.md` is reset to empty.
 
 ### `compound-3-harvest` (periodic curation)
 
-13. **Reads all scope files**: invoking `/compound-3-harvest` reads every entry across `docs/compound/<plan>.md`, `docs/compound/sessions/*.md`, and `docs/compound/<agent-slug>.md` (where minih has written) into one in-memory view.
+13. **Reads all retros into one in-memory view**: invoking `/compound-3-harvest` scans `docs/compound/agents/**/*.retro.md` (canonical) AND `docs/retros/*.md` (minih legacy back-compat; block-parsed on the fly). Validates each retro's frontmatter against `retro.schema.json` (workshop 005); skips malformed retros with a warning; dedups by `retro_id`. The view is **transient — held in memory and printed to terminal**; no on-disk index/rollup file is written (workshop 006 KISS revision).
 14. **Curates the view**: deduplicates entries (heuristic match on category + target + description-similarity), clusters by category and target, age-orders within clusters (newest first). Cluster summaries show the count and the most-frequent description-pattern.
 15. **Flags stale entries**: entries with `status: open` and an age > 4 weeks, or `status: suggested` and no `resolved-by` after 2 weeks, are flagged "needs decision" with a one-keystroke menu to advance status (`[r]esolved` / `[w]ontfix` / `[s]till-active`).
 16. **Prioritised summary**: presents at most 10 actionable entries, prioritised recurrence count > severity > age. Each entry has the same `[s/t/p/e/d/a]` escalation menu as `compound-2-bubble` plus the new `[r/w/s]` status-update actions.
@@ -272,7 +272,7 @@ This repository does not use the formal `docs/domains/` system (no `docs/domains
 
 ### Pipeline touchpoints
 
-21. **`plan-1a-v2-explore` Subagent 7 reads `docs/compound/`**: Subagent 7 ("Prior Learnings Scout") is updated to read `docs/compound/<plan-slug>.md`, `docs/compound/sessions/*.md`, and `docs/compound/<agent-slug>.md` in addition to the legacy `## Discoveries & Learnings` tables. New entries surface in the research dossier's Prior Learnings section with the same `PL-NN` numbering.
+21. **`plan-1a-v2-explore` Subagent 7 reads `docs/compound/`**: Subagent 7 ("Prior Learnings Scout") is updated to read `docs/compound/agents/**/*.retro.md` (canonical per workshop 006) AND `docs/retros/*.md` (minih legacy back-compat) in addition to the legacy `## Discoveries & Learnings` tables. Filters retros relevant to the current research topic (by `frontmatter.plan_id` if a plan is detected, by recency otherwise). New entries surface in the research dossier's Prior Learnings section with the same `PL-NN` numbering.
 22. **`plan-6a-v2-update-progress` path update**: Step 8c's hardcoded `docs/retros/` path updates to `docs/compound/`. One-line change. No behavior change beyond the path.
 
 22a. **`plan-6-v2-implement-phase` calls `compound-1-track` during work**: the skill body is updated to invoke `compound-1-track` at natural friction points during implementation (the same trigger heuristics as `compound-1-track`'s default: tool call > 30s, zero-result search, 2nd retry, backtrack, test/build failure requiring guesswork). This produces fine-grained per-task entries in the buffer rather than only the coarse-grained phase-end retro that plan-6a writes. End-of-phase output reminds the user to run `/compound-2-bubble` if any buffer entries accumulated.
@@ -281,7 +281,7 @@ This repository does not use the formal `docs/domains/` system (no `docs/domains
     - Reference `harness-is-the-product-v2` (philosophy) + the compound family + `engineering-harness-v2` (substrate) as the three layers it operates within
     - Call `compound-1-track` during orchestrator-side work (same as plan-6 above)
     - Document the **companion farewell envelope → compound entry mapping**: `farewell.retrospective.magicWand` (single string + `magicWandTarget`) maps to compound `type: magic-wand`, `target: <mapped>`; `farewell.retrospective.difficulties[]` (MH-XXX prefix) maps to compound `type: difficulty`; `farewell.retrospective.workedWell` (when non-trivial) maps to compound `type: gift`. Schema details locked by the schema workshop.
-    - Frame the companion as a **second producer** of compound entries (alongside the orchestrator's own `compound-1-track` calls). Both producers' outputs land in `docs/compound/<plan-slug>.md` via plan-6a Step 9's existing auto-harvest path (which got the path update in AC#22).
+    - Frame the companion as a **second producer** of compound entries (alongside the orchestrator's own `compound-1-track` calls). Both producers' outputs land as per-run `.retro.md` files at `docs/compound/agents/<agent>/<date>/T<HH-MM-SS>Z-<hash>.retro.md` (workshop 006 path resolver). Each retro has `frontmatter.plan_id` set to the active plan; plan-grouped views come from `compound-3-harvest --plan <slug>` filters. plan-6a Step 9's auto-harvest runs the universal-schema round-trip mapping (workshop 005 § D9) to convert the companion's minih-shaped farewell envelope into a universal retro file.
     - End-of-phase output reminds the user to run `/compound-2-bubble` for the orchestrator-side buffer + `/compound-3-harvest` to triage the accumulated paired entries (orchestrator + companion) post-phase.
 
 ### Cross-cutting
@@ -352,7 +352,7 @@ After Session 1's clarifications, three workshops (vibe / end-to-end-flow / syst
 | **Compound family replaces single producer + consumer** | The originally-proposed `self-improve-v2` (one skill, multiple modes) and `plan-8a-compound-harvest` (separate consumer) split into four small focused skills: `compound-0-setup`, `compound-1-track`, `compound-2-bubble`, `compound-3-harvest`. Each is loadable in isolation; each is re-entrant. |
 | **New top-level skills category** | `skills/compound/` joins `SDD/`, `general/`, `personal/` as a peer category. The compound family lives there, not under `skills/SDD/`. |
 | **Numbering 0/1/2/3 (no gap)** | The user accepted dropping `compound-1-explore` because Stage 1 (Explore) is fulfilled by `plan-1a-v2-explore` Subagent 7 + `engineering-harness.md § Known Difficulties` template seed. Cross-skill domain leak (SDD reads compound's surface) explicitly accepted as a "much faster" tradeoff. |
-| **`docs/compound/` umbrella** | The directory previously called `docs/retros/` (in this spec's earlier draft) becomes `docs/compound/`. ALL self-improvement artifacts live there: difficulty entries, magic-wand entries, gift entries, insights, the session buffer, per-plan files, per-session files, per-agent files (minih), the auto-rebuilt index, the convention guide, the `.disabled` sentinel. |
+| **`docs/compound/` umbrella** | The directory previously called `docs/retros/` (in this spec's earlier draft) becomes `docs/compound/`. ALL self-improvement artifacts live there. (Historical note: this row originally listed per-plan files, per-session files, per-agent files, and an auto-rebuilt index — that flat-file layout was superseded by workshop 006 with the per-run isolated layout `agents/<slug>/<date>/T<HH-MM-SS>Z-<hash>.retro.md` and NO on-disk index files. Cross-cutting views are computed at read time by `compound-3-harvest`. See active § Target Domains row + AC#1/#9/#13 for the current layout.) |
 | **"Compounding value" framing** | The umbrella term is *compound* — short for *compounding value* (not minih's narrower "compounding velocity"). Every entry compounds value session-over-session. Like compound interest. `harness-is-the-product-v2` Principle 2 wording updates to match. |
 | **`agent-harness-v2` → `engineering-harness-v2` rename** | Substrate-layer skill renamed. Interpretation pending — see Open Q1. Governance doc renames `agent-harness.md` → `engineering-harness.md` with backwards-compat read fallback. |
 
@@ -360,7 +360,7 @@ These decisions are reflected throughout this spec body. Workshops 001 and 002 s
 
 ### Session 2026-05-16 (later still) — plan-6 + plan-6-companion compound integration
 
-**User directive**: ensure `plan-6-v2-implement-phase-companion` is in scope and "dressed up with this compounding stuff" — the companion mode uses the minih companion runtime and should be fluent in the magic-wand / compounding-value vocabulary. The companion is already a producer of compound-shaped entries (via plan-6a Step 9's auto-harvest of the farewell envelope into `docs/compound/<plan-slug>.md`), but the skill body itself doesn't speak the compound language explicitly.
+**User directive**: ensure `plan-6-v2-implement-phase-companion` is in scope and "dressed up with this compounding stuff" — the companion mode uses the minih companion runtime and should be fluent in the magic-wand / compounding-value vocabulary. The companion is already a producer of compound-shaped entries (via plan-6a Step 9's auto-harvest of the farewell envelope; historical note: this section originally said the harvest landed in `docs/compound/<plan-slug>.md` — that path was superseded by workshop 006 § Path Resolver, which routes per-run retros to `docs/compound/agents/<agent>/<date>/T<time>Z-<hash>.retro.md` with plan attribution via `frontmatter.plan_id`), but the skill body itself doesn't speak the compound language explicitly.
 
 **Decision**: pull both `plan-6-v2-implement-phase` and `plan-6-v2-implement-phase-companion` into v1 scope as **modify** entries.
 
@@ -437,7 +437,7 @@ R8 (rename ambiguity risk) → **Resolved**.
 - Auto behavior, not staged diff (per the user's selection of the "auto on first compound-0-setup" option)
 - Re-runs detect the breadcrumb and skip the migration step
 
-Note: this auto-move is a deviation from the otherwise strict "suggest-don't-mandate" pattern (anti-vibe 5). Justification: the destination is purely a rename of the directory the files were *already* destined for — minih and plan-6a both intend their writes to feed the compound loop. The breadcrumb makes the move auditable. If the user objects post-migration, they can revert with `git mv` and re-add `docs/retros/.disabled`.
+Note: this auto-split is a deviation from the otherwise strict "suggest-don't-mandate" pattern (anti-vibe 5). Justification: the destination is purely a rename + format-upgrade of files already destined for the compound loop — minih and plan-6a both intend their writes to feed compounding-value reflection. The breadcrumb + `*.legacy.md` rename pattern makes the split fully auditable and reversible. If the user objects post-migration, they can `git mv *.legacy.md *.md` and `git rm docs/retros/.split-to-compound`. (Refined by workshop 006 § D9 from the original "move" to the per-block "split" pattern.)
 
 #### Q5.4 — `harness-is-the-product-v2` Principle 2 wording
 
@@ -449,6 +449,45 @@ Note: this auto-move is a deviation from the otherwise strict "suggest-don't-man
 - Minor cascade: the existing Principle 2 body text mentions "velocity" several times; review for places where "value" is the more general framing
 - Group E scope picks up this wording change
 
+### Session 2026-05-16 (Session 6) — 4-question lock for soft + future-flagged questions
+
+Final Q&A round to resolve the carried-forward soft questions and the future-flagged variants. All four resolved as recommended (Q6.3 was initially pulled into v1 as a scope expansion, then re-deferred to v2 in a follow-up grill — see Q6.3 below).
+
+#### Q6.1 — Task-boundary self-prompt behavior
+
+**Question**: When does the optional task-boundary magic-wand check fire?
+**Answer**: **Empty-buffer-only**.
+**Effect**: `compound-1-track`'s trigger heuristics list explicitly states the task-boundary check fires only when no entry was logged during the current task. Avoids low-quality "I already covered this" duplicates. Resolves the carried-forward soft Open Q5. AC#6 (≤1 self-check per 5min) absorbs this calibration.
+
+#### Q6.2 — `compound-0-setup` scaffolding consent
+
+**Question**: Auto-scaffold on first invocation, --apply gate, or staged diff?
+**Answer**: **Auto-scaffold + log as `type: gift`**.
+**Effect**: Confirms AC#1's default behavior. The auto-scaffold of `docs/compound/` is logged as a `type: gift, source: agent-self, description: "bootstrapped the Compounding Value System"` entry so the user sees it at the next bubble-up. Matches the same suggest-don't-mandate-softening rationale used for Q5.3's auto-migration: the scaffolded files are pure greenfield with no destructive risk. Resolves the carried-forward soft Open Q6.
+
+#### Q6.3 — Variant A: auto-verification of encoded fixes in v1
+
+**Question**: Pull Variant A (auto-verification) into v1, or defer to v2?
+**Answer**: **Defer to v2** (after a brief in-and-out: initially pulled into v1 as a scope expansion, then re-deferred during a follow-up grill on best-effort framing — see below).
+**Initial answer**: pull into v1; close the loop at `verified`.
+**Reversal rationale (follow-up grill, 2026-05-16)**: under the system's best-effort framing (no compliance gates, no enforcement levers), auto-verification stacks two soft compliance bets — the original entry must be logged, AND a future agent must remember to write a structured `resolves: <id>` back-reference on a `type: gift` entry. Either link missing → `verified` never lands → signal stays silent. The user accepted the deferral: "no need to verify them at all, just have them as encoded."
+**Effect** (after reversal):
+- `encoded` is the terminal lifecycle state in v1. `verified` re-joins the future-flagged variants list (Open Q11/Q12 neighbours).
+- No `resolves` field on `type: gift` entries in v1 schema.
+- `compound-1-track` log instructions do NOT mention auto-verification.
+- `compound-3-harvest` does NOT contain verification-detection logic.
+- AC#17a (auto-verification end-to-end) removed.
+- Compounding Test loses signal #2a; signals #1, #2, #3, #4 stand.
+- Schema workshop scope reverts (no `resolves` field discussion).
+- Harvest-behavior workshop scope reverts (no verification-detection sub-topic).
+- Groups C and D in the Phases hint shrink back to the pre-Q6.3 description.
+
+#### Q6.4 — Bubble-up "anything else?" prompt
+
+**Question**: Add the optional "anything else you noticed?" prompt to bubble-up in v1?
+**Answer**: **Defer to post-dogfood revisit**.
+**Effect**: Confirms workshop 001 Q1's recommendation. Bubble-up shows only entries the agent logged automatically; no free-text prompt for things the user noticed but the agent missed. Risk if added: anti-vibe 2 (bureaucratic ceremony). Revisit after 1 month of dogfood data shows whether the agent is missing too much friction. Open Q13 (now redundant) → resolved as defer.
+
 ---
 
 ## Open Questions
@@ -457,41 +496,49 @@ Note: this auto-move is a deviation from the otherwise strict "suggest-don't-man
 
 - ~~**[engineering-harness-v2 rename interpretation]**~~ — RESOLVED: **Interpretation A (Cosmetic)**. Group E unblocked. See Clarifications § Q5.1 for cascade items.
 - ~~**[v2-suffix consistency]**~~ — RESOLVED: **flat** (compound-N-<verb>). See Clarifications § Q5.2.
-- ~~**[docs/retros/ migration]**~~ — RESOLVED: **auto move + breadcrumb on first compound-0-setup invocation**. AC#1 extended. See Clarifications § Q5.3.
+- ~~**[docs/retros/ migration]**~~ — RESOLVED: **auto split + breadcrumb on first compound-0-setup invocation** (refined from "move" to "split" by workshop 006 § D9 — parses each `## <ISO>` block in `docs/retros/<slug>.md` into one per-run `.retro.md` file in the new layout via the workshop 005 mapping; originals renamed to `*.legacy.md` for reversibility; breadcrumb at `docs/retros/.split-to-compound`). AC#1a covers it. See Clarifications § Q5.3 + workshop 006.
 - ~~**[harness-is-the-product-v2 Principle 2 wording]**~~ — RESOLVED: **update to "Track Compounding Value"**. See Clarifications § Q5.4.
 
-### Carried forward (deferred to workshops or follow-up)
+### Resolved in Session 6 (2026-05-16)
 
-5. **[task-boundary self-prompt behavior]** — workshop 001 D8c includes "optional task-boundary check". Should the check fire only when the buffer is empty for the current task (avoids redundancy), or every task boundary regardless? Recommendation: empty-buffer-only.
-6. **[scaffolding consent]** — Does `compound-0-setup` scaffold `docs/compound/` automatically on first invocation, or wait for explicit confirmation? AC#1 assumes auto-scaffold but the user might want explicit consent. Recommendation: auto-scaffold but log the act as `type: gift` so the user sees it at next bubble-up.
-7. **[schema field shape — workshop deferred]** — Exact YAML field names, required-vs-optional split, and minih round-trip mapping deferred to the schema workshop (queued).
-8. **[bubble-up rendering — workshop deferred]** — Exact prompt copy, key-stroke handling, multi-entry per-action selection deferred to the CLI-flow workshop (queued).
-9. **[AGENTS.md voice and exact text — workshop deferred]** — Exact 10–15 lines and precise placement deferred to the AGENTS.md voice workshop (queued).
-10. **[harvest companion behavior — workshop deferred]** — Staleness thresholds, summary rendering, ledger-mutation behavior deferred to the harvest behavior workshop (queued).
+- ~~**[task-boundary self-prompt behavior]**~~ — RESOLVED: **empty-buffer-only**. See Clarifications § Q6.1.
+- ~~**[scaffolding consent]**~~ — RESOLVED: **auto-scaffold + log as `type: gift`**. See Clarifications § Q6.2.
+- ~~**[Variant A — auto-verification]**~~ — RESOLVED **as deferred to v2** (after an in-and-out: initially pulled into v1, then re-deferred under best-effort framing — two stacked compliance bets too soft to land). `encoded` is the terminal v1 state. See Clarifications § Q6.3.
+- ~~**[bubble-up "anything else?" prompt]**~~ — RESOLVED: **defer to post-dogfood revisit**. See Clarifications § Q6.4.
 
-### Future-flagged
+### Workshop-deferred (scope decisions for the four queued workshops)
 
-11. **[Variant A — auto-verification]** (workshop 002 § Extras) — Should future agents auto-detect that an encoded fix worked (via a `type: gift` entry with `resolves: <id>`) and flip status to `verified`? Recommendation: defer to v2; allow manual `[r]esolved` flow in v1.
-12. **[Variant B — promotion]** (workshop 002 § Extras) — Should `compound-3-harvest` flag fixes used across ≥ 3 plans and suggest promotion to a more permanent home? Recommendation: defer to v2; revisit after dogfood-week data accumulates.
-13. **[bubble-up "anything else?" prompt]** (workshop 001 Q1) — Should `compound-2-bubble` also offer "anything else you noticed but I didn't log?" prompt? Recommendation: NO in v1 (anti-vibe 2 risk); revisit after 1 month.
+7. **[schema field shape]** — Exact YAML field names, required-vs-optional split, minih round-trip mapping deferred to the schema workshop.
+8. **[bubble-up rendering]** — Exact prompt copy, key-stroke handling, multi-entry per-action selection deferred to the CLI-flow workshop.
+9. **[AGENTS.md voice and exact text]** — Exact 10–15 lines and precise placement deferred to the AGENTS.md voice workshop.
+10. **[harvest companion behavior]** — Staleness thresholds, summary rendering, ledger-mutation behavior deferred to the harvest behavior workshop.
+
+### Future-flagged (deferred to v2 or post-dogfood)
+
+10a. **[Variant A — auto-verification]** (workshop 002 § Extras; re-deferred from Q6.3) — Should `compound-3-harvest` detect `type: gift` entries with a `resolves: <id>` back-reference and auto-flip the original `encoded → verified`? Re-deferred from v1 because the two stacked compliance bets (original logged + verifying gift logged with structured ID) are too soft under best-effort framing. Revisit when there's a more reliable verification signal (e.g. natural-language pattern match on free-text mentions of prior fixes).
+
+11. **[Variant B — promotion]** (workshop 002 § Extras) — Should `compound-3-harvest` flag fixes used across ≥ 3 plans and suggest promotion to a more permanent home (constitution / framework default / docs/how/ article)? Recommendation: defer to v2; revisit after dogfood-week data accumulates.
+12. **[Variant D — cross-project sharing]** (workshop 002 § Extras) — Should verified entries with `category: tooling` become npx-skills install candidates for other repos? Recommendation: defer to v2.
 
 ---
 
 ## Workshop Opportunities
 
-### Done (3)
+### Done (6)
 
 | # | Topic | Type | Outcome |
 |---|-------|------|---------|
 | 001 | Self-improvement vibe | Other (UX / philosophy) | Vibe statement + 8 design decisions + 7 anti-vibes + 3 imagined sessions + Compounding Test |
 | 002 | End-to-end flow | Integration Pattern | Five-stage loop diagrams + 6 inter-stage contracts (F1–F6) + worked-example sequence + entry lifecycle state machine + 9-way encoding-target decision tree + 5 variants (verification / promotion / recursion / cross-project sharing / minih interop) |
 | 003 | Compound system map | Integration Pattern | Three-layer stack diagram + ecosystem map + file layout + 5 integration surfaces + per-component I/O contracts + worked example + the "compound umbrella" scope decision + 5 architectural decisions (M1–M5) |
+| 004 | SDD pipeline ↔ compound integration | Integration Pattern | Per-skill integration matrix (10 plan-N skills) + 4 firing-site decisions (D1–D7) + integration topology Mermaid + 4 worked walkthroughs + 10-item plan-3 acceptance criteria list + companion-mode harvest anchor (replaces /plan-7 in dominant flow) |
+| 005 | Universal retro contract — JSON Schema, cross-system | Data Model | JSON Schema for `Retro` + namespaced `system.compound` and `system.minih` sub-schemas + 10 decisions (D1–D10) + 3 wire-format examples + deterministic minih round-trip mappings + 4 walkthroughs + 8 edge cases + 3-phase minih migration path + 9-item plan-3 acceptance criteria + 5-item minih RFC acceptance criteria. **Pulls minih importer into v1** (was previously deferred); **defers folder-layout to workshop 006** |
+| 006 | Compound folder layout — per-run isolation by date | Storage Design | Minimal canonical tree (agent-first only; `agents/<slug>/<date>/T<HH-MM-SS>Z-<hash>.retro.md` + buffer + README + optional `.disabled`; NO on-disk index files per KISS revision) + `resolvePath()` + `slugify()` helpers + runtime-view spec (`/compound-3-harvest` filters by `--plan` / `--agent` / `--since` / `--kind` and prints to terminal) + reversible split-migration recipe + 9 decisions (D1–D9; D4 revised to "no indexes") + 4 walkthroughs + 11 edge cases + 10-item plan-3 acceptance criteria. **Subsumes spec's `sessions/<date>-<branch>.md` path** (D5); **refines spec Q5.3 from auto-move to split**; **drops all `_LEDGER` / `_INDEX` rollup files** (information over ceremony) |
 
-### Queued (4 — required before `/plan-3-v2-architect`)
+### Queued (3 — required before `/plan-3-v2-architect`)
 
 | # | Topic | Type | Why Workshop | Key Questions |
 |---|-------|------|--------------|---------------|
-| (next) | Difficulty ledger schema (YAML field shape, minih round-trip mapping, **companion farewell envelope mapping**) | Data Model | Schema is contract for `compound-1-track` writers, the harvest reader, AND `plan-6-v2-implement-phase-companion`'s farewell envelope import path. High inertia once written; ripples across every reader, any future analytics tool, and every compound entry produced by the companion's auto-harvest. | Final field names? Required vs optional? Minih `retrospective.{magicWand, magicWandTarget, difficulties[], workedWell, coordination}` → portable YAML mapping rules? Companion farewell envelope (rich; multi-finding) → compound entries (per-finding split? cluster-as-one?)? `kind` field enum exhaustiveness? Per-scope vs global ID prefix scheme (DL-XXX in buffer, then re-numbered when saved to scope, vs `<scope>:DL-NNN`)? Auto-numbering reset rules? How does compound's `source: agent-self` relate to minih's source-less retros? |
 | (next) | Bubble-up CLI flow (prompt rendering, key-stroke handling, plan-detection, multi-entry selection) | CLI Flow | No precedent in our skill set; UX details determine whether escalation actually fires; high blast radius if wrong (anti-vibe 6 = schema-driven UX is one wrong step away). | Exact prompt copy? How is `[t]/[p]/[e]` invocation emitted (printed string? clipboard? written file?)? Plan-detection heuristics for D4? Multi-entry per-action selection (e.g. choosing `[t]` for 3 entries)? Behavior on terminal narrower than 80 cols? |
 | (next) | AGENTS.md / CLAUDE.md / README_AGENTS.md voice and placement | Other | Three-file mirror; voice sets the tone for the whole **Compounding Value System** as a first-class concept in this repo's skills graph; sets norms for new contributors / new agents. | Where in AGENTS.md does the "Compounding Value System" section land? Exact 10–15 lines for D7's operational-contract voice with one-sentence story preamble? README_AGENTS.md catalog entries — long form or one-liner each? Linkage to `harness-is-the-product-v2` and `engineering-harness-v2` — link, embed, or both? How does the AGENTS.md text describe the three-layer stack and name the slug `compound` as the umbrella? |
 | (next) | Harvest companion behavior | Other (UX / interaction-pattern) | The skill is conceptually clear (read ledger, curate, surface) but its UX, staleness heuristics, and ledger-mutation behavior are unspecified. Without this workshop the harvest design space is wide-open during plan-3. | When does it run (after plan-7? on demand? both)? Staleness thresholds (4 weeks `open` / 2 weeks `suggested`?)? Does it mutate ledger files in place (flip `status: wontfix`) or only suggest? How does its prioritised-summary output differ from `compound-2-bubble`'s session-end prompt? Does it call compound-1-track's schema or extend it (e.g. cluster IDs)? |
@@ -501,7 +548,7 @@ Note: this auto-move is a deviation from the otherwise strict "suggest-don't-man
 | Topic | Type | Why It Might Workshop Later |
 |-------|------|------------------------------|
 | `compound import-minih` mapping | Data Model | If the schema workshop lands cleanly and minih interop tension surfaces during dogfood week, the importer needs a design pass before its follow-up plan ships |
-| `docs/compound/_LEDGER.md` rebuild logic | Data Model | If the auto-rebuild logic gets non-trivial (e.g. cross-scope rollups handled by `compound-3-harvest`), it deserves its own workshop |
+| ~~`docs/compound/_LEDGER.md` rebuild logic~~ | ~~Data Model~~ | **OBSOLETE** — workshop 006 KISS revision dropped all on-disk index/rollup files; cross-cutting views are computed by `compound-3-harvest` at read time. No rebuild logic to workshop. |
 | Reader-side surfacing UX in `plan-1a` Subagent 7 | Other | If the surfacing of new ledger entries in research dossiers feels off in dogfood week, this workshop tunes the presentation |
 | Engineering-harness rename ripple cleanup | Other | If Open Q1 resolves toward Interpretation B (scope refocus), the cleanup of `harness-is-the-product-v2`'s disambiguation + AGENTS.md text + 8 SDD skills' cross-references needs its own design pass |
 

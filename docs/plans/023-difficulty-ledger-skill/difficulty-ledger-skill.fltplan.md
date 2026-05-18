@@ -4,7 +4,7 @@
 
 **Spec**: [difficulty-ledger-skill-spec.md](./difficulty-ledger-skill-spec.md)
 **Plan**: Pending — run `/plan-3-v2-architect` (after the four queued workshops; all critical Open Questions now resolved)
-**Generated**: 2026-05-16 · **Last clarified**: 2026-05-16 (Session 1: 8 Qs; Session 2: compound restructure; Session 3: plan-6 + plan-6-companion compound integration; Session 4: branding lock — Compounding Value System; Session 5: 4-question lock — engineering-harness Interpretation A, flat naming, retros auto-migrate, Principle 2 wording)
+**Generated**: 2026-05-16 · **Last clarified**: 2026-05-16 (Sessions 1–6 + follow-up grill: 24 questions resolved; Q6.3 — auto-verification — was briefly pulled into v1 then re-deferred to v2 under best-effort framing; `encoded` is the terminal v1 state)
 **Status**: Specifying — workshops queued; Group E unblocked
 **Mode**: Simple (single phase with grouped tasks; plan-4/plan-5 optional)
 
@@ -207,8 +207,8 @@ flowchart LR
 |-------|-------|--------|
 | A | Four queued workshops (schema · CLI flow · AGENTS.md voice · harvest behavior) | Pending |
 | B | Build `compound-0-setup` + `docs/compound/` scaffold + `_LEDGER.md` rebuild logic | Pending |
-| C | Build `compound-1-track` + `compound-2-bubble` (per-session producer pair) | Pending |
-| D | Build `compound-3-harvest` (consumer-side periodic skill with `[r/w/s]` lifecycle ops) | Pending |
+| C | Build `compound-1-track` + `compound-2-bubble` (per-session producer pair). | Pending |
+| D | Build `compound-3-harvest` (consumer-side periodic skill with `[r/w/s]` lifecycle ops). | Pending |
 | E | Substrate + governance + pipeline integration (Q5.1 resolved as Interpretation A — cosmetic): rename `agent-harness-v2` → `engineering-harness-v2` (skill content unchanged), rename governance doc + legacy fallback, template `§ Known Difficulties` seed, AGENTS.md / CLAUDE.md / README_AGENTS.md / justfile updates, `harness-is-the-product-v2` Principle 2 wording ("Track Velocity Compounding" → "Track Compounding Value") + disambiguation softening (engineering harness becomes umbrella), 8 SDD skills' agent-harness terminology cascade, plan-6a one-line path update, plan-1a Subagent 7 reader update, plan-6 + plan-6-companion compound integration | Pending |
 | F | Dogfood week + Compounding Test evaluation; calibrate self-introspection + harvest staleness heuristics; file vibe regressions as compound-1-track entries against the skills themselves | Pending |
 
