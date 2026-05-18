@@ -11,7 +11,7 @@ The tutorial starts with a visible orientation turn, then runs checks. State is 
 | # | Check | Required | Result |
 |---|-------|----------|--------|
 | 1 | Workspace open | Yes | Refuse if no repo/workspace is visible. |
-| 2 | RPIV commands available | Yes | Refuse if `/task-research`, `/task-plan`, `/task-implement`, or `/task-review` are unavailable. |
+| 2 | RPIV and tutorial-continuation commands available | Yes | Refuse if `/task-research`, `/task-plan`, `/task-implement`, `/task-review`, or `/sdd-tutorial-next` are unavailable. |
 | 3 | Branch safety | Yes | Refuse on `main`, `master`, `production`, `prod`, or `release/*`. |
 | 4 | Working-tree state | Yes | Continue only if clean or learner acknowledges intentional dirty state. |
 | 5 | Task-category screen | Warn | Warn that red-category tasks will be refused. |
@@ -55,12 +55,12 @@ Slug guidance:
 
 ## Slash-command failure copy
 
-> I can't see the RPIV task skills yet, so the hands-on lesson would get stuck before Research.
+> I can't see the RPIV task skills or `/sdd-tutorial-next` yet, so the hands-on lesson would get stuck before Research or the first classroom return.
 >
-> The next useful move is to run or hand off to `install-hve-core-rpiv`, which installs local skill-shaped RPIV commands from the current authoritative HVE Core source. No tutorial state has been created yet.
+> The next useful move is to install the missing local skills. If RPIV task skills are missing, run or hand off to `install-hve-core-rpiv`; if `/sdd-tutorial-next` is missing in this repo, run `just install-agent-skills`. No tutorial state has been created yet.
 >
-> Required commands before this tutorial can continue: `/task-research`, `/task-plan`, `/task-implement`, `/task-review`.
+> Required commands before this tutorial can continue: `/task-research`, `/task-plan`, `/task-implement`, `/task-review`, and `/sdd-tutorial-next`.
 >
-> Expected install surfaces: `.github/agents/hve-core/`, `.github/prompts/hve-core/`, `.agents/skills/task-*`, `.pi/skills/task-*`, or equivalent user-level locations exposed by your chat tool.
+> Expected install surfaces: `.github/agents/hve-core/`, `.github/prompts/hve-core/`, `.agents/skills/task-*`, `.agents/skills/sdd-tutorial-next`, `.pi/skills/task-*`, or equivalent user-level locations exposed by your chat tool.
 >
 > After installation succeeds, restart or reload your coding agent so it discovers the new skills, then rerun `/sdd-tutorial`. If installer recovery fails, use <https://microsoft.github.io/hve-core/docs/getting-started/install> and rerun `/sdd-tutorial` once the commands resolve.

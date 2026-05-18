@@ -7,22 +7,28 @@
 
 - Learner slug: `{learner-slug}`
 - Current phase: `{current_phase}`
+- Current module: `{derived_module}`
 - Branch: `{branch}`
-- Pacing: `{level}` / `{pacing_preference}`
+- Audience: professional engineer learning SDD/RPIV 101
+- Pacing: `{pacing_preference}`
+- Pending work-terminal command: `{pending_work_terminal_command}`
+- Last classroom checkpoint: `{last_classroom_checkpoint_at}`
 
-## Tutorial Map
+## Classroom / Work Terminal Pattern
 
-| Phase | Status | Artifact |
-|-------|--------|----------|
-| Phase -1 | `{status}` | Preflight state |
-| Phase 0 | `{status}` | Level + glossary |
-| Phase 1 | `{status}` | Why SDD |
-| Phase 2 | `{status}` | RPIV map |
-| Phase 3 | `{status}` | Confirmed micro-spec |
-| Phase 4 | `{status}` | Research artifact |
-| Phase 5 | `{status}` | Plan + details artifacts |
-| Phase 6 | `{status}` | Changes + review artifacts |
-| Phase 7 | `{status}` | Completion summary |
+- **Classroom terminal**: `/sdd-tutorial` and `/sdd-tutorial-next` explain, update this lesson plan, and give one next command.
+- **Work terminal**: `/task-research`, `/task-plan`, `/task-implement`, and `/task-review` do the RPIV work.
+- After each work-terminal command finishes, return to the classroom terminal and run `/sdd-tutorial-next`.
+
+## Module Map
+
+| Module | Status | Purpose | Artifact |
+|--------|--------|---------|----------|
+| 1. Project setup | `{status}` | Safety, tutor stance, glossary, two-terminal pattern | Preflight + lesson state |
+| 2. Task selection + Research | `{status}` | Turn a small real task into repo-grounded knowledge and alignment | Micro-spec + research artifact |
+| 3. Planning | `{status}` | Convert research into strategy and implementation contract | Plan + details artifacts |
+| 4. Implementation | `{status}` | Execute the plan into a concrete diff | Changes artifact + code diff |
+| 5. Review + reflection | `{status}` | Validate against evidence and route rework or completion | Review artifact + completion summary |
 <!-- /TUTORIAL-MANAGED -->
 
 <!-- LEARNER-OWNED -->
@@ -42,6 +48,17 @@ Add your own notes here. The tutorial must preserve this section verbatim.
 | Planning log | `{planning_log_path}` | `{verified_or_status}` |
 | Changes | `{changes_path}` | `{verified}` |
 | Review | `{review_path}` | `{verified}` |
+<!-- /TUTORIAL-MANAGED -->
+
+<!-- TUTORIAL-MANAGED -->
+## Module Reflections
+
+| Module | Reflection |
+|--------|------------|
+| Research | `{research_reflection}` |
+| Planning | `{planning_reflection}` |
+| Implementation | `{implementation_reflection}` |
+| Review | `{review_reflection}` |
 <!-- /TUTORIAL-MANAGED -->
 
 <!-- LEARNER-OWNED -->

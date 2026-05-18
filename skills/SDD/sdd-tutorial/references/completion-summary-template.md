@@ -8,8 +8,8 @@
 
 ## Learner Profile
 
-- **Detected level**: `{novice|intermediate|advanced}`
-- **Pacing preference**: `{examples-heavy|lean}`
+- **Audience**: professional engineer learning SDD/RPIV 101
+- **Pacing preference**: `{pacing_preference}`
 
 ## Chosen Task
 
@@ -33,6 +33,13 @@
 - Research -> Plan: `{research_handoff_note}`
 - Plan -> Implement: `{plan_handoff_note}`
 - Changes -> Review: `{changes_handoff_note}`
+
+## Module Reflections
+
+- Research: `{research_reflection}`
+- Planning: `{planning_reflection}`
+- Implementation: `{implementation_reflection}`
+- Review: `{review_reflection}`
 
 ## Learner's RPI Definition
 

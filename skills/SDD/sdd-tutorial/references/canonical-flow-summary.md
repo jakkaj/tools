@@ -13,9 +13,13 @@ Uncertainty -> Knowledge -> Strategy -> Working Code -> Validated Code
 The learner types:
 
 1. `/task-research <topic>`
+   - Return to the classroom terminal and run `/sdd-tutorial-next`.
 2. `/task-plan <research-path>` or `/task-plan` with the research file open
+   - Return to the classroom terminal and run `/sdd-tutorial-next`.
 3. `/task-implement`
+   - Return to the classroom terminal and run `/sdd-tutorial-next`.
 4. `/task-review` or `/task-review <scope>`
+   - Return to the classroom terminal and run `/sdd-tutorial-next`.
 
 Between every phase: carry the artifact forward by opening it or explicitly referencing its path in the next command.
 

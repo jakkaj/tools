@@ -12,6 +12,7 @@ Official HVE Core install guide: <https://microsoft.github.io/hve-core/docs/gett
 - `/task-plan`
 - `/task-implement`
 - `/task-review`
+- `/sdd-tutorial-next`
 
 ## Expected install surfaces
 
@@ -19,17 +20,18 @@ At least one of these should expose the commands to the learner's chat tool:
 
 - `.github/agents/hve-core/`
 - `.github/prompts/hve-core/`
-- `.agents/skills/task-research/`, `.agents/skills/task-plan/`, `.agents/skills/task-implement/`, `.agents/skills/task-review/`
+- `.agents/skills/task-research/`, `.agents/skills/task-plan/`, `.agents/skills/task-implement/`, `.agents/skills/task-review/`, `.agents/skills/sdd-tutorial-next/`
 - `.pi/skills/task-research/`, `.pi/skills/task-plan/`, `.pi/skills/task-implement/`, `.pi/skills/task-review/`
 - equivalent user-level agent/prompt locations
 
 ## Check
 
-1. Check whether the four required commands resolve.
-2. If not, inspect the expected install surfaces.
-3. If they are missing, stop before creating tutorial state.
-4. Run or hand off to `install-hve-core-rpiv` when that skill is available.
-5. After the installer succeeds, rerun or resume RPIV command preflight before creating tutorial state.
+1. Check whether the five required commands resolve.
+2. If RPIV task commands are missing, inspect the expected HVE Core install surfaces.
+3. If `/sdd-tutorial-next` is missing, reinstall/update the tutorial skill bundle. In this repo, use `just install-agent-skills`.
+4. If required commands are missing, stop before creating tutorial state.
+5. Run or hand off to `install-hve-core-rpiv` when RPIV task skills are missing and that installer skill is available.
+6. After installation succeeds, rerun or resume command preflight before creating tutorial state.
 
 ## Missing-command response
 
@@ -37,9 +39,9 @@ At least one of these should expose the commands to the learner's chat tool:
 >
 > I will run or hand off to `install-hve-core-rpiv` to install local skill-shaped RPIV commands from the current authoritative HVE Core source. No tutorial state has been created yet.
 >
-> Required commands before this tutorial can continue: `/task-research`, `/task-plan`, `/task-implement`, `/task-review`.
+> Required commands before this tutorial can continue: `/task-research`, `/task-plan`, `/task-implement`, `/task-review`, and `/sdd-tutorial-next`.
 >
-> Expected install surfaces: `.github/agents/hve-core/`, `.github/prompts/hve-core/`, `.agents/skills/task-*`, `.pi/skills/task-*`, or equivalent user-level locations exposed by your chat tool.
+> Expected install surfaces: `.github/agents/hve-core/`, `.github/prompts/hve-core/`, `.agents/skills/task-*`, `.agents/skills/sdd-tutorial-next`, `.pi/skills/task-*`, or equivalent user-level locations exposed by your chat tool.
 >
 > After installation succeeds, I will rerun or resume preflight before creating tutorial state.
 
@@ -51,4 +53,4 @@ If `install-hve-core-rpiv` is unavailable or cannot complete:
 >
 > You can install HVE Core through the official guide instead: <https://microsoft.github.io/hve-core/docs/getting-started/install>
 >
-> Once `/task-research`, `/task-plan`, `/task-implement`, and `/task-review` resolve in this chat tool, rerun `/sdd-tutorial`.
+> Once `/task-research`, `/task-plan`, `/task-implement`, `/task-review`, and `/sdd-tutorial-next` resolve in this chat tool, rerun `/sdd-tutorial`.
