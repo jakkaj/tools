@@ -1,8 +1,8 @@
 # Fallback Toy Tasks
 
-Offer these only when the learner has no safe task, proposes one red task, or cannot narrow a yellow task after two attempts.
+Offer these when the learner has no safe task, asks for suggestions, proposes one red task, or cannot narrow a yellow task after two attempts.
 
-Prefer F0 first when the learner cannot think of something. It lives under the repo's gitignored `scratch/` folder, so it is safe for classroom practice without committing toy code. The other tasks are language-neutral options for learners who prefer to practice on tracked repo content. Every task avoids secrets/auth/payment/deployments and has one done-when condition.
+Prefer F0 first when the learner cannot think of something or asks for suggestions. Do not search the repo for candidates before offering F0. It lives under the repo's gitignored `scratch/` folder, so it is safe for classroom practice without committing toy code. The other tasks are language-neutral options for learners who prefer to practice on tracked repo content. Every task avoids secrets/auth/payment/deployments and has one done-when condition.
 
 ## F0 — Scratch Chalk Prime CLI
 

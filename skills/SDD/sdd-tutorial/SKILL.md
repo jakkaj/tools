@@ -209,7 +209,11 @@ Ask for a real repo task first:
 
 Apply `references/scope-rubric.md`.
 
-Red tasks are refused. Yellow tasks are narrowed. If the learner has no task, or red once, or yellow twice, offer `references/fallback-toy-tasks.md`.
+Red tasks are refused. Yellow tasks are narrowed.
+
+If the learner says anything like "got any suggestions?", "I can't think of one", "not sure", "you pick", or otherwise asks for a suggested task, treat that as "learner has no task." Do not search the repo for candidates. Immediately offer the first fallback from `references/fallback-toy-tasks.md`: the gitignored `scratch/chalk-prime-cli/` Node/Chalk prime-number CLI. Explain that it is safe because `scratch/` is gitignored, then ask whether they want to use that toy task.
+
+Only offer the remaining fallback tasks if the learner does not want the scratch Node/Chalk CLI, proposes one red task, or cannot narrow a yellow task after two attempts.
 
 Before Phase 4, emit and confirm a micro-spec:
 
