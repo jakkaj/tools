@@ -61,6 +61,7 @@ The tutorial reflects the HVE Core Docusaurus docs under `hve-core/docs/rpi/`, b
 - `references/installation-check.md`
 - `references/failure-branches.md`
 - `references/coaching-voice.md`
+- `references/module-syllabus.md`
 - `references/lesson-plan-template.md`
 - `references/completion-summary-template.md`
 
@@ -262,9 +263,11 @@ Copy the lesson-plan template and project the current state, module map, module 
 
 Then complete the classroom turn with the two-terminal handoff and stop:
 
-> Module 2 starts now: choosing the task gave us a concrete question, and Research turns that question into repo-grounded context before anyone writes code.
+> Module 2 starts now. Research is not pre-coding; it is context engineering. It should turn this task into repo-grounded evidence: relevant files, constraints, risks, and questions we should resolve before strategy or code.
 >
 > Lesson plan created: `.copilot-tracking/sdd-tutorial/<learner-slug>/lesson-plan.md`. Skim the Module Checklists now so you can see where we are; the learner comments and self-assessment sections are yours to edit as we go.
+>
+> The first work-terminal step asks Research to build that evidence base. We are deliberately not implementing yet.
 >
 > Keep this terminal as the classroom. In a second work terminal, type this command yourself: `/task-research <your confirmed task topic>`.
 >
@@ -286,11 +289,11 @@ If `/sdd-tutorial --resume` lands here, do not continue free-form. Read `state.y
 
 ## Phase 5: Plan
 
-Handled by `/sdd-tutorial-next`. It records the research artifact, explains why Research mattered, optionally asks one module reflection question, then issues the Plan command and stops.
+Handled by `/sdd-tutorial-next`. It records the research artifact, teaches from `references/module-syllabus.md`, asks one module reflection question, then after the learner answers connects Research to Plan and issues the Plan command.
 
 ## Phase 6: Implement + Review
 
-Handled by `/sdd-tutorial-next`. It records Plan output, issues Implement, records changes, issues Review, and routes Review outcomes back to Research, Plan, or Implement when needed.
+Handled by `/sdd-tutorial-next`. It records Plan output, teaches what to inspect in the plan/details artifacts, issues Implement after reflection, records changes, teaches what to inspect in the diff/changes artifact, issues Review after reflection, and routes Review outcomes back to Research, Plan, or Implement when needed.
 
 ## Phase 7: Reflection + passive handoff
 

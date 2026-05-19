@@ -33,6 +33,20 @@
 <!-- /TUTORIAL-MANAGED -->
 
 <!-- TUTORIAL-MANAGED -->
+## Module Learning Guide
+
+Use this section as the syllabus map. The checklist says where you are; this guide says what each step is teaching you.
+
+| Module | What this teaches | What to inspect |
+|--------|-------------------|-----------------|
+| 1. Project setup | How the classroom/work-terminal split keeps the lesson safe and learner-controlled. | Branch, working tree state, RPIV command availability, lesson state path. |
+| 2. Task selection + Research | Research is context engineering and alignment before strategy or code. | Research artifact: relevant files, constraints/risks/questions, recommended task framing. |
+| 3. Planning | Plan turns evidence into an implementation contract. | Plan/details artifacts: implementation steps, validation approach, assumptions/boundaries. |
+| 4. Implementation | Implement follows the plan into an inspectable diff. | Git diff/status, changes artifact, tests/checks run or skipped. |
+| 5. Review + reflection | Review validates the chain and routes completion or rework. | Review artifact: verdict, major findings, rework target phase if any. |
+<!-- /TUTORIAL-MANAGED -->
+
+<!-- TUTORIAL-MANAGED -->
 ## Module Checklists
 
 ### Module 1 — Project setup
