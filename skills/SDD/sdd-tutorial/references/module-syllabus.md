@@ -1,22 +1,20 @@
 # SDD Tutorial Module Syllabus
 
-Use this syllabus to teach the RPIV loop. The tutor is not a command dispatcher: every phase boundary should help the learner understand what just happened, how to read the artifact, and why the next phase exists.
+Use this syllabus to teach the RPIV loop. The tutor is not a command dispatcher and not a checklist proctor: every phase boundary should read the artifact, surface one concrete thing the learner should notice, explain why it matters, and then give the next step.
 
-Keep the classroom rule: one question or one work-terminal command per turn, not both.
+Keep the classroom rule: one work-terminal command per command turn. "Did you notice..." is a teaching pointer, not a question that waits for an answer.
 
 ## Teaching handoff pattern
 
-Use a two-turn pattern at phase boundaries:
+Use this one-turn pattern after a work-terminal artifact is discovered:
 
-1. **Debrief + inspect + reflect** after a work-terminal artifact is discovered.
-   - Debrief what the completed phase was for in 2-4 practical sentences.
-   - Point the learner at 2-3 concrete parts of the artifact to skim now.
-   - Ask the module reflection/self-assessment question and stop.
-2. **Connect + command** after the learner answers or says `skip`.
-   - Connect the completed phase to the next phase in 2-3 practical sentences.
-   - Give exactly one next work-terminal command and stop.
+1. **Debrief**: Explain what the completed phase was for in 1-3 practical sentences.
+2. **Artifact insight**: Read the artifact and point out one specific important detail. Prefer concrete references such as a file path, recommendation, validation command, risk, finding, or routing decision.
+3. **Why it matters**: Explain why that detail matters to SDD/RPIV.
+4. **Connect**: Explain why the next phase exists.
+5. **Command**: Give exactly one next work-terminal command and stop.
 
-Do not explain future paste instructions or ask the learner to remember later steps. The next `/sdd-tutorial-next` invocation teaches the next artifact when it exists.
+Do not ask generic reflection questions. Do not make the learner inspect everything. Pick one useful teaching point from the artifact and make the phase feel concrete.
 
 ## Module 1 — Project setup
 
@@ -24,11 +22,10 @@ Do not explain future paste instructions or ask the learner to remember later st
 
 **Teach**: Setup is about safety and orientation. We confirm the branch, working tree, RPIV commands, and lesson state before code so the learner can practice without accidentally shipping or mixing work.
 
-**Learner should notice**:
+**Good insight examples**:
 
-- Which branch they are on.
-- Whether the working tree is clean or intentionally dirty.
-- Where the local lesson state and lesson plan will live.
+- "Notice we did not name the lesson folder until after choosing the task. That keeps the local state meaningful instead of using a generic label."
+- "Notice the branch check happened before any state was written. That matters because this tutorial can lead to real code changes."
 
 ## Module 2 — Task selection + Research
 
@@ -40,78 +37,81 @@ Do not explain future paste instructions or ask the learner to remember later st
 - Tell the learner that good Research should identify relevant files, constraints, risks, and questions.
 - Emphasize that no implementation happens yet.
 
-**After Research artifact exists — debrief + inspect**:
+**After Research artifact exists — artifact insight options**:
 
-- Research is the evidence base for the rest of the loop. Its value is not just "a file exists"; it gives the human and agent a shared picture of the repo before strategy or code.
-- Ask the learner to open the research artifact and skim:
-  - Relevant files or entry points it found.
-  - Constraints, risks, or open questions.
-  - The recommended slice or next-step framing.
+Read the research artifact and point out one of:
 
-**Reflection prompt**: What did Research clarify or change about the task? Reply with one sentence, `skip` to keep moving, or `show example` if you want a model answer first.
+- A relevant file or entry point it found.
+- A constraint or risk it identified.
+- A recommended slice or task framing.
+- A question it resolved or left open.
 
-**Connect to Plan after reflection**:
+**Connect to Plan**:
 
 - Planning is where the research stops being background reading and becomes an implementation contract.
 - The plan should use the research artifact as evidence for what to change, what not to touch, and how to verify the result.
 - The learner should keep the research artifact open or pass its path to Plan so the planner is anchored to evidence.
 
+**Example teaching point**: "Did you notice Research named `scratch/chalk-prime-cli/` as the safe work area? That matters because the implementation can be real code while still avoiding product files."
+
 ## Module 3 — Planning
 
 **Learning objective**: The learner understands Plan as the strategy and contract that keeps Implement from improvising.
 
-**After Plan/details artifacts exist — debrief + inspect**:
+**After Plan/details artifacts exist — artifact insight options**:
 
-- Plan converts evidence into a buildable route. It should describe the intended change, the order of work, the files involved, validation, and the risks that need attention.
-- Ask the learner to open the plan/details artifacts and skim:
-  - The implementation steps and whether they follow the research.
-  - The acceptance/validation approach.
-  - Any risks, assumptions, or "do not touch" boundaries.
+Read the plan/details artifacts and point out one of:
 
-**Reflection prompt**: What part of the plan feels most important to keep the implementor honest? Reply with one sentence, `skip` to keep moving, or `show example` if you want a model answer first.
+- A specific implementation step that follows from the research.
+- A validation command or acceptance check.
+- A boundary or "do not touch" constraint.
+- A risk or assumption that should shape implementation.
 
-**Connect to Implement after reflection**:
+**Connect to Implement**:
 
-- Implement is the first phase where code should change. It should follow the plan rather than inventing a new strategy mid-flight.
+- Implement is the first phase where code should change.
 - The plan is the guardrail: if implementation needs to diverge, that is a signal to explain the divergence or loop back.
 - The learner should keep the plan visible while running Implement.
+
+**Example teaching point**: "Did you notice the plan separates the CLI UI from the prime-number logic? That matters because Review can check correctness separately from presentation polish."
 
 ## Module 4 — Implementation
 
 **Learning objective**: The learner understands Implementation as plan execution plus an inspectable changes artifact.
 
-**After changes artifact/diff exists — debrief + inspect**:
+**After changes artifact/diff exists — artifact insight options**:
 
-- Implement turns the plan into a concrete diff. The educational value is seeing whether the code change actually follows the strategy, not just whether files changed.
-- Ask the learner to skim:
-  - The changed files in `git status` or the diff.
-  - The changes artifact summary.
-  - Any tests/checks that were run or skipped.
+Read the changes artifact and inspect `git status --short`; point out one of:
 
-**Reflection prompt**: What risk, question, or surprise did you notice in the diff? Reply with one sentence, `skip` to keep moving, or `show example` if you want a model answer first.
+- A changed file that maps back to the plan.
+- A test/check that was run or skipped.
+- A difference between planned work and actual diff.
+- A small risk in the diff that Review should verify.
 
-**Connect to Review after reflection**:
+**Connect to Review**:
 
 - Review is the validation layer. It checks the implementation against the research, plan, and actual diff so the loop can catch gaps before the learner trusts the result.
 - This is where SDD becomes safer than "agent wrote code and we hoped"; the review can route back to Research, Plan, or Implement with evidence.
-- The learner should keep the research, plan, and changes artifacts handy for Review.
 
-## Module 5 — Review + reflection
+**Example teaching point**: "Did you notice the changes artifact says which command was run to verify the CLI? That matters because Review has something concrete to check instead of trusting that the code looks plausible."
+
+## Module 5 - Review + handoff
 
 **Learning objective**: The learner understands Review as validation and routing, not a ceremonial final step.
 
-**After review artifact exists — debrief + inspect**:
+**After review artifact exists — artifact insight options**:
 
-- Review decides whether the loop is complete or whether evidence says we should repair an earlier phase.
-- Ask the learner to skim:
-  - The verdict/status.
-  - Any critical or major findings.
-  - Which phase the review says should handle rework, if any.
+Read the review artifact and point out one of:
+
+- The verdict/status.
+- A critical or major finding.
+- A routing decision back to Research, Plan, or Implement.
+- A concrete reason the work can be accepted.
 
 **If Review is complete**:
 
 - Explain that the loop has produced evidence, strategy, code, and validation.
-- Ask the final reflection question with `show example` and `skip reflection` affordances.
+- Offer a short recap rather than a generic reflection prompt.
 
 **If Review needs rework**:
 
@@ -122,9 +122,4 @@ Do not explain future paste instructions or ask the learner to remember later st
   - `plan_gap`: Plan repairs the implementation contract.
   - `blocked`: pause or retry only after the learner chooses.
 
-## Model answers for `show example`
-
-- **Research**: "Research clarified which files matter and showed the task is safe because it stays inside `scratch/`."
-- **Planning**: "The validation section matters most because it tells the implementor how we will know the change worked."
-- **Implementation**: "The main risk is whether the prime-number logic is correct, not just whether the CLI looks nice."
-- **Final reflection**: "Research builds evidence, Plan turns evidence into a contract, Implement follows that contract into code, and Review checks the result against the earlier artifacts."
+**Example teaching point**: "Did you notice Review routed this back to Plan instead of Implement? That matters because the strategy contract was incomplete, so more coding would only compound the wrong assumption."

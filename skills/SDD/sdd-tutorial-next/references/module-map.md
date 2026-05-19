@@ -8,7 +8,7 @@ Use these modules for the classroom flow. The module is derived from `state.yaml
 | 2. Task selection + Research | `progress.current_phase` is `3` or `4`, or pending work phase is `research` | Choose a small real task, then turn uncertainty into repo-grounded knowledge and shared human/agent alignment. | `/task-research <topic>` |
 | 3. Planning | pending work phase is `plan` | Convert research into an implementation contract, strategy, details, and validation expectations. | `/task-plan <research-path>` |
 | 4. Implementation | pending work phase is `implement` | Execute the plan into working code and a concrete changes artifact while preserving the implementation contract. | `/task-implement` |
-| 5. Review + reflection | pending work phase is `review` or `progress.current_phase` is `7` | Validate code against research, plan, and diff evidence; route rework or complete the lesson. | `/task-review` |
+| 5. Review + handoff | pending work phase is `review` or `progress.current_phase` is `7` | Validate code against research, plan, and diff evidence; route rework or complete the lesson. | `/task-review` |
 
 ## Phase value prompts
 

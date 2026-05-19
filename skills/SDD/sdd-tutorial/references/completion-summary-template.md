@@ -34,21 +34,22 @@
 - Plan -> Implement: `{plan_handoff_note}`
 - Changes -> Review: `{changes_handoff_note}`
 
-## Module Reflections
+## Artifact Insights
 
-- Research: `{research_reflection}`
-- Planning: `{planning_reflection}`
-- Implementation: `{implementation_reflection}`
-- Review: `{review_reflection}`
+| Phase | Artifact | Tutor noticed | Why it matters |
+|-------|----------|----------------|----------------|
+| Research | `{research_path}` | `{research_insight}` | `{research_insight_why}` |
+| Planning | `{plan_path}` | `{planning_insight}` | `{planning_insight_why}` |
+| Implementation | `{changes_path}` | `{implementation_insight}` | `{implementation_insight_why}` |
+| Review | `{review_path}` | `{review_insight}` | `{review_insight_why}` |
 
-## Learner's RPI Definition
+## Optional Next Paths
 
-> `{learner's own words}`
-
-## Chosen Next Path
-
-- **Path**: `{strict-rpi|rpi-agent|continue-learning}`
-- **Next command to run**: `{exact slash command}`
+| Path | When to use it | Command |
+|------|----------------|---------|
+| Strict RPI/RPIV | You want to practice the phase-by-phase artifact handoff yourself. | `/task-research`, then `/task-plan`, `/task-implement`, `/task-review` |
+| Adaptive single-agent RPI | The scope is clear and you want the orchestrator to self-classify. | `/rpi <task>` |
+| Continue learning | You want another classroom loop on a fresh small task. | `/sdd-tutorial` |
 
 ## Verification Gaps
 

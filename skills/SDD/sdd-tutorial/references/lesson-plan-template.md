@@ -19,7 +19,7 @@
 - **Classroom terminal**: `/sdd-tutorial` and `/sdd-tutorial-next` explain, update this lesson plan, and give one next command.
 - **Work terminal**: `/task-research`, `/task-plan`, `/task-implement`, and `/task-review` do the RPIV work.
 - After each work-terminal command finishes, return to the classroom terminal and run `/sdd-tutorial-next`.
-- Review this file after each classroom step: the checklist shows where you are, and the learner-owned notes/self-assessment areas are yours to edit.
+- Review this file after each classroom step: the learning guide shows what each phase is teaching, and the artifact insights show concrete things the tutor noticed in your own artifacts.
 
 ## Module Map
 
@@ -29,13 +29,13 @@
 | 2. Task selection + Research | `{status}` | Turn a small real task into repo-grounded knowledge and alignment | Micro-spec + research artifact |
 | 3. Planning | `{status}` | Convert research into strategy and implementation contract | Plan + details artifacts |
 | 4. Implementation | `{status}` | Execute the plan into a concrete diff | Changes artifact + code diff |
-| 5. Review + reflection | `{status}` | Validate against evidence and route rework or completion | Review artifact + completion summary |
+| 5. Review + handoff | `{status}` | Validate against evidence and route rework or completion | Review artifact + completion summary |
 <!-- /TUTORIAL-MANAGED -->
 
 <!-- TUTORIAL-MANAGED -->
 ## Module Learning Guide
 
-Use this section as the syllabus map. The checklist says where you are; this guide says what each step is teaching you.
+Use this section as the syllabus map. The module map says where you are; this guide says what each step is teaching you.
 
 | Module | What this teaches | What to inspect |
 |--------|-------------------|-----------------|
@@ -43,47 +43,7 @@ Use this section as the syllabus map. The checklist says where you are; this gui
 | 2. Task selection + Research | Research is context engineering and alignment before strategy or code. | Research artifact: relevant files, constraints/risks/questions, recommended task framing. |
 | 3. Planning | Plan turns evidence into an implementation contract. | Plan/details artifacts: implementation steps, validation approach, assumptions/boundaries. |
 | 4. Implementation | Implement follows the plan into an inspectable diff. | Git diff/status, changes artifact, tests/checks run or skipped. |
-| 5. Review + reflection | Review validates the chain and routes completion or rework. | Review artifact: verdict, major findings, rework target phase if any. |
-<!-- /TUTORIAL-MANAGED -->
-
-<!-- TUTORIAL-MANAGED -->
-## Module Checklists
-
-### Module 1 — Project setup
-
-- [{m1_preflight}] Repo, branch, working tree, and skill preflight checked
-- [{m1_orientation}] SDD 101 stance, glossary, and two-terminal model explained
-- [{m1_task}] Small task selected and micro-spec confirmed
-- [{m1_state}] Local tutorial state and lesson plan created
-
-### Module 2 — Task selection + Research
-
-- [{m2_task}] Task scope remains green and learner-owned
-- [{m2_command}] Research command issued for the work terminal
-- [{m2_artifact}] Research artifact recorded and verified
-- [{m2_reflection}] Research module self-assessment captured
-
-### Module 3 — Planning
-
-- [{m3_command}] Plan command issued with research handoff
-- [{m3_artifacts}] Plan/details artifacts recorded and verified
-- [{m3_validator}] Planning validator status recorded
-- [{m3_reflection}] Planning module self-assessment captured
-
-### Module 4 — Implementation
-
-- [{m4_command}] Implement command issued with plan handoff
-- [{m4_artifact}] Changes artifact and code diff observed
-- [{m4_checks}] Relevant engineering checks discussed or recorded
-- [{m4_reflection}] Implementation module self-assessment captured
-
-### Module 5 — Review + reflection
-
-- [{m5_command}] Review command issued with research/plan/changes handoff
-- [{m5_artifact}] Review artifact and status recorded
-- [{m5_routing}] Rework routed or completion accepted
-- [{m5_reflection}] Final RPIV reflection captured
-- [{m5_summary}] Completion summary written
+| 5. Review + handoff | Review validates the chain and routes completion or rework. | Review artifact: verdict, major findings, rework target phase if any. |
 <!-- /TUTORIAL-MANAGED -->
 
 <!-- LEARNER-OWNED -->
@@ -108,48 +68,18 @@ Planning log status uses `worked_task.plan_validator_log.status` such as `not_ye
 <!-- /TUTORIAL-MANAGED -->
 
 <!-- TUTORIAL-MANAGED -->
-## Module Reflections and Self-Assessment
+## Artifact Insights
 
-| Module | Tutor-captured reflection/self-assessment |
-|--------|------------------------------------------|
-| Research | `{research_reflection}` |
-| Planning | `{planning_reflection}` |
-| Implementation | `{implementation_reflection}` |
-| Review | `{review_reflection}` |
+| Phase | Artifact | Tutor noticed | Why it matters |
+|-------|----------|----------------|----------------|
+| Research | `{research_path}` | `{research_insight}` | `{research_insight_why}` |
+| Planning | `{plan_path}` | `{planning_insight}` | `{planning_insight_why}` |
+| Implementation | `{changes_path}` | `{implementation_insight}` | `{implementation_insight_why}` |
+| Review | `{review_path}` | `{review_insight}` | `{review_insight_why}` |
 <!-- /TUTORIAL-MANAGED -->
 
 <!-- LEARNER-OWNED -->
-## Learner Comments and Self-Assessment
+## Learner Notes
 
 Use this section however you like. The tutor will not overwrite it.
-
-### Module 1 — Project setup
-
-- Confidence / comfort:
-- What I want to remember:
-- Questions:
-
-### Module 2 — Task selection + Research
-
-- Confidence / comfort:
-- What I want to remember:
-- Questions:
-
-### Module 3 — Planning
-
-- Confidence / comfort:
-- What I want to remember:
-- Questions:
-
-### Module 4 — Implementation
-
-- Confidence / comfort:
-- What I want to remember:
-- Questions:
-
-### Module 5 — Review + reflection
-
-- Confidence / comfort:
-- What changed in how I think about Research, Plan, Implement, and Review:
-- Questions:
 <!-- /LEARNER-OWNED -->

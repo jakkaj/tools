@@ -136,9 +136,7 @@ progress:
   pending_work_phase: "none | research | plan | implement | review"
   pending_work_terminal_command: ""
   last_classroom_checkpoint_at: ""
-  awaiting_module_reflection: false
-  module_reflection_prompt: ""
-  module_reflections: []
+  artifact_insights: []
 worked_task:
   source: "byo | sandbox"
   fallback_task_id: ""
@@ -259,13 +257,13 @@ progress:
   last_classroom_checkpoint_at: "<now>"
 ```
 
-Copy the lesson-plan template and project the current state, module map, module checklists, artifacts table, and reflection/self-assessment table. Mark Module 1 setup items complete and Module 2 task-selection plus research-command items complete once the research command is issued.
+Copy the lesson-plan template and project the current state, module map, module learning guide, artifact paths table, and artifact insights table.
 
 Then complete the classroom turn with the two-terminal handoff and stop:
 
 > Module 2 starts now. Research is not pre-coding; it is context engineering. It should turn this task into repo-grounded evidence: relevant files, constraints, risks, and questions we should resolve before strategy or code.
 >
-> Lesson plan created: `.copilot-tracking/sdd-tutorial/<learner-slug>/lesson-plan.md`. Skim the Module Checklists now so you can see where we are; the learner comments and self-assessment sections are yours to edit as we go.
+> Lesson plan created: `.copilot-tracking/sdd-tutorial/<learner-slug>/lesson-plan.md`. Skim the Module Learning Guide now so you can see what each phase is teaching; the learner notes section is yours to edit as we go.
 >
 > The first work-terminal step asks Research to build that evidence base. We are deliberately not implementing yet.
 >
@@ -289,29 +287,23 @@ If `/sdd-tutorial --resume` lands here, do not continue free-form. Read `state.y
 
 ## Phase 5: Plan
 
-Handled by `/sdd-tutorial-next`. It records the research artifact, teaches from `references/module-syllabus.md`, asks one module reflection question, then after the learner answers connects Research to Plan and issues the Plan command.
+Handled by `/sdd-tutorial-next`. It records the research artifact, reads it, points out one concrete thing the learner should notice, connects Research to Plan, and issues the Plan command.
 
 ## Phase 6: Implement + Review
 
-Handled by `/sdd-tutorial-next`. It records Plan output, teaches what to inspect in the plan/details artifacts, issues Implement after reflection, records changes, teaches what to inspect in the diff/changes artifact, issues Review after reflection, and routes Review outcomes back to Research, Plan, or Implement when needed.
+Handled by `/sdd-tutorial-next`. It records Plan output, reads the plan/details artifacts, points out one concrete teaching insight, issues Implement, records changes, reads the changes artifact/diff, points out one concrete teaching insight, issues Review, and routes Review outcomes back to Research, Plan, or Implement when needed.
 
-## Phase 7: Reflection + passive handoff
+## Phase 7: Completion recap + passive handoff
 
-Ask the learner to answer in their own words, with affordances:
+Handled by `/sdd-tutorial-next` after Review completes. Do not ask a final reflection question. Write `completion-summary.md` from `references/completion-summary-template.md`, using the recorded artifact insights as the learner-visible evidence of what was learned.
 
-> Final reflection: what are Research, Plan, Implement, and Review each for, and why does the order matter?
->
-> You can answer in your own words, type `show example` if you want a model answer first, or type `skip reflection` to finish without reflecting.
-
-Write `completion-summary.md` from `references/completion-summary-template.md`.
-
-Offer exactly three next paths:
+Show exactly three optional next paths, but do not ask the learner to choose inside this tutorial:
 
 1. **Strict RPI/RPIV** — use `/task-research`, `/task-plan`, `/task-implement`, `/task-review` yourself, carrying the artifact path from each phase into the next.
 2. **Adaptive single-agent RPI** — use `/rpi` when the scope is clear and you want the orchestrator to self-classify.
 3. **Continue learning** — run another tutorial-style loop on a fresh small task.
 
-Record the learner's chosen path and the exact next command, then stop. Do not launch it.
+Then stop. Do not launch any follow-up command.
 
 ## Resume mode
 
@@ -322,9 +314,9 @@ For `/sdd-tutorial --resume [learner-slug]`:
 3. Summarise current phase, learner pacing, branch, and artifact status.
 4. Check recorded artifact paths still exist when possible.
 5. If an artifact is missing, offer concrete choices: re-run the last command, paste a different artifact path, continue with a warning, or start fresh.
-6. Re-project only `TUTORIAL-MANAGED` lesson-plan sections from state, including module map, module checklists, artifact paths, and tutor-captured reflection/self-assessment rows.
+6. Re-project only `TUTORIAL-MANAGED` lesson-plan sections from state, including module map, module learning guide, artifact paths, and artifact insight rows.
 7. Preserve `LEARNER-OWNED` sections verbatim.
-8. Mention the lesson plan path and current module checklist once, then resume at the recorded phase boundary with the exact next command or concrete choices.
+8. Mention the lesson plan path and current module once, then resume at the recorded phase boundary with a concrete artifact insight, exact next command, or concrete choices.
 
 Never read learner-owned reflection during a live session. At resume, inspect only markers needed to preserve the file.
 
@@ -334,4 +326,4 @@ Use `references/failure-branches.md`. The required branches are: slash command u
 
 ## Completion condition
 
-The tutorial is complete when Phase 7 writes the completion summary, records the next path, and stops.
+The tutorial is complete when Phase 7 writes the completion summary, records the artifact insight trail, shows optional next paths, and stops.
