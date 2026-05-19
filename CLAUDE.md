@@ -36,6 +36,26 @@ A skills repository, plus a dev-tooling installer. The skills are the product:
 └── pyproject.toml              # Package metadata (jk-tools-setup CLI)
 ```
 
+## Compounding Value System
+
+`harness-is-the-product-v2` says encode-don't-document and every difficulty is a gift to your future self — but until now, the producers existed (`plan-6a`, minih) and no SDD skill read from the ledger. The **Compounding Value System** (`compound/`) closes the loop. Three layers:
+
+1. **Philosophy** — [`skills/SDD/harness-is-the-product-v2/`](./skills/SDD/harness-is-the-product-v2/) — the principles (no behavior change in v1; Principle 2 reframed from "velocity" to "compounding value")
+2. **Substrate** — [`skills/SDD/engineering-harness-v2/`](./skills/SDD/engineering-harness-v2/) — renamed from `agent-harness-v2`; produces `docs/project-rules/engineering-harness.md` (legacy `agent-harness.md` / `harness.md` still read as fallback); template gains `## Known Difficulties` auto-seeded from the compound ledger
+3. **Meta-loop** — [`skills/compound/`](./skills/compound/) — four small re-entrant skills + universal retro contract:
+   - `compound-0-setup` — scaffold + reversible split-migration from `docs/retros/`
+   - `compound-1-track` — silent producer; per-agent buffer; magic-wand reflex (≤1/5min calibrated)
+   - `compound-2-bubble` — session-end soft prompt `[s/t/p/e/d/a]`; default `[a]ll-save`
+   - `compound-3-harvest` — curator; clusters + stale + top-10; runtime filters; no on-disk indexes (terminal print)
+
+All retros conform to the universal JSON Schema in [`skills/compound/schemas/`](./skills/compound/schemas/) — produced by minih, compound, and any other system that adopts the contract. Cross-system back-compat: `compound-3-harvest` reads minih's legacy `docs/retros/*.md` block format until minih adopts the universal contract natively (RFC pending — see workshop 005 § Acceptance Criteria for the minih RFC).
+
+**Opt-out**: `touch docs/compound/.disabled` silences every compound skill (the auto-firing SDD skills check this sentinel before invoking).
+
+**Ledger surface**: this repo's own `docs/compound/` is scaffolded — see [`docs/compound/README.md`](./docs/compound/README.md).
+
+**Depth**: see [`docs/plans/023-difficulty-ledger-skill/`](./docs/plans/023-difficulty-ledger-skill/) for the spec + 6 workshops + implementation plan.
+
 ## Adding or editing a skill
 
 1. **Pick (or create) a category** under `skills/`. Existing categories: `SDD/`, `general/`, `personal/`. A new category is fine — it's just a subdirectory.

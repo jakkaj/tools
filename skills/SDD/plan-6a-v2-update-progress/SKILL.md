@@ -137,24 +137,32 @@ $ARGUMENTS
          (companion farewell already lands in `docs/retros/<agent-slug>.md`
          via auto-harvest).
 
-      ii. **`docs/retros/<plan-slug>.md`** ledger:
-         Append a phase entry alongside any agent/companion retros for
-         the same plan-phase pair. Format:
-         ```markdown
-         ## <plan-id> Phase <N> — <ISO date>
+      ii. **`docs/compound/agents/<orchestrator-slug>/<YYYY-MM-DD>/T<HH-MM-SS>Z-<hash>.retro.md`** (universal format per workshop 005):
+         Write ONE per-run `.retro.md` file via the `resolvePath()` algorithm
+         from workshop 006 § Path Resolver. The file's YAML frontmatter
+         validates against `skills/compound/schemas/retro.schema.json`.
+         `<orchestrator-slug>` is the calling agent's slug
+         (slugified per workshop 006 D8 — e.g. `claude-code`).
 
-         ### Orchestrator (model + skill)
-         **magicWand**: <quote>
-         **magicWandTarget**: <surface>
-         **difficulties**:
-         - OH-001 (<category>, <severity>): <description> — workaround: <workaround>
-         **workedWell**: <quote>
+         Sentinel check: if `docs/compound/.disabled` exists, SKIP this
+         write (silent no-op).
 
-         ### Agent / Companion (auto-harvested — see runs/<runId>/output/report.json)
-         _Cross-link only; the runner already wrote this entry below or above._
-         ```
-         If the file does not exist, create it with a header pointing
-         at this skill as the writer.
+         Map the orchestrator retrospective to universal entries via the
+         same `minihToUniversal()` logic Step 9 uses (see Compound
+         integration appendix below):
+         - `magicWand` (+ `magicWandTarget`) → one entry, `kind: magic-wand`
+         - `difficulties[]` → one entry per element, `kind: difficulty`
+         - `workedWell` → one entry, `kind: gift`
+
+         Wrap entries in a universal envelope with `schema_version: "1.0"`,
+         `retro_id: <ISO>-<orchestrator-slug>-<short-hash>`, `agent: <slug>`,
+         `plan_id: <plan-id-from-cwd-or-branch>`, timestamps from the phase
+         window. NO `docs/retros/` write — compound is the canonical path
+         now (per workshop 006 D7; back-compat reader handles legacy paths
+         in `compound-3-harvest`).
+
+         If `docs/compound/agents/` doesn't exist, run `compound-0-setup`
+         first (or suggest the user run it).
 
    d) **Surface significant findings as follow-up candidates**:
       If `magicWandTarget` is `agent-harness` or `engineering-harness`,
@@ -222,26 +230,35 @@ $ARGUMENTS
       Never ignore a finding silently. The disposition appears in the
       execution log + the user-facing final summary.
 
-   e) **Append the companion's retro to `docs/retros/<plan-slug>.md`**
-      alongside the orchestrator retro from Step 8c.ii. Format:
-      ```markdown
-      ### Companion (run <runId>)
-      **summary**: <quote>
-      **magicWand**: <quote>
-      **magicWandTarget**: <surface>
-      **difficulties**:
-      - MH-001 (<category>, <severity>): <description> — workaround: <workaround>
-      **coordination**:
-      - peerUpdatesSent: <n>
-      - unresolvedPeerRequests: <n>
-      - statePublished: <bool>
-      - notes: <quote>
-      **findings reconciliation**: <X addressed inline, Y deferred, Z disagreed>
-      ```
-      The runner already auto-harvested the companion's retro into
-      `docs/retros/<companion-slug>.md` — this entry is the **plan-scoped
-      cross-link** that pairs the companion's view with the orchestrator's
-      view for the same phase, so future plans can read both sides at once.
+   e) **Write the companion's retro as a per-run `.retro.md` under**
+      **`docs/compound/agents/<sanitized-companion-slug>/<YYYY-MM-DD>/T<HH-MM-SS>Z-<hash>.retro.md`**
+      (universal format per workshop 005 / workshop 006 § Path Resolver).
+
+      Sentinel check: if `docs/compound/.disabled` exists, SKIP this
+      write (silent no-op).
+
+      Run the `minihToUniversal()` mapping inline (per workshop 005 § D9
+      — agent implements it directly; no separate library in v1):
+
+      | Farewell field | Universal Entry kind | Mapping |
+      |----------------|---------------------|---------|
+      | `farewell.retrospective.workedWell` | one entry, `kind: gift` | description = verbatim |
+      | `farewell.retrospective.confusing` | one entry, `kind: confusion` | description = verbatim |
+      | `farewell.retrospective.magicWand` (+ `magicWandTarget`) | one entry, `kind: magic-wand` | description = magicWand text; `target` = magicWandTarget (defaults `project`) |
+      | `farewell.retrospective.difficulties[]` | one entry per element, `kind: difficulty` | `target` ← `category`; `severity` preserved; `workaround` preserved |
+      | `farewell.retrospective.improvementSuggestions[]` | one entry per element, `kind: improvement-suggestion` | description = each string |
+      | `farewell.retrospective.coordination` | one entry, `kind: coordination` | only if non-empty |
+
+      Wrap entries in a universal envelope with `schema_version: "1.0"`,
+      `retro_id: <ISO>-<companion-slug>-<short-hash>`, `agent: <companion-slug>`,
+      `plan_id: <plan-id>`, timestamps from the run start/end, and
+      `system.minih.run_dir = <companion run dir from --companion-run-id>`.
+
+      The companion's retro file is the canonical record. The legacy
+      `docs/retros/<companion-slug>.md` append path is NO LONGER WRITTEN
+      from here (workshop 005 P1 — compound canonical for new writes;
+      back-compat reader in `compound-3-harvest` handles legacy reads
+      until minih adopts universal natively per workshop 005 P3).
 
    f) **Surface the companion's magicWand as follow-up candidate**: if
       the magicWand is non-trivial, print a stderr note recommending the
@@ -263,3 +280,16 @@ This command is the **single source of truth** for progress updates AND phase-en
 **Call signature symmetry**:
 - Non-companion plan-6: `/plan-6a-v2-update-progress --task <T> --status completed --plan <P> [--retrospective <json>]` — Step 9 skipped (no flag).
 - Companion plan-6: `/plan-6a-v2-update-progress --task <T> --status completed --plan <P> --retrospective <json> --companion-run-id <RUN>` — Step 9 fires.
+---
+
+## Compound integration
+
+This skill is one of the heaviest **producer-side** participants in the **Compounding Value System** (`skills/compound/`) — both via Step 8c.ii (orchestrator retro write) and Step 9.e (companion farewell mapping + write). The integration is INLINE in those steps above (not a separate appendix-only behavior) because plan-6a's job IS to write the retro artifacts.
+
+**Sentinel**: Every write to `docs/compound/` (Step 8c.ii and Step 9.e) first checks `docs/compound/.disabled`. If present, silently skip the write.
+
+**Schema discipline**: Every `.retro.md` written by this skill MUST conform to `skills/compound/schemas/retro.schema.json` and (when applicable) the namespace sub-schemas. The agent constructs the YAML frontmatter directly per the schema — no JSON Schema validator is run in v1 (validation happens at read time in `compound-3-harvest`).
+
+**Why no buffer interaction here**: plan-6a runs per-task; the silent buffer (`docs/compound/_buffers/<agent>.session-buffer.md`) is owned by `compound-1-track` (producer) and `compound-2-bubble` (drain). Plan-6a's compound output is the FAREWELL retros, which bypass the buffer and write directly to per-run `.retro.md` files. The buffer is for IN-SESSION agent-observed friction; the farewells are for END-OF-PHASE structured retrospectives.
+
+See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md), [workshop 005 § D9 round-trip](../../../docs/plans/023-difficulty-ledger-skill/workshops/005-universal-retro-contract.md), [workshop 006 § Path Resolver](../../../docs/plans/023-difficulty-ledger-skill/workshops/006-compound-folder-layout.md).

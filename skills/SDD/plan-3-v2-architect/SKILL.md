@@ -42,7 +42,7 @@ Inputs:
 - For each NEW domain → note the sketch from spec (Purpose, Boundary Owns/Excludes)
 
 **Agent Harness Loading**:
-- If `docs/project-rules/agent-harness.md` (or legacy `harness.md`) exists → read maturity level, boot command, health check, interaction methods
+- If `docs/project-rules/engineering-harness.md` (or legacy `agent-harness.md` / `harness.md`) exists → read maturity level, boot command, health check, interaction methods
 - Check spec `## Clarifications` for agent harness decisions (from plan-2): "Build agent harness as Phase 0" / "Continue without" / "Not needed"
 - If agent harness needed but doesn't exist → plan MUST include Phase 0: Build Agent Harness (unless user overrode)
 
@@ -176,7 +176,7 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
 - Multi-domain phases are permitted but each domain-touch is a separate task group
 - Domain creation phases come BEFORE domain extension phases
 - Composition/wiring phases (connecting domains) come LAST
-- **If agent harness is needed and doesn't exist**: Phase 0 is "Build Agent Harness" — this is the prerequisite that enables agent autonomy for all subsequent phases. Phase 0 creates `docs/project-rules/agent-harness.md` and implements Boot + Interact + Observe capabilities. Target maturity: L2 minimum (auto boot + API interaction). If user overrode agent harness in plan-2, skip Phase 0 and note override in plan.
+- **If agent harness is needed and doesn't exist**: Phase 0 is "Build Agent Harness" — this is the prerequisite that enables agent autonomy for all subsequent phases. Phase 0 creates `docs/project-rules/engineering-harness.md` and implements Boot + Interact + Observe capabilities. Target maturity: L2 minimum (auto boot + API interaction). If user overrode agent harness in plan-2, skip Phase 0 and note override in plan.
 
   **Engineering harness prerequisite**: The agent harness sits **on top of** the engineering harness — Phase 0 assumes a working engineering harness substrate (a boot command like `just dev`, `pnpm dev`, `docker compose up` that returns a healthy state in under 60 seconds, plus a test runner). If plan-1a research surfaced that no engineering harness exists, or the existing one has no runnable boot command, that gap must be resolved BEFORE Phase 0 begins. Surface it as a P0 finding in the plan (Key Findings, Critical impact). Do not attempt to design the agent harness on top of an absent substrate. Engineering harness design is per-project (justfile/Makefile/dev script) and not modeled as a phase here — defer to the project's own conventions.
 - For each NEW domain, first phase includes domain setup task:
@@ -320,3 +320,24 @@ Next step (Simple Mode): Run **/plan-6-v2-implement-phase --plan "<PLAN_PATH>"**
 After writing the plan, auto-call `/plan-5b-flightplan --plan "${PLAN_PATH}"` (no --phase flag = plan-level mode).
 
 This regenerates `${PLAN_DIR}/<slug>.fltplan.md` with full phase data, architecture vision, and journey map. Status becomes "Ready". If a flight plan already exists from plan-1b, it is enriched — the Flight Log section is preserved.
+
+---
+
+## Compound integration
+
+This skill participates in the **Compounding Value System** (`skills/compound/`).
+
+**Sentinel**: Before any compound call below, check `docs/compound/.disabled` — if present, silently skip everything in this section.
+
+**At start**:
+- Check `docs/compound/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/compound-2-bubble` BEFORE this skill's primary planning work.
+- If `docs/compound/agents/**/*.retro.md` has ≥10 entries with `system.compound.status == open` AND the user has not run `compound-3-harvest` in the last 7 days, print a one-liner suggesting `/compound-3-harvest [--plan <slug>]`. **Do NOT auto-fire** — plan-3 start is a suggestion-only moment (don't interrupt the architecture work).
+
+**During planning** (orchestrator-side):
+- Silently call `compound-1-track` per its trigger heuristics. Plan-3-specific triggers: workshop contradictions surfaced during synthesis; missing acceptance criteria in spec; phase boundaries that don't cleanly align with domains; CS scoring ambiguity; the magic-wand reflex when synthesizing the plan structure.
+- Calibration: ≤1 self-prompt per 5min; ≤5 entries per session.
+
+**At end** (logical pause — plan complete):
+- Auto-fire `/compound-2-bubble` — drains the buffer; user sees the soft prompt with `[s/t/p/e/d/a]` actions.
+
+See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md).

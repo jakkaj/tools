@@ -72,8 +72,6 @@ class SetupManager:
 
         # Optional flags (set by main())
         self.clear_mcp = False
-        self.commands_local = ""
-        self.local_dir = str(Path.cwd())
         self.verbose = False
 
     def _detect_os(self) -> str:
@@ -307,12 +305,6 @@ class SetupManager:
         if name == "agents":
             cmd.extend(["--python", sys.executable])
 
-        # Add --commands-local flags for agents installer if requested
-        if name == "agents" and hasattr(self, 'commands_local') and self.commands_local:
-            cmd.extend(["--commands-local", self.commands_local])
-            if hasattr(self, 'local_dir'):
-                cmd.extend(["--local-dir", self.local_dir])
-
         # Add --no-auto-sudo flag if requested (for all installers)
         if hasattr(self, 'no_auto_sudo') and self.no_auto_sudo:
             cmd.append("--no-auto-sudo")
@@ -357,135 +349,13 @@ class SetupManager:
             version_after=version_after
         )
 
-    def _install_local_commands_python(self) -> InstallResult:
-        """Pure Python implementation of local commands installation.
-        Used on Windows where bash is unavailable, and as a fallback on all platforms.
-        """
-        import re
-        import shutil
-        start_time = time.time()
-
-        cli_list = self.commands_local
-        target_dir = Path(self.local_dir)
-        v2_source = self.script_dir / "agents" / "v2-commands"
-
-        if not v2_source.exists():
-            return InstallResult("agents", False, "v2-commands source directory not found", "", "v2-commands not found", 0.0)
-
-        source_files = sorted(v2_source.glob("*.md"))
-        if not source_files:
-            return InstallResult("agents", False, "No .md files found in v2-commands", "", "No source files", 0.0)
-
-        skip_files = {"README.md", "GETTING-STARTED.md", "changes.md", "codebase.md"}
-        output_lines = []
-
-        # Claude — raw copy
-        if "claude" in cli_list:
-            claude_dir = target_dir / ".claude" / "commands"
-            claude_dir.mkdir(parents=True, exist_ok=True)
-            # Cleanup old plan commands
-            for old in claude_dir.glob("plan-[0-9]*.md"):
-                old.unlink()
-            count = 0
-            for src in source_files:
-                shutil.copy2(src, claude_dir / src.name)
-                count += 1
-            output_lines.append(f"Claude: {count} commands -> {claude_dir}")
-
-        # OpenCode — raw copy
-        if "opencode" in cli_list:
-            opencode_dir = target_dir / ".opencode" / "command"
-            opencode_dir.mkdir(parents=True, exist_ok=True)
-            for old in opencode_dir.glob("plan-[0-9]*.md"):
-                old.unlink()
-            count = 0
-            for src in source_files:
-                shutil.copy2(src, opencode_dir / src.name)
-                count += 1
-            output_lines.append(f"OpenCode: {count} commands -> {opencode_dir}")
-
-        # GitHub Copilot (VS Code) — rename to .prompt.md
-        if "ghcp" in cli_list:
-            ghcp_dir = target_dir / ".github" / "prompts"
-            ghcp_dir.mkdir(parents=True, exist_ok=True)
-            for old in ghcp_dir.glob("plan-[0-9]*.prompt.md"):
-                old.unlink()
-            count = 0
-            for src in source_files:
-                prompt_name = src.stem + ".prompt.md"
-                shutil.copy2(src, ghcp_dir / prompt_name)
-                count += 1
-            output_lines.append(f"GitHub Copilot: {count} prompts -> {ghcp_dir}")
-
-        # Copilot CLI — skills format: <name>/SKILL.md
-        if "copilot-cli" in cli_list:
-            skills_dir = target_dir / ".github" / "skills"
-            skills_dir.mkdir(parents=True, exist_ok=True)
-            # Cleanup old skill directories
-            for old_skill in skills_dir.glob("plan-[0-9]*"):
-                if old_skill.is_dir():
-                    shutil.rmtree(old_skill)
-            # Migrate: clean old .github/agents/*.agent.md
-            old_agents_dir = target_dir / ".github" / "agents"
-            if old_agents_dir.exists():
-                for old_agent in old_agents_dir.glob("*.agent.md"):
-                    old_agent.unlink()
-                try:
-                    old_agents_dir.rmdir()
-                except OSError:
-                    pass  # Not empty — user has custom files
-            count = 0
-            for src in source_files:
-                if src.name in skip_files:
-                    continue
-                content = src.read_text(encoding="utf-8")
-                name = src.stem.lower().replace(" ", "-")
-                desc = f"Command: {name}"
-                fm_match = re.match(r"^---\s*\n(.*?)\n---\s*\n", content, re.DOTALL)
-                content_body = content
-                if fm_match:
-                    for line in fm_match.group(1).split("\n"):
-                        if line.strip().startswith("description:"):
-                            desc = line.partition(":")[2].strip().strip('"').strip("'")
-                            break
-                    content_body = content[fm_match.end():]
-                frontmatter = f'---\nname: {name}\ndescription: "{desc}"\n---\n\n'
-                skill_dir = skills_dir / name
-                skill_dir.mkdir(parents=True, exist_ok=True)
-                (skill_dir / "SKILL.md").write_text(frontmatter + content_body.lstrip(), encoding="utf-8")
-                count += 1
-            output_lines.append(f"Copilot CLI: {count} skills -> {skills_dir}")
-
-        duration = time.time() - start_time
-        message = "Local commands installed: " + "; ".join(output_lines)
-        return InstallResult("agents", True, message, "\n".join(output_lines), "", duration)
-
     def install_tools(self, update_mode: bool = False) -> None:
         """Install all tools with progress tracking"""
-        # Check if we're in local-commands-only mode
-        is_local_mode = hasattr(self, 'commands_local') and self.commands_local
-
-        if is_local_mode:
-            # On Windows (or if bash unavailable), use pure Python implementation
-            if self.os_type == "Windows":
-                console.print("[dim]Using Python-native installer (Windows)[/dim]\n")
-                result = self._install_local_commands_python()
-                self.results.append(result)
-                return
-            # On Unix, run agents.sh via bash
-            agents_installer = self.install_path / "agents.sh"
-            if not agents_installer.exists():
-                console.print(f"[red]agents.sh installer not found at {agents_installer}[/red]")
-                return
-            installers = [agents_installer]
-            action = "install local commands"
-        else:
-            # Standard mode: get all installers
-            installers = self.get_installers()
-            if not installers:
-                console.print("[yellow]No installers found[/yellow]")
-                return
-            action = "update" if update_mode else "install"
+        installers = self.get_installers()
+        if not installers:
+            console.print("[yellow]No installers found[/yellow]")
+            return
+        action = "update" if update_mode else "install"
 
         console.print(f"\n[bold cyan]Found {len(installers)} installer(s) to {action}[/bold cyan]\n")
 
@@ -591,14 +461,8 @@ class SetupManager:
 
     def run(self, update_mode: bool = False) -> None:
         """Run the complete setup process"""
-        # Check if we're in local-commands-only mode
-        is_local_mode = hasattr(self, 'commands_local') and self.commands_local
-
         # Display header
-        if is_local_mode:
-            mode_text = "LOCAL COMMANDS MODE"
-        else:
-            mode_text = "UPDATE MODE" if update_mode else "INSTALL MODE"
+        mode_text = "UPDATE MODE" if update_mode else "INSTALL MODE"
 
         console.print(Panel.fit(
             f"[bold cyan]Tools Repository Setup Manager[/bold cyan]\n"
@@ -607,58 +471,39 @@ class SetupManager:
             border_style="cyan"
         ))
 
-        # In local mode, skip most setup steps
-        if is_local_mode:
-            # Only install local commands via agents.sh
-            console.print("\n[bold]Installing local commands...[/bold]")
-            console.print(f"[dim]Target: {self.local_dir}[/dim]")
-            console.print(f"[dim]CLIs: {self.commands_local}[/dim]\n")
-            self.install_tools(update_mode)
+        # Check prerequisites
+        console.print("\n[bold]Checking prerequisites...[/bold]")
+        if not self.check_prerequisites():
+            console.print("[red]Prerequisites check failed. Exiting.[/red]")
+            sys.exit(1)
+        console.print("[green]✓[/green] Prerequisites check passed")
 
-            # Show summary
-            self.show_summary()
+        # Add to PATH
+        console.print("\n[bold]Configuring PATH...[/bold]")
+        self.add_to_path()
 
-            # Custom final message for local mode
-            console.print(Panel(
-                "[green]Local commands installed![/green]\n\n"
-                f"Commands have been installed to:\n"
-                f"  [cyan]{self.local_dir}[/cyan]\n\n"
-                "The commands are now available for your project.",
-                border_style="green"
-            ))
-        else:
-            # Standard full setup mode
-            # Check prerequisites
-            console.print("\n[bold]Checking prerequisites...[/bold]")
-            if not self.check_prerequisites():
-                console.print("[red]Prerequisites check failed. Exiting.[/red]")
-                sys.exit(1)
-            console.print("[green]✓[/green] Prerequisites check passed")
+        # Make scripts executable
+        console.print("\n[bold]Setting permissions...[/bold]")
+        self.make_scripts_executable()
 
-            # Add to PATH
-            console.print("\n[bold]Configuring PATH...[/bold]")
-            self.add_to_path()
+        # Install/Update tools
+        action = "Updating" if update_mode else "Installing"
+        console.print(f"\n[bold]{action} tools...[/bold]")
+        self.install_tools(update_mode)
 
-            # Make scripts executable
-            console.print("\n[bold]Setting permissions...[/bold]")
-            self.make_scripts_executable()
+        # Show summary
+        self.show_summary()
 
-            # Install/Update tools
-            action = "Updating" if update_mode else "Installing"
-            console.print(f"\n[bold]{action} tools...[/bold]")
-            self.install_tools(update_mode)
-
-            # Show summary
-            self.show_summary()
-
-            # Final message
-            console.print(Panel(
-                "[green]Setup complete![/green]\n\n"
-                "To use the changes in your current shell:\n"
-                "  [cyan]source ~/.zshrc[/cyan]\n\n"
-                "Or simply open a new terminal window.",
-                border_style="green"
-            ))
+        # Final message
+        console.print(Panel(
+            "[green]Setup complete![/green]\n\n"
+            "To use the changes in your current shell:\n"
+            "  [cyan]source ~/.zshrc[/cyan]\n\n"
+            "Or simply open a new terminal window.\n\n"
+            "Note: Skills are installed separately — see INSTALL.md for\n"
+            "      'npx skills add jakkaj/tools' patterns.",
+            border_style="green"
+        ))
 
 
 def main():
@@ -677,20 +522,6 @@ def main():
         help="Clear all existing MCP servers before installing new ones"
     )
     parser.add_argument(
-        "--commands-local",
-        type=str,
-        default="",
-        metavar="CLIS",
-        help="Install commands locally to project directory (comma-separated: claude,opencode,ghcp,copilot-cli,codex)"
-    )
-    parser.add_argument(
-        "--local-dir",
-        type=str,
-        default=os.getcwd(),
-        metavar="PATH",
-        help="Target directory for local commands (default: current directory)"
-    )
-    parser.add_argument(
         "--no-auto-sudo",
         action="store_true",
         help="Disable automatic sudo retry on permission errors"
@@ -701,10 +532,7 @@ def main():
     try:
         manager = SetupManager()
         manager.clear_mcp = args.clear_mcp
-        manager.commands_local = args.commands_local
         manager.no_auto_sudo = args.no_auto_sudo
-        if args.local_dir:
-            manager.local_dir = args.local_dir
         manager.run(update_mode=args.update)
     except KeyboardInterrupt:
         console.print("\n[yellow]Setup interrupted by user[/yellow]")

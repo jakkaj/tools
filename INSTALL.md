@@ -12,7 +12,7 @@ Skills are grouped by purpose. Categories are organizational only — they do **
 
 | Category | What's in it | Count |
 |---|---|---|
-| `SDD/` | The spec-driven-development (SDD) pipeline — domain-aware plan, specify, clarify, architect, workshop, implement, review skills. The active workflow for non-trivial features. | 27 |
+| `SDD/` | The spec-driven-development (SDD) pipeline — domain-aware plan, specify, clarify, architect, workshop, implement, review skills. The active workflow for non-trivial features. | 29 |
 | `general/` | Domain-generic skills that work in any project (e.g. `grill-me` — relentlessly interrogates plans/designs until shared understanding). | 1 |
 | `personal/` | Personal / lifestyle / non-coding skills (e.g. `shopping-hunter` — product research and pricing dossiers). | 1 |
 
@@ -84,6 +84,30 @@ Repeat `--skill` to install a subset:
 
 ```bash
 npx skills@latest add jakkaj/tools --skill grill-me --skill plan-1a-v2-explore -a claude-code -g
+```
+
+### (f2) Install a whole category via subfolder shorthand
+
+`npx skills` accepts a **subfolder path appended to the repo shorthand** — this is undocumented in `--help` but supported by the `parseSource` regex in `vercel-labs/skills` (line 191). Useful when you want every skill in one category without listing each `--skill` flag.
+
+```bash
+# All 4 compound/ skills
+npx skills@latest add jakkaj/tools/skills/compound -a claude-code -g
+
+# All SDD/ skills (without general/ or personal/)
+npx skills@latest add jakkaj/tools/skills/SDD -a claude-code -g
+```
+
+Combine with a `#branch` selector to install from an unmerged branch (use `#`, not `@` — the CLI parses `@` as a skill filter):
+
+```bash
+npx skills@latest add jakkaj/tools/skills/compound#023-difficulty-ledger-skill -a claude-code -g
+```
+
+Equivalent full-URL form (also supported, line 125 of the CLI's `parseSource`):
+
+```bash
+npx skills@latest add https://github.com/jakkaj/tools/tree/main/skills/compound -a claude-code -g
 ```
 
 ### (g) Install project-locally (current directory)

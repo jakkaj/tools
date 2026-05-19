@@ -90,7 +90,7 @@ Otherwise → **Phase Mode** (continue).
    - Is it in the correct domain's source tree?
    - Run `/code-concept-search-v2` for major new concepts to check for duplication
    - Flag contract changes (higher risk)
-   - **Agent harness health check** (if `docs/project-rules/agent-harness.md` or legacy `harness.md` exists):
+   - **Agent harness health check** (if `docs/project-rules/engineering-harness.md` or legacy `agent-harness.md` / `harness.md` exists):
      * Run health check command from the agent harness governance doc — is the agent harness operational?
      * If Phase 0 is "Build Agent Harness" and this is Phase 0: skip (agent harness doesn't exist yet)
      * If healthy → note in Context Brief: "Agent harness available at L[N]"
@@ -162,8 +162,8 @@ Otherwise → **Phase Mode** (continue).
    **Domain constraints**:
    - [Import rules, dependency direction, contract boundaries]
 
-   **Agent harness context** (if `docs/project-rules/agent-harness.md` or legacy `harness.md` exists):
-   - **Boot**: [command from agent-harness.md] — health check: [health URL/command]
+   **Agent harness context** (if `docs/project-rules/engineering-harness.md` or legacy `agent-harness.md` / `harness.md` exists):
+   - **Boot**: [command from engineering-harness.md] — health check: [health URL/command]
    - **Interact**: [primary interaction method] — [example endpoint/command]
    - **Observe**: [evidence capture method] — evidence dir: [path]
    - **Maturity**: L[N] — [brief status note]
@@ -542,3 +542,19 @@ plan-7-v2 reviews the fix — same subagents scoped to fix files, validates doma
 ```
 
 Next step: Run **/plan-6-v2-implement-phase --phase "<Phase N: Title>" --plan "<PLAN_PATH>"**
+
+---
+
+## Compound integration
+
+This skill participates in the **Compounding Value System** (`skills/compound/`).
+
+**Sentinel**: Before any compound call below, check `docs/compound/.disabled` — if present, silently skip everything in this section.
+
+**At start**: Check `docs/compound/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/compound-2-bubble` BEFORE this skill's primary work.
+
+**During task brief authoring** (LIGHT — fewer trigger points than the deep skills): silently call `compound-1-track` only for substantive friction (e.g. plan structure ambiguity, missing acceptance criteria in source plan, agent harness context missing when needed). Calibration: ≤1 self-prompt per 5min; ≤3 entries per session for plan-5 (lighter than the default ≤5 because plan-5 is short-horizon synthesis work).
+
+**At end**: this skill CHAINS to plan-6 — no end-of-skill `compound-2-bubble` here. The bubble fires inside plan-6 at end-of-phase (the next logical pause).
+
+See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md).

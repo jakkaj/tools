@@ -97,22 +97,22 @@ $ARGUMENTS
      * Read `## Target Domains` from spec
      * Read `## Domain Manifest` from plan
      * For each domain being modified, read `docs/domains/<slug>/domain.md`
-   - **Load agent harness context** (if `docs/project-rules/agent-harness.md` or legacy `harness.md` exists):
+   - **Load agent harness context** (if `docs/project-rules/engineering-harness.md` or legacy `agent-harness.md` / `harness.md` exists):
      * Read the agent harness governance doc — boot command, health check, interaction methods, observe capabilities, maturity level
 
-2a) **Pre-Phase Agent Harness Validation** (if `docs/project-rules/agent-harness.md`, or legacy `harness.md`, exists):
+2a) **Pre-Phase Agent Harness Validation** (if `docs/project-rules/engineering-harness.md`, or legacy `agent-harness.md` / `harness.md`, exists):
 
    Before starting ANY task, validate the agent harness is operational:
 
    **Stage 1 — Boot Check** (5s if running, 60s cold boot):
-   Run health check from agent-harness.md. If healthy → "Already running" (skip boot).
+   Run health check from engineering-harness.md. If healthy → "Already running" (skip boot).
    If not responding → run boot command, retry health check (30 × 2s = 60s max).
 
    **Stage 2 — Interact Check** (5s, single attempt):
-   Send test input per agent-harness.md § Interact. Verify a response is received.
+   Send test input per engineering-harness.md § Interact. Verify a response is received.
 
    **Stage 3 — Observe Check** (5s, single attempt):
-   Capture evidence per agent-harness.md § Observe. Verify evidence is non-empty.
+   Capture evidence per engineering-harness.md § Observe. Verify evidence is non-empty.
 
    **Verdict**:
    - ✅ HEALTHY → proceed to tasks
@@ -126,7 +126,7 @@ $ARGUMENTS
    **Special case — Phase 0 "Build Agent Harness"**: Skip pre-phase validation (agent harness doesn't exist yet).
    Instead, run validation at END of Phase 0 to confirm the agent harness works.
 
-   After ALL phase tasks complete: update the agent harness governance doc § History (`docs/project-rules/agent-harness.md`, or legacy `harness.md`) with what changed.
+   After ALL phase tasks complete: update the agent harness governance doc § History (`docs/project-rules/engineering-harness.md`, or legacy `agent-harness.md` / `harness.md`) with what changed.
    Use the agent harness Boot/Interact/Observe capabilities for evidence capture throughout implementation when available.
 
 3) Execute tasks:
@@ -240,3 +240,32 @@ STOP: Report phase complete. Suggest next step.
 
 **Next step (Full Mode)**: Run **/plan-7-v2-code-review --phase "<Phase N: Title>" --plan "<PLAN_PATH>"**
 **Next step (Simple Mode)**: Run **/plan-7-v2-code-review --plan "<PLAN_PATH>"**
+---
+
+## Compound integration
+
+This skill participates in the **Compounding Value System** (`skills/compound/`).
+
+**Sentinel**: Before any compound call below, check `docs/compound/.disabled` — if present, silently skip everything in this section.
+
+**At start of each phase**:
+- Check `docs/compound/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/compound-2-bubble` BEFORE this phase's work.
+
+**During implementation work** (the bulk of the skill's runtime):
+- Silently call `compound-1-track` per its trigger heuristics:
+  - A tool call took >30 seconds and you were waiting on it
+  - A search returned zero results when you expected matches
+  - You retried the same operation more than once
+  - You backtracked from a wrong assumption
+  - A test or build failure required guesswork to interpret
+  - The magic-wand reflex fires at a task-boundary AND the buffer is currently empty (Q6.1 — never pile on)
+- Calibration: ≤1 self-prompt per 5min; ≤5 entries per session (anti-vibe 7).
+
+**At end of EACH phase** (logical pause):
+- Auto-fire `/compound-2-bubble` — drains the buffer; user sees the soft prompt with `[s/t/p/e/d/a]` actions.
+- End-of-phase output reminds the user `/compound-2-bubble` is available if entries accumulated since the last bubble.
+
+**After the FINAL phase**:
+- If ≥10 unharvested entries (count `.retro.md` files where `system.compound.status == open`), print a one-liner suggesting `/compound-3-harvest`. **Do NOT auto-fire** — solo `/plan-6` is the rare path; the dominant flow runs `/plan-6-companion` whose final-phase debrief auto-fires harvest.
+
+See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md).

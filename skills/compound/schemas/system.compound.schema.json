@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/jakkaj/tools/blob/main/skills/compound/schemas/system.compound.schema.json",
+  "title": "Compound system extensions",
+  "description": "Per-entry compound lifecycle metadata, written under entry.system.compound",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["open", "suggested", "encoded", "wontfix", "dismissed", "escalated", "stale"],
+      "default": "open",
+      "description": "Lifecycle state of this entry. Transitions handled by compound-2-bubble + compound-3-harvest."
+    },
+    "resolved_by": {
+      "type": "string",
+      "description": "Path to scratch/ diff, commit hash, or PR URL that encodes the fix. Set when status moves to encoded."
+    },
+    "first_seen_at": { "type": "string", "format": "date-time" },
+    "last_harvested_at": { "type": "string", "format": "date-time" },
+    "harvest_count": { "type": "integer", "minimum": 0 },
+    "source": {
+      "type": "string",
+      "enum": ["user", "agent-self"],
+      "description": "Compound producer-side annotation: did the user mutter the friction, or did the agent observe it itself? Compound-only field; minih retros default to source=agent-self when imported."
+    }
+  }
+}

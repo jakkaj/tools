@@ -212,22 +212,22 @@ Brief once. Don't re-brief mid-phase unless the scope materially changes (in whi
      * Read `## Target Domains` from spec
      * Read `## Domain Manifest` from plan
      * For each domain being modified, read `docs/domains/<slug>/domain.md`
-   - **Load agent harness context** (if `docs/project-rules/agent-harness.md` or legacy `harness.md` exists):
+   - **Load agent harness context** (if `docs/project-rules/engineering-harness.md` or legacy `agent-harness.md` / `harness.md` exists):
      * Read the agent harness governance doc — boot command, health check, interaction methods, observe capabilities, maturity level
 
-## 2a) Pre-Phase Agent Harness Validation (if `docs/project-rules/agent-harness.md`, or legacy `harness.md`, exists)
+## 2a) Pre-Phase Agent Harness Validation (if `docs/project-rules/engineering-harness.md`, or legacy `agent-harness.md` / `harness.md`, exists)
 
    Before starting ANY task, validate the agent harness is operational:
 
    **Stage 1 — Boot Check** (5s if running, 60s cold boot):
-   Run health check from agent-harness.md. If healthy → "Already running" (skip boot).
+   Run health check from engineering-harness.md. If healthy → "Already running" (skip boot).
    If not responding → run boot command, retry health check (30 × 2s = 60s max).
 
    **Stage 2 — Interact Check** (5s, single attempt):
-   Send test input per agent-harness.md § Interact. Verify a response is received.
+   Send test input per engineering-harness.md § Interact. Verify a response is received.
 
    **Stage 3 — Observe Check** (5s, single attempt):
-   Capture evidence per agent-harness.md § Observe. Verify evidence is non-empty.
+   Capture evidence per engineering-harness.md § Observe. Verify evidence is non-empty.
 
    **Verdict**:
    - ✅ HEALTHY → proceed to tasks
@@ -241,7 +241,7 @@ Brief once. Don't re-brief mid-phase unless the scope materially changes (in whi
    **Special case — Phase 0 "Build Agent Harness"**: Skip pre-phase validation (agent harness doesn't exist yet).
    Instead, run validation at END of Phase 0 to confirm the agent harness works.
 
-   After ALL phase tasks complete: update the agent harness governance doc § History (`docs/project-rules/agent-harness.md`, or legacy `harness.md`) with what changed.
+   After ALL phase tasks complete: update the agent harness governance doc § History (`docs/project-rules/engineering-harness.md`, or legacy `agent-harness.md` / `harness.md`) with what changed.
    Use the agent harness Boot/Interact/Observe capabilities for evidence capture throughout implementation when available.
 
 ## 3) Execute tasks
@@ -430,3 +430,66 @@ STOP: Report phase complete. Suggest next step.
 **Next step**: Move on to the next phase. Run `/plan-5-v2-phase-tasks-and-brief --phase "<Phase N+1: Title>" --plan "<PLAN_PATH>"` to generate that phase's tasks dossier, then re-run this skill.
 
 If the companion produced a **magicWand** in its farewell, consider filing it as a fix dossier or backlog item *before* starting the next phase — that's how the agent harness improves itself.
+---
+
+## Compound integration
+
+This skill participates in the **Compounding Value System** (`skills/compound/`) — and it's the **dominant flow** for compound. The companion's final-phase debrief is where `compound-3-harvest` auto-fires (replacing `/plan-7` as the harvest anchor for the typical SDD flow).
+
+### Three-layer context
+
+This skill sits at the intersection of all three layers:
+- **Philosophy**: `harness-is-the-product-v2` — encode, don't document; every difficulty is a gift to future sessions
+- **Substrate**: `engineering-harness-v2` — the harness governance doc seeds `## Known Difficulties` from compound entries
+- **Meta-loop**: the four `compound-N` skills — this skill is one of the heaviest producers
+
+### Sentinel
+
+Before any compound call below, check `docs/compound/.disabled` — if present, silently skip everything in this section.
+
+### At start of each phase
+- Check `docs/compound/_buffers/<agent>.session-buffer.md` (where `<agent>` matches the calling CLI's slug — typically `plan-6-companion` when invoked via minih). If non-empty from a prior session, fire `/compound-2-bubble` BEFORE this phase's work.
+
+### During implementation work (same as plan-6)
+- Silently call `compound-1-track` per its trigger heuristics:
+  - A tool call took >30 seconds and you were waiting on it
+  - A search returned zero results when you expected matches
+  - You retried the same operation more than once
+  - You backtracked from a wrong assumption
+  - A test or build failure required guesswork to interpret
+  - The magic-wand reflex fires at a task-boundary AND the buffer is currently empty (Q6.1 — never pile on)
+- Calibration: ≤1 self-prompt per 5min; ≤5 entries per session (anti-vibe 7).
+
+### Companion as a SECOND producer (alongside orchestrator)
+
+The companion is BOTH:
+1. **An orchestrator-side compound-1-track producer** (the calls above land in `_buffers/plan-6-companion.session-buffer.md`)
+2. **A minih-runtime farewell-envelope producer** (the companion emits a `farewell.retrospective` at the end of each phase, which plan-6a's Step 9 maps via `minihToUniversal()` and writes as a per-run `.retro.md`)
+
+Both producers' outputs land in `docs/compound/agents/.../*.retro.md` — they just take different paths there.
+
+### Farewell envelope → universal retro mapping
+
+When the companion emits a `farewell.retrospective` object at end-of-phase, plan-6a's Step 9 runs the mapping below. The mapping is per workshop 005 § D9 (deterministic, lossless):
+
+| Farewell field | Universal Entry kind | Notes |
+|----------------|---------------------|-------|
+| `farewell.retrospective.workedWell` (string) | one entry, `kind: gift` | description = farewell text verbatim |
+| `farewell.retrospective.confusing` (string) | one entry, `kind: confusion` | description = farewell text verbatim |
+| `farewell.retrospective.magicWand` (string) | one entry, `kind: magic-wand` | description = farewell text; `target` from `magicWandTarget` (defaults to `project`) |
+| `farewell.retrospective.difficulties[]` (array of objects) | one entry per element, `kind: difficulty` | each element's `category` → `target`; `severity` preserved; `workaround` preserved |
+| `farewell.retrospective.improvementSuggestions[]` (string array) | one entry per element, `kind: improvement-suggestion` | description = each string |
+| `farewell.retrospective.coordination` (string, optional) | one entry, `kind: coordination` | only if non-empty |
+
+The mapped envelope wraps these entries with `schema_version`, `retro_id`, `agent` (companion slug), timestamps from the run start/end, and `system.minih.run_dir` from the companion's run dir.
+
+See workshop 005 § D9 for the TypeScript pseudocode plan-6a Step 9 implements inline.
+
+### At end of EACH phase (logical pause)
+- Auto-fire `/compound-2-bubble` — drains the buffer (the orchestrator-side producer's output). User sees the soft prompt with `[s/t/p/e/d/a]` actions.
+- End-of-phase output reminds the user `/compound-2-bubble` is available for orchestrator-side entries; the companion-side farewell envelope already landed via plan-6a Step 9.
+
+### At the FINAL phase's debrief (the dominant-flow harvest anchor)
+- **Auto-fire `/compound-3-harvest`** — this is the long-horizon reflection moment for the typical SDD flow (replaces `/plan-7` which is rare in the companion pattern). Curated view shows clustered friction across the whole plan's lifetime; user can advance lifecycle status `[r/w/s]` on stale or resolved entries.
+
+See: [workshop 004 § Per-Skill Integration Matrix + § The Four Firing Sites](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md); [workshop 005 § D9 round-trip](../../../docs/plans/023-difficulty-ledger-skill/workshops/005-universal-retro-contract.md).

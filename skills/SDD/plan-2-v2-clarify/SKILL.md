@@ -98,7 +98,7 @@ Ask the user to confirm using ask_user:
 
 ### Agent Harness Readiness
 
-Check if `docs/project-rules/agent-harness.md` (or legacy `harness.md`) exists:
+Check if `docs/project-rules/engineering-harness.md` (or legacy `agent-harness.md` / `harness.md`) exists:
 
 **If agent harness exists**: Report current maturity level (L0–L4) and ask:
 - "The project has an agent harness at L[N]. Is it sufficient for this feature, or does it need updating?"

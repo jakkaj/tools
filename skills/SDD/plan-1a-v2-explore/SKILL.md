@@ -234,11 +234,11 @@ Outcomes:
 
 **Part 2 — Agent harness governance** (Boot → Interact → Observe feedback loop):
 
-- If `docs/project-rules/agent-harness.md` (or legacy `harness.md`) exists:
+- If `docs/project-rules/engineering-harness.md` (or legacy `agent-harness.md` / `harness.md`) exists:
   * Read it — note project type, maturity level (L0–L4), boot command, health check, interaction methods, observe capabilities
   * Include agent harness status in the research dossier output (§ Agent Harness Status section)
   * Pass agent harness context to subagents so they can reference available validation infrastructure
-  * If only the legacy `harness.md` is present, note "legacy filename — consider migrating to `agent-harness.md`" but do NOT modify the file from this read-only research command
+  * If only the legacy `harness.md` is present, note "legacy filename — consider migrating to `engineering-harness.md`" but do NOT modify the file from this read-only research command
 - If no agent harness exists **but Part 1 substrate is present**:
   * Note "No agent harness found — agents cannot autonomously validate running software"
   * Add to research dossier **Workshop Opportunities**: suggest running `/agent-harness-v2 --create` to establish the agent feedback loop on top of the existing engineering harness substrate
@@ -408,18 +408,22 @@ Return complete findings list including any external research gaps identified."
 1. `docs/plans/*/tasks/*/tasks.md` - Phase dossiers (Full Mode)
 2. `docs/plans/*/*.md` - Plan files (Simple Mode may have inline discoveries)
 3. `docs/plans/*/tasks/*/execution.log.md` - Execution logs with detailed context
+4. `docs/compound/agents/**/*.retro.md` - **Compounding Value System retros** (universal `.retro.md` format; YAML frontmatter validates against `skills/compound/schemas/retro.schema.json`)
+5. `docs/retros/*.md` (back-compat) - legacy minih block-format ledger (auto-parsed via the same minih-block reader compound-3-harvest uses)
 
 **Tasks**:
 - Find ALL `## Discoveries & Learnings` sections across prior plans
+- For compound retros (locations 4-5): parse each `.retro.md` frontmatter; extract entries where `entry.system.compound.status` is `open`, `suggested`, or `encoded`; filter to entries relevant to the current research (by `plan_id` if a plan is detected from cwd/branch; otherwise by recency window — last 30 days)
 - Extract discoveries relevant to [RESEARCH_TOPIC]:
   * Match by keywords, technologies, patterns, file paths
-  * Prioritize: `gotcha`, `unexpected-behavior`, `workaround`, `decision` types
+  * Prioritize: `gotcha`, `unexpected-behavior`, `workaround`, `decision` types AND compound entries with `kind: difficulty | magic-wand | insight`
 - For each relevant discovery, capture:
-  * Original discovery text
-  * Resolution (how it was handled)
-  * Source (which plan/phase it came from)
+  * Original discovery text (or compound `entry.description`)
+  * Resolution (how it was handled, or `entry.system.compound.resolved_by` if encoded)
+  * Source (which plan/phase it came from, or the source `.retro.md` path)
   * Why it might apply to current research
 - Also scan execution logs for inline learnings (search for 'learned', 'discovered', 'gotcha', 'unexpected', 'note to self')
+- **Add a compound-activity one-liner** to the research dossier's Prior Learnings header summarizing the compound side: e.g. `✓ 8 entries surfaced from compound across 3 prior sessions — 3 encoded, 5 open`
 
 **Output**: 5-15 findings numbered PL-01 through PL-15:
 ```markdown
@@ -528,12 +532,16 @@ For each gap found, note:
 1. `docs/plans/*/tasks/*/tasks.md` - Phase dossiers
 2. `docs/plans/*/*.md` - Plan files (Simple Mode)
 3. `docs/plans/*/tasks/*/execution.log.md` - Execution logs
+4. `docs/compound/agents/**/*.retro.md` - **Compounding Value System retros** (universal `.retro.md`; YAML frontmatter validates against `skills/compound/schemas/retro.schema.json`)
+5. `docs/retros/*.md` (back-compat) - legacy minih block-format ledger
 
 **Tasks**:
 - Find ALL `## Discoveries & Learnings` sections
+- For compound retros (locations 4-5): parse `.retro.md` frontmatter; extract entries where `entry.system.compound.status` is `open | suggested | encoded`; filter by `plan_id` (if plan detected) or recency window (last 30 days)
 - Extract discoveries relevant to [RESEARCH_TOPIC] by keyword/technology/pattern matching
-- Prioritize: `gotcha`, `unexpected-behavior`, `workaround`, `decision` types
-- Capture original discovery, resolution, source, and relevance
+- Prioritize: `gotcha`, `unexpected-behavior`, `workaround`, `decision` types AND compound `kind: difficulty | magic-wand | insight`
+- Capture original discovery (or `entry.description`), resolution (or `entry.system.compound.resolved_by`), source, and relevance
+- Add a compound-activity one-liner to the Prior Learnings header (e.g. `✓ 8 entries surfaced from compound — 3 encoded, 5 open`)
 
 **Output**: 5-15 findings numbered PL-01 through PL-15 with source references and actionable insights.
 
@@ -1038,3 +1046,23 @@ This command provides deep, actionable research into existing codebase functiona
 **Suggest next step to user:**
 
 Run **/plan-1b-specify** to create the feature specification, or **/plan-2c-workshop** if deep design exploration is needed first.
+---
+
+## Compound integration
+
+This skill participates in the **Compounding Value System** (`skills/compound/`). Subagent 7 (Prior Learnings Scout) ALREADY reads `docs/compound/agents/**/*.retro.md` + back-compat `docs/retros/*.md` per its body spec above. The orchestrator-side additions are below.
+
+**Sentinel**: Before any compound call below, check `docs/compound/.disabled` — if present, silently skip everything in this section.
+
+**At start**:
+- Check `docs/compound/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/compound-2-bubble` BEFORE this skill's research work.
+- If `docs/compound/agents/**/*.retro.md` has ≥5 entries with `system.compound.status == open` AND the user has not run `compound-3-harvest` in the last 7 days, print a one-liner suggesting `/compound-3-harvest [--plan <slug>]`. **Do NOT auto-fire** — research start is a suggestion-only moment.
+
+**During research** (orchestrator-side, NOT subagent-side per workshop 004 § D6 — subagents stay focused on research output; orchestrator does the meta-tracking):
+- Silently call `compound-1-track` per its trigger heuristics. Plan-1a-specific triggers: research returning zero results despite the topic being plausibly covered; subagent timing out; major contradictions between subagents that require manual reconciliation; the magic-wand reflex when synthesizing the dossier.
+- Calibration: ≤1 self-prompt per 5min; ≤5 entries per session.
+
+**At end** (logical pause — research dossier complete):
+- Auto-fire `/compound-2-bubble` — drains the buffer; the user sees the soft prompt with `[s/t/p/e/d/a]` actions.
+
+See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md).

@@ -3,10 +3,12 @@
 > **First-class concept**: "Compounding Value System" is the formal name; **`compound`** is the slug. A peer category in this repo's skills graph alongside SDD, general, and personal.
 
 **Spec**: [difficulty-ledger-skill-spec.md](./difficulty-ledger-skill-spec.md)
-**Plan**: Pending — run `/plan-3-v2-architect` (after the four queued workshops; all critical Open Questions now resolved)
-**Generated**: 2026-05-16 · **Last clarified**: 2026-05-16 (Session 1: 8 Qs; Session 2: compound restructure; Session 3: plan-6 + plan-6-companion compound integration; Session 4: branding lock — Compounding Value System; Session 5: 4-question lock — engineering-harness Interpretation A, flat naming, retros auto-migrate, Principle 2 wording)
-**Status**: Specifying — workshops queued; Group E unblocked
-**Mode**: Simple (single phase with grouped tasks; plan-4/plan-5 optional)
+**Plan**: [difficulty-ledger-skill-plan.md](./difficulty-ledger-skill-plan.md) — 30 tasks, Simple Mode, post-/validate-v2 trim (40 → 30)
+**Generated**: 2026-05-16 · **Last clarified**: 2026-05-16 · **Implementation pass**: 2026-05-18 (26 of 30 tasks landed)
+**Status**: Implementation complete; install (T025-T026) + 1-week dogfood (T027) + Compounding Test verification (T028) pending
+**Mode**: Simple (single phase; 30 tasks; plan-4/plan-5 optional and skipped)
+
+> ⚠️ **Note on body content below**: this fltplan was generated 2026-05-16 against the pre-trim, pre-KISS design (still references `_LEDGER.md`, "6 task groups", etc.). The implementation followed the post-trim plan + workshop-006 KISS revision (no on-disk indexes; per-run isolation). For current authoritative shape, see the plan + execution log. Regenerate the body via `/plan-5b-flightplan` if needed.
 
 ---
 
@@ -207,8 +209,8 @@ flowchart LR
 |-------|-------|--------|
 | A | Four queued workshops (schema · CLI flow · AGENTS.md voice · harvest behavior) | Pending |
 | B | Build `compound-0-setup` + `docs/compound/` scaffold + `_LEDGER.md` rebuild logic | Pending |
-| C | Build `compound-1-track` + `compound-2-bubble` (per-session producer pair) | Pending |
-| D | Build `compound-3-harvest` (consumer-side periodic skill with `[r/w/s]` lifecycle ops) | Pending |
+| C | Build `compound-1-track` + `compound-2-bubble` (per-session producer pair). | Pending |
+| D | Build `compound-3-harvest` (consumer-side periodic skill with `[r/w/s]` lifecycle ops). | Pending |
 | E | Substrate + governance + pipeline integration (Q5.1 resolved as Interpretation A — cosmetic): rename `agent-harness-v2` → `engineering-harness-v2` (skill content unchanged), rename governance doc + legacy fallback, template `§ Known Difficulties` seed, AGENTS.md / CLAUDE.md / README_AGENTS.md / justfile updates, `harness-is-the-product-v2` Principle 2 wording ("Track Velocity Compounding" → "Track Compounding Value") + disambiguation softening (engineering harness becomes umbrella), 8 SDD skills' agent-harness terminology cascade, plan-6a one-line path update, plan-1a Subagent 7 reader update, plan-6 + plan-6-companion compound integration | Pending |
 | F | Dogfood week + Compounding Test evaluation; calibrate self-introspection + harvest staleness heuristics; file vibe regressions as compound-1-track entries against the skills themselves | Pending |
 
@@ -254,4 +256,28 @@ flowchart LR
 
 <!-- Updated by /plan-6 and /plan-6a after each phase completes -->
 
-_No phases completed yet._
+### 2026-05-18 — Single-phase implementation pass (26 of 30 tasks)
+
+Plan-6 invocation with ultrathink + KISS tracking (per-task plan-table checkbox ticks + per-task exec-log entry; flightplan updated once at end rather than 30× per-task ceremony).
+
+**5 blocks landed** (committed as two commits — Block 1 separately because committed before user direction "no commit after each one"; Blocks 2-5 as one commit on top):
+
+| Block | Tasks | Outcome |
+|-------|-------|---------|
+| 1. Foundation | T001-T010 | `skills/compound/` created with 3 schemas + 5 fixtures + README + 4 SKILL.mds (`compound-0-setup`, `compound-1-track`, `compound-2-bubble`, `compound-3-harvest`); `docs/compound/` dogfood tree scaffolded |
+| 2. Substrate | T011-T012 | `agent-harness-v2` → `engineering-harness-v2` (`git mv` + frontmatter + body rewrites + `## Known Difficulties` template seed + Step 4a algorithm + 7-skill cross-ref cascade); `harness-is-the-product-v2` Principle 2 reframed; `(E)`/`(A)`/`(both)` tags collapsed |
+| 3. Pipeline integration | T013-T022 | 10 SDD skill body updates per workshop 004 matrix (plan-1a, 1b, 2c, 3, 5, 6, 6-companion, 6a, 7, 8); plan-3 self-modified LAST per Finding 03; plan-1a Subagent 7 reader updated; plan-6a Step 8c/9 rewritten with universal-format writes + `minihToUniversal()` mapping table; T030 grep-audit folded into plan-7 spot-check |
+| 4. Governance | T023-T024 | AGENTS.md + CLAUDE.md gain "Compounding Value System" section (mirrored, ~25 lines each, D7 voice); README_AGENTS.md catalog adds `### compound/` section + updates engineering-harness-v2 row |
+| 5. Install + side-work | T029-T030 (T025-T028 deferred) | Pre-dogfood walkthroughs.md (7 anti-vibes + 3 imagined sessions A/B/C traced); scratch/minih-rfc-draft.md (gitignored) ready for user to post once branch merges to main |
+
+**Deferred (future ambient)**:
+- T025 — `npx skills` install across 5 CLIs (user-driven; modifies CLI dirs)
+- T026 — portability verification (depends on T025)
+- T027 — 1-week dogfood window (calendar wait)
+- T028 — verify 4 Compounding Test signals (depends on T027)
+
+**Files**: 18 created + 13 modified across `skills/compound/`, `skills/SDD/`, `docs/compound/`, `docs/plans/023-difficulty-ledger-skill/`, plus 3 governance docs.
+
+**Discoveries logged**: 5 in execution.log.md (cascade target enumeration mismatch; tag-system collapse decision; gitignored buffer dogfood note; schemas not auto-validated this session; pre-dogfood walkthroughs are analytical not evidence-based).
+
+**Next step**: user merges branch `023-difficulty-ledger-skill` → main; runs `just install-skills` (T025); dogfoods for ≥7 days; runs T028 verification.
