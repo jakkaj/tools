@@ -119,6 +119,62 @@ Default format:
 
 **Nothing is written to disk by the harvest itself** (per workshop 006 § D4 KISS revision — no `_LEDGER.md`, no `_AGENT.md`, no rollup files). The view is transient terminal output.
 
+### `--json` output (machine-readable read interface)
+
+`/compound-3-harvest --json` emits the same computed view as the default render but as a single JSON document on stdout. This is a **read-time render of transient computation** — still no on-disk index, still no persisted state. Use it for `just compound-value`, CI hooks, or any downstream skill that wants programmatic access to loop status.
+
+**Schema** (stable contract — bump compound v1.x if changed):
+
+```json
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-05-19T01:30:00Z",
+  "retros": 27,
+  "entries": {
+    "total": 47,
+    "open": 28,
+    "suggested": 2,
+    "encoded": 17,
+    "wontfix": 0,
+    "dismissed": 0,
+    "escalated": 0,
+    "stale": 0
+  },
+  "top_clusters": [
+    {
+      "kind": "difficulty",
+      "target": "tooling",
+      "count": 4,
+      "oldest": "2026-05-14T11:22:00Z",
+      "representative": "grep on src/ took 47s — should use ripgrep"
+    }
+  ],
+  "harness": {
+    "maturity": "L2",
+    "last_validation": "2026-05-18",
+    "boot_ms": 18000,
+    "verdict": "healthy"
+  }
+}
+```
+
+Field semantics:
+
+- `schema_version` — semver for the JSON contract itself; bump on breaking shape change.
+- `generated_at` — ISO-8601 UTC timestamp of THIS render.
+- `retros` — count of `.retro.md` files scanned (post dedup + version-skew filter).
+- `entries.*` — counts by `system.compound.status` (plus `total` = sum of all entries seen). Missing-status entries count as `open`.
+- `top_clusters` — top-10 clusters by the same priority order as the default view (recurrence > severity > age). Cap at 10; consumers wanting fewer should slice.
+- `harness` — if `docs/project-rules/engineering-harness.md` (or legacy `agent-harness.md` / `harness.md`) exists, parse its `## Maturity Assessment` + `## History` for the most recent validation. If absent, emit `{"maturity": null, "last_validation": null, "boot_ms": null, "verdict": null}`.
+
+**Missing/empty cases**:
+
+- Empty tree → `{..., "retros": 0, "entries": {"total": 0, ...}, "top_clusters": [], "harness": {...or null}}`. Still valid JSON; consumers handle.
+- Sentinel `docs/compound/.disabled` present → emit the disabled-line on stderr; exit non-zero; **no JSON on stdout** (consumers can detect by exit code).
+- Schema-version skew on a retro → still emit JSON; skipped retros contribute to neither counts nor clusters.
+
+Consumed by `scripts/compound-value.sh` (the cross-CLI portable pretty-printer) and `just compound-value`. Other consumers should pipe `<their-CLI invokes the skill> --json | jq ...`.
+
 ## Step 6 — Action menu
 
 The same `[s/t/p/e/d/a]` actions as `compound-2-bubble`, plus three lifecycle ops:

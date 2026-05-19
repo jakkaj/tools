@@ -120,12 +120,41 @@ User copy-pastes the ones they want. Entries also saved to `.retro.md`. Clear bu
 For each entry where the encoding is a small mechanical edit (frequently true for `kind: difficulty` with a clear `suggested_encoding`):
 
 1. Generate the diff (the agent makes a best-effort guess at the change)
-2. Write to `scratch/encode-<entry-id>-<target-slug>.diff`
-3. Print the file path: "Staged scratch/encode-DL-001-tooling.diff — review and `git apply` to land"
+2. Append the **Validation footer** (mandatory — see template below) so the staged diff documents how a reviewer verifies the encoded fix actually works
+3. Write to `scratch/encode-<entry-id>-<target-slug>.diff`
+4. Print the file path: "Staged scratch/encode-DL-001-tooling.diff — review and `git apply` to land"
 
 **Nothing is auto-applied.** The diff is staged for user review. This is the "encode, don't document" mechanism — the encoding is in the diff, not in a doc.
 
 Entries are also saved to `.retro.md` with `system.compound.status: suggested` and `system.compound.resolved_by: scratch/encode-<id>-<target>.diff`. Clear buffer.
+
+#### Validation footer template (mandatory on every encoded diff)
+
+Every staged `scratch/encode-<id>-<target>.diff` MUST end with a literal `## Validation` block of this shape:
+
+```markdown
+## Validation
+
+Run:
+  <command 1>
+  <command 2 — optional>
+
+Expected:
+  - <observable outcome 1>
+  - <observable outcome 2 — optional>
+
+Compound lifecycle:
+  <entry-id> transitions system.compound.status: suggested → encoded when this diff lands.
+  resolved_by: <commit-sha-after-land>
+```
+
+How the three sub-sections are filled:
+
+- **`Run:`** — best-effort shell command(s) that exercise the encoded change. If the entry's `suggested_encoding` mentions a recipe/command, use it; otherwise the agent picks a sensible reproduction or verification command (compile / test / grep / curl). If genuinely unknown, write `Run: (manual review only)`.
+- **`Expected:`** — observable outcomes (file content matches, command exits 0, output contains substring). Plain bullets — no full test framework needed.
+- **`Compound lifecycle:`** — names the entry id and the transition compound-3-harvest's `[r]esolved` lifecycle action will execute on this entry. The `resolved_by` line is a placeholder the user fills with the actual SHA after the diff lands.
+
+The footer makes "encoded" mean *the loop changed AND we can prove it*, not just *we wrote a patch*. Reviewers see the verification path inline with the change.
 
 ### `[d]ismiss all`
 

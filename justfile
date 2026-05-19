@@ -35,6 +35,9 @@ help:
     @echo "  just install-skills-local        - Install all skills project-local to every CLI (from jakkaj/tools remote)"
     @echo "  just install-skills-from-source  - Install all skills globally to every CLI from THIS working tree (test local branch)"
     @echo ""
+    @echo "Compound loop:"
+    @echo "  just compound-value              - Render compound-3-harvest --json output as a compact terminal view (reads JSON on stdin)"
+    @echo ""
 
 # Complete development environment setup
 setup: venv install
@@ -233,6 +236,11 @@ install-skills-from-source:
     npx skills@latest add "$(pwd)" \
         -a claude-code -a codex -a opencode -a github-copilot -a pi -g -y
     @echo "✅ Skills installed globally from $(pwd)"
+
+# Render compound-3-harvest --json output as a compact terminal view (reads JSON on stdin)
+# Usage: <json-source> | just compound-value
+compound-value:
+    @scripts/compound-value.sh
 
 # Create a release build with checks
 release: ci

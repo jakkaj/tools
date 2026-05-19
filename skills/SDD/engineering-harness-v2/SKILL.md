@@ -153,7 +153,7 @@ Write to `docs/project-rules/engineering-harness.md` (new canonical path) using 
 ## Known Difficulties
 
 <!-- Auto-seeded by engineering-harness-v2 from the compound ledger. -->
-<!-- Up to 10 most-relevant open entries, filtered by target: engineering-harness | tooling | infra. -->
+<!-- Up to 10 most-relevant open entries, filtered by target: engineering-harness | tooling | infra | build | config | dependencies | env | auth | tests | observe. -->
 <!-- Sorted by recurrence (count of entries in the same cluster) descending, then by age (oldest first). -->
 <!-- Agents reading this file at boot see accumulated friction without scanning the whole ledger. -->
 <!-- Refresh: re-run engineering-harness-v2 (idempotent; re-reads compound and re-renders this section in place). -->
@@ -215,7 +215,7 @@ After writing the template (or on every re-run of this skill), populate the `## 
 1. **Read** `docs/compound/agents/**/*.retro.md` files (skip if `docs/compound/` doesn't exist — the section stays empty until compound starts producing entries).
 2. **Filter** entries to:
    - `entry.system.compound.status == "open"` OR `entry.system.compound.status == "suggested"` (closed/resolved entries are noise here)
-   - `entry.target` in: `engineering-harness | tooling | infra` (relevance filter — other targets are not boot-time concerns)
+   - `entry.target` in: `engineering-harness | tooling | infra | build | config | dependencies | env | auth | tests | observe` (relevance filter — these are the target classes a fresh agent hits during boot/install/health-check; entries outside this set are not boot-time concerns)
 3. **Cluster** by `(entry.kind, entry.target)` and count recurrence (how many entries fall in each cluster across all retros).
 4. **Sort** clusters by recurrence (descending), then by oldest entry in the cluster.
 5. **Take top 10** clusters (cap to keep the boot read manageable).
