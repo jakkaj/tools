@@ -57,7 +57,7 @@ Slug guidance:
 
 > I can't see the RPIV task skills or `/sdd-tutorial-next` yet, so the hands-on lesson would get stuck before Research or the first classroom return.
 >
-> The next useful move is to install the missing local skills. If RPIV task skills are missing, run or hand off to `install-hve-core-rpiv`; if `/sdd-tutorial-next` is missing in this repo, run `just install-agent-skills`. No tutorial state has been created yet.
+> The next useful move is to install the missing local skills. I will run `just install-agent-skills` myself if this repo provides that recipe, then re-check the commands. If RPIV task skills are still missing, I will run or hand off to `install-hve-core-rpiv`. No tutorial state has been created yet.
 >
 > Required commands before this tutorial can continue: `/task-research`, `/task-plan`, `/task-implement`, `/task-review`, and `/sdd-tutorial-next`.
 >

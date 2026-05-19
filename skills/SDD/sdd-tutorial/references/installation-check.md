@@ -28,16 +28,17 @@ At least one of these should expose the commands to the learner's chat tool:
 
 1. Check whether the five required commands resolve.
 2. If RPIV task commands are missing, inspect the expected HVE Core install surfaces.
-3. If `/sdd-tutorial-next` is missing, reinstall/update the tutorial skill bundle. In this repo, use `just install-agent-skills`.
-4. If required commands are missing, stop before creating tutorial state.
-5. Run or hand off to `install-hve-core-rpiv` when RPIV task skills are missing and that installer skill is available.
-6. After installation succeeds, rerun or resume command preflight before creating tutorial state.
+3. If a repo-local `just install-agent-skills` recipe exists, inspect the recipe name/intent and run `just install-agent-skills` yourself before asking the learner to do anything. This is setup recovery, not RPIV work-terminal execution.
+4. After the just recipe finishes, re-check the five required commands.
+5. If required commands are still missing, stop before creating tutorial state.
+6. Run or hand off to `install-hve-core-rpiv` when RPIV task skills are still missing and that installer skill is available.
+7. After installation succeeds, rerun or resume command preflight before creating tutorial state.
 
 ## Missing-command response
 
 > HVE Core RPI/RPIV is not installed or not visible in this environment yet.
 >
-> I will run or hand off to `install-hve-core-rpiv` to install local skill-shaped RPIV commands from the current authoritative HVE Core source. No tutorial state has been created yet.
+> I will try the repo-local setup recovery first: if `just install-agent-skills` exists here, I will run it now and re-check the required commands. If RPIV task skills are still missing after that, I will run or hand off to `install-hve-core-rpiv` to install local skill-shaped RPIV commands from the current authoritative HVE Core source. No tutorial state has been created yet.
 >
 > Required commands before this tutorial can continue: `/task-research`, `/task-plan`, `/task-implement`, `/task-review`, and `/sdd-tutorial-next`.
 >
