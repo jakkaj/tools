@@ -98,6 +98,26 @@ The `src/jk_tools/` tree is an auto-synced mirror used for Python packaging (the
 
 The sync **no longer mirrors any skill content**. Skills are published directly from the top-level `skills/` tree via `npx skills`.
 
+## Skills deployment architecture
+
+`npx skills add` (called by `just install-skills*`) writes skills to a **canonical store** and **symlinks** per-CLI views into it. After running an install:
+
+- **Canonical store**: `~/.agents/skills/<slug>/` — real directories; single source of truth on disk.
+- **Symlinked views**: `~/.claude/skills/<slug>` and `~/.pi/skills/<slug>` are symlinks back to the canonical store (managed by `npx skills`).
+- **Other CLIs**: Codex, OpenCode, GitHub Copilot read from `~/.agents/skills/` directly — no per-CLI symlink dir.
+
+**Why symlinks not copies**: a copy would drift the moment one CLI's view was updated and another wasn't. Symlinks make drift impossible — every view tracks the canonical store.
+
+**Known orphan path**: `~/.copilot/skills/`. Older versions of `npx skills` wrote skills there as real directories. If it exists today it's stale (the current install no longer targets it) and will cause **duplicate skill discovery entries with divergent content** as `~/.agents/skills/` evolves. Fix:
+
+```bash
+rm -rf ~/.copilot/skills                            # nuke (preferred — nothing reads it anymore)
+# OR, if something still reads from that path:
+ln -s ~/.agents/skills ~/.copilot/skills            # symlink to canonical
+```
+
+**Diagnosis**: `just doctor-skills` reports canonical-store size, validates expected symlinks, and flags any orphan real-dir skill stores at known legacy paths. Run it after any `npx skills` upgrade or if you see the same skill name surface twice in skill discovery.
+
 ## Running the dev-tooling installer
 
 ```bash

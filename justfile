@@ -38,6 +38,9 @@ help:
     @echo "Compound loop:"
     @echo "  just compound-value              - Render compound-3-harvest --json output as a compact terminal view (reads JSON on stdin)"
     @echo ""
+    @echo "Diagnostics:"
+    @echo "  just doctor-skills               - Diagnose skill deployment (canonical store + symlinks + orphan legacy paths)"
+    @echo ""
 
 # Complete development environment setup
 setup: venv install
@@ -241,6 +244,84 @@ install-skills-from-source:
 # Usage: <json-source> | just compound-value
 compound-value:
     @scripts/compound-value.sh
+
+# Diagnose skill deployment: canonical store + symlink validity + orphan real-dir stores at legacy paths
+# Run after any `npx skills` upgrade or when the same skill name surfaces twice in discovery.
+doctor-skills:
+    #!/usr/bin/env bash
+    set -eu
+    canonical="$HOME/.agents/skills"
+    echo "🩺 Skills doctor"
+    echo
+    if [ -d "$canonical" ]; then
+        count=$(ls "$canonical" | wc -l | tr -d ' ')
+        echo "✅ Canonical store: $canonical ($count skills)"
+    else
+        echo "⚠️  Canonical store missing: $canonical — run 'just install-skills-from-source'"
+    fi
+    echo
+    echo "Per-CLI views (entries should be symlinks into canonical; hand-installed real dirs allowed if not also in canonical):"
+    for path in "$HOME/.claude/skills" "$HOME/.pi/skills"; do
+        if [ -L "$path" ]; then
+            echo "  ✅ $path → $(readlink "$path") (whole-dir symlink)"
+        elif [ -d "$path" ]; then
+            symlinks=$(find "$path" -mindepth 1 -maxdepth 1 -type l 2>/dev/null | wc -l | tr -d ' ')
+            real_dirs=$(find "$path" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+            if [ "$real_dirs" -eq 0 ] && [ "$symlinks" -eq 0 ]; then
+                echo "  ℹ️  $path is empty"
+                continue
+            fi
+            if [ "$real_dirs" -eq 0 ]; then
+                echo "  ✅ $path ($symlinks symlinked skills)"
+                continue
+            fi
+            # Classify each real subdir as duplicate-of-canonical (bad) or hand-installed-only (fine)
+            duplicates=""
+            handlocal=""
+            for d in $(find "$path" -mindepth 1 -maxdepth 1 -type d 2>/dev/null); do
+                slug=$(basename "$d")
+                if [ -e "$canonical/$slug" ]; then
+                    duplicates="$duplicates $slug"
+                else
+                    handlocal="$handlocal $slug"
+                fi
+            done
+            echo "  ℹ️  $path: $symlinks symlinks + $real_dirs real subdirs"
+            if [ -n "$duplicates" ]; then
+                echo "      ⚠️  Duplicates of canonical (will drift):$duplicates"
+                echo "         Fix per slug: rm -rf $path/<slug> && ln -s $canonical/<slug> $path/<slug>"
+            fi
+            if [ -n "$handlocal" ]; then
+                echo "      ✅ Hand-installed local-only (not in canonical — harmless):$handlocal"
+            fi
+        else
+            echo "  ℹ️  $path missing (CLI may not have initialized yet)"
+        fi
+    done
+    echo
+    echo "Orphan real-dir stores at legacy paths:"
+    found=0
+    for path in "$HOME/.copilot/skills" "$HOME/.codex/skills" "$HOME/.config/opencode/skills"; do
+        if [ -e "$path" ] && [ ! -L "$path" ] && [ -d "$path" ]; then
+            count=$(ls "$path" 2>/dev/null | wc -l | tr -d ' ')
+            if [ "$count" -gt 0 ]; then
+                echo "  ⚠️  $path ($count entries) — likely orphan from older npx skills"
+                echo "      Fix: rm -rf $path  (or: rm -rf $path && ln -s $canonical $path)"
+                found=1
+            fi
+        fi
+    done
+    [ "$found" -eq 0 ] && echo "  ✅ None found"
+    echo
+    echo "Dangling symlinks under $HOME/.claude/skills:"
+    if [ -d "$HOME/.claude/skills" ]; then
+        dangling=$(find "$HOME/.claude/skills" -maxdepth 1 -type l ! -exec test -e {} \; -print 2>/dev/null || true)
+        if [ -n "$dangling" ]; then
+            echo "$dangling" | sed 's/^/  ⚠️  /'
+        else
+            echo "  ✅ None"
+        fi
+    fi
 
 # Create a release build with checks
 release: ci
