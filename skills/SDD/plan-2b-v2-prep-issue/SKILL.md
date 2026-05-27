@@ -276,7 +276,7 @@ Copy the above to your issue tracker, or:
 ## Integration Notes
 
 - Can run after /plan-1b-v2-specify (spec only → feature issue)
-- Can run after /plan-3-v2-architect (with plan context → richer feature issue with domain impact)
+- Can run after /plan-3-v3-architect (with plan context → richer feature issue with domain impact)
 - Can run after /plan-5-v2-phase-tasks-and-brief (with --phase N → domain-aware story issues)
 - Multiple runs accumulate in issues/ folder (one file per issue)
 - Domain awareness is additive — issues generate correctly without domains

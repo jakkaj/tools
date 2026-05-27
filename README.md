@@ -218,16 +218,19 @@ It prevents "local optimum" decisions from being repeated as accidental architec
 
 ---
 
-## Chapter 4: Validate readiness (optional, but the "quality gate before spend")
+## Chapter 4: Readiness gates are baked into the plan (not a separate validation pass)
 
-Now there's a plan. The temptation is to start coding. Instead, an optional readiness validation pass runs.
+Earlier versions of the pipeline had a separate `/plan-4-complete-the-plan` step that ran post-hoc validators against the plan. That step has been **collapsed into `/plan-3-v3-architect`** — the gates now run inline during generation.
 
-The `/plan-4-complete-the-plan` stage runs parallel validators across structure, testing, completeness, doctrine alignment, and ADR awareness, and produces a READY vs NOT READY outcome (with an explicit override option).
+`/plan-3-v3-architect` produces the plan in one of two states:
 
-Conceptually, this is a **pre-spend gate**: plan deficiencies are caught before the most expensive activity (implementation) begins.
+- **`Status: READY`** — all seven gates (Clarify, Constitution, Architecture, ADR, Structure, Testing Alignment, Domain Completeness) passed; the plan is consumable by `/plan-5`.
+- **`Status: DRAFT — UNRESOLVED GAPS`** — one or more gates failed. The plan is **still written** (so the user has context to fix), but is annotated inline with `⚠️ GAP: …` markers at each violation site, plus a final `## Unresolved Gaps` table that names exactly what to fix and where.
+
+Conceptually, this is still the **pre-spend gate** — plan deficiencies caught before the most expensive activity (implementation) begins. The shift is from "generator → safety net → maybe fix" to "fail-fast generator that emits the plan AND the gap list in one pass."
 
 **Why this chapter matters in SDD:**
-Because the cost curve is real: mistakes found in plan are cheaper than mistakes found in code review, and dramatically cheaper than mistakes found in production.
+The cost curve is real: mistakes found in plan are cheaper than mistakes found in code review, and dramatically cheaper than mistakes found in production. Baking the gates into the generator means the user can never silently consume a broken plan downstream — the `DRAFT` status header and inline gap markers make defects visible in context.
 
 ---
 

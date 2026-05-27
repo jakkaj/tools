@@ -68,4 +68,4 @@ See [`plan-1b-v3-specify-and-clarify/SKILL.md`](../plan-1b-v3-specify-and-clarif
 Updated `SPEC_FILE` with a new `### Session YYYY-MM-DD` block and any section updates the answers triggered.
 ```
 
-Next step: Run **/plan-3-v2-architect** (if architect hasn't run) or re-run the downstream skill that surfaced the ambiguity.
+Next step: Run **/plan-3-v3-architect** (if architect hasn't run) or re-run the downstream skill that surfaced the ambiguity.

@@ -149,7 +149,7 @@ Submit as ONE batched call on batched hosts; sequentially on sequential hosts.
 
 After Round 2:
 - Append Q&A to the same `### Session YYYY-MM-DD` block in `## Clarifications`
-- Update affected sections immediately (`## Target Domains` for boundary adjustments, agent-harness decision recorded for `plan-3-v2-architect`, topic-specific markers replaced with resolved values)
+- Update affected sections immediately (`## Target Domains` for boundary adjustments, agent-harness decision recorded for `plan-3-v3-architect`, topic-specific markers replaced with resolved values)
 - Save the spec
 
 ---
@@ -224,7 +224,7 @@ After: update spec `## Target Domains` with user's adjustments.
 
 **If no harness**: ask "This project has no agent harness (Boot → Interact → Observe feedback loop). Without one, the agent validates via unit tests and manual verification only. Note: this is the agent-side feedback layer — it sits on top of the project's engineering harness (justfile/Makefile/dev script) and assumes that substrate already works." Options: "Build agent harness as Phase 0 (Recommended)" / "Continue without agent harness" / "Feature doesn't need an agent harness".
 
-After: capture in `## Clarifications`. If "Build as Phase 0" chosen, note for `plan-3-v2-architect`. If overridden, document the override reason.
+After: capture in `## Clarifications`. If "Build as Phase 0" chosen, note for `plan-3-v3-architect`. If overridden, document the override reason.
 
 ### Topic-specific (Round 2, conditional)
 
@@ -254,5 +254,5 @@ Draw from these categories based on `[NEEDS CLARIFICATION]` markers in the sketc
 
 Next steps:
 - **If Workshop Opportunities identified**: Consider running **/plan-2c-workshop**
-- **Otherwise**: Run **/plan-3-v2-architect** to generate the implementation plan
+- **Otherwise**: Run **/plan-3-v3-architect** to generate the implementation plan
 - **To add clarifications later** (mid-plan or post-architect): Run **/plan-2-v2-clarify** to open a new `### Session` block

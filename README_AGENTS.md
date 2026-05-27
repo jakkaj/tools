@@ -58,7 +58,7 @@ npx skills@latest add jakkaj/tools \
 
 # Three planning skills into Claude Code + Copilot CLI, project-local
 npx skills@latest add jakkaj/tools \
-  --skill plan-1a-v2-explore --skill plan-1b-v2-specify --skill plan-3-v2-architect \
+  --skill plan-1a-v2-explore --skill plan-1b-v3-specify-and-clarify --skill plan-3-v3-architect \
   -a claude-code -a github-copilot
 ```
 
@@ -132,13 +132,12 @@ The active workflow for non-trivial feature work. Use these for any change large
 |---|---|
 | `plan-0-v2-constitution` | Establish or refresh the project constitution before planning begins. |
 | `plan-1a-v2-explore` | Deep-dive research into existing codebase functionality before specification. |
-| `plan-1b-v2-specify` | Create or update a feature spec from a natural-language description (WHAT/WHY only). |
-| `plan-2-v2-clarify` | Resolve high-impact ambiguities (≤8 questions) and update the spec. |
+| `plan-1b-v3-specify-and-clarify` | Create a feature spec AND resolve high-impact ambiguities in one skill with front-loaded batched questions. Replaces `plan-1b-v2-specify` + `plan-2-v2-clarify`. |
+| `plan-2-v2-clarify` | Mid-plan clarification re-entry (≤4 questions). Soft-deprecated — for new specs use `plan-1b-v3-specify-and-clarify`. |
 | `plan-2b-v2-prep-issue` | Generate terse, industry-standard issue text for Azure DevOps / GitHub Issues. |
 | `plan-2c-v2-workshop` | Create detailed design documents for complex concepts surfaced in the spec. |
-| `plan-3-v2-architect` | Generate a domain-aware, lean implementation plan with phases and task tables. |
+| `plan-3-v3-architect` | Generate a domain-aware, lean implementation plan with phases, task tables, AND seven self-validating fail-fast gates baked in. Replaces `plan-3-v2-architect` + `plan-4-v2-complete-the-plan`. |
 | `plan-3a-v2-adr` | Generate an Architectural Decision Record from the spec and clarifications. |
-| `plan-4-v2-complete-the-plan` | Assess plan completeness before execution; readiness gate. |
 | `plan-5-v2-phase-tasks-and-brief` | Generate a tasks dossier (tasks + context brief) for a phase. |
 | `plan-5b-flightplan` | Generate a consumable Flight Plan (`.fltplan.md`) at phase or plan level. |
 | `plan-6-v2-implement-phase` | Implement exactly one approved phase using the chosen testing approach. |

@@ -349,9 +349,10 @@ Verdict: **APPROVE** (proceed) or **REQUEST_CHANGES** (fix issues first)
 | Command | Purpose | When to use |
 |---------|---------|-------------|
 | `/plan-3a-adr` | Create Architectural Decision Record | Major design decisions |
-| `/plan-4-complete-the-plan` | Validate plan readiness | Before complex implementations |
 | `/plan-5 --subtask` | Handle mid-phase complexity | When task needs decomposition |
 | `/plan-2b-prep-issue` | Generate issue tracker text | Syncing to GitHub/Jira |
+
+> Note: `/plan-4-complete-the-plan` was retired in v3 — readiness gates are now baked into `/plan-3-v3-architect` and run inline during plan generation.
 
 ---
 
@@ -453,10 +454,8 @@ docs/
 ```bash
 /plan-0-constitution          # Once per project
 /plan-1a-explore --plan oauth "research auth patterns"
-/plan-1b-specify "Add OAuth2 authentication"
-/plan-2-clarify               # Select "Full" mode, TAD testing
-/plan-3-architect
-/plan-4-complete-the-plan
+/plan-1b-v3-specify-and-clarify "Add OAuth2 authentication"  # spec + clarifications in one pass
+/plan-3-v3-architect          # generates plan with inline gates (no separate /plan-4 step in v3)
 # For each phase:
 /plan-5 --phase "Phase 1: ..." --plan "..."
 /didyouknow --tasks "..."     # Recommended

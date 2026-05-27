@@ -20,11 +20,10 @@ These skills (installed via `npx skills add jakkaj/tools -a <cli>` from `/skills
 |---------|----------|-----------------|
 | `plan-v2-extract-domain` | *(new)* | Collaboratively identify and formalize existing code as a named domain |
 | `plan-1a-v2-explore` | `plan-1a-explore` | Domain & Boundary Scout subagent, domain context in research output |
-| `plan-1b-v2-specify` | `plan-1b-specify` | Adds `## Target Domains` section to spec |
-| `plan-2-v2-clarify` | `plan-2-clarify` | Domain Review question for boundary validation |
-| `plan-3-v2-architect` | `plan-3-architect` | Lean output (≤500 lines), 2 research subagents, domain manifest |
+| `plan-1b-v3-specify-and-clarify` | `plan-1b-specify` + `plan-2-clarify` | Merged: front-loaded batched questions before spec sketch + conditional post-sketch round. Replaces both v2 skills. |
+| `plan-2-v2-clarify` | `plan-2-clarify` | Soft-deprecated mid-plan re-entry point (≤4 questions). For new specs use `plan-1b-v3-specify-and-clarify`. |
+| `plan-3-v3-architect` | `plan-3-architect` + `plan-4-complete-the-plan` | Merged: lean output (≤500 lines), 2 research subagents, domain manifest, AND seven inline fail-fast gates (Clarify / Constitution / Architecture / ADR / Structure / Testing Alignment / Domain Completeness). Emits with `Status: READY` or `Status: DRAFT — UNRESOLVED GAPS` + inline `⚠️ GAP:` markers. Replaces both v2 skills. |
 | `plan-3a-v2-adr` | `plan-3a-adr` | Domain impact analysis, domain map integration, domain.md backlinks |
-| `plan-4-v2-complete-the-plan` | `plan-4-complete-the-plan` | Domain completeness validation, no false positives on lean plan format |
 | `plan-5-v2-phase-tasks-and-brief` | `plan-5-phase-tasks-and-brief` | 7-column task table with Domain column, simplified prior-phase review |
 | `plan-6-v2-implement-phase` | `plan-6-implement-phase` | Domain placement rules, post-implementation domain.md updates |
 | `plan-6-v2-implement-phase-companion` | *(new — sibling of plan-6-v2)* | Same as plan-6-v2 + parallel `code-review-companion` (Power-On-Mode via `minih`). Companion reviews each commit live; **supersedes `/plan-7-v2-code-review`** for projects with a companion agent. |

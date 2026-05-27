@@ -6,7 +6,7 @@ Please deep think / ultrathink as this is a complex task.
 
 # plan-3a-v2-adr
 
-Generate a high-quality, **domain-aware ADR** from the spec (and optional plan), save it under `docs/adr/`, and wire cross-links so /plan-3-v2-architect and /plan-5-v2 can import constraints. Includes domain impact analysis, domain map integration, and domain.md backlinks.
+Generate a high-quality, **domain-aware ADR** from the spec (and optional plan), save it under `docs/adr/`, and wire cross-links so /plan-3-v3-architect and /plan-5-v2 can import constraints. Includes domain impact analysis, domain map integration, and domain.md backlinks.
 
 ```md
 User input:
@@ -414,7 +414,7 @@ Domain Impact Summary:
 | [slug] | [modify]    | [summary]       | [yes/no]   |
 
 Next steps:
-- Option A: proceed to /plan-3-v2-architect (plan uses this ADR)
+- Option A: proceed to /plan-3-v3-architect (plan uses this ADR)
 - Option B: rerun /plan-3a-v2-adr for additional decisions
 - Option C: review ADR at docs/adr/adr-NNNN-[title-slug].md
 ```
@@ -467,5 +467,5 @@ Fix these issues and retry with --replace NNNN flag
 * Dependency rules apply: business → infrastructure ✅, infrastructure → business ❌, business → business via contracts only ⚠️
 
 Next steps:
-- Proceed to **/plan-3-v2-architect** (plan uses this ADR)
+- Proceed to **/plan-3-v3-architect** (plan uses this ADR)
 - Or rerun **/plan-3a-v2-adr** for additional decisions

@@ -126,7 +126,7 @@ End with a clear, conversational statement that grounds the session. Not a lectu
 
 ## What This Skill is NOT
 
-- It is NOT a planning tool (use plan-3-v2-architect)
+- It is NOT a planning tool (use plan-3-v3-architect)
 - It is NOT a validation tool (use validate-v2)
 - It is NOT a code review (use plan-7-v2-code-review)
 - It IS the philosophical backbone that makes all other skills serve the right goal
