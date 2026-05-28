@@ -121,8 +121,13 @@ skills/harness/) EMPTY. **Expected residue confirmed intentional**: `system.comp
 prose + 2 test fixtures name `compound-2-bubble`/`compound-3-harvest` — frozen minih contract, AC2-excluded, Non-Goal
 (schemas stay put). Belt-and-suspenders sweep of all skills/ (outside schemas) EMPTY; src/jk_tools mirror EMPTY.
 
-### T014 — Global cleanup + dogfood install — DEFERRED (needs commit+push + user confirmation)
-Touches global `~/.agents/skills/` (rm -rf 6 old slugs) and `npx skills add jakkaj/tools` which pulls from the PUSHED
-GitHub branch — so it cannot run meaningfully until this work is committed AND pushed, and it modifies shared state
-outside the repo. Paused for user confirmation.
+### T014 — Global cleanup + dogfood install (done — committed `897a3b9`, pushed to main first)
+User chose "commit + push, then run T014". Committed the atomic consolidation (`897a3b9`, 31 files, +1096/−1277),
+pushed `bffbe24..897a3b9 → origin/main`. Then: removed 7 old slugs (the 6 plan slugs + a stale pre-plan `agent-harness-v2`)
+from BOTH the canonical `~/.agents/skills/` store AND the per-skill symlinks in `~/.claude/skills/` (npx does not
+auto-prune — PL-04). **Gotcha hit (and dogfooded the loop's own lesson):** zsh does not word-split an unquoted `$OLD`
+var in a for-loop — the first removal pass silently no-op'd; fixed by listing slugs literally. `just install-skills-from-source`
+(exit 0) reinstalled the 3 new slugs; `just doctor-skills` clean (32 skills, no orphans, no dangling). AC6 published-branch
+smoke: `npx skills add jakkaj/tools -a claude-code -g` installed all 3 new slugs from pushed main (exit 0). Final verify:
+6 old slugs absent from both stores, 3 new present in both, doctor clean. AC5 + AC6 green.
 

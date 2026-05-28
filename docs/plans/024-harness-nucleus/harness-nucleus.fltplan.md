@@ -3,7 +3,7 @@
 **Spec**: [harness-nucleus-spec.md](./harness-nucleus-spec.md)
 **Plan**: [harness-nucleus-plan.md](./harness-nucleus-plan.md)
 **Generated**: 2026-05-28
-**Status**: In Progress — 16/17 tasks landed (all source edits + grep gates pass); T014 (global cleanup + dogfood install) deferred pending commit/push + user confirmation
+**Status**: Landed — 17/17 tasks complete; committed `897a3b9`, pushed to main; all grep gates + dogfood install (AC1–AC13) pass
 
 ---
 
@@ -97,8 +97,8 @@ flowchart LR
     classDef ready fill:#9E9E9E,stroke:#757575,color:#fff
 
     S[Specify + Clarify]:::done --> P[Plan]:::done
-    P --> P1[Phase 1: Consolidation]:::active
-    P1 --> D[Done]:::ready
+    P --> P1[Phase 1: Consolidation]:::done
+    P1 --> D[Done]:::done
 ```
 
 **Legend**: green = done | yellow = active/next | grey = not started
@@ -109,7 +109,7 @@ flowchart LR
 
 | Phase | Title | Tasks | CS | Status |
 |-------|-------|-------|----|--------|
-| 1 | Consolidation (single phase — Simple Mode) | 16/17 done (T014 deferred) | CS-3 | In Progress |
+| 1 | Consolidation (single phase — Simple Mode) | 17/17 done | CS-3 | Complete |
 
 Simple Mode = one phase with inline tasks. Task table generated in [harness-nucleus-plan.md](./harness-nucleus-plan.md) § Implementation. Next: `/plan-6-v2-implement-phase`.
 
@@ -158,4 +158,4 @@ Simple Mode = one phase with inline tasks. Task table generated in [harness-nucl
 
 **Decisions made**: MIGRATION.md's explicit stale-file `rm` lists collapsed into behavior-preserving globs (so the retired names disappear from the doc while cleanup still works). `compound-value` recipe name kept (not a skill name). Frozen `skills/compound/schemas/` left untouched (Non-Goal) — its `compound-2/3` strings are expected, AC2-excluded residue.
 
-**Deferred**: T014 (rm 6 old `~/.agents/skills/` slugs + `just doctor-skills` + `npx skills add` dogfood) — needs commit+push first (npx pulls from GitHub) and modifies global state; awaiting user confirmation.
+**Dogfood (T014, post-push)**: committed `897a3b9`, pushed `bffbe24..897a3b9 → main`; removed 7 old slugs (6 plan + stale `agent-harness-v2`) from canonical + `~/.claude/skills`; `just install-skills-from-source` + `just doctor-skills` clean (32 skills, no orphans/dangling); `npx skills add jakkaj/tools` from published main installed the 3 new slugs (AC5 + AC6 green).
