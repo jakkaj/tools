@@ -1,5 +1,7 @@
 # Compounding Value System Implementation Plan
 
+> **⏩ Forward-pointer (plan-024, 2026-05-28)**: the skills designed here were consolidated and renamed by [plan-024 harness-nucleus](../024-harness-nucleus/). The 6 compound+harness skills became 3 loop-stage skills under `skills/harness/`: `compound-1-track`→`harness-2-observe`, `compound-2-bubble`+`compound-3-harvest`→`harness-3-retro` (`--drain`/`--harvest`), `engineering-harness-v2` VALIDATE+STATUS→`harness-1-boot`. `compound-0-setup` + CREATE mode were dropped to a separate setup effort; `harness-is-the-product-v2` was retired (principles inline). The `skills/compound/schemas/` contract is unchanged. This plan is preserved as immutable design history — the names below are the *original* names.
+
 **Mode**: Simple
 **Plan Version**: 1.0.0
 **Created**: 2026-05-18

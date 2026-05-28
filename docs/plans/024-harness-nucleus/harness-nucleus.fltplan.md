@@ -3,7 +3,7 @@
 **Spec**: [harness-nucleus-spec.md](./harness-nucleus-spec.md)
 **Plan**: [harness-nucleus-plan.md](./harness-nucleus-plan.md)
 **Generated**: 2026-05-28
-**Status**: Ready (spec validated v2.0; plan generated — Simple Mode, 17 tasks)
+**Status**: In Progress — 16/17 tasks landed (all source edits + grep gates pass); T014 (global cleanup + dogfood install) deferred pending commit/push + user confirmation
 
 ---
 
@@ -97,7 +97,7 @@ flowchart LR
     classDef ready fill:#9E9E9E,stroke:#757575,color:#fff
 
     S[Specify + Clarify]:::done --> P[Plan]:::done
-    P --> P1[Phase 1: Consolidation]:::ready
+    P --> P1[Phase 1: Consolidation]:::active
     P1 --> D[Done]:::ready
 ```
 
@@ -109,7 +109,7 @@ flowchart LR
 
 | Phase | Title | Tasks | CS | Status |
 |-------|-------|-------|----|--------|
-| 1 | Consolidation (single phase — Simple Mode) | 17 (T001–T017) | CS-3 | Ready |
+| 1 | Consolidation (single phase — Simple Mode) | 16/17 done (T014 deferred) | CS-3 | In Progress |
 
 Simple Mode = one phase with inline tasks. Task table generated in [harness-nucleus-plan.md](./harness-nucleus-plan.md) § Implementation. Next: `/plan-6-v2-implement-phase`.
 
@@ -144,4 +144,18 @@ Simple Mode = one phase with inline tasks. Task table generated in [harness-nucl
 
 <!-- Updated by /plan-6 and /plan-6a after each phase completes -->
 
-_No phases completed yet._
+### Phase 1: Consolidation — 16/17 landed (2026-05-29)
+
+**What was done**: Collapsed the 6 compound+harness skills into 3 loop-stage skills under a new `skills/harness/` category and cascaded every cross-reference atomically. The latent `plan-3-v3-architect` 2-deep fallback-chain bug was fixed in the same train. All grep-audit gates (AC1/AC2/AC3/AC13) pass; AC4 verified functionally.
+
+**Key changes**:
+- `skills/harness/harness-1-boot/` — VALIDATE+STATUS extracted verbatim from `engineering-harness-v2`; CREATE + Known-Difficulties seed + Anti-Patterns dropped (KF05); canonical-first 3-deep chain; `UNAVAILABLE` graceful degrade
+- `skills/harness/harness-2-observe/` — `git mv` from `compound-1-track`; `compound-0-setup` self-heal refs neutralized to no-op/UNAVAILABLE
+- `skills/harness/harness-3-retro/` — merge of `compound-2-bubble` (`--drain`) + `compound-3-harvest` (`--harvest`); `[s/t/p/e/d/a]` menu + 8-path `--json` schema preserved
+- Retired `harness-is-the-product-v2` — 5 principles distributed inline across the 3 bodies + README (AC12)
+- 8 SDD appendices, 5 governance docs (+ AC11 vocab-freeze), `justfile`/`compound-value.sh`, `src/jk_tools/` mirror, plan-023 forward-pointer, `walkthroughs.md` fixture trace
+- `plan-3-v3-architect` — canonical-first 3-deep harness-doc read + Phase-0 creates `engineering-harness.md` (AC7)
+
+**Decisions made**: MIGRATION.md's explicit stale-file `rm` lists collapsed into behavior-preserving globs (so the retired names disappear from the doc while cleanup still works). `compound-value` recipe name kept (not a skill name). Frozen `skills/compound/schemas/` left untouched (Non-Goal) — its `compound-2/3` strings are expected, AC2-excluded residue.
+
+**Deferred**: T014 (rm 6 old `~/.agents/skills/` slugs + `just doctor-skills` + `npx skills add` dogfood) — needs commit+push first (npx pulls from GitHub) and modifies global state; awaiting user confirmation.

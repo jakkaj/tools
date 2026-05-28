@@ -551,10 +551,10 @@ This skill participates in the **Compounding Value System** (`skills/compound/`)
 
 **Sentinel**: Before any compound call below, check `docs/compound/.disabled` — if present, silently skip everything in this section.
 
-**At start**: Check `docs/compound/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/compound-2-bubble` BEFORE this skill's primary work.
+**At start**: Check `docs/compound/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-3-retro --drain` BEFORE this skill's primary work.
 
-**During task brief authoring** (LIGHT — fewer trigger points than the deep skills): silently call `compound-1-track` only for substantive friction (e.g. plan structure ambiguity, missing acceptance criteria in source plan, agent harness context missing when needed). Calibration: ≤1 self-prompt per 5min; ≤3 entries per session for plan-5 (lighter than the default ≤5 because plan-5 is short-horizon synthesis work).
+**During task brief authoring** (LIGHT — fewer trigger points than the deep skills): silently call `harness-2-observe` only for substantive friction (e.g. plan structure ambiguity, missing acceptance criteria in source plan, agent harness context missing when needed). Calibration: ≤1 self-prompt per 5min; ≤3 entries per session for plan-5 (lighter than the default ≤5 because plan-5 is short-horizon synthesis work).
 
-**At end**: this skill CHAINS to plan-6 — no end-of-skill `compound-2-bubble` here. The bubble fires inside plan-6 at end-of-phase (the next logical pause).
+**At end**: this skill CHAINS to plan-6 — no end-of-skill `harness-3-retro --drain` here. The bubble fires inside plan-6 at end-of-phase (the next logical pause).
 
 See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md).

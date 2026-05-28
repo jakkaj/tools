@@ -47,7 +47,9 @@ cd tools
 
 | Path | What |
 |---|---|
-| `skills/SDD/` | The 27 spec-driven-development pipeline skills (plan-*, validate, harness, didyouknow, etc.) |
+| `skills/SDD/` | The spec-driven-development pipeline skills (plan-*, validate, didyouknow, etc.) |
+| `skills/harness/` | The 3 harness loop-stage skills: `harness-1-boot`, `harness-2-observe`, `harness-3-retro` (Boot → Observe → Retro) |
+| `skills/compound/` | Frozen cross-system retro schemas (`schemas/`) — the minih contract; not skills themselves |
 | `skills/general/` | Domain-generic skills (grill-me) |
 | `skills/personal/` | Personal / non-coding skills (shopping-hunter) |
 | `agents/commands/` | DEPRECATED v1 commands. See `agents/commands/DEPRECATED.md`. |
@@ -56,6 +58,20 @@ cd tools
 | `install/`, `scripts/` | Dev-tool installers and utility scripts |
 
 See **[CLAUDE.md](./CLAUDE.md)** for the contributor-facing dev guide (how to add or edit a skill).
+
+## The harness loop (why these skills exist)
+
+The `skills/harness/` family encodes one idea: **the engineering harness IS the product.** Development infrastructure — `just`/`make` recipes, build and seed scripts, test runners, env setup, plus the agent-facing Boot → Interact → Observe loop on top — is not scaffolding. It is the first-class product of engineering work, and every plan and code change should leave it better than it found it.
+
+Three skills name the loop stage they serve:
+
+- **`harness-1-boot`** — *Boot.* Validate the harness is healthy and report its maturity at session start. If a fresh agent can't reach a healthy, observable running system in 30-60 seconds, that is the most important thing to fix.
+- **`harness-2-observe`** — *Observe.* A silent producer that captures friction during work to a per-agent buffer, so each difficulty catalogued becomes a gift to your future self (compounding value).
+- **`harness-3-retro`** — *Retro.* `--drain` at session end surfaces what was observed and stages encoded fixes (encode, don't document); `--harvest` curates the accumulated ledger at long-horizon reflection moments.
+
+**Agents are real users.** Test agents, smoke bots, CI runners, and plan-6 companions are not test scripts — they are real users of the infrastructure, and their failures and "magic wand" wishes are the most honest feedback the harness gets. The loop above exists to capture that feedback and compound it.
+
+These three are the runtime companions to an engineering harness that is already set up, defined, and prompted in the host repo. Provisioning a fresh harness (scaffolding the governance doc + ledger) is a separate setup concern; the skills degrade gracefully (`harness-1-boot` reports `UNAVAILABLE`, observe/retro no-op) when the substrate is absent.
 
 ## Development
 

@@ -31,12 +31,8 @@ Cleanup is **optional**. Leaving the stale files in place will not break anythin
 If you want to clean up, run each of these one-liners. Each is idempotent and safe to re-run.
 
 ```bash
-# 1. Claude Code (commands/)
-rm -f ~/.claude/commands/*-v2.md ~/.claude/commands/plan-*.md ~/.claude/commands/validate-v2.md \
-      ~/.claude/commands/htmlify-v2.md ~/.claude/commands/util-0-v2-handover.md \
-      ~/.claude/commands/didyouknow-v2.md ~/.claude/commands/deepresearch-v2.md \
-      ~/.claude/commands/flowspace-research-v2.md ~/.claude/commands/harness-is-the-product-v2.md \
-      ~/.claude/commands/agent-harness-v2.md ~/.claude/commands/code-concept-search-v2.md
+# 1. Claude Code (commands/) — the *v2*.md + plan-*.md globs cover every fanned-out v2-command file
+rm -f ~/.claude/commands/*v2*.md ~/.claude/commands/plan-*.md
 
 # 2. OpenCode
 rm -f ~/.config/opencode/command/*-v2.md ~/.config/opencode/command/plan-*.md
@@ -48,18 +44,14 @@ rm -f ~/.codex/prompts/*-v2.md ~/.codex/prompts/plan-*.md
 rm -f ~/.config/github-copilot/prompts/*-v2.prompt.md ~/.config/github-copilot/prompts/plan-*.prompt.md
 
 # 5. GitHub Copilot CLI (skills directory)
-#    Remove only the v2-command-derived skill directories.
-for slug in agent-harness-v2 code-concept-search-v2 deepresearch-v2 didyouknow-v2 \
-            flowspace-research-v2 harness-is-the-product-v2 htmlify-v2 plan-0-v2-constitution \
-            plan-1a-v2-explore plan-1b-v2-specify plan-2-v2-clarify plan-2b-v2-prep-issue \
-            plan-2c-v2-workshop plan-3-v2-architect plan-3a-v2-adr plan-4-v2-complete-the-plan \
-            plan-5-v2-phase-tasks-and-brief plan-5b-flightplan plan-6-v2-implement-phase \
-            plan-6-v2-implement-phase-companion plan-6a-v2-update-progress plan-6b-worked-example \
-            plan-7-v2-code-review plan-8-v2-merge plan-v2-extract-domain util-0-v2-handover \
-            validate-v2; do
-  rm -rf ~/.copilot/skills/"$slug"
-done
+#    Remove only the v2-command-derived skill directories (every one either
+#    contains "v2" or starts with "plan-"), leaving any current skills intact.
+rm -rf ~/.copilot/skills/*v2* ~/.copilot/skills/plan-*
 ```
+
+## Note on the retired harness/compound command files
+
+Some of the stale files cleaned up above were the old harness/philosophy commands (the v2-era `harness`/`agent-harness`/`compound` `.md` files). Those concepts have been **consolidated into three loop-stage skills** — `harness-1-boot`, `harness-2-observe`, and `harness-3-retro` — under `skills/harness/`. The standalone philosophy command was retired (its principles are now inline). So if you see old harness or compound command files lingering in `$HOME`, delete them per the recipe above and install the three current `harness-*` skills via `npx skills` below.
 
 ## Re-installing in the new layout
 

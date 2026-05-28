@@ -51,9 +51,9 @@ npx skills@latest add jakkaj/tools \
 You can chain `-a` with `--skill` too — install a specific subset of skills to a specific subset of CLIs:
 
 ```bash
-# Just the harness skill, into Claude Code and Codex, globally
+# Just the harness boot skill, into Claude Code and Codex, globally
 npx skills@latest add jakkaj/tools \
-  --skill harness-is-the-product-v2 \
+  --skill harness-1-boot \
   -a claude-code -a codex -g
 
 # Three planning skills into Claude Code + Copilot CLI, project-local
@@ -70,7 +70,7 @@ Use `--skill <slug>` to scope the install to a single skill (repeat for several)
 
 ```bash
 # Single skill, globally for Claude Code
-npx skills@latest add jakkaj/tools --skill harness-is-the-product-v2 -a claude-code -g
+npx skills@latest add jakkaj/tools --skill harness-1-boot -a claude-code -g
 
 # A few skills, project-local for Codex
 npx skills@latest add jakkaj/tools --skill grill-me --skill plan-1a-v2-explore -a codex
@@ -124,7 +124,7 @@ Categories are organizational only. They do **not** affect install commands — 
 
 ## Skill catalog
 
-### `SDD/` — Spec-Driven Development (29 skills)
+### `SDD/` — Spec-Driven Development (27 skills)
 
 The active workflow for non-trivial feature work. Use these for any change large enough to benefit from explicit specification, clarification, architecture, and phase-based implementation. Each step produces an artifact that the next step consumes.
 
@@ -150,8 +150,6 @@ The active workflow for non-trivial feature work. Use these for any change large
 | `validate-v2` | Launch parallel subagents to validate produced work with structured lens coverage. |
 | `sdd-tutorial` | Coach a learner through one branch-based SDD/RPIV loop with orientation, preflight, task selection, RPIV handoffs, reflection, and resume. |
 | `install-hve-core-rpiv` | Install or update local skill-shaped HVE Core RPI/RPIV task skills from the current authoritative HVE Core source. |
-| `engineering-harness-v2` (renamed from `agent-harness-v2`) | Create or validate the engineering harness — substrate + agent-facing Boot/Interact/Observe overlay. Produces `engineering-harness.md` (legacy `agent-harness.md` / `harness.md` still read as fallback); template auto-seeds `## Known Difficulties` from the compound ledger. |
-| `harness-is-the-product-v2` | Re-ground the session on the core philosophy — the harness is the product; every difficulty is a gift; encode-don't-document. |
 | `code-concept-search-v2` | Find a concept in the codebase by walking through code like a human engineer. |
 | `deepresearch-v2` | Craft structured research prompts for deep-research agents. |
 | `didyouknow-v2` | Surface critical insights conversationally to build shared understanding. |
@@ -159,18 +157,17 @@ The active workflow for non-trivial feature work. Use these for any change large
 | `htmlify-v2` | Convert markdown, specs, plans, or findings into polished static HTML documents. |
 | `util-0-v2-handover` | Generate a domain-aware handover document for LLM agent continuity. |
 
-### `compound/` — Compounding Value System (4 skills)
+### `harness/` — Harness loop (3 skills)
 
-The meta-loop that closes the compounding-value gap left by `harness-is-the-product-v2` — every session in any supported CLI silently logs friction; soft prompts at session end route encodable entries; periodic curation surfaces accumulated learnings. Universal `.retro.md` contract in `skills/compound/schemas/` so minih + compound + ad-hoc scripts speak the same language. Opt-out via `touch docs/compound/.disabled`.
+The Compounding Value System, named by loop stage: **Boot → Do Work → Observe → Retro**. Every session in any supported CLI validates the harness at boot, silently logs friction during work, and surfaces + encodes accumulated learnings at session end and at long-horizon reflection. The 5 philosophy principles are encoded inline across these bodies + the repo README (the standalone philosophy skill was retired in plan-024). These three are runtime companions to an engineering harness that the host repo has already set up, defined, and prompted; provisioning a fresh harness (governance doc + ledger scaffold) is a separate setup effort, and the skills degrade gracefully when the substrate is absent. Opt-out via `touch docs/compound/.disabled`.
 
 | Slug | One-line purpose |
 |---|---|
-| `compound-0-setup` | Scaffold `docs/compound/` once per repo + reversible split-migration from legacy `docs/retros/*.md`. Idempotent. |
-| `compound-1-track` | Silent producer — append friction/magic-wand entries to per-agent session buffer during work. Never prompts. |
-| `compound-2-bubble` | Session-end soft prompt — `[s/t/p/e/d/a]` actions; wraps entries in universal retro envelope; writes one `.retro.md` per save. |
-| `compound-3-harvest` | Curator — scans all retros; clusters by kind+target; flags stale; prints top-10 to terminal. NO on-disk indexes. Runtime filters (`--plan`/`--agent`/`--since`/`--kind`). |
+| `harness-1-boot` | **Boot.** Validate the engineering harness is healthy + report maturity at session start. VALIDATE (3-stage Boot/Interact/Observe) + STATUS (read-only). Reads `engineering-harness.md` (legacy `agent-harness.md` / `harness.md` fallback); reports `UNAVAILABLE` gracefully when absent. |
+| `harness-2-observe` | **Observe.** Silent producer — append friction/magic-wand entries to a per-agent session buffer during work. Never prompts. |
+| `harness-3-retro` | **Retro.** `--drain` = session-end soft prompt (`[s/t/p/e/d/a]`; wraps entries in a universal retro envelope; writes one `.retro.md` per save). `--harvest` = curator (scans all retros; clusters by kind+target; flags stale; top-10; `--json`; NO on-disk indexes; runtime filters `--plan`/`--agent`/`--since`/`--kind`). |
 
-See [`docs/plans/023-difficulty-ledger-skill/`](./docs/plans/023-difficulty-ledger-skill/) for the design history (spec + 6 workshops + implementation plan).
+The universal `.retro.md` contract lives in [`skills/compound/schemas/`](./skills/compound/schemas/) (frozen minih cross-system contract — not a skill; stays put). See [`docs/plans/023-difficulty-ledger-skill/`](./docs/plans/023-difficulty-ledger-skill/) for the design history and [`docs/plans/024-harness-nucleus/`](./docs/plans/024-harness-nucleus/) for the 6→3 loop-stage consolidation.
 
 ### `general/` — Domain-generic (1 skill)
 

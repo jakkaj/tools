@@ -434,24 +434,24 @@ If the companion produced a **magicWand** in its farewell, consider filing it as
 
 ## Compound integration
 
-This skill participates in the **Compounding Value System** (`skills/compound/`) — and it's the **dominant flow** for compound. The companion's final-phase debrief is where `compound-3-harvest` auto-fires (replacing `/plan-7` as the harvest anchor for the typical SDD flow).
+This skill participates in the **Compounding Value System** (the `skills/harness/` loop + the frozen `skills/compound/schemas/` contract) — and it's the **dominant flow** for the harness loop. The companion's final-phase debrief is where `harness-3-retro --harvest` auto-fires (replacing `/plan-7` as the harvest anchor for the typical SDD flow).
 
 ### Three-layer context
 
 This skill sits at the intersection of all three layers:
-- **Philosophy**: `harness-is-the-product-v2` — encode, don't document; every difficulty is a gift to future sessions
-- **Substrate**: `engineering-harness-v2` — the harness governance doc seeds `## Known Difficulties` from compound entries
-- **Meta-loop**: the four `compound-N` skills — this skill is one of the heaviest producers
+- **Philosophy**: the 5 harness principles, now encoded inline across the `skills/harness/` skill bodies + repo README (the retired philosophy skill's content) — encode, don't document; every difficulty is a gift to future sessions
+- **Substrate**: the engineering harness governance doc (`docs/project-rules/engineering-harness.md`), validated at session start by `harness-1-boot`
+- **Meta-loop**: the 3 harness loop-stage skills (`harness-1-boot`, `harness-2-observe`, `harness-3-retro`) — this skill is one of the heaviest observe-side producers
 
 ### Sentinel
 
 Before any compound call below, check `docs/compound/.disabled` — if present, silently skip everything in this section.
 
 ### At start of each phase
-- Check `docs/compound/_buffers/<agent>.session-buffer.md` (where `<agent>` matches the calling CLI's slug — typically `plan-6-companion` when invoked via minih). If non-empty from a prior session, fire `/compound-2-bubble` BEFORE this phase's work.
+- Check `docs/compound/_buffers/<agent>.session-buffer.md` (where `<agent>` matches the calling CLI's slug — typically `plan-6-companion` when invoked via minih). If non-empty from a prior session, fire `/harness-3-retro --drain` BEFORE this phase's work.
 
 ### During implementation work (same as plan-6)
-- Silently call `compound-1-track` per its trigger heuristics:
+- Silently call `harness-2-observe` per its trigger heuristics:
   - A tool call took >30 seconds and you were waiting on it
   - A search returned zero results when you expected matches
   - You retried the same operation more than once
@@ -463,7 +463,7 @@ Before any compound call below, check `docs/compound/.disabled` — if present, 
 ### Companion as a SECOND producer (alongside orchestrator)
 
 The companion is BOTH:
-1. **An orchestrator-side compound-1-track producer** (the calls above land in `_buffers/plan-6-companion.session-buffer.md`)
+1. **An orchestrator-side harness-2-observe producer** (the calls above land in `_buffers/plan-6-companion.session-buffer.md`)
 2. **A minih-runtime farewell-envelope producer** (the companion emits a `farewell.retrospective` at the end of each phase, which plan-6a's Step 9 maps via `minihToUniversal()` and writes as a per-run `.retro.md`)
 
 Both producers' outputs land in `docs/compound/agents/.../*.retro.md` — they just take different paths there.
@@ -486,10 +486,10 @@ The mapped envelope wraps these entries with `schema_version`, `retro_id`, `agen
 See workshop 005 § D9 for the TypeScript pseudocode plan-6a Step 9 implements inline.
 
 ### At end of EACH phase (logical pause)
-- Auto-fire `/compound-2-bubble` — drains the buffer (the orchestrator-side producer's output). User sees the soft prompt with `[s/t/p/e/d/a]` actions.
-- End-of-phase output reminds the user `/compound-2-bubble` is available for orchestrator-side entries; the companion-side farewell envelope already landed via plan-6a Step 9.
+- Auto-fire `/harness-3-retro --drain` — drains the buffer (the orchestrator-side producer's output). User sees the soft prompt with `[s/t/p/e/d/a]` actions.
+- End-of-phase output reminds the user `/harness-3-retro --drain` is available for orchestrator-side entries; the companion-side farewell envelope already landed via plan-6a Step 9.
 
 ### At the FINAL phase's debrief (the dominant-flow harvest anchor)
-- **Auto-fire `/compound-3-harvest`** — this is the long-horizon reflection moment for the typical SDD flow (replaces `/plan-7` which is rare in the companion pattern). Curated view shows clustered friction across the whole plan's lifetime; user can advance lifecycle status `[r/w/s]` on stale or resolved entries.
+- **Auto-fire `/harness-3-retro --harvest`** — this is the long-horizon reflection moment for the typical SDD flow (replaces `/plan-7` which is rare in the companion pattern). Curated view shows clustered friction across the whole plan's lifetime; user can advance lifecycle status `[r/w/s]` on stale or resolved entries.
 
 See: [workshop 004 § Per-Skill Integration Matrix + § The Four Firing Sites](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md); [workshop 005 § D9 round-trip](../../../docs/plans/023-difficulty-ledger-skill/workshops/005-universal-retro-contract.md).

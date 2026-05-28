@@ -47,7 +47,7 @@ Inputs:
 - For each NEW domain → note the sketch from spec (Purpose, Boundary Owns/Excludes)
 
 **Agent Harness Loading**:
-- If `docs/project-rules/agent-harness.md` (or legacy `harness.md`) exists → read maturity level, boot command, health check, interaction methods
+- If `docs/project-rules/engineering-harness.md` (canonical) — or legacy `agent-harness.md` / `harness.md`, read in that order — exists → read maturity level, boot command, health check, interaction methods
 - Check spec `## Clarifications` for agent harness decisions
 - If agent harness needed but doesn't exist → plan MUST include Phase 0: Build Agent Harness (unless user overrode in plan-1b/plan-2)
 
@@ -228,7 +228,7 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
 - Each phase should primarily target **ONE domain**. Multi-domain phases are permitted but each domain-touch is a separate task group.
 - Domain creation phases come BEFORE domain extension phases.
 - Composition/wiring phases come LAST.
-- **If agent harness is needed and doesn't exist**: Phase 0 is "Build Agent Harness". Phase 0 creates `docs/project-rules/agent-harness.md` and implements Boot + Interact + Observe capabilities. Target maturity: L2 minimum. If user overrode in plan-2/plan-1b, skip Phase 0 and note override.
+- **If agent harness is needed and doesn't exist**: Phase 0 is "Build Agent Harness". Phase 0 creates `docs/project-rules/engineering-harness.md` (canonical name) and implements Boot + Interact + Observe capabilities. Target maturity: L2 minimum. If user overrode in plan-2/plan-1b, skip Phase 0 and note override.
   - **Engineering harness prerequisite**: agent harness sits on top of a working engineering harness substrate (justfile/Makefile/dev script with a boot command healthy <60s, plus a test runner). If plan-1a research surfaced no engineering harness exists, surface as a Critical Key Finding. Engineering harness design is per-project and not modeled as a phase here.
 - For each NEW domain, first phase includes domain setup task:
   - Create `docs/domains/<slug>/domain.md` (use format from `/extract-domain`)

@@ -159,10 +159,11 @@ $ARGUMENTS
          `plan_id: <plan-id-from-cwd-or-branch>`, timestamps from the phase
          window. NO `docs/retros/` write — compound is the canonical path
          now (per workshop 006 D7; back-compat reader handles legacy paths
-         in `compound-3-harvest`).
+         in `harness-3-retro --harvest`).
 
-         If `docs/compound/agents/` doesn't exist, run `compound-0-setup`
-         first (or suggest the user run it).
+         If `docs/compound/agents/` doesn't exist, **no-op gracefully** —
+         the ledger tree is provisioned by the separate engineering-harness
+         setup effort, not by this skill. Skip the retro write and continue.
 
    d) **Surface significant findings as follow-up candidates**:
       If `magicWandTarget` is `agent-harness` or `engineering-harness`,
@@ -257,7 +258,7 @@ $ARGUMENTS
       The companion's retro file is the canonical record. The legacy
       `docs/retros/<companion-slug>.md` append path is NO LONGER WRITTEN
       from here (workshop 005 P1 — compound canonical for new writes;
-      back-compat reader in `compound-3-harvest` handles legacy reads
+      back-compat reader in `harness-3-retro --harvest` handles legacy reads
       until minih adopts universal natively per workshop 005 P3).
 
    f) **Surface the companion's magicWand as follow-up candidate**: if
@@ -288,8 +289,8 @@ This skill is one of the heaviest **producer-side** participants in the **Compou
 
 **Sentinel**: Every write to `docs/compound/` (Step 8c.ii and Step 9.e) first checks `docs/compound/.disabled`. If present, silently skip the write.
 
-**Schema discipline**: Every `.retro.md` written by this skill MUST conform to `skills/compound/schemas/retro.schema.json` and (when applicable) the namespace sub-schemas. The agent constructs the YAML frontmatter directly per the schema — no JSON Schema validator is run in v1 (validation happens at read time in `compound-3-harvest`).
+**Schema discipline**: Every `.retro.md` written by this skill MUST conform to `skills/compound/schemas/retro.schema.json` and (when applicable) the namespace sub-schemas. The agent constructs the YAML frontmatter directly per the schema — no JSON Schema validator is run in v1 (validation happens at read time in `harness-3-retro --harvest`).
 
-**Why no buffer interaction here**: plan-6a runs per-task; the silent buffer (`docs/compound/_buffers/<agent>.session-buffer.md`) is owned by `compound-1-track` (producer) and `compound-2-bubble` (drain). Plan-6a's compound output is the FAREWELL retros, which bypass the buffer and write directly to per-run `.retro.md` files. The buffer is for IN-SESSION agent-observed friction; the farewells are for END-OF-PHASE structured retrospectives.
+**Why no buffer interaction here**: plan-6a runs per-task; the silent buffer (`docs/compound/_buffers/<agent>.session-buffer.md`) is owned by `harness-2-observe` (producer) and `harness-3-retro --drain` (drain). Plan-6a's compound output is the FAREWELL retros, which bypass the buffer and write directly to per-run `.retro.md` files. The buffer is for IN-SESSION agent-observed friction; the farewells are for END-OF-PHASE structured retrospectives.
 
 See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md), [workshop 005 § D9 round-trip](../../../docs/plans/023-difficulty-ledger-skill/workshops/005-universal-retro-contract.md), [workshop 006 § Path Resolver](../../../docs/plans/023-difficulty-ledger-skill/workshops/006-compound-folder-layout.md).

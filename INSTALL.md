@@ -22,7 +22,7 @@ A full listing of every skill is in [`README_AGENTS.md`](./README_AGENTS.md).
 
 ## Canonical Install Patterns
 
-Each pattern is a one-liner. Substitute `<slug>` with a skill name (e.g. `harness-is-the-product-v2`, `grill-me`).
+Each pattern is a one-liner. Substitute `<slug>` with a skill name (e.g. `harness-1-boot`, `grill-me`).
 
 ### (a) Install everything globally for Claude Code
 
@@ -77,7 +77,7 @@ npx skills@latest add jakkaj/tools -a claude-code -a codex -a opencode -g
 Use `--skill <slug>` to scope the install to a single skill rather than the full set:
 
 ```bash
-npx skills@latest add jakkaj/tools --skill harness-is-the-product-v2 -a claude-code -g
+npx skills@latest add jakkaj/tools --skill harness-1-boot -a claude-code -g
 ```
 
 Repeat `--skill` to install a subset:

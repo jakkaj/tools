@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# compound-value.sh — render compound-3-harvest --json output as a compact terminal view.
+# compound-value.sh — render harness-3-retro --harvest --json output as a compact terminal view.
 # Reads JSON on stdin. Per workshop 007 § RV-002 + FX001 § RV-002.
 #
 # Usage:
 #   <json-source> | just compound-value
 #   echo '<json>' | scripts/compound-value.sh
 #
-# The JSON source is whatever produces compound-3-harvest's --json output —
+# The JSON source is whatever produces harness-3-retro --harvest --json output —
 # typically the active agent CLI invoking the skill. Cross-CLI portable
 # because this script is just a pretty-printer (no skill invocation here).
 
