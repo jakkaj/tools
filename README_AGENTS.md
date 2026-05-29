@@ -136,6 +136,7 @@ The active workflow for non-trivial feature work. Use these for any change large
 | `plan-2-v2-clarify` | Mid-plan clarification re-entry (≤4 questions). Soft-deprecated — for new specs use `plan-1b-v3-specify-and-clarify`. |
 | `plan-2b-v2-prep-issue` | Generate terse, industry-standard issue text for Azure DevOps / GitHub Issues. |
 | `plan-2c-v2-workshop` | Create detailed design documents for complex concepts surfaced in the spec. |
+| `plan-2d-backpressure-survey` | Advisory survey (after the spec, before `plan-3`) of whether the planned work can be *proven by deterministic backpressure* vs inference/eyeballing. Emits `backpressure-coverage.md` (sensor inventory + coverage matrix + qualitative certainty) and recommends a "Phase 0: Establish Backpressure" on gaps. Never blocks; the computational counterpart to `plan-7-v2-code-review`. |
 | `plan-3-v3-architect` | Generate a domain-aware, lean implementation plan with phases, task tables, AND seven self-validating fail-fast gates baked in. Replaces `plan-3-v2-architect` + `plan-4-v2-complete-the-plan`. |
 | `plan-3a-v2-adr` | Generate an Architectural Decision Record from the spec and clarifications. |
 | `plan-5-v2-phase-tasks-and-brief` | Generate a tasks dossier (tasks + context brief) for a phase. |

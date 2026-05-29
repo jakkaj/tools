@@ -94,6 +94,10 @@ If `${PLAN_DIR}/workshops/*.md` exist:
 - Do NOT contradict workshop decisions
 - Skip research for workshopped topics
 
+If `${PLAN_DIR}/backpressure-coverage.md` exists (from `/plan-2d-backpressure-survey`):
+- Read it. Note its qualitative Certainty and its **Recommended Phase 0: Establish Backpressure** table (if present).
+- Treat a Recommended Phase 0 as an **optional, user-decided** input to phase design (see § Phase Design Principles) — NOT a gate. Absence of this artifact changes nothing (no error, no Status change).
+
 ### Research Subagents (2 parallel)
 
 **Subagent 1 — Domain & Pattern Scout**:
@@ -230,6 +234,7 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
 - Composition/wiring phases come LAST.
 - **If agent harness is needed and doesn't exist**: Phase 0 is "Build Agent Harness". Phase 0 creates `docs/project-rules/engineering-harness.md` (canonical name) and implements Boot + Interact + Observe capabilities. Target maturity: L2 minimum. If user overrode in plan-2/plan-1b, skip Phase 0 and note override.
   - **Engineering harness prerequisite**: agent harness sits on top of a working engineering harness substrate (justfile/Makefile/dev script with a boot command healthy <60s, plus a test runner). If plan-1a research surfaced no engineering harness exists, surface as a Critical Key Finding. Engineering harness design is per-project and not modeled as a phase here.
+- **If `${PLAN_DIR}/backpressure-coverage.md` recommends a Phase 0** (from `/plan-2d-backpressure-survey`): include an **optional** "Phase 0: Establish Backpressure" whose tasks build the sensors named in that artifact's Recommended Phase 0 table (data-check scripts, dependency/architecture rules, smoke routes, CodeQL/Roslyn queries, schema checks). This is **advisory** — include it when the survey recommends it and the user wants the deterministic provability; **never gate on it and never flip Status to DRAFT for its absence**. If both this and the agent-harness Phase 0 apply, they may be one combined Phase 0 or sequential (harness substrate first).
 - For each NEW domain, first phase includes domain setup task:
   - Create `docs/domains/<slug>/domain.md` (use format from `/extract-domain`)
   - Create source directory
