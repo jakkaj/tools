@@ -64,6 +64,7 @@ The tutorial reflects the HVE Core Docusaurus docs under `hve-core/docs/rpi/`, b
 - `references/module-syllabus.md`
 - `references/lesson-plan-template.md`
 - `references/completion-summary-template.md`
+- `references/getting-started.md` — visual map of the full `/plan-*` pipeline + where the harness loop auto-fires (mermaid diagrams; manual vs auto calls)
 
 ## Phase -1: Orientation + Preflight
 
