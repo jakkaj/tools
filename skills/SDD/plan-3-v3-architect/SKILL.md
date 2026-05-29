@@ -1,7 +1,7 @@
 ---
 name: plan-3-v3-architect
 description: |
-  Generate a lean, domain-aware implementation plan with self-validating fail-fast gates baked in. Runs Clarify / Constitution / Architecture / ADR / Structure / Testing Alignment / Domain Completeness gates inline during generation. Emits the plan with `**Status**: READY` (all gates pass) or `**Status**: DRAFT — UNRESOLVED GAPS` + inline `⚠️ GAP:` markers + a final `## Unresolved Gaps` table (any gate fails) so the user sees exactly what's wrong in context. Replaces plan-3-v2-architect AND plan-4-v2-complete-the-plan — no separate validator step.
+  Generate a lean, domain-aware implementation plan with self-validating fail-fast gates baked in. Runs Clarify / Constitution / Architecture / ADR / Structure / Testing Alignment / Domain Completeness gates inline during generation. Emits the plan with `**Status**: READY` (all gates pass) or `**Status**: DRAFT — UNRESOLVED GAPS` + inline `⚠️ GAP:` markers + a final `## Unresolved Gaps` table (any gate fails) so the user sees exactly what's wrong in context. Replaces plan-3-v2-architect AND plan-4-v2-complete-the-plan — the inline gates supersede the old plan-4 readiness check. After writing the plan it auto-runs the deep thesis-aware validator (`validate-v2`) on the result, every time.
 ---
 Please deep think / ultrathink as this is a complex task.
 
@@ -379,6 +379,8 @@ Tasks: [count]
 Domains: [count existing + count new]
 Gate Matrix: [N PASS / M FAIL / K N/A]
 
+(Deep validation via /validate-v2 auto-runs next — always, READY or DRAFT.)
+
 [If READY]
 Next step: Run /plan-5-v2-phase-tasks-and-brief
 
@@ -394,7 +396,17 @@ Re-run /plan-3-v3-architect after fixing to re-check gates.
 ### Auto-Generate Plan-Level Flight Plan
 
 After writing the plan, auto-call `/plan-5b-flightplan --plan "${PLAN_PATH}"` (no `--phase` flag = plan-level mode). The flight plan reflects the current Status. If a flight plan already exists from plan-1b, it is enriched — Flight Log preserved.
+
+### Auto-Run Deep Validation
+
+After the flight plan is generated, **always** auto-call the thesis-aware validator on the freshly written plan, regardless of Status:
+
+```
+/validate-v2 --artifact "${PLAN_PATH}"
 ```
 
-Next step (when `Status: READY`): Run **/plan-5-v2-phase-tasks-and-brief**
-Next step (when `Status: DRAFT — UNRESOLVED GAPS`): Address the gaps (see report above), then re-run **/plan-3-v3-architect** to re-validate.
+This runs whether the plan emitted `Status: READY` or `Status: DRAFT — UNRESOLVED GAPS`. The inline G1–G7 gates are lightweight structural checks done during generation; `validate-v2` is the heavier multi-agent thesis/forward-compatibility review — they are complementary, not redundant. The validator's findings are applied or surfaced per its own flow; a DRAFT plan's already-known gaps will simply be reconfirmed alongside any deeper issues the validator finds.
+```
+
+Next step (when `Status: READY`): Run **/plan-5-v2-phase-tasks-and-brief** (deep validation has already run automatically)
+Next step (when `Status: DRAFT — UNRESOLVED GAPS`): Address the gaps (see report above + validator findings), then re-run **/plan-3-v3-architect** to re-validate.
