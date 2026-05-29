@@ -285,7 +285,7 @@ This command is the **single source of truth** for progress updates AND phase-en
 
 ## Compound integration
 
-This skill is one of the heaviest **producer-side** participants in the **Compounding Value System** (`skills/compound/`) — both via Step 8c.ii (orchestrator retro write) and Step 9.e (companion farewell mapping + write). The integration is INLINE in those steps above (not a separate appendix-only behavior) because plan-6a's job IS to write the retro artifacts.
+This skill is one of the heaviest **producer-side** participants in the **Compounding Value System** (the `skills/harness/` loop + the frozen `skills/compound/schemas/` contract) — both via Step 8c.ii (orchestrator retro write) and Step 9.e (companion farewell mapping + write). The integration is INLINE in those steps above (not a separate appendix-only behavior) because plan-6a's job IS to write the retro artifacts.
 
 **Sentinel**: Every write to `docs/compound/` (Step 8c.ii and Step 9.e) first checks `docs/compound/.disabled`. If present, silently skip the write.
 

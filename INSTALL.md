@@ -91,23 +91,25 @@ npx skills@latest add jakkaj/tools --skill grill-me --skill plan-1a-v2-explore -
 `npx skills` accepts a **subfolder path appended to the repo shorthand** — this is undocumented in `--help` but supported by the `parseSource` regex in `vercel-labs/skills` (line 191). Useful when you want every skill in one category without listing each `--skill` flag.
 
 ```bash
-# All 4 compound/ skills
-npx skills@latest add jakkaj/tools/skills/compound -a claude-code -g
+# All 3 harness/ loop-stage skills (harness-1-boot, harness-2-observe, harness-3-retro)
+npx skills@latest add jakkaj/tools/skills/harness -a claude-code -g
 
 # All SDD/ skills (without general/ or personal/)
 npx skills@latest add jakkaj/tools/skills/SDD -a claude-code -g
 ```
 
+> Note: `skills/compound/` holds only the frozen `schemas/` contract (no SKILL.md folders), so there is no `skills/compound` category to install — the loop-stage skills live under `skills/harness/`.
+
 Combine with a `#branch` selector to install from an unmerged branch (use `#`, not `@` — the CLI parses `@` as a skill filter):
 
 ```bash
-npx skills@latest add jakkaj/tools/skills/compound#023-difficulty-ledger-skill -a claude-code -g
+npx skills@latest add jakkaj/tools/skills/harness#024-harness-nucleus -a claude-code -g
 ```
 
 Equivalent full-URL form (also supported, line 125 of the CLI's `parseSource`):
 
 ```bash
-npx skills@latest add https://github.com/jakkaj/tools/tree/main/skills/compound -a claude-code -g
+npx skills@latest add https://github.com/jakkaj/tools/tree/main/skills/harness -a claude-code -g
 ```
 
 ### (g) Install project-locally (current directory)

@@ -442,7 +442,7 @@ Next step: Apply fixes from fix-tasks file, then re-run `/plan-7-v2-code-review`
 
 ## Compound integration
 
-This skill participates in the **Compounding Value System** (`skills/compound/`).
+This skill participates in the **Compounding Value System** (the `skills/harness/` loop + the frozen `skills/compound/schemas/` contract).
 
 **Sentinel**: Before any compound call below, check `docs/compound/.disabled` — if present, silently skip everything in this section.
 

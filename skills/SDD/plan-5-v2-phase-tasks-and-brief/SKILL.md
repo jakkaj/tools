@@ -547,7 +547,7 @@ Next step: Run **/plan-6-v2-implement-phase --phase "<Phase N: Title>" --plan "<
 
 ## Compound integration
 
-This skill participates in the **Compounding Value System** (`skills/compound/`).
+This skill participates in the **Compounding Value System** (the `skills/harness/` loop + the frozen `skills/compound/schemas/` contract).
 
 **Sentinel**: Before any compound call below, check `docs/compound/.disabled` — if present, silently skip everything in this section.
 

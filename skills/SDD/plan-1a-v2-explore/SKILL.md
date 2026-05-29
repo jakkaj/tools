@@ -1050,7 +1050,7 @@ Run **/plan-1b-specify** to create the feature specification, or **/plan-2c-work
 
 ## Compound integration
 
-This skill participates in the **Compounding Value System** (`skills/compound/`). Subagent 7 (Prior Learnings Scout) ALREADY reads `docs/compound/agents/**/*.retro.md` + back-compat `docs/retros/*.md` per its body spec above. The orchestrator-side additions are below.
+This skill participates in the **Compounding Value System** (the `skills/harness/` loop + the frozen `skills/compound/schemas/` contract). Subagent 7 (Prior Learnings Scout) ALREADY reads `docs/compound/agents/**/*.retro.md` + back-compat `docs/retros/*.md` per its body spec above. The orchestrator-side additions are below.
 
 **Sentinel**: Before any compound call below, check `docs/compound/.disabled` — if present, silently skip everything in this section.
 
