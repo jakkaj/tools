@@ -149,7 +149,7 @@ The active workflow for non-trivial feature work. Use these for any change large
 | `plan-8-v2-merge` | Analyze upstream changes from `main` and generate a merge plan. |
 | `plan-v2-extract-domain` | Collaboratively identify and formalize a codebase concept as a named domain. |
 | `validate-v2` | Launch parallel subagents to validate produced work with structured lens coverage. |
-| `sdd-tutorial` | Coach a learner through one branch-based SDD/RPIV loop with orientation, preflight, task selection, RPIV handoffs, reflection, and resume. |
+| `the-flow` | Guided co-pilot **front-door** that *drives* you through the `plan-*` pipeline (`/plan-1a → 1b → [2c] → [2d] → 3 → 5 → 6 → 7 → 8`) like an expert beside you: asks what you want to build, narrates each stage, points out one insight per artifact, surfaces optional branches + `/compact` seams + harness/backpressure cues, and tells you exactly what to type next. Re-entrant (survives `/compact`) and can **adopt** a plan already in flight. Drives the `plan-*` family for real planning + execution work (not an RPIV/`task-*` teaching loop). Bundles the visual pipeline guide at `references/getting-started.md`. |
 | `install-hve-core-rpiv` | Install or update local skill-shaped HVE Core RPI/RPIV task skills from the current authoritative HVE Core source. |
 | `code-concept-search-v2` | Find a concept in the codebase by walking through code like a human engineer. |
 | `deepresearch-v2` | Craft structured research prompts for deep-research agents. |

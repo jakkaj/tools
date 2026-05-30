@@ -18,6 +18,7 @@ These skills (installed via `npx skills add jakkaj/tools -a <cli>` from `/skills
 
 | Command | Replaces | What's Different |
 |---------|----------|-----------------|
+| `the-flow` | *(new)* | **Guided co-pilot front-door** that *drives/narrates* the whole `plan-*` pipeline conversationally — asks what you want to build, routes to `/plan-1a`/`/plan-1b`, narrates each seam with one artifact insight, surfaces the optional branches (`/plan-2c`, `/plan-2d`), `/compact` seams, and harness/backpressure cues, and tells you the exact next command. Re-entrant via on-disk state (survives `/compact`); can **adopt** an in-flight plan. Coaches only — never runs `/plan-*`/code/merge itself, never gates. Drives real `plan-*` work (not an RPIV/`task-*` teaching loop); bundles the visual pipeline guide at `references/getting-started.md`. |
 | `plan-v2-extract-domain` | *(new)* | Collaboratively identify and formalize existing code as a named domain |
 | `plan-1a-v2-explore` | `plan-1a-explore` | Domain & Boundary Scout subagent, domain context in research output |
 | `plan-1b-v3-specify-and-clarify` | `plan-1b-specify` + `plan-2-clarify` | Merged: front-loaded batched questions before spec sketch + conditional post-sketch round. Replaces both v2 skills. |

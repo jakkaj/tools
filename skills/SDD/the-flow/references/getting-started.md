@@ -13,6 +13,8 @@ Two tracks run at once:
 - **SDD pipeline** (you drive it) — `/plan-1a → 1b → [2c] → 3 → 5 → 6 → 7 → 8`, one step per command.
 - **Harness loop** (mostly drives itself) — `Boot → Observe → Retro`, firing automatically at the seams of the SDD skills.
 
+> **New to this, or want a guide?** Run **`/the-flow`** — a conversational co-pilot that walks you through this whole pipeline: it asks what you want to build, narrates each stage, points out one insight per artifact, surfaces the optional branches + `/compact` seams + harness/backpressure cues, and tells you exactly what to type next. It *drives the `plan-*` flow on this page* — real planning + execution work, not an RPIV/`task-*` teaching loop. It coaches only — it never runs commands for you — and it's re-entrant, so it survives `/compact` and can even pick up a plan you started by hand.
+
 ```mermaid
 flowchart TB
     classDef manual fill:#e3f2fd,stroke:#1976d2,color:#000
@@ -192,6 +194,7 @@ You didn't have to type a single harness command — `/plan-6` boots the harness
 
 | Command | What it does | Produces | Harness behaviour |
 |---|---|---|---|
+| `/the-flow` | **Guided co-pilot** — drives this whole pipeline conversationally (front-door) | `.the-flow-state.json` + `the-flow.{json,md}` + `original-ask.md` | narrates harness/backpressure cues; never fires them |
 | `/harness-1-boot` | Validate engineering harness, report maturity | terminal report | **auto** as `/plan-6` pre-flight; **you** on demand |
 | `/plan-1a` | Deep-dive codebase research *(optional)* | `research-dossier.md` | observe (silent) |
 | `/plan-1b` | Spec + front-loaded clarifications | `<slug>-spec.md` | — |

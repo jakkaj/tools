@@ -108,11 +108,11 @@ On success, report:
 - How to invoke or discover the skills in the user's client.
 - How to rerun the installer to update from HVE Core.
 - How to roll back or uninstall using the manifest.
-- A clear ready message telling the user installation is complete and they should restart or reload their coding agent before rerunning `/sdd-tutorial` or invoking the generated task skills.
+- A clear ready message telling the user installation is complete and they should restart or reload their coding agent before invoking the generated task skills.
 
 Use this completion wording, adjusted only for exact client names and paths:
 
-> RPIV local skill installation is complete. Restart or reload your coding agent so it discovers the new skills, then rerun `/sdd-tutorial` or invoke the generated RPIV task skills.
+> RPIV local skill installation is complete. Restart or reload your coding agent so it discovers the new skills, then invoke the generated RPIV task skills.
 
 On failure, report:
 

@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://jakkaj/tools/skills/the-flow/flight-plan.schema.json",
+  "title": "the-flow flight plan",
+  "$comment": "REFERENCE-ONLY / standardisation doc. the-flow hand-cranks the JSON by inference and self-checks against this shape; there is NO runtime validator (first-class flight-plan tooling is out of scope this plan — workshop 002 Q1 deferred only the validator, not this schema file). Mirrors references/flight-plan.template.json and the field tables in workshops/002-flight-plan-dag.md § JSON contract. references/sample-the-flow.json must validate against this.",
+  "type": "object",
+  "required": ["schema_version", "kind", "slug", "plan_dir", "mode", "cursor", "nodes"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "kind": { "type": "string", "const": "flight-plan" },
+    "slug": { "type": "string" },
+    "plan_dir": { "type": "string", "description": "docs/plans/<ord>-<slug>" },
+    "mode": { "type": "string", "enum": ["Simple", "Full", "unknown"] },
+    "cursor": { "type": "string", "description": "id of the current node (exactly one)" },
+    "recommended_next": { "type": "string", "description": "id the-flow will suggest next" },
+    "now": { "type": "string", "description": "current node label (rail status line)" },
+    "next": { "type": "string", "description": "next label; omit when multiple options (narration lists them)" },
+    "_comment": { "type": "string", "description": "free-form authoring note (ignored)" },
+    "agents": {
+      "type": "array",
+      "description": "parallel minih agents running alongside the flow (companions + workers). the-flow records them; it does not run minih.",
+      "items": { "$ref": "#/$defs/agent" }
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/node" }
+    }
+  },
+  "$defs": {
+    "status": {
+      "type": "string",
+      "enum": ["done", "in_progress", "blocked", "known", "assumed"],
+      "description": "done=ran/accepted (green) · in_progress=running now (orange) · blocked=hit a wall (red) · known=designed future (blue-grey) · assumed=speculative future (dashed grey)"
+    },
+    "node": {
+      "type": "object",
+      "required": ["id", "type", "label", "status", "next"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "description": "stable short id (spec, p3, dr, fx3)" },
+        "type": {
+          "type": "string",
+          "enum": ["research", "deep-research", "spec", "workshop", "backpressure", "plan", "adr", "phase", "fix-loop", "review", "merge"],
+          "description": "each workshop is its OWN workshop node (never collapsed)"
+        },
+        "label": { "type": "string" },
+        "status": { "$ref": "#/$defs/status" },
+        "next": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "downstream node ids (DAG edges); [] for terminal"
+        },
+        "command": { "type": "string", "description": "the /plan-* or tool command this node runs" },
+        "ran_at": { "type": "string", "description": "ISO timestamp when executed (adoption: artifact mtime, best-effort)" },
+        "user_input": { "type": "string", "description": "VERBATIM user words that drove this step (audit → 🗣 bubble)" },
+        "reconstructed": { "type": "boolean", "description": "true when user_input/ran_at were back-filled by adoption rather than captured live" },
+        "note": { "type": "string", "description": "what was done & why (1-2 lines)" },
+        "artifacts": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "repo-relative paths this node produced/links (*-spec.md, tasks/.../execution.log.md, reviews/*.md, plan folder)"
+        },
+        "branch_of": { "type": "string", "description": "for excursions: the spine node id it hangs off" },
+        "phase": { "type": "integer", "description": "for type:phase — the phase number" },
+        "iterations": { "type": "integer", "description": "for type:fix-loop — rounds taken" },
+        "tool": { "type": "string", "description": "for type:deep-research — perplexity | harness | … (tool of choice)" }
+      }
+    },
+    "agent": {
+      "type": "object",
+      "required": ["id", "kind", "slug", "status", "covers"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "description": "stable short id" },
+        "kind": {
+          "type": "string",
+          "enum": ["companion", "worker"],
+          "description": "companion=watches/advisory (wraps its phases) · worker=does a slice in parallel (side-node)"
+        },
+        "slug": { "type": "string", "description": "minih agent slug (code-review-companion, docs-writer)" },
+        "runtime": { "type": "string", "description": "minih (today the only one)" },
+        "run_id": { "type": "string", "description": "minih run id once booted" },
+        "status": { "type": "string", "enum": ["live", "queued", "done", "dead"] },
+        "covers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "node ids the agent spans (companion wraps these; worker builds into them)"
+        },
+        "render": {
+          "type": "string",
+          "enum": ["wrap", "side"],
+          "description": "wrap=companion subgraph around covers[] · side=worker side-node into covers[] (defaults from kind)"
+        },
+        "driver": { "type": "string", "description": "the skill that runs it (e.g. /plan-6-v2-implement-phase-companion); blank if user minih-ran it ad-hoc" },
+        "note": { "type": "string", "description": "role / what it watches or builds" }
+      }
+    }
+  }
+}

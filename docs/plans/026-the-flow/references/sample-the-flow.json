@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "kind": "flight-plan",
+  "slug": "project-setup",
+  "plan_dir": "docs/plans/001-project-setup",
+  "mode": "Full",
+  "cursor": "p3",
+  "recommended_next": "p4",
+  "now": "Phase 3 · Next.js + Clean Arch",
+  "next": "Phase 4 · CLI Package",
+  "agents": [
+    { "id": "crc", "kind": "companion", "slug": "code-review-companion", "runtime": "minih",
+      "run_id": "2026-01-19T08-22-01Z-a91f", "status": "live", "covers": ["p1", "p2", "p3", "p4", "p5", "p6"],
+      "render": "wrap",
+      "driver": "/plan-6-v2-implement-phase-companion",
+      "note": "wraps the build phases; reviews each commit live (fire-and-forget pings); supersedes /plan-7." },
+    { "id": "docw", "kind": "worker", "slug": "docs-writer", "runtime": "minih",
+      "status": "queued", "covers": ["p6"],
+      "note": "drafts package READMEs in parallel during the Docs phase." }
+  ],
+  "_comment": "Illustrative the-flow.json (flight-plan DAG) for chainglass 001-project-setup at Phase 3 in progress. Source of truth; the-flow.md is generated from this. status: done|in_progress|blocked|known(designed future)|assumed(speculative future). Each workshop is its OWN node (no collapsing). Nodes with user_input render a speech bubble in the md.",
+  "nodes": [
+    { "id": "research", "type": "research", "label": "Research", "status": "done",
+      "command": "/plan-1a", "ran_at": "2026-01-17T09:02Z",
+      "user_input": "set up the monorepo: web app, cli, and mcp server, clean architecture, TDD-first",
+      "note": "8-subagent dossier; landed on pnpm+turborepo, commander, fake-adapter TDD.",
+      "artifacts": ["research-dossier.md"], "next": ["spec"] },
+
+    { "id": "dr", "type": "deep-research", "label": "Deep research x3", "status": "done",
+      "branch_of": "research", "tool": "perplexity",
+      "user_input": "double-check the cli name and parser choice online",
+      "note": "CLI name 'cg' is free; commander over yargs; turborepo caching.",
+      "artifacts": ["external-research/cli-naming.md", "external-research/parser.md"], "next": ["spec"] },
+
+    { "id": "spec", "type": "spec", "label": "Spec", "status": "done",
+      "command": "/plan-1b", "ran_at": "2026-01-17T14:20Z",
+      "user_input": "make it clean-arch with fakes for every adapter; full TDD",
+      "note": "CS-4 -> Full. 6 phases anticipated.", "artifacts": ["project-setup-spec.md"], "next": ["ws1"] },
+
+    { "id": "ws1", "type": "workshop", "label": "Workshop 1 · clean-arch boundaries", "status": "done",
+      "branch_of": "spec", "ran_at": "2026-01-17T16:00Z",
+      "user_input": "where exactly do the layer boundaries sit?",
+      "note": "ports/adapters boundaries pinned per package.",
+      "artifacts": ["workshops/001-clean-arch.md"], "next": ["ws2"] },
+
+    { "id": "ws2", "type": "workshop", "label": "Workshop 2 · fake/adapter strategy", "status": "done",
+      "branch_of": "spec", "ran_at": "2026-01-17T17:10Z",
+      "user_input": "one fake per adapter, or shared fakes?",
+      "note": "one fake per port; shared test factory.",
+      "artifacts": ["workshops/002-fakes.md"], "next": ["plan"] },
+
+    { "id": "plan", "type": "plan", "label": "Plan", "status": "done",
+      "command": "/plan-3", "ran_at": "2026-01-18T08:00Z",
+      "note": "Status READY, 6 phases locked -> future phase nodes flip assumed->known.",
+      "artifacts": ["project-setup-plan.md", "project-setup.fltplan.md"], "next": ["p1"] },
+
+    { "id": "p1", "type": "phase", "phase": 1, "label": "Monorepo Foundation", "status": "done",
+      "note": "12/12 tasks; pnpm workspace + turborepo wired.",
+      "artifacts": ["tasks/phase-1-monorepo-foundation/tasks.md",
+                    "tasks/phase-1-monorepo-foundation/execution.log.md",
+                    "reviews/review.phase-1-monorepo-foundation.md"], "next": ["p2"] },
+
+    { "id": "p2", "type": "phase", "phase": 2, "label": "Shared Package", "status": "done",
+      "note": "12/12 tasks, 18 tests passing.",
+      "artifacts": ["tasks/phase-2-shared-package/tasks.md",
+                    "reviews/review.phase-2-shared-package.md"], "next": ["p3"] },
+
+    { "id": "p3", "type": "phase", "phase": 3, "label": "Next.js + Clean Arch", "status": "in_progress",
+      "command": "/plan-6 --phase \"Phase 3: Next.js App with Clean Architecture\"",
+      "note": "building; tasks.md present, review not yet run.",
+      "artifacts": ["tasks/phase-3-nextjs-app/tasks.md",
+                    "tasks/phase-3-nextjs-app/execution.log.md"], "next": ["fx3", "p4"] },
+
+    { "id": "fx3", "type": "fix-loop", "label": "fix loop?", "status": "assumed",
+      "branch_of": "p3", "note": "only if Phase 3 review returns REQUEST_CHANGES.", "next": ["p4"] },
+
+    { "id": "p4", "type": "phase", "phase": 4, "label": "CLI Package", "status": "known", "next": ["p5"] },
+    { "id": "p5", "type": "phase", "phase": 5, "label": "MCP Server", "status": "known", "next": ["p6"] },
+    { "id": "p6", "type": "phase", "phase": 6, "label": "Docs & Polish", "status": "known", "next": ["merge"] },
+    { "id": "merge", "type": "merge", "label": "Merge", "status": "known", "command": "/plan-8", "next": [] }
+  ]
+}
