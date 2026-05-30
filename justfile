@@ -323,6 +323,44 @@ doctor-skills:
         fi
     fi
 
+# Report skills deployed in target dirs that are NOT in this repo's source skills/ (renamed/removed/stale). READ-ONLY — prints tidy commands, deletes nothing.
+skills-orphans:
+    #!/usr/bin/env bash
+    set -eu
+    repo_root="$(pwd)"
+    src="$(find skills -mindepth 3 -maxdepth 3 -name SKILL.md 2>/dev/null | awk -F/ '{print $(NF-1)}' | sort -u)"
+    echo "🧹 Skills orphan report (READ-ONLY) — source of truth: ${repo_root}/skills ($(echo "$src" | grep -c .) skills)"
+    echo "   'orphan' = present in a deployed target but absent from source here (npx skills add never prunes these)."
+    echo
+    canonical="$HOME/.agents/skills"
+    any=0
+    for target in "$canonical" "$HOME/.claude/skills" "$HOME/.pi/skills" "$HOME/.copilot/skills" "$HOME/.codex/skills" "$HOME/.config/opencode/skills"; do
+        [ -e "$target" ] || continue
+        if [ -L "$target" ]; then
+            echo "  ↪ $target → $(readlink "$target") (whole-dir symlink — mirrors its target, skipped)"
+            continue
+        fi
+        [ -d "$target" ] || continue
+        dep="$(ls -1 "$target" 2>/dev/null | sort -u)"
+        orphans="$(comm -13 <(echo "$src") <(echo "$dep") || true)"
+        if [ -n "$orphans" ]; then
+            any=1
+            echo "  ⚠️  $target — $(echo "$orphans" | grep -c .) not in source:"
+            echo "$orphans" | sed 's/^/        • /'
+            echo "      tidy (review first!): for s in $(echo $orphans); do rm -rf \"$target/\$s\"; done"
+            echo
+        else
+            echo "  ✅ $target — no orphans"
+        fi
+    done
+    echo
+    if [ "$any" -eq 0 ]; then
+        echo "✅ No orphans anywhere — every deployed skill exists in source."
+    else
+        echo "ℹ️  Review the lists above, then paste a 'tidy:' line to remove. Nothing was deleted."
+        echo "   NOTE: legitimately hand-installed local-only skills (e.g. pack-code) also appear here — only tidy what you recognise as stale/renamed."
+    fi
+
 # Create a release build with checks
 release: ci
     @echo ""

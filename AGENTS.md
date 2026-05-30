@@ -349,7 +349,7 @@ Both are slated for deletion in a future cleanup pass. **Do not add new content 
 - **Commit both**: Source files AND synced `src/jk_tools/` files
 
 ### Skills deployment architecture
-`npx skills add` writes to `~/.agents/skills/` (canonical) and symlinks `~/.claude/skills/` + `~/.pi/skills/` into it. Other CLIs (Codex, OpenCode, Copilot) read `~/.agents/skills/` directly. The legacy `~/.copilot/skills/` path is an orphan from older `npx skills` versions — if present as a real directory it causes duplicate-with-stale skill discovery. Run `just doctor-skills` to detect and get the fix command. Full notes: [`CLAUDE.md § Skills deployment architecture`](./CLAUDE.md#skills-deployment-architecture).
+`npx skills add` writes to `~/.agents/skills/` (canonical) and symlinks `~/.claude/skills/` + `~/.pi/skills/` into it. Other CLIs (Codex, OpenCode, Copilot) read `~/.agents/skills/` directly. The legacy `~/.copilot/skills/` path is an orphan from older `npx skills` versions — if present as a real directory it causes duplicate-with-stale skill discovery. Run `just doctor-skills` to detect and get the fix command. `npx skills add` never **prunes** renamed/removed skills, so deleted skills linger in deploy targets — `just skills-orphans` is a read-only report of slugs present in a target but absent from source `skills/`, with copy-pasteable `tidy:` commands (deletes nothing; you choose). Full notes: [`CLAUDE.md § Skills deployment architecture`](./CLAUDE.md#skills-deployment-architecture).
 
 ## Scratch Directory (Ephemeral Workspace)
 

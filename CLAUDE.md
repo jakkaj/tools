@@ -119,6 +119,8 @@ ln -s ~/.agents/skills ~/.copilot/skills            # symlink to canonical
 
 **Diagnosis**: `just doctor-skills` reports canonical-store size, validates expected symlinks, and flags any orphan real-dir skill stores at known legacy paths. Run it after any `npx skills` upgrade or if you see the same skill name surface twice in skill discovery.
 
+**Stale/renamed-skill drift**: `npx skills add` only **adds/updates** — it never **prunes** a skill that was renamed or removed from source, so deleted skills linger in the deploy targets. `just skills-orphans` is a **read-only** report that diffs this repo's source `skills/` against every deploy target (`~/.agents/skills` canonical + per-CLI views + legacy paths) and lists slugs present in a target but absent from source, with a copy-pasteable `tidy:` `rm` line per target. It **deletes nothing** — you choose what to remove (legitimately hand-installed local-only skills like `pack-code` also surface, so only tidy what you recognise as stale). Run it after deleting/renaming a skill.
+
 ## Running the dev-tooling installer
 
 ```bash
