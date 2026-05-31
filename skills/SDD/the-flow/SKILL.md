@@ -36,6 +36,27 @@ Every time you surface a next command:
 3. **On a clear go-ahead** (`yes`, `run it`, `go`) → **invoke the command yourself** (via the Skill tool or its equivalent), let it complete, then continue the flow in the same turn: discover the artifact it produced, narrate the insight, hand-crank the flight plan, and print-and-offer the *next* step. One accepted step per turn.
 4. **If the user copies it / runs it themselves** → wait; when they're back, re-running `/the-flow` (or just continuing) resumes from durable state exactly as before.
 
+### Resolving stage names → installed slugs
+
+The narration below uses **bare stage names** (`/plan-3`, `/plan-1b`, …). These are friendly aliases, **not** runnable skill slugs. When you print a copyable command or invoke one via the Skill tool, expand the alias to the **exact current slug** from this table — **never invent or append a version suffix.** Version numbers drift (e.g. it is `plan-3-v3-architect`, *not* `plan-3-v2-architect`); if your memory or stale context suggests a different suffix, this table wins.
+
+| Stage alias | Current installed slug |
+|---|---|
+| `/plan-1a` | `plan-1a-v2-explore` |
+| `/plan-1b` | `plan-1b-v3-specify-and-clarify` |
+| `/plan-2c` | `plan-2c-v2-workshop` |
+| `/plan-2d` | `plan-2d-backpressure-survey` |
+| `/plan-3` | `plan-3-v3-architect` |
+| `/plan-3a` | `plan-3a-v2-adr` |
+| `/plan-5` | `plan-5-v2-phase-tasks-and-brief` |
+| `/plan-5b` | `plan-5b-flightplan` |
+| `/plan-6` | `plan-6-v2-implement-phase` (or `plan-6-v2-implement-phase-companion`) |
+| `/plan-6a` | `plan-6a-v2-update-progress` |
+| `/plan-7` | `plan-7-v2-code-review` |
+| `/plan-8` | `plan-8-v2-merge` |
+
+If a slug ever fails to resolve at runtime, do **not** guess a suffix — fall back to printing the bare `/plan-N` alias (the host resolves it) and tell the user the canonical pipeline lives in `skills/SDD/`.
+
 **Exceptions (print, never silently run):**
 - **`/compact`** — a CLI built-in that wipes context; you literally cannot invoke it. Print it, explain the re-run handshake.
 - **The final merge** — print `/plan-8`'s analysis and only execute on an explicit typed `PROCEED`.
