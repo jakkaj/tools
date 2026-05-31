@@ -73,6 +73,19 @@ Three skills name the loop stage they serve:
 
 These three are the runtime companions to an engineering harness that is already set up, defined, and prompted in the host repo. Provisioning a fresh harness (scaffolding the governance doc + ledger) is a separate setup concern; the skills degrade gracefully (`harness-1-boot` reports `UNAVAILABLE`, observe/retro no-op) when the substrate is absent.
 
+**Ownership split**: this repo owns the canonical runtime loop skills (`harness-1-boot`, `harness-2-observe`, `harness-3-retro`) and the frozen retro schema contract. Project-side setup/provisioning remains in `AI-Substrate/harness-engineering` via `engineering-harness-setup`; tools consumes the generated governance doc and ledger paths, but does not recreate that setup flow.
+
+**Back-pressure signals**: the runtime loop captures not only "make this easier" friction, but also "what should the harness have proved?" gaps: missing smoke paths, visual/log evidence, architecture/static checks, security/dependency/schema checks, and other deterministic sensors. These are advisory improvement candidates, never gates or scores.
+
+If old deployed skill slugs linger after renames (for example retired `boot-harness` or `compound-*` runtime skills), use the read-only reports:
+
+```bash
+just skills-orphans
+just doctor-skills
+```
+
+Review the output before deleting anything; the recipes never auto-delete user-installed skills.
+
 ## Development
 
 ```bash

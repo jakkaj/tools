@@ -73,6 +73,9 @@ Single prompt at end of session. **Never asks twice.** Format:
   3. [gift/compound] harness ledger scaffolded cleanly
      → no encoding needed (it's a gift)
 
+  4. [difficulty/project-sensor] Had to infer whether the website rendered correctly because no smoke path or screenshot evidence was available
+     → encode as: add smoke command or visual evidence capture
+
 [s]ave all to scope file
 [t]ask: emit /plan-5 --fix invocations for the encodable ones
 [p]lan: emit /plan-1b invocations for the bigger ones
@@ -88,6 +91,7 @@ Notes on the prompt:
 - One-line encoding hint per entry (from `suggested_encoding` or a sensible default)
 - Action menu fits in two screen-lines
 - Pressing Enter without typing = `[a]ll-save` (the default)
+- Drain should make both improvement shapes visible: ease/friction improvements (faster, clearer, less annoying) and proof/back-pressure improvements (new deterministic signals, sensors, evidence paths, architecture checks). Both use the same schema; distinguish them by `target`, description, and encoding hint, not by new `kind` values.
 
 ### Step 3 — Route by action
 
@@ -320,9 +324,22 @@ Sort clusters by:
 
 1. Recurrence (count of entries) — highest first
 2. Severity (entries with `severity: blocking` rank higher; then `degrading`; then `annoying`; entries with no severity rank lowest)
-3. Age (older clusters rank higher)
+3. Back-pressure leverage (clusters whose target or representative entry indicates missing proof/sensors/evidence/architecture/security/schema checks should stay legible as proof-improvement candidates)
+4. Age (older clusters rank higher)
 
 Cap at top-10 for the default view. Filtered views may show more.
+
+Back-pressure leverage is advisory display guidance only. It does not create a gate, score, persisted index, or threshold, and it must not mutate entries.
+
+#### Recognize proof/back-pressure clusters
+
+Treat these as proof/back-pressure improvement candidates when printing labels or choosing representative wording:
+
+- Targets such as `project-sensor`, `runtime-inspectability`, `architecture-fitness`, `security`, `schema`, `infra`, or `tooling`
+- Descriptions or `suggested_encoding` values that mention smoke paths, screenshots, logs, traces, health checks, dependency-direction rules, CodeQL/Roslyn/ArchUnit, schema validation, data checks, or missing evidence
+- `difficulty` entries where the workaround was "manual review", "read code manually", "inferred", or "eyeballed"
+
+Keep the original schema fields intact. Do not rewrite kinds to `signal-gap`, `sensor-gap`, or `weak-back-pressure`.
 
 ### Step 5 — Print terminal view (NO on-disk writes)
 
@@ -335,10 +352,11 @@ Default format:
    Date range: 2026-04-10 → 2026-05-18
    Total entries: 47 (28 open, 17 encoded, 2 wontfix)
 
-📊 Open clusters (top 10 by recurrence > severity > age):
+📊 Open clusters (top 10 by recurrence > severity > back-pressure leverage > age):
    1. [tooling] grep/search slowness — 4 entries (claude-code: 3, plan-6-companion: 1)  [r/w/s]
-   2. [pipeline] missing example patterns — 3 entries  [r/w/s]
-   3. [config] env var contract guessing — 2 entries  [r/w/s]
+   2. [proof/project-sensor] missing smoke or visual evidence — 3 entries  [r/w/s]
+   3. [pipeline] missing example patterns — 3 entries  [r/w/s]
+   4. [config] env var contract guessing — 2 entries  [r/w/s]
    ...
 
 ⏰ Stale (>4 weeks open): 3 entries
@@ -397,7 +415,7 @@ Field semantics:
 - `generated_at` — ISO-8601 UTC timestamp of THIS render.
 - `retros` — count of `.retro.md` files scanned (post dedup + version-skew filter).
 - `entries.*` — counts by `system.compound.status` (plus `total` = sum of all entries seen). Missing-status entries count as `open`.
-- `top_clusters` — top-10 clusters by the same priority order as the default view (recurrence > severity > age). Cap at 10; consumers wanting fewer should slice.
+- `top_clusters` — top-10 clusters by the same priority order as the default view (recurrence > severity > back-pressure leverage > age). Cap at 10; consumers wanting fewer should slice.
 - `harness` — if `docs/project-rules/engineering-harness.md` (or legacy `agent-harness.md` / `harness.md`) exists, parse its `## Maturity Assessment` + `## History` for the most recent validation. If absent, emit `{"maturity": null, "last_validation": null, "boot_ms": null, "verdict": null}`.
 
 **Missing/empty cases**:
@@ -453,6 +471,8 @@ User responsibility — best-effort framing; no auto-pruning ever.
 - **No auto-applying** any encoded diff. Staged-only via `[e]ncode`.
 - **No buffer reading**. Buffer is `--drain`'s territory; this mode reads `.retro.md` files only.
 - **No mid-session firing**. The auto-firing sites are at logical pauses (end of plan-N, debrief, merge).
+- **No schema expansion**. Missing-signal and back-pressure entries stay schema-compatible by using existing `kind` values plus targets and encoding hints.
+- **No proof gates**. Harvest can surface missing sensors as high-leverage improvement candidates, but it never blocks a plan, applies a threshold, or declares compliance.
 
 ### `--harvest` edge cases
 

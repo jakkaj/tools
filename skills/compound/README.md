@@ -10,11 +10,18 @@ The compound + harness skills that used to live under `skills/compound/` were co
 |---|---|
 | `compound-1-track` | [`harness-2-observe`](../harness/harness-2-observe/) |
 | `compound-2-bubble` + `compound-3-harvest` | [`harness-3-retro`](../harness/harness-3-retro/) (`--drain` / `--harvest`) |
-| `compound-0-setup` | dropped to the separate engineering-harness setup effort |
+| `compound-0-setup` | dropped to the separate engineering-harness setup effort (`AI-Substrate/harness-engineering` owns provisioning) |
 
 The **schemas stay here on purpose.** `skills/compound/schemas/` is a frozen cross-system path commitment with minih (the v1 home for the universal retro contract) until the schemas are extracted to a shared `@ai-substrate/retro-schema` npm package. Renaming or moving the path is an explicit Non-Goal — see [`docs/plans/024-harness-nucleus/harness-nucleus-spec.md`](../../docs/plans/024-harness-nucleus/harness-nucleus-spec.md) § Non-Goals (IC-01 / IC-08).
 
 So `npx skills add jakkaj/tools/skills/compound` installs nothing (no `SKILL.md` folders here). To install the loop skills, use `jakkaj/tools/skills/harness` — see [`INSTALL.md`](../../INSTALL.md).
+
+Runtime vs setup boundary:
+
+- **tools** owns the runtime loop skills: `harness-1-boot`, `harness-2-observe`, and `harness-3-retro`.
+- **harness-engineering** owns setup/provisioning: creating project governance docs, ledger folders, command maps, starter harness CLI surfaces, and setup templates.
+- Runtime skills consume those artifacts when present and degrade gracefully when absent; they do not scaffold them.
+- Old deployed runtime slugs can remain after renames because `npx skills add` does not prune. Use `just skills-orphans` and `just doctor-skills` from the repo root to report drift; review before deleting anything.
 
 ## What's in `schemas/`
 

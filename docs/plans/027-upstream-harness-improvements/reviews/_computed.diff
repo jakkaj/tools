@@ -1,0 +1,1452 @@
+diff --git a/INSTALL.md b/INSTALL.md
+index 1094822..c2421c9 100644
+--- a/INSTALL.md
++++ b/INSTALL.md
+@@ -100,6 +100,15 @@ npx skills@latest add jakkaj/tools/skills/SDD -a claude-code -g
+ 
+ > Note: `skills/compound/` holds only the frozen `schemas/` contract (no SKILL.md folders), so there is no `skills/compound` category to install — the loop-stage skills live under `skills/harness/`.
+ 
++The `skills/harness/` category is the runtime loop only: Boot, Observe, and Retro. Project-side engineering-harness setup/provisioning (creating `docs/project-rules/engineering-harness.md`, `docs/compound/`, starter command maps, or harness CLI scripts) remains in the separate `AI-Substrate/harness-engineering` repository's `engineering-harness-setup` skill. If those generated artifacts are absent, the runtime skills report `UNAVAILABLE` or no-op gracefully rather than scaffolding them.
++
++After upgrading or renaming skills, `npx skills add` updates/adds but does not prune old deployed slugs. Run these read-only checks and review the suggested tidy commands manually:
++
++```bash
++just skills-orphans
++just doctor-skills
++```
++
+ Combine with a `#branch` selector to install from an unmerged branch (use `#`, not `@` — the CLI parses `@` as a skill filter):
+ 
+ ```bash
+diff --git a/README.md b/README.md
+index 2b3a444..37b7344 100644
+--- a/README.md
++++ b/README.md
+@@ -73,6 +73,19 @@ Three skills name the loop stage they serve:
+ 
+ These three are the runtime companions to an engineering harness that is already set up, defined, and prompted in the host repo. Provisioning a fresh harness (scaffolding the governance doc + ledger) is a separate setup concern; the skills degrade gracefully (`harness-1-boot` reports `UNAVAILABLE`, observe/retro no-op) when the substrate is absent.
+ 
++**Ownership split**: this repo owns the canonical runtime loop skills (`harness-1-boot`, `harness-2-observe`, `harness-3-retro`) and the frozen retro schema contract. Project-side setup/provisioning remains in `AI-Substrate/harness-engineering` via `engineering-harness-setup`; tools consumes the generated governance doc and ledger paths, but does not recreate that setup flow.
++
++**Back-pressure signals**: the runtime loop captures not only "make this easier" friction, but also "what should the harness have proved?" gaps: missing smoke paths, visual/log evidence, architecture/static checks, security/dependency/schema checks, and other deterministic sensors. These are advisory improvement candidates, never gates or scores.
++
++If old deployed skill slugs linger after renames (for example retired `boot-harness` or `compound-*` runtime skills), use the read-only reports:
++
++```bash
++just skills-orphans
++just doctor-skills
++```
++
++Review the output before deleting anything; the recipes never auto-delete user-installed skills.
++
+ ## Development
+ 
+ ```bash
+diff --git a/skills/compound/README.md b/skills/compound/README.md
+index d52b8ee..1fe647e 100644
+--- a/skills/compound/README.md
++++ b/skills/compound/README.md
+@@ -10,12 +10,19 @@ The compound + harness skills that used to live under `skills/compound/` were co
+ |---|---|
+ | `compound-1-track` | [`harness-2-observe`](../harness/harness-2-observe/) |
+ | `compound-2-bubble` + `compound-3-harvest` | [`harness-3-retro`](../harness/harness-3-retro/) (`--drain` / `--harvest`) |
+-| `compound-0-setup` | dropped to the separate engineering-harness setup effort |
++| `compound-0-setup` | dropped to the separate engineering-harness setup effort (`AI-Substrate/harness-engineering` owns provisioning) |
+ 
+ The **schemas stay here on purpose.** `skills/compound/schemas/` is a frozen cross-system path commitment with minih (the v1 home for the universal retro contract) until the schemas are extracted to a shared `@ai-substrate/retro-schema` npm package. Renaming or moving the path is an explicit Non-Goal — see [`docs/plans/024-harness-nucleus/harness-nucleus-spec.md`](../../docs/plans/024-harness-nucleus/harness-nucleus-spec.md) § Non-Goals (IC-01 / IC-08).
+ 
+ So `npx skills add jakkaj/tools/skills/compound` installs nothing (no `SKILL.md` folders here). To install the loop skills, use `jakkaj/tools/skills/harness` — see [`INSTALL.md`](../../INSTALL.md).
+ 
++Runtime vs setup boundary:
++
++- **tools** owns the runtime loop skills: `harness-1-boot`, `harness-2-observe`, and `harness-3-retro`.
++- **harness-engineering** owns setup/provisioning: creating project governance docs, ledger folders, command maps, starter harness CLI surfaces, and setup templates.
++- Runtime skills consume those artifacts when present and degrade gracefully when absent; they do not scaffold them.
++- Old deployed runtime slugs can remain after renames because `npx skills add` does not prune. Use `just skills-orphans` and `just doctor-skills` from the repo root to report drift; review before deleting anything.
++
+ ## What's in `schemas/`
+ 
+ See [`schemas/README.md`](./schemas/README.md) for the full contract: `retro.schema.json`, the `system.*` namespace extensions, fixtures, wire format, and versioning.
+diff --git a/skills/compound/schemas/README.md b/skills/compound/schemas/README.md
+index 938c4f1..3af9a0d 100644
+--- a/skills/compound/schemas/README.md
++++ b/skills/compound/schemas/README.md
+@@ -9,7 +9,7 @@ The universal retro contract — JSON Schema definitions that govern every `.ret
+ | [`retro.schema.json`](./retro.schema.json) | The universal retro contract. One retro per run/session. Frontmatter of every `.retro.md` file validates against this. |
+ | [`system.compound.schema.json`](./system.compound.schema.json) | Compound's namespace extension (`entry.system.compound.*`). Lifecycle metadata: `status`, `resolved_by`, harvest counters, `source`. |
+ | [`system.minih.schema.json`](./system.minih.schema.json) | Minih's namespace extension (`retro.system.minih.*` or `entry.system.minih.*`). Run metadata: `run_dir`, `events_count`, `status`. |
+-| [`fixtures/`](./fixtures/) | Test fixtures — example `.retro.md` files covering full / minimum / multi-kind / lifecycle-rich / malformed cases. |
++| [`fixtures/`](./fixtures/) | Test fixtures — example `.retro.md` files covering full / minimum / multi-kind / lifecycle-rich / schema-safe signal/back-pressure / malformed cases. |
+ 
+ ## Wire format
+ 
+@@ -39,6 +39,43 @@ print('OK')
+ "
+ ```
+ 
++Validate every non-malformed fixture by extracting the YAML frontmatter before passing it to the JSON Schema:
++
++```bash
++python3 - <<'PY'
++import json
++from pathlib import Path
++
++import jsonschema
++import yaml
++
++schema = json.loads(Path("retro.schema.json").read_text())
++for path in sorted(Path("fixtures").glob("*.retro.md")):
++    if path.name == "malformed.retro.md":
++        continue
++    content = path.read_text()
++    if not content.startswith("---\n"):
++        raise SystemExit(f"{path}: missing YAML frontmatter")
++    frontmatter = content.split("---", 2)[1]
++    jsonschema.validate(yaml.safe_load(frontmatter), schema)
++    print(f"OK {path}")
++PY
++```
++
++Run this from `skills/compound/schemas/`. It intentionally validates the frontmatter only; the markdown body remains free text.
++
++## Encoding signal, sensor, and back-pressure gaps
++
++The schema deliberately keeps a small `kind` enum. Do **not** add ad-hoc kinds such as `signal-gap`, `sensor-gap`, or `weak-back-pressure` unless a deliberate schema migration has been planned. Encode these as ordinary entries with richer targets and encoding hints:
++
++| Gap | `kind` | Example `target` | Example `suggested_encoding` |
++|-----|--------|------------------|------------------------------|
++| Agent had to infer runtime behavior | `difficulty` | `project-sensor` or `runtime-inspectability` | `add smoke command or visual evidence capture` |
++| Missing deterministic architecture proof | `improvement-suggestion` | `architecture-fitness` | `architecture check recipe` |
++| Wished-for proof command or evidence path | `magic-wand` | `tooling`, `skill`, or `runtime-inspectability` | `engineering-harness command map entry` |
++
++See [`fixtures/signal-backpressure.retro.md`](./fixtures/signal-backpressure.retro.md) for a schema-valid example.
++
+ ## Versioning
+ 
+ `schema_version` in frontmatter follows SemVer:
+diff --git a/skills/harness/harness-1-boot/SKILL.md b/skills/harness/harness-1-boot/SKILL.md
+index 1cc0843..387a7d0 100644
+--- a/skills/harness/harness-1-boot/SKILL.md
++++ b/skills/harness/harness-1-boot/SKILL.md
+@@ -12,6 +12,8 @@ The **Boot** stage of the harness loop. Run it at session start to confirm the e
+ 
+ **Layering**: the agent-facing Boot/Interact/Observe loop sits **on top of** the engineering substrate (the project's `justfile`/`Makefile`/`package.json scripts.dev` boot command, test runner, etc.). The Boot command the governance doc records IS the engineering harness substrate. If no substrate exists, the verdict is `UNAVAILABLE` — Boot can't work without something to boot.
+ 
++**Signal readiness**: Boot reports more than "can the process start?" It also checks whether the harness exposes enough deterministic signals for a human or agent to prove behavior without inference: runtime inspectability, smoke paths, architecture/static checks, security/dependency/schema checks, evidence paths, and known back-pressure gaps. Missing signals are improvement candidates, not blockers or scores.
++
+ ---
+ 
+ ## Input
+@@ -51,10 +53,12 @@ Mode resolution:
+ 
+ ### Step 1: Read the engineering harness governance doc
+ 
+-Read the governance doc using the canonical-first fallback chain from Step 0: `docs/project-rules/engineering-harness.md` → `agent-harness.md` → `harness.md` (emit the migration advisory if a legacy name was used). Parse: boot command, health check, interaction method, observe method, current maturity level.
++Read the governance doc using the canonical-first fallback chain from Step 0: `docs/project-rules/engineering-harness.md` → `agent-harness.md` → `harness.md` (emit the migration advisory if a legacy name was used). Parse: boot command, health check, interaction method, observe method, current maturity level, deterministic signal inventory, evidence paths, and any declared back-pressure gaps.
+ 
+ If all three paths are missing or unparseable → report `UNAVAILABLE` (verdict table below). The governance doc is provisioned by the separate engineering-harness setup effort, not by this skill — boot does not block the session; it notes the harness is not yet provisioned and proceeds.
+ 
++If the governance doc exists but omits signal-readiness sections, continue normally and report those dimensions as "not declared". Do not scaffold or rewrite the doc just to add them.
++
+ ### Step 2: Execute 3-Stage Validation
+ 
+ Run checks using bash tool:
+@@ -89,7 +93,22 @@ Run checks using bash tool:
+ | **❌ UNHEALTHY** | Any check fails |
+ | **🔴 UNAVAILABLE** | No engineering-harness.md (or legacy agent-harness.md / harness.md) and no boot command |
+ 
+-### Step 4: Update Maturity & Report
++### Step 4: Read signal/back-pressure readiness
++
++Build a short signal-readiness summary from the governance doc and observed evidence. Use plain categories; do not invent a numeric score or threshold:
++
++| Dimension | What to look for | Report value |
++|-----------|------------------|--------------|
++| Runtime inspectability | App/API/CLI can expose current health/state to the agent. | present / missing / not declared |
++| Smoke paths | A deterministic route, command, or scenario proves the main behavior starts. | present / missing / not declared |
++| Architecture/static checks | Dependency rules, lint, type checks, ArchUnit/Roslyn/CodeQL, or similar checks exist. | present / missing / not declared |
++| Security/dependency/schema checks | Dependency audit, schema validation, CodeQL, data checks, or equivalent proof exists. | present / missing / not declared |
++| Evidence paths | Screenshots, logs, traces, snapshots, artifacts, or command output locations are discoverable. | present / missing / not declared |
++| Back-pressure gaps | The doc names behaviors that still rely on inference or human eyeballing. | list / none declared |
++
++Treat absent dimensions as harness-improvement signals for Observe/Retro. They do not change `HEALTHY` to `UNHEALTHY` unless the actual Boot, Interact, or Observe checks fail.
++
++### Step 5: Update Maturity & Report
+ 
+ Update engineering-harness.md `## Maturity Assessment` to reflect current reality.
+ Update `**Maturity Level**` header field.
+@@ -104,6 +123,8 @@ Report:
+   Boot:      [✅/❌] [detail] ([duration])
+   Interact:  [✅/❌] [detail] ([duration])
+   Observe:   [✅/❌] [detail] ([duration])
++  Signals:   [runtime/smoke/static/security/evidence summary]
++  Gaps:      [known back-pressure gaps or "none declared"]
+ 
+   Verdict:   [verdict]
+   Maturity:  L[N] ([description])
+@@ -138,3 +159,9 @@ Read engineering-harness.md (or legacy agent-harness.md / harness.md, with migra
+ | L4: Self-healing | Auto-recovery from stale processes, auth expiry |
+ 
+ Boot reports the level that is *actually working* (not aspirational).
++
++## What Boot does NOT do
++
++- **No setup or scaffolding**. It never creates `docs/project-rules/engineering-harness.md`, `docs/compound/`, command maps, fixtures, or harness CLI scripts. Those are provisioned by the separate engineering-harness setup effort.
++- **No gates, scores, or thresholds for back-pressure**. Signal-readiness gaps are advisory improvement candidates. Boot only fails when the live Boot, Interact, or Observe checks fail.
++- **No product-specific sensor implementation**. It reports whether sensors are present or missing; it does not invent downstream project checks.
+diff --git a/skills/harness/harness-2-observe/SKILL.md b/skills/harness/harness-2-observe/SKILL.md
+index 78af6c2..8a89e58 100644
+--- a/skills/harness/harness-2-observe/SKILL.md
++++ b/skills/harness/harness-2-observe/SKILL.md
+@@ -23,6 +23,9 @@ The agent calling this skill notices something worth logging. Concrete trigger h
+ - The agent had to retry the same operation more than once
+ - The agent backtracked from a wrong assumption
+ - A test or build failure required guesswork to interpret
++- The agent had to infer runtime behavior because no smoke path, screenshot, log, trace, or health evidence was available
++- The agent had to eyeball an architecture, dependency, security, schema, or data constraint that a deterministic check could have proved
++- `harness-1-boot` reported a missing or "not declared" signal-readiness dimension that affected the current work
+ - The agent caught itself muttering "if only there were a …" (the magic-wand reflex)
+ 
+ When any of these triggers, call this skill with one entry.
+@@ -80,6 +83,40 @@ Append-only YAML block per entry (one entry per call). Each entry conforms to th
+       first_seen_at: "2026-05-18T10:15:00Z"
+ ```
+ 
++### Schema-safe signal/back-pressure encodings
++
++Do not invent new `kind` values such as `signal-gap`, `sensor-gap`, or `weak-back-pressure`. Encode missing proof with existing kinds plus explicit targets:
++
++```yaml
++- id: DL-003
++  kind: difficulty
++  target: project-sensor
++  severity: degrading
++  description: "Had to infer whether the website rendered correctly because no smoke path or screenshot evidence was available."
++  workaround: "Read the code path manually."
++  suggested_encoding: "add smoke command or visual evidence capture"
++  system:
++    compound:
++       status: open
++       source: agent-self
++       first_seen_at: "2026-05-30T07:45:00Z"
++```
++
++```yaml
++- id: SUGG-002
++  kind: improvement-suggestion
++  target: architecture-fitness
++  description: "Add a deterministic dependency-direction or CodeQL check so architecture regressions fail before review."
++  suggested_encoding: "architecture check recipe"
++  system:
++    compound:
++       status: open
++       source: agent-self
++       first_seen_at: "2026-05-30T07:47:00Z"
++```
++
++Use targets such as `project-sensor`, `runtime-inspectability`, `architecture-fitness`, `security`, `schema`, or `tooling` to make the missing signal visible to `harness-3-retro --harvest` without changing the schema.
++
+ ### ID generation
+ 
+ Per-buffer counter, scoped within the buffer file:
+@@ -116,6 +153,7 @@ The point is: ask once per natural pause, only when otherwise silent.
+ - **No fix application**. Entries describe friction; encoding happens via `harness-3-retro --drain [e]ncode` (stages a diff for review).
+ - **No prompting the user mid-session**. Bubble-up is exclusively at session end.
+ - **No buffer reading or curation**. That's `harness-3-retro --drain` (drain) and `harness-3-retro --harvest` (curate).
++- **No sensor implementation**. This skill logs missing proof. It never creates product-specific smoke tests, CodeQL queries, schema checks, or setup artifacts.
+ 
+ ## Edge cases
+ 
+@@ -123,6 +161,7 @@ The point is: ask once per natural pause, only when otherwise silent.
+ - **Concurrent agents**: per-agent buffer files mean no collision. Two agents call harness-2-observe simultaneously → two different files.
+ - **Malformed entry**: if the agent constructs an invalid entry (missing required field), the write fails. Better to skip the entry than to corrupt the buffer.
+ - **Buffer file missing**: create it (touch). The first entry initializes it. If `_buffers/` is also missing, **no-op gracefully** (report `UNAVAILABLE`, exit silently) — the producer never auto-scaffolds; provisioning `docs/compound/` is the separate engineering-harness setup effort's job.
++- **Inference gap discovered late**: log the missing signal as the friction, not just the symptom. Prefer "no smoke/evidence path proved X" over "I was confused", because the former is encodable into deterministic back-pressure.
+ 
+ ## Producer-side annotation
+ 
+diff --git a/skills/harness/harness-3-retro/SKILL.md b/skills/harness/harness-3-retro/SKILL.md
+index 4b4fafe..c2aa625 100644
+--- a/skills/harness/harness-3-retro/SKILL.md
++++ b/skills/harness/harness-3-retro/SKILL.md
+@@ -73,6 +73,9 @@ Single prompt at end of session. **Never asks twice.** Format:
+   3. [gift/compound] harness ledger scaffolded cleanly
+      → no encoding needed (it's a gift)
+ 
++  4. [difficulty/project-sensor] Had to infer whether the website rendered correctly because no smoke path or screenshot evidence was available
++     → encode as: add smoke command or visual evidence capture
++
+ [s]ave all to scope file
+ [t]ask: emit /plan-5 --fix invocations for the encodable ones
+ [p]lan: emit /plan-1b invocations for the bigger ones
+@@ -88,6 +91,7 @@ Notes on the prompt:
+ - One-line encoding hint per entry (from `suggested_encoding` or a sensible default)
+ - Action menu fits in two screen-lines
+ - Pressing Enter without typing = `[a]ll-save` (the default)
++- Drain should make both improvement shapes visible: ease/friction improvements (faster, clearer, less annoying) and proof/back-pressure improvements (new deterministic signals, sensors, evidence paths, architecture checks). Both use the same schema; distinguish them by `target`, description, and encoding hint, not by new `kind` values.
+ 
+ ### Step 3 — Route by action
+ 
+@@ -320,10 +324,23 @@ Sort clusters by:
+ 
+ 1. Recurrence (count of entries) — highest first
+ 2. Severity (entries with `severity: blocking` rank higher; then `degrading`; then `annoying`; entries with no severity rank lowest)
+-3. Age (older clusters rank higher)
++3. Back-pressure leverage (clusters whose target or representative entry indicates missing proof/sensors/evidence/architecture/security/schema checks should stay legible as proof-improvement candidates)
++4. Age (older clusters rank higher)
+ 
+ Cap at top-10 for the default view. Filtered views may show more.
+ 
++Back-pressure leverage is advisory display guidance only. It does not create a gate, score, persisted index, or threshold, and it must not mutate entries.
++
++#### Recognize proof/back-pressure clusters
++
++Treat these as proof/back-pressure improvement candidates when printing labels or choosing representative wording:
++
++- Targets such as `project-sensor`, `runtime-inspectability`, `architecture-fitness`, `security`, `schema`, `infra`, or `tooling`
++- Descriptions or `suggested_encoding` values that mention smoke paths, screenshots, logs, traces, health checks, dependency-direction rules, CodeQL/Roslyn/ArchUnit, schema validation, data checks, or missing evidence
++- `difficulty` entries where the workaround was "manual review", "read code manually", "inferred", or "eyeballed"
++
++Keep the original schema fields intact. Do not rewrite kinds to `signal-gap`, `sensor-gap`, or `weak-back-pressure`.
++
+ ### Step 5 — Print terminal view (NO on-disk writes)
+ 
+ Default format:
+@@ -335,10 +352,11 @@ Default format:
+    Date range: 2026-04-10 → 2026-05-18
+    Total entries: 47 (28 open, 17 encoded, 2 wontfix)
+ 
+-📊 Open clusters (top 10 by recurrence > severity > age):
++📊 Open clusters (top 10 by recurrence > severity > back-pressure leverage > age):
+    1. [tooling] grep/search slowness — 4 entries (claude-code: 3, plan-6-companion: 1)  [r/w/s]
+-   2. [pipeline] missing example patterns — 3 entries  [r/w/s]
+-   3. [config] env var contract guessing — 2 entries  [r/w/s]
++   2. [proof/project-sensor] missing smoke or visual evidence — 3 entries  [r/w/s]
++   3. [pipeline] missing example patterns — 3 entries  [r/w/s]
++   4. [config] env var contract guessing — 2 entries  [r/w/s]
+    ...
+ 
+ ⏰ Stale (>4 weeks open): 3 entries
+@@ -453,6 +471,8 @@ User responsibility — best-effort framing; no auto-pruning ever.
+ - **No auto-applying** any encoded diff. Staged-only via `[e]ncode`.
+ - **No buffer reading**. Buffer is `--drain`'s territory; this mode reads `.retro.md` files only.
+ - **No mid-session firing**. The auto-firing sites are at logical pauses (end of plan-N, debrief, merge).
++- **No schema expansion**. Missing-signal and back-pressure entries stay schema-compatible by using existing `kind` values plus targets and encoding hints.
++- **No proof gates**. Harvest can surface missing sensors as high-leverage improvement candidates, but it never blocks a plan, applies a threshold, or declares compliance.
+ 
+ ### `--harvest` edge cases
+ 
+diff --git a/docs/plans/027-upstream-harness-improvements/.the-flow-state.json b/docs/plans/027-upstream-harness-improvements/.the-flow-state.json
+new file mode 100644
+index 0000000..86c24ac
+--- /dev/null
++++ b/docs/plans/027-upstream-harness-improvements/.the-flow-state.json
+@@ -0,0 +1,14 @@
++{
++  "schema_version": 1,
++  "slug": "upstream-harness-improvements",
++  "plan_dir": "docs/plans/027-upstream-harness-improvements",
++  "mode": "Simple",
++  "current_stage": "awaiting-7",
++  "pending_command": "/plan-7-v2-code-review --plan \"docs/plans/027-upstream-harness-improvements/upstream-harness-improvements-plan.md\"",
++  "intent": "Take the harness back-pressure, signal, and retro improvements from harness-engineering upstream into the tools repo, while leaving engineering-harness-setup in harness-engineering.",
++  "milestones_total": 6,
++  "milestones_done": 4,
++  "last_checkpoint_at": "2026-05-30T08:10:01Z",
++  "compacted_seams": [],
++  "status": "active"
++}
+diff --git a/docs/plans/027-upstream-harness-improvements/execution.log.md b/docs/plans/027-upstream-harness-improvements/execution.log.md
+new file mode 100644
+index 0000000..c8af83c
+--- /dev/null
++++ b/docs/plans/027-upstream-harness-improvements/execution.log.md
+@@ -0,0 +1,68 @@
++# Execution Log — Upstream Harness Improvements
++
++**Started**: 2026-05-30T07:37:29Z  
++**Phase**: Phase 1: Upstream runtime-loop wording, schema-safe examples, validation, and ownership docs
++
++## Pre-phase harness validation
++
++| Check | Result | Evidence |
++|-------|--------|----------|
++| Governance doc | UNAVAILABLE | No `docs/project-rules/engineering-harness.md`, `docs/project-rules/agent-harness.md`, or `docs/project-rules/harness.md` exists in tools. |
++| Boot / Interact / Observe | Skipped | Plan explicitly continues without a local project harness and validates through repo checks plus harness skills. |
++
++## Task log
++
++### T001 — Define schema-safe signal-gap encoding examples
++
++Status: completed.
++
++Evidence:
++- Added `skills/compound/schemas/fixtures/signal-backpressure.retro.md`.
++- Updated `skills/compound/schemas/README.md` with frontmatter-only validation and schema-safe encoding guidance.
++
++### T002 — Update boot signal-readiness reporting contract
++
++Status: completed.
++
++Evidence:
++- Updated `skills/harness/harness-1-boot/SKILL.md` to parse and report signal readiness.
++- Preserved `UNAVAILABLE` behavior and explicitly kept setup/scaffolding out of Boot.
++
++### T003 — Update observe triggers and encoding guidance
++
++Status: completed.
++
++Evidence:
++- Added inference-gap and missing deterministic-signal triggers to `harness-2-observe`.
++- Added schema-safe YAML examples using existing `kind` values and explicit targets.
++
++### T004 — Update retro drain/harvest prioritization
++
++Status: completed.
++
++Evidence:
++- Updated `harness-3-retro --drain` prompt notes to call out ease and proof/back-pressure improvements.
++- Updated `--harvest` guidance to recognize proof/sensor clusters without indexes, gates, or schema changes.
++
++### T005 — Clarify ownership and migration guidance
++
++Status: completed.
++
++Evidence:
++- Updated `README.md`, `INSTALL.md`, and `skills/compound/README.md` with runtime/setup ownership guidance.
++- Documented `just skills-orphans` and `just doctor-skills` as read-only drift reports.
++
++### T006 — Run and document validation
++
++Status: completed.
++
++Evidence:
++- `python3 -m json.tool skills/compound/schemas/retro.schema.json` passed.
++- Frontmatter-only validation passed for all non-malformed retro fixtures, including `fixtures/signal-backpressure.retro.md`.
++- Markdown drift checks found the expected signal-readiness, schema-safe encoding, back-pressure leverage, and ownership wording.
++- Legacy source slug check found no `boot-harness` or retired `compound-*` runtime skill source folders.
++- `plan-2d-backpressure-survey` and `the-flow` still contain advisory/non-blocking wording.
++- `just skills-orphans` completed with one baseline report: `pack-code` exists under `~/.claude/skills` but is not a tools source skill.
++- `just doctor-skills` classified `pack-code` as hand-installed local-only and harmless; no stale legacy real-dir stores or dangling symlinks were found.
++
++No deployed skills were deleted.
+diff --git a/docs/plans/027-upstream-harness-improvements/original-ask.md b/docs/plans/027-upstream-harness-improvements/original-ask.md
+new file mode 100644
+index 0000000..5e48503
+--- /dev/null
++++ b/docs/plans/027-upstream-harness-improvements/original-ask.md
+@@ -0,0 +1,4 @@
++# Original ask - upstream-harness-improvements
++**Captured**: 2026-05-30T02:18:45Z  .  **By**: /the-flow
++
++> let's get a plan going in the other repo to take our improveent here and ensure they are availvle upstrea in tools reapo, then we will have all our work there in the tools repo except harness setup which stays here
+diff --git a/docs/plans/027-upstream-harness-improvements/research-dossier.md b/docs/plans/027-upstream-harness-improvements/research-dossier.md
+new file mode 100644
+index 0000000..6bbc728
+--- /dev/null
++++ b/docs/plans/027-upstream-harness-improvements/research-dossier.md
+@@ -0,0 +1,276 @@
++# Research Report: Upstream harness improvements
++
++**Generated**: 2026-05-30T04:22:18Z  
++**Research Query**: "Take the harness back-pressure, signal, and retro improvements from harness-engineering upstream into the tools repo, while leaving engineering-harness-setup in harness-engineering."  
++**Mode**: Pre-Plan  
++**Location**: `docs/plans/027-upstream-harness-improvements/research-dossier.md`  
++**FlowSpace**: Not available for `~/github/tools` in this session; standard tools used  
++**Findings**: 38 synthesized findings from local inspection + 4 focused research agents
++
++## Executive Summary
++
++### What It Does
++
++The tools repo already owns the canonical runtime harness loop: `harness-1-boot`, `harness-2-observe`, and `harness-3-retro`. The harness-engineering repo now owns the setup/provisioning surface: `engineering-harness-setup`, generated `engineering-harness.md`, starter `harness/cli/`, and the stronger signal/back-pressure setup wording.
++
++### Business Purpose
++
++This migration should make tools the single upstream home for operational harness skills while keeping harness-engineering focused on public foundations and project-local setup. The key is to port improvements that belong to the runtime loop without reintroducing setup scaffolding into tools.
++
++### Key Insights
++
++1. **The split is already intentional upstream**: plan 024 explicitly dropped setup/scaffold/migration concepts to the separate engineering-harness setup effort while keeping only the three runtime loop skills in tools (`docs/plans/024-harness-nucleus/harness-nucleus-spec.md:13-28`, `39-46`, `58-66`).
++2. **Back-pressure exists upstream, but mostly in `plan-2d`**: tools has a strong advisory backpressure survey, and `plan-3` consumes `backpressure-coverage.md`, but the harness loop itself is weaker on runtime signal inventory and inference-gap capture (`skills/SDD/plan-2d-backpressure-survey/SKILL.md:10-20`, `24-33`; `skills/SDD/plan-3-v3-architect/SKILL.md:97-100`, `235-237`).
++3. **The schema contract should not be expanded casually**: tools' universal retro schema only permits `difficulty`, `magic-wand`, `gift`, `insight`, `coordination`, `improvement-suggestion`, and `confusion`; harness-engineering's `signal-gap`, `sensor-gap`, and `weak-back-pressure` should be mapped into existing kinds + richer targets/encoding hints unless a deliberate schema version bump is planned (`skills/compound/schemas/retro.schema.json:64-87`).
++
++### Quick Stats
++
++- **Core skill surfaces**: 3 harness runtime skills, 1 compound schema directory, 2 SDD consumers (`plan-2d`, `the-flow`) directly relevant.
++- **Prior plans scanned**: 017, 023, 024, 025, 026.
++- **Test coverage**: lightweight recipe/grep/install checks; no executable contract validator for retro schema or backpressure artifacts found.
++- **Domains**: no formal `docs/domains/`; informal boundaries are `harness`, `compound`, `sdd-pipeline`, and `dev-tooling`.
++- **Prior learnings**: 6 directly relevant prior-plan lessons surfaced.
++
++## How It Currently Works
++
++### Entry Points
++
++| Entry Point | Type | Location | Purpose |
++|------------|------|----------|---------|
++| `harness-1-boot` | Skill | `skills/harness/harness-1-boot/SKILL.md:29-57` | Reads `engineering-harness.md` canonical-first and validates or reports `UNAVAILABLE`. |
++| `harness-2-observe` | Skill | `skills/harness/harness-2-observe/SKILL.md:13-63` | Silent producer that appends friction/improvement entries to per-agent buffers. |
++| `harness-3-retro --drain` | Skill mode | `skills/harness/harness-3-retro/SKILL.md:34-119` | Drains one session buffer into a durable `.retro.md`. |
++| `harness-3-retro --harvest` | Skill mode | `skills/harness/harness-3-retro/SKILL.md:240-409` | Scans durable retros, clusters entries, and emits terminal or JSON views. |
++| `plan-2d-backpressure-survey` | SDD skill | `skills/SDD/plan-2d-backpressure-survey/SKILL.md:24-33`, `105-143` | Advisory deterministic-sensor survey producing `backpressure-coverage.md`. |
++| `the-flow` | SDD guide | `skills/SDD/the-flow/SKILL.md:16-44`, `211-220` | Guides the plan pipeline and surfaces backpressure/harness seams. |
++
++### Core Execution Flow
++
++1. **Boot**: `harness-1-boot` looks for `docs/project-rules/engineering-harness.md`, then legacy names. If missing, it reports `UNAVAILABLE`; it does not create the governance doc (`skills/harness/harness-1-boot/SKILL.md:29-57`, `90-98`).
++2. **Observe**: during work, agents call `harness-2-observe` silently when they hit material friction or a magic-wand moment. If `_buffers/` is missing, it no-ops gracefully rather than scaffolding (`skills/harness/harness-2-observe/SKILL.md:13-63`, `120-125`).
++3. **Retro drain**: `harness-3-retro --drain` presents one `[s/t/p/e/d/a]` prompt and saves entries into `docs/compound/agents/<agent>/<date>/*.retro.md` (`skills/harness/harness-3-retro/SKILL.md:60-119`).
++4. **Retro harvest**: `harness-3-retro --harvest` scans `.retro.md` plus legacy `docs/retros/*.md`, validates frontmatter, dedups, clusters, and optionally emits JSON for tooling (`skills/harness/harness-3-retro/SKILL.md:267-409`).
++5. **Backpressure planning**: `plan-2d` inventories deterministic sensors and writes `backpressure-coverage.md`; `plan-3` reads it if present and can include an optional "Phase 0: Establish Backpressure" (`skills/SDD/plan-2d-backpressure-survey/SKILL.md:61-105`; `skills/SDD/plan-3-v3-architect/SKILL.md:97-100`, `235-237`).
++
++### Data Flow
++
++```mermaid
++graph LR
++    Setup[harness-engineering setup] --> EH[docs/project-rules/engineering-harness.md]
++    Setup --> Ledger[docs/compound tree]
++    EH --> Boot[harness-1-boot]
++    Work[Do Work] --> Observe[harness-2-observe]
++    Observe --> Buffer[docs/compound/_buffers/*.session-buffer.md]
++    Buffer --> Drain[harness-3-retro --drain]
++    Drain --> Retros[docs/compound/agents/**/*.retro.md]
++    Retros --> Harvest[harness-3-retro --harvest]
++    Spec[plan-1b spec] --> Survey[plan-2d backpressure survey]
++    Survey --> Coverage[backpressure-coverage.md]
++    Coverage --> Architect[plan-3]
++```
++
++## Architecture & Design
++
++### Core Components
++
++- **Runtime harness loop**: `skills/harness/` is the canonical upstream home for Boot, Observe, Retro. It intentionally assumes setup artifacts exist and degrades gracefully when they do not (`skills/compound/README.md:7-17`).
++- **Compound contract**: `skills/compound/schemas/` is not installable skill content; it is the frozen universal retro schema path shared across systems (`skills/compound/README.md:1-21`).
++- **Setup surface**: harness-engineering's `engineering-harness-setup` creates governance, CLI, signal inventory, and setup templates; tools only consumes the outputs (`harness-engineering/skills/engineering-harness-setup/SKILL.md:134-208`, `290-354`).
++- **Backpressure design-time survey**: `plan-2d` is the computational-control tier before architect; it is advisory and artifact-based (`skills/SDD/plan-2d-backpressure-survey/SKILL.md:10-20`, `24-33`).
++
++### Design Patterns Identified
++
++1. **Graceful degradation**: missing setup artifacts produce `UNAVAILABLE` or no-op, never a hard failure (`harness-1-boot/SKILL.md:44-57`; `harness-2-observe/SKILL.md:61-63`).
++2. **Computed views, not persisted indexes**: harvest computes views at read time and writes no on-disk rollups (`harness-3-retro/SKILL.md:450-472`).
++3. **Advisory backpressure**: `plan-2d` can recommend sensors but never blocks or flips plans to DRAFT (`plan-2d-backpressure-survey/SKILL.md:24-33`).
++4. **Setup/provisioning split**: plan 024 says setup/scaffold/migration are owned by the separate engineering-harness setup effort, not the runtime loop (`docs/plans/024-harness-nucleus/harness-nucleus-spec.md:39-46`, `58-66`).
++
++## Dependencies & Integration
++
++### Internal Dependencies
++
++| Dependency | Type | Purpose | Risk if Changed |
++|------------|------|---------|-----------------|
++| `docs/project-rules/engineering-harness.md` | Optional input | Boot maturity and validation contract | Boot degrades to `UNAVAILABLE`; setup boundary becomes unclear. |
++| `docs/compound/_buffers/` | Optional input/output | Observe buffer path | Observe no-ops; retro loop produces no entries. |
++| `skills/compound/schemas/retro.schema.json` | Contract | Validates `.retro.md` envelope and entries | Schema bump could break minih/tools compatibility. |
++| `backpressure-coverage.md` | Optional artifact | Design-time sensor coverage input to `plan-3` | `plan-3` loses Phase 0 signal; no blocking behavior. |
++| `scripts/compound-value.sh` | Tool consumer | Pretty-prints harvest JSON | Can silently degrade if JSON fields default through `jq // 0`. |
++
++### External / Cross-Repo Dependencies
++
++| Surface | Owner | Purpose | Criticality |
++|---------|-------|---------|-------------|
++| `engineering-harness-setup` | `AI-Substrate/harness-engineering` | Provisions governance, `harness/cli`, command map, signal inventory | High |
++| `npx skills add` | Vercel Labs skills CLI | Installs/updates skills but does not prune removed slugs | High |
++| `docs/compound/` path | Cross-system contract | Shared ledger tree with minih/back-compat readers | High |
++
++## Quality & Testing
++
++### Existing Validation
++
++- `just doctor-skills` validates deploy-target symlinks and legacy orphan paths.
++- `just skills-orphans` reports deployed skills absent from source and prints copy-paste cleanup commands (`justfile:326-362`).
++- `scripts/compound-value.sh` renders harvest JSON from stdin (`scripts/compound-value.sh:1-34`).
++- `scripts/check-skill-slugs.sh` is used by prior plans to check slug collisions.
++
++### Gaps
++
++| Gap | Severity | Evidence | Impact |
++|-----|----------|----------|--------|
++| No repo-level retro schema validator wired into `just`/CI | High | `docs/compound/README.md` documents validation, but no just recipe was found | Schema drift can pass local checks. |
++| `harness-1-boot` lacks signal-readiness reporting from harness-engineering | High | tools boot report still uses checklist `[X/15]`; setup emits `[X/20]` with signals | Setup-generated docs may be richer than boot output. |
++| `harness-2-observe` triggers do not explicitly capture inference/back-pressure gaps | Medium | tools observe trigger list stops at magic-wand/backtracking; source `compound-1-track` includes signal/sensor/user-flow checks | Missing signals may be under-captured. |
++| `harness-3-retro` clusters only by `(kind, target)` with no signal-shape annotation | Medium | harvest spec at `harness-3-retro/SKILL.md:302-325` | Back-pressure improvements may not be prioritized distinctly. |
++| Install/update workflow can leave orphaned old skills | Medium | `justfile:326-362`, prior plan PL-04 | Old `boot-harness`/`compound-*` may keep appearing after migration. |
++
++## Modification Considerations
++
++### Safe to Modify
++
++1. **Skill prose in `skills/harness/*.md`**: markdown contract edits are the intended surface, but preserve best-effort/no-gate wording.
++2. **Targets and suggested encodings**: adding examples for `runtime-observe`, `smoke`, `architecture`, `static-analysis`, `security`, `schema`, `user-flow`, and `evidence` is schema-safe because `target` is a free string (`retro.schema.json:83-87`).
++3. **Docs/install guidance**: tools docs should clarify loop ownership and tell users to install setup from harness-engineering.
++
++### Modify with Caution
++
++1. **`kind` enum**: adding `signal-gap`/`sensor-gap`/`weak-back-pressure` would require schema versioning and consumer updates (`retro.schema.json:64-74`).
++2. **Harvest JSON shape**: `scripts/compound-value.sh` consumes `.harness`, `.entries`, and `.top_clusters[]` (`scripts/compound-value.sh:26-34`).
++3. **Setup responsibility in tools**: adding scaffold behavior to `harness-1/2/3` would violate plan 024's boundary (`docs/plans/024-harness-nucleus/harness-nucleus-spec.md:39-46`, `58-66`).
++
++### Danger Zones
++
++1. **Turning backpressure into a gate**: both `plan-2d` and `the-flow` explicitly forbid blocking, thresholds, and scoring (`plan-2d-backpressure-survey/SKILL.md:24-33`; `the-flow/SKILL.md:18-23`).
++2. **Persisted harvest indexes**: `harness-3-retro` explicitly forbids on-disk indexes (`harness-3-retro/SKILL.md:450-472`).
++3. **Renaming `skills/compound/schemas/`**: tools docs state this path is frozen until extraction to a shared package (`skills/compound/README.md:13-17`).
++
++## Prior Learnings
++
++### Prior Learning PL-01: Runtime loop consolidation is already resolved
++
++**Source**: `docs/plans/024-harness-nucleus/harness-nucleus-spec.md:13-28`, `39-46`  
++**What They Found**: Six older compound/harness skills were consolidated into three runtime-stage skills, with scaffold/setup concepts moved out.  
++**Action for Current Work**: Do not recreate `compound-0-setup` or setup scaffolding in tools; update tools runtime skills only.
++
++### Prior Learning PL-02: Orphaned installed skills are a known trap
++
++**Source**: `docs/plans/024-harness-nucleus/harness-nucleus-plan.md:52-54`, `87`; `justfile:326-362`  
++**What They Found**: `npx skills add` updates but does not prune renamed/removed skills.  
++**Action for Current Work**: Include `just skills-orphans` / `just doctor-skills` in validation and update harness-engineering install docs to stop advertising old slugs.
++
++### Prior Learning PL-03: Backpressure must remain advisory
++
++**Source**: `docs/plans/025-backpressure-survey/backpressure-survey-plan.md:52-56`, `75-93`  
++**What They Found**: `plan-2d` exists to surface deterministic coverage, not to block or score.  
++**Action for Current Work**: Any upstream wording must say "signals/back-pressure gaps are improvement candidates," not "required gates."
++
++### Prior Learning PL-04: No formal domain registry exists
++
++**Source**: `docs/plans/024-harness-nucleus/harness-nucleus-spec.md:81-90`; `docs/plans/026-the-flow/the-flow-spec.md:41-55`  
++**What They Found**: Skills are treated as the product; domains are informal skill-file boundaries.  
++**Action for Current Work**: Use informal domains in the spec/plan rather than creating `docs/domains/`.
++
++### Prior Learning PL-05: The setup/runtime boundary is load-bearing
++
++**Source**: `docs/plans/024-harness-nucleus/harness-nucleus-spec.md:46`, `58-66`  
++**What They Found**: Fresh repos cannot be made loop-functional by the three tools skills alone; setup is separate.  
++**Action for Current Work**: Keep `engineering-harness-setup` in harness-engineering, but make tools references point to it when provisioning is needed.
++
++### Prior Learning PL-06: The-flow exposes harness cues, but does not validate them
++
++**Source**: `docs/plans/026-the-flow/the-flow-spec.md:18-28`, `85-106`  
++**What They Found**: the-flow narrates optional branches, backpressure, and harness seams; it is not a validator.  
++**Action for Current Work**: Update the-flow wording only if needed to reference the migrated setup boundary; do not make it enforce retro/schema/backpressure consistency.
++
++## Domain Context
++
++No `docs/domains/registry.md` exists in tools. Informal domains:
++
++| Domain | Relationship | Key Components | Recommendation |
++|--------|--------------|----------------|----------------|
++| `harness` | Direct | `skills/harness/harness-{1,2,3}-*.md` | Extend runtime skills with signal/back-pressure wording. |
++| `compound` | Contract | `skills/compound/schemas/*.json`, `docs/compound/` | Preserve schema/path; avoid enum changes unless explicitly versioned. |
++| `sdd-pipeline` | Consumer | `plan-2d`, `plan-3`, `the-flow`, SDD compound appendices | Keep advisory, artifact-driven integration. |
++| `dev-tooling` | Validator | `justfile`, `scripts/compound-value.sh` | Add or document validation commands where practical. |
++| `harness-engineering setup` | External owner | `engineering-harness-setup` in other repo | Reference as provisioning source; do not copy setup into tools. |
++
++## Critical Discoveries
++
++### Critical Finding 01: Tools boot is behind setup's signal checklist
++
++**Impact**: Critical  
++**Source**: local inspection + IA-02/IA-08  
++**What**: harness-engineering setup generates `## Signals and Back Pressure` and a 20-item checklist; tools `harness-1-boot` reports `[X/15]` and does not inspect runtime/smoke/architecture/security/schema signal readiness.  
++**Why It Matters**: Users could provision a richer harness doc but get a weaker boot report from the canonical upstream boot skill.  
++**Required Action**: Update `harness-1-boot` to parse/report signal readiness without creating setup artifacts.
++
++### Critical Finding 02: Signal-gap enum values are not upstream-schema-safe
++
++**Impact**: Critical  
++**Source**: `retro.schema.json:64-87`; harness-engineering `compound-1-track` source  
++**What**: harness-engineering added `signal-gap`, `sensor-gap`, and `weak-back-pressure` as `kind` values, but tools' schema does not allow them.  
++**Why It Matters**: Directly porting these values would produce invalid `.retro.md` entries.  
++**Required Action**: Map to `difficulty` or `improvement-suggestion` with richer `target` and `suggested_encoding`, or plan an explicit schema bump.
++
++### Critical Finding 03: Setup and runtime ownership must stay separate
++
++**Impact**: Critical  
++**Source**: `docs/plans/024-harness-nucleus/harness-nucleus-spec.md:39-46`, `58-66`; `harness-2-observe/SKILL.md:61-63`  
++**What**: Tools loop skills intentionally do not scaffold `docs/compound/` or `engineering-harness.md`.  
++**Why It Matters**: Moving too much from harness-engineering would undo the consolidation and re-create duplicate setup paths.  
++**Required Action**: Keep provisioning in `engineering-harness-setup`; update tools to consume and narrate, not scaffold.
++
++## Recommendations
++
++### If Modifying Tools
++
++1. **Port signal-readiness to `harness-1-boot`**: include runtime inspectability, product smoke, structured evidence, architecture/static checks, security/dependency/schema checks, and back-pressure gaps in the report. Keep `UNAVAILABLE` graceful.
++2. **Port inference-gap capture to `harness-2-observe`**: add source-compatible triggers such as "what did the agent/reviewer have to infer?" but encode as existing schema kinds.
++3. **Port back-pressure prioritization to `harness-3-retro`**: add wording that harvest distinguishes ease improvements from back-pressure improvements, using target/suggested_encoding rather than new kinds.
++4. **Update tools docs**: explicitly state that setup/provisioning remains in `AI-Substrate/harness-engineering` and runtime loop skills live in tools.
++5. **Add validation where practical**: a `just` recipe for retro schema validation or a documented smoke command would reduce drift.
++
++### If Modifying Harness-Engineering Afterward
++
++1. Keep `engineering-harness-setup`.
++2. Retire or remove installable `boot-harness` and `compound-*` after tools has equivalent wording.
++3. Update install docs to point runtime-loop users to `jakkaj/tools/skills/harness`.
++4. Use `just skills-orphans` in tools to help users clean old deployed slugs.
++
++## External Research Opportunities
++
++No external research is needed. The question is an internal cross-repo migration and all material decisions are answered by the two local repos and prior plans.
++
++## Appendix: File Inventory
++
++### Tools repo core files
++
++| File | Purpose |
++|------|---------|
++| `skills/harness/harness-1-boot/SKILL.md` | Session-start boot/maturity report. |
++| `skills/harness/harness-2-observe/SKILL.md` | Silent producer for session buffer entries. |
++| `skills/harness/harness-3-retro/SKILL.md` | Drain/harvest retro consumer and curator. |
++| `skills/compound/schemas/retro.schema.json` | Universal retro envelope and entry schema. |
++| `skills/SDD/plan-2d-backpressure-survey/SKILL.md` | Advisory deterministic-sensor survey. |
++| `skills/SDD/the-flow/SKILL.md` | Guided SDD pipeline front door. |
++| `justfile` | Skill install, doctor, orphan, and compound-value recipes. |
++| `scripts/compound-value.sh` | Harvest JSON pretty-printer. |
++
++### Harness-engineering source files
++
++| File | Purpose |
++|------|---------|
++| `skills/engineering-harness-setup/SKILL.md` | Setup/provisioning source of truth; emits signal/back-pressure governance and starter CLI. |
++| `skills/boot-harness/SKILL.md` | Older boot skill with richer signal-readiness report to port upstream. |
++| `skills/compound-1-track/SKILL.md` | Older observe producer with signal/sensor/back-pressure triggers. |
++| `skills/compound-2-bubble/SKILL.md` | Older drain wording with signal-gap encoding examples. |
++| `skills/compound-3-harvest/SKILL.md` | Older harvest wording that distinguishes ease vs back-pressure improvements. |
++| `skills/engineering-harness-setup/templates/magic-wand-prompt.md` | Canonical magic-wand + inference-gap wording. |
++| `skills/engineering-harness-setup/templates/retrospective-schema.json` | Setup-local retrospective schema with `inferenceGap`. |
++
++## Next Steps
++
++Proceed to `/plan-1b-v3-specify-and-clarify` to write the migration spec. Suggested scope: upstream runtime-loop wording and validation into tools, leave `engineering-harness-setup` in harness-engineering, then later retire duplicate installable runtime skills from harness-engineering.
++
++**Research Complete**: 2026-05-30T04:22:18Z  
++**Report Location**: `docs/plans/027-upstream-harness-improvements/research-dossier.md`
+diff --git a/docs/plans/027-upstream-harness-improvements/the-flow.json b/docs/plans/027-upstream-harness-improvements/the-flow.json
+new file mode 100644
+index 0000000..1bcebb8
+--- /dev/null
++++ b/docs/plans/027-upstream-harness-improvements/the-flow.json
+@@ -0,0 +1,111 @@
++{
++  "schema_version": 1,
++  "kind": "flight-plan",
++  "slug": "upstream-harness-improvements",
++  "plan_dir": "docs/plans/027-upstream-harness-improvements",
++  "mode": "Simple",
++  "cursor": "review",
++  "recommended_next": "review",
++  "now": "Phase 1 landed",
++  "next": "Review changes",
++  "agents": [],
++  "nodes": [
++    {
++      "id": "research",
++      "type": "research",
++      "label": "Research",
++      "status": "done",
++      "command": "/plan-1a-v2-explore",
++      "ran_at": "2026-05-30T04:22:18Z",
++      "user_input": "let's get a plan going in the other repo to take our improveent here and ensure they are availvle upstrea in tools reapo, then we will have all our work there in the tools repo except harness setup which stays here",
++      "note": "Research found the migration boundary: tools already owns the runtime harness loop; the missing upstream work is signal-readiness/inference-gap wording in harness-1/2/3, while setup/provisioning remains in harness-engineering.",
++      "artifacts": [
++        "research-dossier.md"
++      ],
++      "next": [
++        "spec"
++      ]
++    },
++    {
++      "id": "spec",
++      "type": "spec",
++      "label": "Spec",
++      "status": "done",
++      "command": "/plan-1b-v3-specify-and-clarify",
++      "ran_at": "2026-05-30T04:26:06Z",
++      "note": "Capture the upstream migration contract: port runtime-loop improvements to tools and leave setup in harness-engineering.",
++      "artifacts": [
++        "upstream-harness-improvements-spec.md",
++        "upstream-harness-improvements.fltplan.md"
++      ],
++      "next": [
++        "backpressure",
++        "plan"
++      ]
++    },
++    {
++      "id": "backpressure",
++      "type": "backpressure",
++      "label": "Backpressure survey",
++      "status": "assumed",
++      "command": "/plan-2d-backpressure-survey",
++      "branch_of": "spec",
++      "note": "Optional branch skipped by user; architect should proceed from the spec and research dossier.",
++      "next": [
++        "plan"
++      ]
++    },
++    {
++      "id": "plan",
++      "type": "plan",
++      "label": "Plan",
++      "status": "done",
++      "command": "/plan-3-v3-architect",
++      "ran_at": "2026-05-30T05:32:56Z",
++      "note": "Architected a READY Simple plan with one implementation phase; optional backpressure survey was skipped.",
++      "artifacts": [
++        "upstream-harness-improvements-plan.md",
++        "upstream-harness-improvements.fltplan.md"
++      ],
++      "next": [
++        "phase-1"
++      ]
++    },
++    {
++      "id": "phase-1",
++      "type": "phase",
++      "phase": 1,
++      "label": "Phase 1: Upstream runtime-loop wording, schema-safe examples, validation, and ownership docs",
++      "status": "done",
++      "command": "/plan-6-v2-implement-phase",
++      "ran_at": "2026-05-30T08:10:01Z",
++      "note": "Implemented the single Simple-mode phase: runtime harness skills now include signal/back-pressure wording, schema-safe retro examples, ownership docs, and local validation evidence.",
++      "artifacts": [
++        "execution.log.md",
++        "skills/compound/schemas/fixtures/signal-backpressure.retro.md"
++      ],
++      "next": [
++        "review"
++      ]
++    },
++    {
++      "id": "review",
++      "type": "review",
++      "label": "Review",
++      "status": "in_progress",
++      "command": "/plan-7-v2-code-review",
++      "note": "Review the implemented Simple-mode phase before merge analysis.",
++      "next": [
++        "merge"
++      ]
++    },
++    {
++      "id": "merge",
++      "type": "merge",
++      "label": "Merge",
++      "status": "assumed",
++      "command": "/plan-8-v2-merge",
++      "next": []
++    }
++  ]
++}
+diff --git a/docs/plans/027-upstream-harness-improvements/the-flow.md b/docs/plans/027-upstream-harness-improvements/the-flow.md
+new file mode 100644
+index 0000000..1e45d9e
+--- /dev/null
++++ b/docs/plans/027-upstream-harness-improvements/the-flow.md
+@@ -0,0 +1,27 @@
++# `the-flow.md` - upstream-harness-improvements
++
++**Plan**: upstream-harness-improvements . **Mode**: Simple
++**Rail**: `[the-flow] ◆-◆-◆-[◆]-◇-◇` . **now**: Phase 1 landed . **next**: Review changes
++
++```mermaid
++flowchart TD
++    classDef done    fill:#4CAF50,stroke:#388E3C,color:#fff
++    classDef wip     fill:#FF9800,stroke:#F57C00,color:#000
++    classDef blocked fill:#F44336,stroke:#D32F2F,color:#fff
++    classDef known   fill:#90A4AE,stroke:#607D8B,color:#000
++    classDef assumed fill:#ECEFF1,stroke:#B0BEC5,color:#90A4AE,stroke-dasharray:4 4
++    classDef said    fill:#FFFDE7,stroke:#FBC02D,color:#000
++    classDef companion fill:#E0F2F1,stroke:#00897B,color:#000
++    classDef worker  fill:#E8EAF6,stroke:#3F51B5,color:#000
++
++    R[Research]:::done --> S[Spec]:::done --> PL[Plan]:::done --> P1[Phase 1: Upstream runtime-loop wording]:::done --> RV[Review]:::wip --> M[Merge]:::assumed
++    S -.->|prove it skipped| BP[Backpressure survey]:::assumed
++    BP -.-> PL
++
++    UR>"🗣 let's get a plan going in the other repo to take our improveent here and ensure they are availvle upstrea in tools reapo, then we will have all our work there in the tools repo except harness setup which stays here"]:::said
++    UR -.- R
++```
++
++**Legend**: done . in progress . blocked . known future . assumed future . user input . companion . worker
++
++_Generated from `the-flow.json`._
+diff --git a/docs/plans/027-upstream-harness-improvements/upstream-harness-improvements-plan.md b/docs/plans/027-upstream-harness-improvements/upstream-harness-improvements-plan.md
+new file mode 100644
+index 0000000..f2cb681
+--- /dev/null
++++ b/docs/plans/027-upstream-harness-improvements/upstream-harness-improvements-plan.md
+@@ -0,0 +1,170 @@
++# Upstream Harness Improvements Implementation Plan
++
++**Mode**: Simple  
++**Plan Version**: 1.0.0  
++**Created**: 2026-05-30  
++**Spec**: [upstream-harness-improvements-spec.md](./upstream-harness-improvements-spec.md)  
++**Status**: READY
++
++## Gate Matrix
++
++| Gate | Check | Status | Notes |
++|------|-------|--------|-------|
++| G1 | Clarify | PASS | Spec has no unresolved `[NEEDS CLARIFICATION]` markers; domain and harness readiness decisions are recorded. |
++| G2 | Constitution | N/A | No `docs/project-rules/constitution.md` exists in tools. |
++| G3 | Architecture | N/A | No `docs/project-rules/architecture.md` exists in tools. |
++| G4 | ADR Compliance | N/A | No accepted ADRs found under `docs/adr/`. |
++| G5 | Structure | PASS | Simple plan contains required sections, task table, success criteria, risks, and resolved references. |
++| G6 | Testing Alignment | PASS | Hybrid testing is represented by fixture/schema validation, drift checks, and install/orphan checks. |
++| G7 | Domain Completeness | PASS | Every spec domain appears in Target Domains and Domain Manifest; informal domains do not require `docs/domains/` setup. |
++
++## Summary
++
++This plan upstreams the stronger harness signal/back-pressure loop into tools' canonical runtime skills without moving setup/provisioning out of harness-engineering. The implementation updates `harness-1-boot`, `harness-2-observe`, and `harness-3-retro` to recognize signal readiness, inference gaps, and missing deterministic proof as improvement opportunities. It preserves the universal retro schema by encoding signal/sensor/back-pressure gaps through existing `kind` values plus targets and suggested encodings, then updates docs and validation fixtures so the split remains legible.
++
++## Target Domains
++
++| Domain | Status | Relationship | Role |
++|--------|--------|--------------|------|
++| harness-runtime | NEW | modify | Runtime Boot -> Observe -> Retro skills receiving the upstreamed wording and behavior. |
++| compound-contract | NEW | consume | Universal retro schema and `.retro.md` contract that must remain compatible. |
++| sdd-pipeline | NEW | consume | `plan-2d`, `plan-3`, and `the-flow` consume or narrate harness/back-pressure artifacts. |
++| dev-tooling | NEW | modify | Validation and install-drift recipes/scripts. |
++| external-harness-setup | NEW | consume | Cross-repo provisioning source that remains in harness-engineering. |
++
++## Domain Manifest
++
++| File | Domain | Classification | Rationale |
++|------|--------|----------------|-----------|
++| `skills/harness/harness-1-boot/SKILL.md` | harness-runtime | internal | Boot skill contract should report signal/back-pressure readiness without scaffolding setup. |
++| `skills/harness/harness-2-observe/SKILL.md` | harness-runtime | internal | Observe skill should capture inference gaps and missing deterministic signals. |
++| `skills/harness/harness-3-retro/SKILL.md` | harness-runtime | internal | Retro skill should surface ease and proof/back-pressure improvements during drain/harvest. |
++| `skills/compound/schemas/fixtures/*.retro.md` | compound-contract | contract | Fixtures prove the chosen signal-gap encoding remains schema-valid. |
++| `skills/compound/schemas/README.md` | compound-contract | contract | Documents schema-safe encoding examples and validation expectations. |
++| `skills/compound/schemas/retro.schema.json` | compound-contract | contract | Consumed for validation only; no enum expansion is planned. |
++| `skills/SDD/plan-2d-backpressure-survey/SKILL.md` | sdd-pipeline | cross-domain | Should remain advisory and may be referenced for conceptual alignment; avoid behavioral gating changes. |
++| `skills/SDD/the-flow/SKILL.md` | sdd-pipeline | cross-domain | Should remain advisory and may be referenced for setup/runtime ownership wording if needed. |
++| `README.md` | dev-tooling | cross-domain | Top-level ownership guidance for runtime skills vs setup. |
++| `INSTALL.md` | dev-tooling | cross-domain | Install guidance should point setup to harness-engineering and runtime loop to tools. |
++| `justfile` | dev-tooling | internal | Existing `skills-orphans` / `doctor-skills` validation should be used or lightly extended. |
++| `scripts/compound-value.sh` | dev-tooling | internal | Harvest JSON consumer; do not break expected output shape. |
++| `/Users/jordanknight/substrate/harness-engineering/skills/engineering-harness-setup/SKILL.md` | external-harness-setup | cross-domain | Source of setup/provisioning wording; referenced, not copied wholesale into tools. |
++
++## Key Findings
++
++| # | Impact | Finding | Action |
++|---|--------|---------|--------|
++| 01 | Critical | New retro `kind` values would break tools' current schema, which only allows seven enum values. | Encode signal/sensor/back-pressure gaps as `difficulty`, `improvement-suggestion`, or `magic-wand` with explicit `target` and `suggested_encoding`. |
++| 02 | Critical | Plan 024 intentionally moved setup/scaffold/migration out of the tools runtime loop. | Keep tools changes runtime-only; reference harness-engineering for provisioning. |
++| 03 | High | `harness-1-boot` already degrades gracefully with `UNAVAILABLE`, but its readiness report is behind setup's richer signal checklist. | Extend report wording/check extraction for signal readiness while preserving graceful fallback. |
++| 04 | High | `harness-2-observe` already owns silent capture, but its trigger list does not explicitly include inference gaps or missing deterministic signals. | Add signal/back-pressure triggers and schema-safe encoding examples. |
++| 05 | High | `harness-3-retro` already owns drain/harvest, but its prioritization language does not clearly distinguish ease improvements from back-pressure improvements. | Add drain prompt and harvest prioritization wording for missing proof/sensors, with no persisted indexes. |
++| 06 | High | `npx skills add` leaves renamed/removed deployed skills behind. | Include `just skills-orphans` and `just doctor-skills` in validation/docs so old `boot-harness` and `compound-*` installs are discoverable. |
++| 07 | High | `plan-2d` and `the-flow` explicitly forbid gates, scores, thresholds, and blocking. | Preserve advisory wording everywhere; do not turn back-pressure gaps into readiness gates. |
++| 08 | High | Validation currently relies on lightweight checks and schema docs; the spec needs deterministic proof for sample retro encoding. | Add or update sample `.retro.md` fixture(s) and document validation commands using existing schema artifacts. |
++
++## Implementation
++
++**Objective**: Update tools so its canonical harness runtime loop reflects the signal-readiness and inference-gap improvements from harness-engineering while preserving setup/runtime boundaries and retro schema compatibility.
++
++**Testing Approach**: Hybrid - use real skill files, real schema fixtures, and local drift/install checks; avoid mocks.
++
++### Tasks
++
++| Status | ID | Task | Domain | Path(s) | Done When | Notes |
++|--------|----|------|--------|---------|-----------|-------|
++| [x] | T001 | Define schema-safe signal-gap encoding examples | compound-contract | `skills/compound/schemas/fixtures/*.retro.md`, `skills/compound/schemas/README.md` | Fixture(s) represent inference/sensor/back-pressure gaps using existing `kind` values and their YAML frontmatter validates against the current schema via the documented `python3`/`jsonschema` or `ajv` command. | Per findings 01, 08. Validation must extract frontmatter, not merely parse the markdown file. |
++| [x] | T002 | Update boot signal-readiness reporting contract | harness-runtime | `skills/harness/harness-1-boot/SKILL.md` | Boot skill documents runtime inspectability, smoke paths, architecture/static checks, security/dependency/schema checks, evidence paths, and back-pressure gaps while retaining `UNAVAILABLE` behavior. | Per findings 02, 03. |
++| [x] | T003 | Update observe triggers and encoding guidance | harness-runtime | `skills/harness/harness-2-observe/SKILL.md` | Observe triggers include inference gaps and missing deterministic signals/sensors, and examples encode them with schema-valid kinds/targets. | Per findings 01, 04. |
++| [x] | T004 | Update retro drain/harvest prioritization | harness-runtime | `skills/harness/harness-3-retro/SKILL.md` | Drain/harvest wording distinguishes ease improvements from proof/back-pressure improvements without adding gates, indexes, or enum values. | Per findings 01, 05, 07. |
++| [x] | T005 | Clarify ownership and migration guidance | dev-tooling | `README.md`, `INSTALL.md`, `skills/compound/README.md` | Docs state runtime loop skills live in tools, setup/provisioning remains in harness-engineering, and old deployed slugs should be checked with orphan tooling. | Per findings 02, 06. |
++| [x] | T006 | Run and document validation | dev-tooling | `justfile`, `scripts/compound-value.sh`, touched docs/skills | JSON/schema checks, retro-frontmatter schema validation, markdown drift checks, `just skills-orphans`, `just doctor-skills`, and grep checks for legacy source slugs pass or have documented baseline exceptions. | Per findings 06, 08. If orphan checks report existing deployed drift, capture the baseline in the implementation log; do not auto-delete user-installed skills. |
++
++### Acceptance Criteria
++
++- [x] `harness-1-boot` describes and reports signal/back-pressure readiness dimensions including runtime inspectability, smoke paths, architecture/static checks, security/dependency/schema checks, and evidence/back-pressure gaps.
++- [x] `harness-1-boot` still treats missing governance docs as `UNAVAILABLE`, not a failure, and does not scaffold setup artifacts.
++- [x] `harness-2-observe` includes triggers for inference gaps and missing deterministic signals/sensors.
++- [x] `harness-2-observe` guidance maps those gaps into schema-valid retro entries.
++- [x] `harness-3-retro --drain` prompts users to consider both ease/friction improvements and missing proof/signal/back-pressure improvements.
++- [x] `harness-3-retro --harvest` prioritization or display guidance distinguishes ease improvements from back-pressure improvements without adding persisted indexes.
++- [x] Tools documentation states that runtime harness loop skills live in tools and project setup/provisioning remains in harness-engineering.
++- [x] Any sample retro entries validate against tools' existing retro schema without adding new `kind` enum values.
++- [x] Existing advisory/back-pressure language in `plan-2d` and `the-flow` remains non-blocking and threshold-free.
++- [x] Validation includes JSON parsing/schema checks, relevant skill drift checks, and install-orphan reporting.
++- [x] Validation explicitly checks retro fixture YAML frontmatter against `skills/compound/schemas/retro.schema.json`.
++
++### Risks
++
++| Risk | Likelihood | Impact | Mitigation |
++|------|------------|--------|------------|
++| Non-schema `kind` values slip into examples | Medium | High | Add fixture validation before changing observe/retro wording; do not edit the enum. |
++| Setup behavior creeps into tools | Medium | High | Keep tasks scoped to consumption/reporting/docs; reference harness-engineering instead of scaffolding. |
++| Back-pressure language reads as a gate | Medium | Medium | Use "advisory", "improvement candidate", and "best-effort"; avoid thresholds and scores. |
++| Existing harvest consumers break | Low | High | Do not change harvest JSON shape or persisted index behavior. |
++| Old installed slugs remain in user environments | High | Medium | Document and run `just skills-orphans` / `just doctor-skills`; never auto-delete. |
++| Validation or install checks touch user environments unexpectedly | Low | Medium | Keep validation local, avoid network-dependent checks unless already part of existing repo commands, do not print secrets, and never delete deployed skills automatically. |
++
++## Agent Harness Strategy
++
++Agent Harness: Not applicable for this plan (user override: continue without a local project harness; validate through repo checks and the harness skills themselves).
++
++## Discoveries & Learnings
++
++| Task | Discovery | Impact |
++|------|-----------|--------|
++| T001 | No local `docs/project-rules/engineering-harness.md` (or legacy fallback) exists in tools. | Pre-phase harness validation is `UNAVAILABLE`; continue with repo-local schema and drift checks per the plan. |
++| T001 | Signal/back-pressure examples fit the existing schema using `difficulty`, `improvement-suggestion`, and `magic-wand` plus explicit `target` and `suggested_encoding` values. | No retro enum migration is needed for this phase. |
++| T002 | Boot can report missing signal-readiness dimensions without changing the core health verdict. | Missing proof remains an improvement signal, not a gate. |
++| T003 | Observe entries can name the missing proof mechanism directly (`project-sensor`, `runtime-inspectability`, `architecture-fitness`) while staying schema-valid. | Harvest can distinguish these gaps by target/encoding hint instead of new enum values. |
++| T004 | Retro can surface proof/back-pressure improvement candidates by display labels and prioritization hints. | No persisted index, enum expansion, or blocking gate is needed. |
++| T005 | Top-level and install docs already distinguish skills from setup tooling; the missing piece was the cross-repo setup/runtime split. | Added explicit tools-runtime vs harness-engineering-setup ownership wording and read-only orphan-check guidance. |
++| T006 | `just skills-orphans` reports `pack-code` as a hand-installed local-only skill in `~/.claude/skills`; `just doctor-skills` classifies it as harmless. | Baseline documented; no auto-delete was performed. |
++
++---
++
++## Validation Record (2026-05-30T05:38:20Z)
++
++### Validation Thesis
++
++**Raison d'être**: Turn the spec's migration goal into a buildable, schema-safe implementation path: upstream harness-engineering's signal-readiness, back-pressure, and inference-gap improvements into tools' runtime harness skills without moving setup/provisioning into tools.
++
++**Value claim**: Future implementation agents and reviewers should have a clearer, safer, more repeatable path for making tools the canonical runtime-loop home while avoiding schema breaks and setup/runtime boundary drift.
++
++**Artifact promise**: The plan provides concrete tasks, touched files, validation evidence, risks, and acceptance criteria sufficient for `/plan-6` to implement the migration without re-deciding scope.
++
++**Intended beneficiaries**: Implementation agents, reviewers, tools maintainers, downstream users installing harness skills, and the later harness-engineering cleanup work.
++
++**Proof target**: Implementation.
++
++**Evidence standard**: Source-aligned task list; schema-compatible fixture plan; explicit touched files; validation commands/checks; non-goal boundaries; advisory/non-gating language preservation.
++
++**Thesis source**: `upstream-harness-improvements-spec.md` summary, goals, non-goals, complexity assumptions, and acceptance criteria.
++
++**Thesis verdict**: Advanced.
++
++**Main thesis risk**: The implementation must still prove the sample retro frontmatter against the schema and avoid drifting from runtime guidance into setup scaffolding.
++
++---
++
++| Agent | Lenses Covered | Thesis Axes Covered | Issues | Verdict |
++|-------|----------------|---------------------|--------|---------|
++| Plan Coherence Validator | Domain Boundaries, Integration & Ripple, Hidden Assumptions, Technical Constraints, Edge Cases & Failures, Concept Documentation, Proof-Level Fit | Implementation Readiness, Migration Safety, Contract Integrity, Review Compression | 0 blockers | Passed |
++| Risk & Evidence Validator | Evidence Sufficiency, Deployment & Ops, Security & Privacy, System Behavior, Edge Cases & Failures, Hidden Assumptions | Evidence Sufficiency, Operational Reliability, Safety to Change, Learning Compounding | 2 medium + 1 low tightening items fixed | Passed with fixes |
++| Thesis & Forward Validator | Thesis Alignment, Forward-Compatibility, User/Product Value Preservation, Downstream Usefulness, Integration & Ripple, Contract Integrity | Thesis Alignment, Forward-Compatibility, Migration Safety | 0 blockers | Passed |
++
++### Forward-Compatibility Matrix
++
++| Consumer | Requirement | Failure Mode | Verdict | Evidence |
++|----------|-------------|--------------|---------|----------|
++| `/plan-6-v2-implement-phase` | Needs task IDs, paths, done-when criteria, validation expectations, and scope boundaries. | Test boundary | Passed | T001-T006 name paths, success criteria, validation expectations, and schema/setup boundaries. |
++| `/plan-7-v2-code-review` | Needs acceptance criteria, risks, non-goals, and schema/advisory constraints to review against. | Contract drift | Passed | Acceptance criteria and risks explicitly cover schema enum compatibility, advisory back-pressure language, and no setup scaffolding. |
++| Harness-engineering follow-up cleanup | Needs tools to own equivalent runtime behavior before duplicate runtime skills are retired there. | Lifecycle ownership | Passed | Plan tasks update tools' `harness-1/2/3` runtime skills while preserving `engineering-harness-setup` as the external setup owner. |
++
++**Thesis alignment**: Value claim advanced: yes; proof level Target = Implementation, Actual = Implementation; main thesis risk is ensuring implementation validates retro frontmatter and does not drift into setup scaffolding.
++
++**Outcome alignment**: The plan advances "Clarify in tools docs that operational harness loop skills live in tools, while setup/provisioning remains in harness-engineering" by assigning docs, runtime-skill, schema-fixture, and validation tasks that preserve the boundary.
++
++**Standalone?**: No - downstream consumers are `/plan-6-v2-implement-phase`, `/plan-7-v2-code-review`, and the later harness-engineering cleanup.
++
++Overall: VALIDATED WITH FIXES
+diff --git a/docs/plans/027-upstream-harness-improvements/upstream-harness-improvements-spec.md b/docs/plans/027-upstream-harness-improvements/upstream-harness-improvements-spec.md
+new file mode 100644
+index 0000000..52dceaf
+--- /dev/null
++++ b/docs/plans/027-upstream-harness-improvements/upstream-harness-improvements-spec.md
+@@ -0,0 +1,189 @@
++# Upstream Harness Improvements
++
++**Mode**: Simple
++
++## Research Context
++
++📚 Specification incorporates findings from `research-dossier.md`.
++
++The research found a clear ownership split: tools already owns the canonical runtime harness loop (`harness-1-boot`, `harness-2-observe`, `harness-3-retro`) while `AI-Substrate/harness-engineering` owns setup/provisioning (`engineering-harness-setup`, generated `engineering-harness.md`, generated `harness/cli/`, and setup templates). The missing upstream work is to make the runtime loop in tools reflect the signal-readiness, back-pressure, and inference-gap improvements recently added in harness-engineering without moving setup scaffolding into tools.
++
++Key research findings:
++
++1. `harness-1-boot` should understand richer signal readiness from setup-generated governance docs, but still report `UNAVAILABLE` gracefully when no governance doc exists.
++2. `harness-2-observe` should capture inference/back-pressure gaps using tools' existing retro schema kinds, not by introducing incompatible `signal-gap`, `sensor-gap`, or `weak-back-pressure` enum values.
++3. `harness-3-retro` should make ease improvements and back-pressure improvements visible during drain/harvest while preserving computed views and schema compatibility.
++4. Tools documentation should point provisioning/setup work to harness-engineering and runtime loop work to tools.
++
++## Summary
++
++Upstream the harness back-pressure, signal-readiness, and retro/inference-gap improvements from harness-engineering into tools' canonical harness runtime skills. Keep `engineering-harness-setup` and all provisioning behavior in harness-engineering; tools should consume the generated project harness artifacts, not recreate them.
++
++## Goals
++
++- Make tools' `harness-1-boot` report signal/back-pressure readiness that aligns with setup-generated `engineering-harness.md` content.
++- Make tools' `harness-2-observe` capture moments where an agent or reviewer had to infer behavior that a harness should have proved.
++- Make tools' `harness-3-retro` surface missing signals/sensors/back-pressure as first-class improvement candidates during drain and harvest.
++- Preserve the tools schema contract by mapping signal/sensor/back-pressure gaps into existing `kind` values plus target/encoding metadata.
++- Clarify in tools docs that operational harness loop skills live in tools, while setup/provisioning remains in harness-engineering.
++- Provide a safe validation path for skill prose, schema compatibility, sample retro artifacts, and install/orphan checks.
++
++## Non-Goals
++
++- Do not move `engineering-harness-setup` into tools.
++- Do not recreate `compound-0-setup`, `boot-harness`, or `compound-*` legacy skill names in tools.
++- Do not add mandatory gates, numeric thresholds, or blocking behavior to back-pressure survey or harness retro flows.
++- Do not broaden the universal retro schema enum unless explicitly planned as a schema migration.
++- Do not create a formal `docs/domains/` system as part of this migration.
++- Do not implement product-specific sensors for downstream repositories; tools should describe/capture/report the pattern.
++
++## Target Domains
++
++No formal `docs/domains/registry.md` exists in tools. This spec uses domain-like boundaries discovered in research.
++
++| Domain | Status | Relationship | Role in This Feature |
++|--------|--------|--------------|----------------------|
++| harness-runtime | **NEW** | **modify** | Runtime Boot -> Observe -> Retro skills that should receive the upstreamed wording and behavior. |
++| compound-contract | **NEW** | **consume** | Universal retro schema and `.retro.md` contract that must remain compatible. |
++| sdd-pipeline | **NEW** | **consume** | `plan-2d`, `plan-3`, and `the-flow` consume or narrate harness/back-pressure artifacts. |
++| dev-tooling | **NEW** | **modify** | `just` recipes and scripts used to validate skill drift, schema compatibility, and installed orphan skills. |
++| external-harness-setup | **NEW** | **consume** | Cross-repo provisioning source that remains in harness-engineering. |
++
++### New Domain Sketches
++
++#### harness-runtime [NEW]
++
++- **Purpose**: Own the canonical operational loop skills in tools: Boot, Observe, Retro.
++- **Boundary Owns**: Reading project harness governance, producing session-buffer observations, draining/harvesting retro entries, and narrating signal/back-pressure improvement opportunities.
++- **Boundary Excludes**: Creating project governance docs, scaffolding `docs/compound/`, or generating `harness/cli/`; those remain setup responsibilities.
++
++#### compound-contract [NEW]
++
++- **Purpose**: Preserve the universal retro entry shape used by tools, minih-compatible harvesters, and downstream projects.
++- **Boundary Owns**: Schema-valid `kind`, `target`, frontmatter envelope, and computed harvest expectations.
++- **Boundary Excludes**: Feature-specific classification taxonomies that would require unplanned schema migrations.
++
++#### sdd-pipeline [NEW]
++
++- **Purpose**: Keep plan-stage back-pressure and harness cues coherent across `plan-2d`, `plan-3`, and `the-flow`.
++- **Boundary Owns**: Advisory deterministic back-pressure survey, plan consumption of `backpressure-coverage.md`, and flow narration.
++- **Boundary Excludes**: Enforcing gates, thresholds, or mandatory sensor coverage.
++
++#### dev-tooling [NEW]
++
++- **Purpose**: Provide safe local validation for skills, schemas, and install drift.
++- **Boundary Owns**: `just` recipes, validation scripts, and copy-pasteable orphan cleanup reports.
++- **Boundary Excludes**: Deleting user-installed skills automatically.
++
++#### external-harness-setup [NEW]
++
++- **Purpose**: Represent the external setup/provisioning owner in harness-engineering.
++- **Boundary Owns**: Generated project rules, starter CLI, command maps, magic-wand prompt, and setup templates.
++- **Boundary Excludes**: Runtime loop execution once setup artifacts are present.
++
++## Testing Strategy
++
++**Approach**: Hybrid - lightweight checks plus targeted tests/fixtures for schema and skill behavior.
++
++**Rationale**: The migration is mostly skill/documentation behavior, but schema compatibility and sample retro encoding need deterministic checks so signal/back-pressure wording does not drift into invalid artifacts.
++
++**Focus Areas**:
++
++- Markdown/prose drift checks for updated skill files.
++- JSON schema parsing for `skills/compound/schemas/retro.schema.json`.
++- Sample `.retro.md` fixtures that encode inference/sensor/back-pressure gaps using existing schema kinds.
++- `just skills-orphans` / `just doctor-skills` style checks for install drift.
++- Grep-based checks that legacy slugs are not reintroduced as tools source skills.
++
++**Excluded**:
++
++- Full end-to-end install into every downstream deploy target.
++- Product-specific boot/smoke/architecture/security sensor implementation.
++- Network-dependent validation.
++
++**Mock Usage**: Avoid mocks entirely. Use real skill files, schema fixtures, and sample retro artifacts.
++
++## Documentation Strategy
++
++**Location**: Hybrid README + skill docs.
++
++**Rationale**: Users need quick ownership guidance at the top level and detailed operational behavior where agents actually read the skills. Update top-level/install guidance only where it prevents confusion; keep behavior-specific detail in `skills/harness/*` and adjacent README surfaces.
++
++## Complexity
++
++**Score**: CS-3 (medium)
++
++**Breakdown**: S=2, I=2, D=1, N=1, F=1, T=1
++
++**Confidence**: 0.82
++
++**Assumptions**:
++
++- The tools repo remains the canonical home for runtime harness skills.
++- Harness-engineering remains the canonical home for setup/provisioning.
++- Schema compatibility is preferred over new retro `kind` values.
++- The user-selected Simple mode means this should be planned as one coherent migration phase unless architecture discovers a real split is necessary.
++- The informal target-domain boundaries are sufficient for this migration; no formal `docs/domains/` registry is needed.
++- Tools' own local project harness governance can remain unavailable for this work; validation should use repo checks and the harness skills themselves.
++
++**Dependencies**:
++
++- Current tools `skills/harness/*` skill bodies.
++- Current tools `skills/compound/schemas/retro.schema.json`.
++- Current tools `plan-2d`, `plan-3`, and `the-flow` wording.
++- Harness-engineering setup templates and legacy boot/compound skill wording as source material.
++
++**Risks**:
++
++- Accidentally moving setup/scaffolding responsibility into tools.
++- Creating invalid retro entries by using non-schema `kind` values.
++- Making back-pressure sound mandatory rather than advisory.
++- Leaving install docs advertising old harness-engineering runtime skills after tools is updated.
++
++**Phases**:
++
++- Phase 1: Upstream runtime-loop wording, schema-safe examples, validation, and ownership docs into tools.
++
++## Acceptance Criteria
++
++1. `harness-1-boot` describes and reports signal/back-pressure readiness dimensions including runtime inspectability, smoke paths, architecture/static checks, security/dependency/schema checks, and evidence/back-pressure gaps.
++2. `harness-1-boot` still treats missing governance docs as `UNAVAILABLE`, not a failure, and does not scaffold setup artifacts.
++3. `harness-2-observe` includes triggers for inference gaps and missing deterministic signals/sensors.
++4. `harness-2-observe` guidance maps those gaps into schema-valid retro entries.
++5. `harness-3-retro --drain` prompts users to consider both ease/friction improvements and missing proof/signal/back-pressure improvements.
++6. `harness-3-retro --harvest` prioritization or display guidance distinguishes ease improvements from back-pressure improvements without adding persisted indexes.
++7. Tools documentation states that runtime harness loop skills live in tools and project setup/provisioning remains in harness-engineering.
++8. Any sample retro entries validate against tools' existing retro schema without adding new `kind` enum values.
++9. Existing advisory/back-pressure language in `plan-2d` and `the-flow` remains non-blocking and threshold-free.
++10. Validation includes JSON parsing/schema checks, relevant skill drift checks, and install-orphan reporting.
++
++## Risks & Assumptions
++
++- **Schema risk**: Directly porting `signal-gap`, `sensor-gap`, or `weak-back-pressure` as `kind` values would break tools' current schema.
++- **Boundary risk**: Adding setup behavior to tools would contradict plan 024's consolidation.
++- **Advisory-language risk**: Stronger back-pressure wording could accidentally read as a gate.
++- **Install-drift risk**: Old deployed skills can linger because `npx skills add` does not prune removed slugs.
++
++## Open Questions
++
++- Should tools add a tiny schema-validation recipe for sample retro fixtures, or is documented validation enough for this phase?
++- Should the top-level tools README mention harness-engineering setup directly, or should that live only in install/skill docs?
++
++## Workshop Opportunities
++
++| Topic | Type | Why Workshop | Key Questions |
++|-------|------|--------------|---------------|
++| Retro schema-safe encoding of signal gaps | Data Model | Direct enum port is unsafe; the plan needs a stable mapping. | Which existing `kind` should represent signal/sensor/back-pressure gaps? Which targets and metadata should be recommended? |
++
++## Clarifications
++
++### Session 2026-05-30
++
++| Question | Answer |
++|----------|--------|
++| Workflow Mode | Simple - single-phase quick path. |
++| Testing Strategy | Hybrid - lightweight checks plus targeted tests/fixtures for schema and skill behavior. |
++| Mock Usage | Avoid mocks entirely - use real skill files, schema fixtures, and sample retro artifacts. |
++| Documentation Strategy | Hybrid README + skill docs - update top-level/install guidance and relevant skill READMEs/SKILL.md. |
++| Domain Review | Keep the informal boundaries: `harness-runtime`, `compound-contract`, `sdd-pipeline`, `dev-tooling`, and external `harness-setup`. |
++| Agent Harness Readiness | Continue without a local project harness; validate through repo checks and the harness skills themselves. |
+diff --git a/docs/plans/027-upstream-harness-improvements/upstream-harness-improvements.fltplan.md b/docs/plans/027-upstream-harness-improvements/upstream-harness-improvements.fltplan.md
+new file mode 100644
+index 0000000..34c7026
+--- /dev/null
++++ b/docs/plans/027-upstream-harness-improvements/upstream-harness-improvements.fltplan.md
+@@ -0,0 +1,146 @@
++# Flight Plan: Upstream Harness Improvements
++
++**Spec**: [upstream-harness-improvements-spec.md](./upstream-harness-improvements-spec.md)  
++**Plan**: [upstream-harness-improvements-plan.md](./upstream-harness-improvements-plan.md)  
++**Generated**: 2026-05-30T05:32:56Z  
++**Status**: Landed
++
++---
++
++## The Mission
++
++**What we're building**: We are moving the runtime harness-loop improvements from harness-engineering into tools, where `harness-1-boot`, `harness-2-observe`, and `harness-3-retro` are now canonical. The setup skill stays in harness-engineering; tools will consume setup-generated artifacts and make signal-readiness, inference gaps, and back-pressure opportunities visible during the runtime loop.
++
++**Why it matters**: This prevents duplicate harness skills while making the stronger "what should the harness have proved?" improvement loop available upstream.
++
++---
++
++## Where We Are -> Where We're Headed
++
++```text
++TODAY:                                      AFTER this plan:
++Tools has canonical harness-1/2/3           Tools harness-1/2/3 include signal/back-pressure language
++Setup improvements live in harness-eng      Setup remains in harness-eng, referenced not copied
++Retro schema has fixed kind enum            Signal gaps encode through schema-safe kinds/targets
++plan-2d owns design-time backpressure       Runtime loop also captures missing proof during work
++Existing orphan tooling reports drift       Validation uses orphan + schema checks
++```
++
++```mermaid
++flowchart LR
++    classDef existing fill:#E8F5E9,stroke:#4CAF50,color:#000
++    classDef changed fill:#FFF3E0,stroke:#FF9800,color:#000
++    classDef new fill:#E3F2FD,stroke:#2196F3,color:#000
++
++    subgraph Current["Current State"]
++        C1[harness-1 Boot]:::existing
++        C2[harness-2 Observe]:::existing
++        C3[harness-3 Retro]:::existing
++        C4[Retro Schema]:::existing
++        C5[Harness Setup in harness-engineering]:::existing
++    end
++
++    subgraph Target["After This Plan"]
++        T1[harness-1 Boot Signal Readiness]:::changed
++        T2[harness-2 Inference Gap Capture]:::changed
++        T3[harness-3 Backpressure Harvest]:::changed
++        T4[Retro Schema Compatible Examples]:::changed
++        T5[Harness Setup in harness-engineering]:::existing
++        T6[Ownership Guidance]:::new
++    end
++
++    C1 --> T1
++    C2 --> T2
++    C3 --> T3
++    C4 --> T4
++    C5 --> T5
++    T5 -. referenced by .-> T6
++```
++
++**Legend**: existing (green) | changed (orange) | new (blue)
++
++---
++
++## Scope
++
++**Goals**:
++
++- Align `harness-1-boot` with setup-generated signal/back-pressure readiness.
++- Teach `harness-2-observe` to capture inference gaps and missing deterministic signals.
++- Teach `harness-3-retro` to surface both ease improvements and proof/back-pressure improvements.
++- Preserve retro schema compatibility by using existing kinds plus targets and encoding hints.
++- Clarify setup/runtime ownership in tools docs.
++
++**Non-Goals**:
++
++- Move `engineering-harness-setup` into tools.
++- Recreate legacy `boot-harness` or `compound-*` skill names in tools.
++- Add mandatory gates, scores, thresholds, or blocking behavior.
++- Add product-specific sensors for downstream repositories.
++
++---
++
++## Journey Map
++
++```mermaid
++flowchart LR
++    classDef done fill:#4CAF50,stroke:#388E3C,color:#fff
++    classDef active fill:#FFC107,stroke:#FFA000,color:#000
++    classDef ready fill:#9E9E9E,stroke:#757575,color:#fff
++
++    S[Specify]:::done --> P[Plan]:::done
++    P --> I[Implement Migration]:::done
++    I --> D[Done]:::done
++```
++
++**Legend**: green = done | yellow = active | grey = not started
++
++---
++
++## Phases Overview
++
++| Phase | Title | Tasks | CS | Status |
++|-------|-------|-------|----|--------|
++| 1 | Upstream runtime-loop wording, schema-safe examples, validation, and ownership docs | 6 | CS-3 | Complete |
++
++---
++
++## Acceptance Criteria
++
++- [x] `harness-1-boot` describes and reports signal/back-pressure readiness dimensions.
++- [x] `harness-1-boot` still treats missing governance docs as `UNAVAILABLE`, not a failure.
++- [x] `harness-2-observe` includes triggers for inference gaps and missing deterministic signals/sensors.
++- [x] `harness-2-observe` maps those gaps into schema-valid retro entries.
++- [x] `harness-3-retro --drain` prompts for ease and proof/back-pressure improvements.
++- [x] `harness-3-retro --harvest` distinguishes ease improvements from back-pressure improvements.
++- [x] Tools docs state runtime loop skills live in tools and setup/provisioning remains in harness-engineering.
++- [x] Sample retro entries validate against tools' existing retro schema.
++
++---
++
++## Key Risks
++
++| Risk | Mitigation |
++|------|------------|
++| Non-schema `kind` values break retro validation | Use existing `difficulty` or `improvement-suggestion` kinds plus targets and encoding hints. |
++| Setup behavior creeps into tools | Keep tools runtime-only and reference harness-engineering for provisioning. |
++| Back-pressure reads as a mandatory gate | Preserve advisory, best-effort, threshold-free wording. |
++| Old deployed skills linger | Include `just skills-orphans` / `just doctor-skills` in validation guidance. |
++
++---
++
++## Flight Log
++
++- 2026-05-30T07:37:29Z — Phase 1 implementation started; local engineering harness governance is unavailable, so validation will use repo-local schema, skill, drift, and grep checks.
++- 2026-05-30T08:00:00Z — Phase 1 landed; schema, fixture, drift, legacy slug, advisory wording, `just skills-orphans`, and `just doctor-skills` checks completed. Baseline orphan report: `pack-code` is hand-installed local-only and was not deleted.
++
++## Implementation Checklist
++
++| Status | Task | Evidence |
++|--------|------|----------|
++| [x] | T001 — Schema-safe signal-gap examples | `fixtures/signal-backpressure.retro.md` plus schema README guidance |
++| [x] | T002 — Boot signal-readiness reporting | `harness-1-boot` now reports signal readiness and preserves `UNAVAILABLE` |
++| [x] | T003 — Observe triggers and encoding guidance | `harness-2-observe` logs inference gaps with schema-safe targets |
++| [x] | T004 — Retro drain/harvest prioritization | `harness-3-retro` surfaces proof/back-pressure candidates without gates or schema changes |
++| [x] | T005 — Ownership and migration guidance | README, INSTALL, and compound README clarify tools runtime vs harness-engineering setup |
++| [x] | T006 — Validation | Schema/frontmatter validation, drift checks, orphan report, and doctor report completed |
+diff --git a/skills/compound/schemas/fixtures/signal-backpressure.retro.md b/skills/compound/schemas/fixtures/signal-backpressure.retro.md
+new file mode 100644
+index 0000000..0abb933
+--- /dev/null
++++ b/skills/compound/schemas/fixtures/signal-backpressure.retro.md
+@@ -0,0 +1,49 @@
++---
++schema_version: "1.0"
++retro_id: "2026-05-30T07:45:00Z-harness-agent-a11c0de"
++agent: harness-agent
++plan_id: "027-upstream-harness-improvements"
++started_at: "2026-05-30T07:45:00Z"
++ended_at: "2026-05-30T07:52:00Z"
++summary: "Captured inference and back-pressure gaps using the existing retro schema kinds."
++
++entries:
++  - id: DL-003
++    kind: difficulty
++    target: project-sensor
++    severity: degrading
++    description: "Had to infer whether the website rendered correctly because no smoke path or screenshot evidence was available."
++    workaround: "Reviewed code paths and README instructions manually."
++    suggested_encoding: "add smoke command or visual evidence capture"
++    system:
++      compound:
++        status: open
++        source: agent-self
++        first_seen_at: "2026-05-30T07:45:00Z"
++
++  - id: SUGG-002
++    kind: improvement-suggestion
++    target: architecture-fitness
++    description: "Add a deterministic dependency-direction or CodeQL check so architecture regressions fail before review."
++    suggested_encoding: "architecture check recipe"
++    system:
++      compound:
++        status: open
++        source: agent-self
++        first_seen_at: "2026-05-30T07:47:00Z"
++
++  - id: MW-002
++    kind: magic-wand
++    target: runtime-inspectability
++    description: "A single harness command that boots the app and returns health, route, and evidence paths would remove guesswork."
++    suggested_encoding: "engineering-harness command map entry"
++    system:
++      compound:
++        status: open
++        source: agent-self
++        first_seen_at: "2026-05-30T07:49:00Z"
++---
++
++## Reflection
++
++Signal, sensor, and back-pressure gaps are encoded with existing `kind` values plus explicit `target` and `suggested_encoding` fields. No `signal-gap`, `sensor-gap`, or `weak-back-pressure` enum values are required.

@@ -12,6 +12,8 @@ The **Boot** stage of the harness loop. Run it at session start to confirm the e
 
 **Layering**: the agent-facing Boot/Interact/Observe loop sits **on top of** the engineering substrate (the project's `justfile`/`Makefile`/`package.json scripts.dev` boot command, test runner, etc.). The Boot command the governance doc records IS the engineering harness substrate. If no substrate exists, the verdict is `UNAVAILABLE` — Boot can't work without something to boot.
 
+**Signal readiness**: Boot reports more than "can the process start?" It also checks whether the harness exposes enough deterministic signals for a human or agent to prove behavior without inference: runtime inspectability, smoke paths, architecture/static checks, security/dependency/schema checks, evidence paths, and known back-pressure gaps. Missing signals are improvement candidates, not blockers or scores.
+
 ---
 
 ## Input
@@ -51,9 +53,11 @@ Mode resolution:
 
 ### Step 1: Read the engineering harness governance doc
 
-Read the governance doc using the canonical-first fallback chain from Step 0: `docs/project-rules/engineering-harness.md` → `agent-harness.md` → `harness.md` (emit the migration advisory if a legacy name was used). Parse: boot command, health check, interaction method, observe method, current maturity level.
+Read the governance doc using the canonical-first fallback chain from Step 0: `docs/project-rules/engineering-harness.md` → `agent-harness.md` → `harness.md` (emit the migration advisory if a legacy name was used). Parse: boot command, health check, interaction method, observe method, current maturity level, deterministic signal inventory, evidence paths, and any declared back-pressure gaps.
 
 If all three paths are missing or unparseable → report `UNAVAILABLE` (verdict table below). The governance doc is provisioned by the separate engineering-harness setup effort, not by this skill — boot does not block the session; it notes the harness is not yet provisioned and proceeds.
+
+If the governance doc exists but omits signal-readiness sections, continue normally and report those dimensions as "not declared". Do not scaffold or rewrite the doc just to add them.
 
 ### Step 2: Execute 3-Stage Validation
 
@@ -89,7 +93,22 @@ Run checks using bash tool:
 | **❌ UNHEALTHY** | Any check fails |
 | **🔴 UNAVAILABLE** | No engineering-harness.md (or legacy agent-harness.md / harness.md) and no boot command |
 
-### Step 4: Update Maturity & Report
+### Step 4: Read signal/back-pressure readiness
+
+Build a short signal-readiness summary from the governance doc and observed evidence. Use plain categories; do not invent a numeric score or threshold:
+
+| Dimension | What to look for | Report value |
+|-----------|------------------|--------------|
+| Runtime inspectability | App/API/CLI can expose current health/state to the agent. | present / missing / not declared |
+| Smoke paths | A deterministic route, command, or scenario proves the main behavior starts. | present / missing / not declared |
+| Architecture/static checks | Dependency rules, lint, type checks, ArchUnit/Roslyn/CodeQL, or similar checks exist. | present / missing / not declared |
+| Security/dependency/schema checks | Dependency audit, schema validation, CodeQL, data checks, or equivalent proof exists. | present / missing / not declared |
+| Evidence paths | Screenshots, logs, traces, snapshots, artifacts, or command output locations are discoverable. | present / missing / not declared |
+| Back-pressure gaps | The doc names behaviors that still rely on inference or human eyeballing. | list / none declared |
+
+Treat absent dimensions as harness-improvement signals for Observe/Retro. They do not change `HEALTHY` to `UNHEALTHY` unless the actual Boot, Interact, or Observe checks fail.
+
+### Step 5: Update Maturity & Report
 
 Update engineering-harness.md `## Maturity Assessment` to reflect current reality.
 Update `**Maturity Level**` header field.
@@ -104,6 +123,8 @@ Report:
   Boot:      [✅/❌] [detail] ([duration])
   Interact:  [✅/❌] [detail] ([duration])
   Observe:   [✅/❌] [detail] ([duration])
+  Signals:   [runtime/smoke/static/security/evidence summary]
+  Gaps:      [known back-pressure gaps or "none declared"]
 
   Verdict:   [verdict]
   Maturity:  L[N] ([description])
@@ -138,3 +159,9 @@ Read engineering-harness.md (or legacy agent-harness.md / harness.md, with migra
 | L4: Self-healing | Auto-recovery from stale processes, auth expiry |
 
 Boot reports the level that is *actually working* (not aspirational).
+
+## What Boot does NOT do
+
+- **No setup or scaffolding**. It never creates `docs/project-rules/engineering-harness.md`, `docs/compound/`, command maps, fixtures, or harness CLI scripts. Those are provisioned by the separate engineering-harness setup effort.
+- **No gates, scores, or thresholds for back-pressure**. Signal-readiness gaps are advisory improvement candidates. Boot only fails when the live Boot, Interact, or Observe checks fail.
+- **No product-specific sensor implementation**. It reports whether sensors are present or missing; it does not invent downstream project checks.

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "slug": "upstream-harness-improvements",
+  "plan_dir": "docs/plans/027-upstream-harness-improvements",
+  "mode": "Simple",
+  "current_stage": "awaiting-8",
+  "pending_command": "/plan-8-v2-merge --plan \"docs/plans/027-upstream-harness-improvements/upstream-harness-improvements-plan.md\"",
+  "intent": "Take the harness back-pressure, signal, and retro improvements from harness-engineering upstream into the tools repo, while leaving engineering-harness-setup in harness-engineering.",
+  "milestones_total": 6,
+  "milestones_done": 5,
+  "last_checkpoint_at": "2026-05-30T08:11:45Z",
+  "compacted_seams": [],
+  "status": "active"
+}

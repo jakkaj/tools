@@ -100,6 +100,15 @@ npx skills@latest add jakkaj/tools/skills/SDD -a claude-code -g
 
 > Note: `skills/compound/` holds only the frozen `schemas/` contract (no SKILL.md folders), so there is no `skills/compound` category to install — the loop-stage skills live under `skills/harness/`.
 
+The `skills/harness/` category is the runtime loop only: Boot, Observe, and Retro. Project-side engineering-harness setup/provisioning (creating `docs/project-rules/engineering-harness.md`, `docs/compound/`, starter command maps, or harness CLI scripts) remains in the separate `AI-Substrate/harness-engineering` repository's `engineering-harness-setup` skill. If those generated artifacts are absent, the runtime skills report `UNAVAILABLE` or no-op gracefully rather than scaffolding them.
+
+After upgrading or renaming skills, `npx skills add` updates/adds but does not prune old deployed slugs. Run these read-only checks and review the suggested tidy commands manually:
+
+```bash
+just skills-orphans
+just doctor-skills
+```
+
 Combine with a `#branch` selector to install from an unmerged branch (use `#`, not `@` — the CLI parses `@` as a skill filter):
 
 ```bash

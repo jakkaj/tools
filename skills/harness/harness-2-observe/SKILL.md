@@ -23,6 +23,9 @@ The agent calling this skill notices something worth logging. Concrete trigger h
 - The agent had to retry the same operation more than once
 - The agent backtracked from a wrong assumption
 - A test or build failure required guesswork to interpret
+- The agent had to infer runtime behavior because no smoke path, screenshot, log, trace, or health evidence was available
+- The agent had to eyeball an architecture, dependency, security, schema, or data constraint that a deterministic check could have proved
+- `harness-1-boot` reported a missing or "not declared" signal-readiness dimension that affected the current work
 - The agent caught itself muttering "if only there were a …" (the magic-wand reflex)
 
 When any of these triggers, call this skill with one entry.
@@ -80,6 +83,40 @@ Append-only YAML block per entry (one entry per call). Each entry conforms to th
       first_seen_at: "2026-05-18T10:15:00Z"
 ```
 
+### Schema-safe signal/back-pressure encodings
+
+Do not invent new `kind` values such as `signal-gap`, `sensor-gap`, or `weak-back-pressure`. Encode missing proof with existing kinds plus explicit targets:
+
+```yaml
+- id: DL-003
+  kind: difficulty
+  target: project-sensor
+  severity: degrading
+  description: "Had to infer whether the website rendered correctly because no smoke path or screenshot evidence was available."
+  workaround: "Read the code path manually."
+  suggested_encoding: "add smoke command or visual evidence capture"
+  system:
+    compound:
+       status: open
+       source: agent-self
+       first_seen_at: "2026-05-30T07:45:00Z"
+```
+
+```yaml
+- id: SUGG-002
+  kind: improvement-suggestion
+  target: architecture-fitness
+  description: "Add a deterministic dependency-direction or CodeQL check so architecture regressions fail before review."
+  suggested_encoding: "architecture check recipe"
+  system:
+    compound:
+       status: open
+       source: agent-self
+       first_seen_at: "2026-05-30T07:47:00Z"
+```
+
+Use targets such as `project-sensor`, `runtime-inspectability`, `architecture-fitness`, `security`, `schema`, or `tooling` to make the missing signal visible to `harness-3-retro --harvest` without changing the schema.
+
 ### ID generation
 
 Per-buffer counter, scoped within the buffer file:
@@ -116,6 +153,7 @@ The point is: ask once per natural pause, only when otherwise silent.
 - **No fix application**. Entries describe friction; encoding happens via `harness-3-retro --drain [e]ncode` (stages a diff for review).
 - **No prompting the user mid-session**. Bubble-up is exclusively at session end.
 - **No buffer reading or curation**. That's `harness-3-retro --drain` (drain) and `harness-3-retro --harvest` (curate).
+- **No sensor implementation**. This skill logs missing proof. It never creates product-specific smoke tests, CodeQL queries, schema checks, or setup artifacts.
 
 ## Edge cases
 
@@ -123,6 +161,7 @@ The point is: ask once per natural pause, only when otherwise silent.
 - **Concurrent agents**: per-agent buffer files mean no collision. Two agents call harness-2-observe simultaneously → two different files.
 - **Malformed entry**: if the agent constructs an invalid entry (missing required field), the write fails. Better to skip the entry than to corrupt the buffer.
 - **Buffer file missing**: create it (touch). The first entry initializes it. If `_buffers/` is also missing, **no-op gracefully** (report `UNAVAILABLE`, exit silently) — the producer never auto-scaffolds; provisioning `docs/compound/` is the separate engineering-harness setup effort's job.
+- **Inference gap discovered late**: log the missing signal as the friction, not just the symptom. Prefer "no smoke/evidence path proved X" over "I was confused", because the former is encodable into deterministic back-pressure.
 
 ## Producer-side annotation
 

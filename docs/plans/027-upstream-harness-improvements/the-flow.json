@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "kind": "flight-plan",
+  "slug": "upstream-harness-improvements",
+  "plan_dir": "docs/plans/027-upstream-harness-improvements",
+  "mode": "Simple",
+  "cursor": "merge",
+  "recommended_next": "merge",
+  "now": "Review approved",
+  "next": "Merge analysis",
+  "agents": [],
+  "nodes": [
+    {
+      "id": "research",
+      "type": "research",
+      "label": "Research",
+      "status": "done",
+      "command": "/plan-1a-v2-explore",
+      "ran_at": "2026-05-30T04:22:18Z",
+      "user_input": "let's get a plan going in the other repo to take our improveent here and ensure they are availvle upstrea in tools reapo, then we will have all our work there in the tools repo except harness setup which stays here",
+      "note": "Research found the migration boundary: tools already owns the runtime harness loop; the missing upstream work is signal-readiness/inference-gap wording in harness-1/2/3, while setup/provisioning remains in harness-engineering.",
+      "artifacts": [
+        "research-dossier.md"
+      ],
+      "next": [
+        "spec"
+      ]
+    },
+    {
+      "id": "spec",
+      "type": "spec",
+      "label": "Spec",
+      "status": "done",
+      "command": "/plan-1b-v3-specify-and-clarify",
+      "ran_at": "2026-05-30T04:26:06Z",
+      "note": "Capture the upstream migration contract: port runtime-loop improvements to tools and leave setup in harness-engineering.",
+      "artifacts": [
+        "upstream-harness-improvements-spec.md",
+        "upstream-harness-improvements.fltplan.md"
+      ],
+      "next": [
+        "backpressure",
+        "plan"
+      ]
+    },
+    {
+      "id": "backpressure",
+      "type": "backpressure",
+      "label": "Backpressure survey",
+      "status": "assumed",
+      "command": "/plan-2d-backpressure-survey",
+      "branch_of": "spec",
+      "note": "Optional branch skipped by user; architect should proceed from the spec and research dossier.",
+      "next": [
+        "plan"
+      ]
+    },
+    {
+      "id": "plan",
+      "type": "plan",
+      "label": "Plan",
+      "status": "done",
+      "command": "/plan-3-v3-architect",
+      "ran_at": "2026-05-30T05:32:56Z",
+      "note": "Architected a READY Simple plan with one implementation phase; optional backpressure survey was skipped.",
+      "artifacts": [
+        "upstream-harness-improvements-plan.md",
+        "upstream-harness-improvements.fltplan.md"
+      ],
+      "next": [
+        "phase-1"
+      ]
+    },
+    {
+      "id": "phase-1",
+      "type": "phase",
+      "phase": 1,
+      "label": "Phase 1: Upstream runtime-loop wording, schema-safe examples, validation, and ownership docs",
+      "status": "done",
+      "command": "/plan-6-v2-implement-phase",
+      "ran_at": "2026-05-30T08:10:01Z",
+      "note": "Implemented the single Simple-mode phase: runtime harness skills now include signal/back-pressure wording, schema-safe retro examples, ownership docs, and local validation evidence.",
+      "artifacts": [
+        "execution.log.md",
+        "skills/compound/schemas/fixtures/signal-backpressure.retro.md"
+      ],
+      "next": [
+        "review"
+      ]
+    },
+    {
+      "id": "review",
+      "type": "review",
+      "label": "Review",
+      "status": "done",
+      "command": "/plan-7-v2-code-review",
+      "ran_at": "2026-05-30T08:11:45Z",
+      "note": "Read-only review approved the Simple-mode phase with zero findings and 91% coverage confidence.",
+      "artifacts": [
+        "reviews/review.md",
+        "reviews/_computed.diff"
+      ],
+      "next": [
+        "merge"
+      ]
+    },
+    {
+      "id": "merge",
+      "type": "merge",
+      "label": "Merge",
+      "status": "in_progress",
+      "command": "/plan-8-v2-merge",
+      "next": []
+    }
+  ]
+}

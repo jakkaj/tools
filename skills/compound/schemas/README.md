@@ -9,7 +9,7 @@ The universal retro contract — JSON Schema definitions that govern every `.ret
 | [`retro.schema.json`](./retro.schema.json) | The universal retro contract. One retro per run/session. Frontmatter of every `.retro.md` file validates against this. |
 | [`system.compound.schema.json`](./system.compound.schema.json) | Compound's namespace extension (`entry.system.compound.*`). Lifecycle metadata: `status`, `resolved_by`, harvest counters, `source`. |
 | [`system.minih.schema.json`](./system.minih.schema.json) | Minih's namespace extension (`retro.system.minih.*` or `entry.system.minih.*`). Run metadata: `run_dir`, `events_count`, `status`. |
-| [`fixtures/`](./fixtures/) | Test fixtures — example `.retro.md` files covering full / minimum / multi-kind / lifecycle-rich / malformed cases. |
+| [`fixtures/`](./fixtures/) | Test fixtures — example `.retro.md` files covering full / minimum / multi-kind / lifecycle-rich / schema-safe signal/back-pressure / malformed cases. |
 
 ## Wire format
 
@@ -38,6 +38,43 @@ jsonschema.validate(frontmatter, schema)
 print('OK')
 "
 ```
+
+Validate every non-malformed fixture by extracting the YAML frontmatter before passing it to the JSON Schema:
+
+```bash
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+import jsonschema
+import yaml
+
+schema = json.loads(Path("retro.schema.json").read_text())
+for path in sorted(Path("fixtures").glob("*.retro.md")):
+    if path.name == "malformed.retro.md":
+        continue
+    content = path.read_text()
+    if not content.startswith("---\n"):
+        raise SystemExit(f"{path}: missing YAML frontmatter")
+    frontmatter = content.split("---", 2)[1]
+    jsonschema.validate(yaml.safe_load(frontmatter), schema)
+    print(f"OK {path}")
+PY
+```
+
+Run this from `skills/compound/schemas/`. It intentionally validates the frontmatter only; the markdown body remains free text.
+
+## Encoding signal, sensor, and back-pressure gaps
+
+The schema deliberately keeps a small `kind` enum. Do **not** add ad-hoc kinds such as `signal-gap`, `sensor-gap`, or `weak-back-pressure` unless a deliberate schema migration has been planned. Encode these as ordinary entries with richer targets and encoding hints:
+
+| Gap | `kind` | Example `target` | Example `suggested_encoding` |
+|-----|--------|------------------|------------------------------|
+| Agent had to infer runtime behavior | `difficulty` | `project-sensor` or `runtime-inspectability` | `add smoke command or visual evidence capture` |
+| Missing deterministic architecture proof | `improvement-suggestion` | `architecture-fitness` | `architecture check recipe` |
+| Wished-for proof command or evidence path | `magic-wand` | `tooling`, `skill`, or `runtime-inspectability` | `engineering-harness command map entry` |
+
+See [`fixtures/signal-backpressure.retro.md`](./fixtures/signal-backpressure.retro.md) for a schema-valid example.
 
 ## Versioning
 
