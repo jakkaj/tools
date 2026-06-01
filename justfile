@@ -322,6 +322,21 @@ doctor-skills:
             echo "  ✅ None"
         fi
     fi
+    echo
+    echo "Bundled retro-schema drift (harness-3-retro carries a copy so the schema travels with the skill via npx skills add):"
+    canon_schema="skills/compound/schemas/retro.schema.json"
+    bundled_schema="skills/harness/harness-3-retro/references/retro.schema.json"
+    if [ -f "$canon_schema" ] && [ -f "$bundled_schema" ]; then
+        if diff -q "$canon_schema" "$bundled_schema" >/dev/null 2>&1; then
+            echo "  ✅ $bundled_schema matches canonical"
+        else
+            echo "  ⚠️  $bundled_schema DIFFERS from canonical — re-sync: cp $canon_schema $bundled_schema"
+        fi
+    elif [ -f "$canon_schema" ]; then
+        echo "  ⚠️  bundled copy missing — create: cp $canon_schema $bundled_schema"
+    else
+        echo "  ℹ️  canonical schema not found (run 'just doctor-skills' from repo root)"
+    fi
 
 # Report skills deployed in target dirs that are NOT in this repo's source skills/ (renamed/removed/stale). READ-ONLY — prints tidy commands, deletes nothing.
 skills-orphans:

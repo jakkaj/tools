@@ -274,7 +274,7 @@ Then proceed with the scan anyway (the harvest reads `.retro.md` files; buffer e
 
 For each file:
 - Parse the YAML frontmatter (between the first two `---` lines)
-- Validate against `skills/compound/schemas/retro.schema.json`
+- Validate against the bundled `references/retro.schema.json` (a deployment mirror of the canonical, frozen `skills/compound/schemas/retro.schema.json` — copied into this skill folder so it travels with the skill via `npx skills add`; in a source checkout either path is identical). If neither is present, skip validation and print `⚠ retro schema not found — skipping validation` (best-effort: a missing schema never blocks the harvest).
 - If invalid → print a warning naming the file path + the validation error; SKIP the entire retro (strict — no half-parse)
 - If valid → add to the in-memory view
 
