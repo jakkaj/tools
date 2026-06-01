@@ -53,9 +53,7 @@ tools/
 │   ├── rust.sh        # Installs Rust and Cargo via rustup
 │   ├── code2prompt.sh # Installs code2prompt via cargo
 │   └── agents.sh      # Configures MCP servers (no longer fans skills out)
-├── agents/            # MCP + legacy commands (SOURCE OF TRUTH for MCP)
-│   ├── commands/      # DEPRECATED v1 commands — see DEPRECATED.md inside
-│   ├── commands-lite/ # DEPRECATED lite-pipeline commands — see DEPRECATED.md inside
+├── agents/            # Installer infra only (SOURCE OF TRUTH for MCP)
 │   ├── mcp/           # MCP server definitions (used by install/agents.sh)
 │   └── settings.local.json # Shared agent settings
 ├── docs/
@@ -78,7 +76,7 @@ tools/
 └── LICENSE            # Repository license
 ```
 
-> **Note**: `skills/` is the canonical source for what users install. `agents/v2-commands/` and `other-skills/` were the legacy sources and have been removed. `agents/commands/` and `agents/commands-lite/` are retained but deprecated (each contains a `DEPRECATED.md`).
+> **Note**: `skills/` is the canonical source for what users install. The legacy sources `agents/v2-commands/`, `other-skills/`, `agents/commands/`, and `agents/commands-lite/` have all been removed — skills ship via `npx skills add jakkaj/tools`.
 
 ## Compounding Value System
 
@@ -149,8 +147,8 @@ When you run `./setup.sh`, it:
 ### What Gets Synced
 
 ✅ **Automatically synced:**
-- `agents/commands/*.md` → `src/jk_tools/agents/commands/` (legacy, retained while deprecated)
 - `agents/mcp/` → `src/jk_tools/agents/mcp/`
+- `agents/settings.local.json` → `src/jk_tools/agents/settings.local.json`
 - `agents/settings.local.json` → `src/jk_tools/agents/`
 - `scripts/` → `src/jk_tools/scripts/`
 - `install/` → `src/jk_tools/install/`
@@ -219,7 +217,7 @@ The 27 SDD skills were migrated from the legacy `agents/v2-commands/*.md` set by
 
 ### Deprecated command directories
 
-`agents/commands/` (v1) and `agents/commands-lite/` (lite pipeline) are retained for reference only. Each contains a `DEPRECATED.md` pointing at `skills/`. Do not add new content to either; they are slated for deletion in a future cleanup pass.
+The legacy `agents/commands/` (v1) and `agents/commands-lite/` (lite pipeline) command sets have been **removed**. The active workflow is the v2 SDD pipeline in `skills/SDD/`, shipped via `npx skills add jakkaj/tools`.
 
 ### Adding New Tools
 
@@ -320,14 +318,9 @@ jk-gcm ./scratch/analysis ./src
 cat ./scratch/analysis/codebase.md
 ```
 
-## Legacy Command Sets (Deprecated)
+## Legacy Command Sets (Removed)
 
-The directories below are retained for reference only and are **no longer maintained**:
-
-- `agents/commands/` — the v1 command set (the original "full pipeline"). See `agents/commands/DEPRECATED.md`.
-- `agents/commands-lite/` — the lite-pipeline command set. See `agents/commands-lite/DEPRECATED.md`.
-
-Both are slated for deletion in a future cleanup pass. **Do not add new content to either.** The active workflow is the v2 SDD pipeline in `skills/SDD/`.
+The v1 `agents/commands/` and lite `agents/commands-lite/` command sets have been **deleted** — they predated `npx skills`. The active workflow is the v2 SDD pipeline in `skills/SDD/`, distributed via `npx skills add jakkaj/tools`.
 
 ## Maintenance
 

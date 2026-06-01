@@ -188,12 +188,7 @@ Skills that work in any project, coding or not.
 
 ## Deprecation notice
 
-Two directories in this repository are retained for reference only and are **no longer maintained**:
-
-- [`agents/commands/`](./agents/commands/) — the v1 command set. See [`agents/commands/DEPRECATED.md`](./agents/commands/DEPRECATED.md).
-- [`agents/commands-lite/`](./agents/commands-lite/) — the lite-pipeline command set. See [`agents/commands-lite/DEPRECATED.md`](./agents/commands-lite/DEPRECATED.md).
-
-Both directories are slated for deletion in a future cleanup pass. Do not add new content to either. The replacement is `skills/`.
+The legacy command sets `agents/commands/` (v1) and `agents/commands-lite/` (lite pipeline) have been **removed**. The replacement is `skills/`, distributed via `npx skills add jakkaj/tools`.
 
 ---
 

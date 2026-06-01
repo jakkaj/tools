@@ -42,23 +42,15 @@ main() {
     echo ""
 
     # Ensure distribution directories exist
-    mkdir -p "${DIST_ROOT}/agents/commands"
     mkdir -p "${DIST_ROOT}/agents/mcp"
     mkdir -p "${DIST_ROOT}/scripts"
     mkdir -p "${DIST_ROOT}/install"
     mkdir -p "${DIST_ROOT}/.vscode"
 
-    # 1. Sync agents/commands (all .md files)
-    print_status "Syncing agents/commands/*.md..."
-    rsync -av --delete \
-        --include="*.md" \
-        --exclude="*" \
-        "${REPO_ROOT}/agents/commands/" \
-        "${DIST_ROOT}/agents/commands/"
-    count=$(find "${DIST_ROOT}/agents/commands" -name "*.md" -type f | wc -l | tr -d ' ')
-    print_success "Synced ${count} command files"
+    # (legacy agents/commands/*.md — the pre-npx slash-command set — was removed;
+    #  skills now ship via `npx skills add jakkaj/tools`, not this mirror.)
 
-    # 2. Sync agents/mcp
+    # 1. Sync agents/mcp
     print_status "Syncing agents/mcp/..."
     rsync -av --delete \
         "${REPO_ROOT}/agents/mcp/" \

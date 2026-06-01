@@ -20,10 +20,8 @@ A skills repository, plus a dev-tooling installer. The skills are the product:
 │   ├── SDD/                    # 27 spec-driven-development pipeline skills
 │   ├── general/                # 1 skill (grill-me)
 │   └── personal/               # 1 skill (shopping-hunter)
-├── agents/
-│   ├── commands/               # DEPRECATED v1 commands (DEPRECATED.md inside)
-│   ├── commands-lite/          # DEPRECATED lite-pipeline commands (DEPRECATED.md inside)
-│   ├── mcp/servers.json        # MCP server source-of-truth
+├── agents/                     # Installer infra only (legacy command sets removed — skills ship via npx)
+│   ├── mcp/servers.json        # MCP server source-of-truth (read by install/agents.sh)
 │   └── settings.local.json     # Shared agent settings
 ├── docs/
 │   ├── plans/                  # Plan folders (NNN-slug/) produced by the SDD pipeline
@@ -158,7 +156,7 @@ Ordinals are allocated via `scripts/plan-ordinal.py` (alias `jk-po`), which scan
 
 ## Deprecated directories
 
-`agents/commands/` (v1) and `agents/commands-lite/` (lite pipeline) are retained for reference only. Each has a `DEPRECATED.md` pointer at the new layout. Do not add new content to either; they are slated for deletion.
+The legacy command sets `agents/commands/` (v1) and `agents/commands-lite/` (lite pipeline) have been **removed** — the active workflow is the v2 SDD pipeline in `skills/SDD/`, distributed via `npx skills add jakkaj/tools`. `agents/` now holds installer infra only (`mcp/servers.json`, `settings.local.json`).
 
 ## Pointers
 

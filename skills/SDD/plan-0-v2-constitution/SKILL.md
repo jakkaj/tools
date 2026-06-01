@@ -96,7 +96,7 @@ Flag unknowns as 'UNKNOWN: <reason>' for TODO handling."
 "Inventory templates and commands that reference doctrine.
 
 **Scan**:
-- agents/commands/*.md for references to constitution, rules, idioms, architecture
+- skills/**/SKILL.md (and any `.claude/commands/*.md`) for references to constitution, rules, idioms, architecture
 - templates/ directory for similar references
 
 **Output**: JSON with {file_path, references_to[], link_format, expected_paths[]}
@@ -342,7 +342,7 @@ Include amendment date as ISO 8601."
    - Track anti-patterns and reviewer checklists that should remain stable across implementations.
 
 7) Propagate doctrine into helpers (if any)
-   - For each file under `templates/`, `agents/commands/`, or `agents/v2-commands/` that references the constitution or rules, ensure links remain correct and language stays stack-neutral.
+   - For each file under `templates/` or command/skill directories (e.g. `skills/`, `.claude/commands/`) that references the constitution or rules, ensure links remain correct and language stays stack-neutral.
    - Where downstream workflows expect gates (e.g., "confirm plan aligns with rules"), keep the gate but phrase it generically.
    - Do not invent new templates; update only those already present.
 

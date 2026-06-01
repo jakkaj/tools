@@ -52,8 +52,7 @@ cd tools
 | `docs/harness/` | Harness loop runtime ledger (per-agent buffers + `.retro.md` files) **and** the frozen cross-system retro `schemas/` (the minih shape contract) — not skills themselves |
 | `skills/general/` | Domain-generic skills (grill-me) |
 | `skills/personal/` | Personal / non-coding skills (shopping-hunter) |
-| `agents/commands/` | DEPRECATED v1 commands. See `agents/commands/DEPRECATED.md`. |
-| `agents/commands-lite/` | DEPRECATED lite-pipeline commands. See `agents/commands-lite/DEPRECATED.md`. |
+| `agents/` | Installer infra only — `mcp/servers.json` (MCP source-of-truth) + `settings.local.json`. Legacy command sets removed; skills ship via `npx`. |
 | `agents/mcp/servers.json` | MCP server source-of-truth (installed by `./setup.sh`) |
 | `install/`, `scripts/` | Dev-tool installers and utility scripts |
 
