@@ -547,11 +547,11 @@ Next step: Run **/plan-6-v2-implement-phase --phase "<Phase N: Title>" --plan "<
 
 ## Compound integration
 
-This skill participates in the **Compounding Value System** (the `skills/harness/` loop + the frozen `skills/compound/schemas/` contract).
+This skill participates in the **Compounding Value System** (the `skills/harness/` loop + the frozen `docs/harness/schemas/` contract).
 
-**Sentinel**: Before any compound call below, check `docs/compound/.disabled` — if present, silently skip everything in this section.
+**Sentinel**: Before any compound call below, check `docs/harness/.disabled` — if present, silently skip everything in this section.
 
-**At start**: Check `docs/compound/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-3-retro --drain` BEFORE this skill's primary work.
+**At start**: Check `docs/harness/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-3-retro --drain` BEFORE this skill's primary work.
 
 **During task brief authoring** (LIGHT — fewer trigger points than the deep skills): silently call `harness-2-observe` only for substantive friction (e.g. plan structure ambiguity, missing acceptance criteria in source plan, agent harness context missing when needed). Calibration: ≤1 self-prompt per 5min; ≤3 entries per session for plan-5 (lighter than the default ≤5 because plan-5 is short-horizon synthesis work).
 

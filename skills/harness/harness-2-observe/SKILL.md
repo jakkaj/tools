@@ -1,7 +1,7 @@
 ---
 name: harness-2-observe
 description: |
-  Observe stage of the harness loop (Boot → Do Work → Observe → Retro). Silent producer: called silently during a session whenever friction or insight arises — logs one entry per call to `docs/compound/_buffers/<agent>.session-buffer.md`. No user output during work; the only user surface is `harness-3-retro --drain` at session end. Tracks compounding value — every difficulty catalogued is a gift to your future self. Calibrated for ≤1 self-prompt per 5 minutes and ≤5 entries per session (anti-vibe 7 mitigation).
+  Observe stage of the harness loop (Boot → Do Work → Observe → Retro). Silent producer: called silently during a session whenever friction or insight arises — logs one entry per call to `docs/harness/_buffers/<agent>.session-buffer.md`. No user output during work; the only user surface is `harness-3-retro --drain` at session end. Tracks compounding value — every difficulty catalogued is a gift to your future self. Calibrated for ≤1 self-prompt per 5 minutes and ≤5 entries per session (anti-vibe 7 mitigation).
 ---
 
 # harness-2-observe
@@ -45,11 +45,11 @@ These are soft targets, not enforced. The Compounding Test signal at the 1-week 
 
 ## Sentinel check
 
-If `docs/compound/.disabled` exists → silently no-op. Do not log, do not prompt, do not error. The opt-out is absolute.
+If `docs/harness/.disabled` exists → silently no-op. Do not log, do not prompt, do not error. The opt-out is absolute.
 
 ## Buffer path
 
-`docs/compound/_buffers/<agent>.session-buffer.md`
+`docs/harness/_buffers/<agent>.session-buffer.md`
 
 Where `<agent>` is the calling CLI's slug (lowercase kebab-case):
 
@@ -62,11 +62,11 @@ Where `<agent>` is the calling CLI's slug (lowercase kebab-case):
 
 Per-agent buffer means two simultaneous agents on the same repo don't trample each other's entries.
 
-If the buffer file doesn't exist, create it (touch). If `_buffers/` doesn't exist, **no-op gracefully** — this skill never scaffolds. A missing `docs/compound/` ledger tree means the harness ledger isn't provisioned yet; provisioning it is the separate engineering-harness setup effort's job, not the producer's. Report `UNAVAILABLE` and exit silently.
+If the buffer file doesn't exist, create it (touch). If `_buffers/` doesn't exist, **no-op gracefully** — this skill never scaffolds. A missing `docs/harness/` ledger tree means the harness ledger isn't provisioned yet; provisioning it is the separate engineering-harness setup effort's job, not the producer's. Report `UNAVAILABLE` and exit silently.
 
 ## Entry format
 
-Append-only YAML block per entry (one entry per call). Each entry conforms to the universal Entry schema (`skills/compound/schemas/retro.schema.json` § `$defs.Entry`):
+Append-only YAML block per entry (one entry per call). Each entry conforms to the universal Entry schema (`docs/harness/schemas/retro.schema.json` § `$defs.Entry`):
 
 ```yaml
 - id: DL-001                          # Required. <PREFIX>-<3+ digit number>. Per-buffer counter.
@@ -160,7 +160,7 @@ The point is: ask once per natural pause, only when otherwise silent.
 - **Sentinel mid-write**: if `.disabled` appears between two calls, subsequent calls no-op. Already-written entries stay until next bubble.
 - **Concurrent agents**: per-agent buffer files mean no collision. Two agents call harness-2-observe simultaneously → two different files.
 - **Malformed entry**: if the agent constructs an invalid entry (missing required field), the write fails. Better to skip the entry than to corrupt the buffer.
-- **Buffer file missing**: create it (touch). The first entry initializes it. If `_buffers/` is also missing, **no-op gracefully** (report `UNAVAILABLE`, exit silently) — the producer never auto-scaffolds; provisioning `docs/compound/` is the separate engineering-harness setup effort's job.
+- **Buffer file missing**: create it (touch). The first entry initializes it. If `_buffers/` is also missing, **no-op gracefully** (report `UNAVAILABLE`, exit silently) — the producer never auto-scaffolds; provisioning `docs/harness/` is the separate engineering-harness setup effort's job.
 - **Inference gap discovered late**: log the missing signal as the friction, not just the symptom. Prefer "no smoke/evidence path proved X" over "I was confused", because the former is encodable into deterministic back-pressure.
 
 ## Producer-side annotation

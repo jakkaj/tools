@@ -98,9 +98,9 @@ npx skills@latest add jakkaj/tools/skills/harness -a claude-code -g
 npx skills@latest add jakkaj/tools/skills/SDD -a claude-code -g
 ```
 
-> Note: `skills/compound/` holds only the frozen `schemas/` contract (no SKILL.md folders), so there is no `skills/compound` category to install — the loop-stage skills live under `skills/harness/`.
+> Note: the universal retro `schemas/` contract now lives at `docs/harness/schemas/` (no longer under `skills/`), so there is no `skills/compound` category to install — the loop-stage skills live under `skills/harness/`, and `harness-3-retro` bundles its own deploy copy of the schema in `references/`.
 
-The `skills/harness/` category is the runtime loop only: Boot, Observe, and Retro. Project-side engineering-harness setup/provisioning (creating `docs/project-rules/engineering-harness.md`, `docs/compound/`, starter command maps, or harness CLI scripts) remains in the separate `AI-Substrate/harness-engineering` repository's `engineering-harness-setup` skill. If those generated artifacts are absent, the runtime skills report `UNAVAILABLE` or no-op gracefully rather than scaffolding them.
+The `skills/harness/` category is the runtime loop only: Boot, Observe, and Retro. Project-side engineering-harness setup/provisioning (creating `docs/project-rules/engineering-harness.md`, `docs/harness/`, starter command maps, or harness CLI scripts) remains in the separate `AI-Substrate/harness-engineering` repository's `engineering-harness-setup` skill. If those generated artifacts are absent, the runtime skills report `UNAVAILABLE` or no-op gracefully rather than scaffolding them.
 
 After upgrading or renaming skills, `npx skills add` updates/adds but does not prune old deployed slugs. Run these read-only checks and review the suggested tidy commands manually:
 

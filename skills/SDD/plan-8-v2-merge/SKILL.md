@@ -1033,12 +1033,12 @@ Your branch is up to date. No merge needed.
 
 ## Compound integration
 
-This skill participates in the **Compounding Value System** (the `skills/harness/` loop + the frozen `skills/compound/schemas/` contract).
+This skill participates in the **Compounding Value System** (the `skills/harness/` loop + the frozen `docs/harness/schemas/` contract).
 
-**Sentinel**: Before any compound call below, check `docs/compound/.disabled` — if present, silently skip everything in this section.
+**Sentinel**: Before any compound call below, check `docs/harness/.disabled` — if present, silently skip everything in this section.
 
 **At start**:
-- Check `docs/compound/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-3-retro --drain` BEFORE the merge analysis.
+- Check `docs/harness/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-3-retro --drain` BEFORE the merge analysis.
 
 **During merge analysis**:
 - Silently call `harness-2-observe` per its trigger heuristics. Merge-specific triggers: rebase conflicts that needed manual resolution; squash decisions that lost information; CI failures during the merge gate.

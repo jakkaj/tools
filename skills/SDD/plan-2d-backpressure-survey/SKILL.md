@@ -1,7 +1,7 @@
 ---
 name: plan-2d-backpressure-survey
 description: |
-  Advisory deterministic-backpressure coverage survey. Runs AFTER the spec (plan-1b / plan-2c) and BEFORE the architect (plan-3). Inventories the deterministic sensors a repo already has (build / type / test / lint / smoke / boot / architecture checks, CodeQL / Roslyn / dependency-rules / data-scripts), derives the feature's experienced failure modes from the spec's acceptance criteria + target domains + risks, maps each criterion/failure-mode to a sensor (EXISTS / BUILDABLE / ABSENT × computational / inferential / human-judgement), emits a qualitative certainty rating (Strong / Partial / Weak), and — only when material behaviour/architecture gaps exist — recommends a "Phase 0: Establish Backpressure". Writes docs/plans/<ordinal>-<slug>/backpressure-coverage.md, which plan-3-v3-architect consumes. ADVISORY / best-effort only: never blocks, never flips a plan to DRAFT, no numeric thresholds, no persisted index. Honours docs/compound/.disabled.
+  Advisory deterministic-backpressure coverage survey. Runs AFTER the spec (plan-1b / plan-2c) and BEFORE the architect (plan-3). Inventories the deterministic sensors a repo already has (build / type / test / lint / smoke / boot / architecture checks, CodeQL / Roslyn / dependency-rules / data-scripts), derives the feature's experienced failure modes from the spec's acceptance criteria + target domains + risks, maps each criterion/failure-mode to a sensor (EXISTS / BUILDABLE / ABSENT × computational / inferential / human-judgement), emits a qualitative certainty rating (Strong / Partial / Weak), and — only when material behaviour/architecture gaps exist — recommends a "Phase 0: Establish Backpressure". Writes docs/plans/<ordinal>-<slug>/backpressure-coverage.md, which plan-3-v3-architect consumes. ADVISORY / best-effort only: never blocks, never flips a plan to DRAFT, no numeric thresholds, no persisted index. Honours docs/harness/.disabled.
 ---
 Please deep think / ultrathink as this is a complex task.
 
@@ -36,7 +36,7 @@ If a future change to this skill adds a threshold, a gate, a blocking behaviour,
 
 ## Sentinel check
 
-If `docs/compound/.disabled` exists → **silently no-op**: do not run the survey, do not create or modify `backpressure-coverage.md`, do not log, do not prompt, do not error. The opt-out is absolute. (Mirrors `harness-2-observe`.)
+If `docs/harness/.disabled` exists → **silently no-op**: do not run the survey, do not create or modify `backpressure-coverage.md`, do not log, do not prompt, do not error. The opt-out is absolute. (Mirrors `harness-2-observe`.)
 
 ---
 
@@ -54,7 +54,7 @@ Inputs:
 
 ## PHASE 0 — Setup
 
-1. Sentinel: if `docs/compound/.disabled` exists → silent no-op, STOP.
+1. Sentinel: if `docs/harness/.disabled` exists → silent no-op, STOP.
 2. Resolve SPEC_FILE (from --spec/--plan arg, the current plan folder, or an ordinal branch). If no spec exists → tell the user to run `/plan-1b-v3-specify-and-clarify` first and STOP. (This skill surveys against a spec; it does not invent one.)
 3. Read the spec's `## Acceptance Criteria`, `## Target Domains`, and `## Risks & Assumptions`. These are the things the work must make true — the survey's subject.
 

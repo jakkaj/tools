@@ -62,7 +62,7 @@ for path in sorted(Path("fixtures").glob("*.retro.md")):
 PY
 ```
 
-Run this from `skills/compound/schemas/`. It intentionally validates the frontmatter only; the markdown body remains free text.
+Run this from `docs/harness/schemas/`. It intentionally validates the frontmatter only; the markdown body remains free text.
 
 ## Encoding signal, sensor, and back-pressure gaps
 

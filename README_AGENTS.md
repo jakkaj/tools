@@ -160,7 +160,7 @@ The active workflow for non-trivial feature work. Use these for any change large
 
 ### `harness/` — Harness loop (3 skills)
 
-The Compounding Value System, named by loop stage: **Boot → Do Work → Observe → Retro**. Every session in any supported CLI validates the harness at boot, silently logs friction during work, and surfaces + encodes accumulated learnings at session end and at long-horizon reflection. The 5 philosophy principles are encoded inline across these bodies + the repo README (the standalone philosophy skill was retired in plan-024). These three are runtime companions to an engineering harness that the host repo has already set up, defined, and prompted; provisioning a fresh harness (governance doc + ledger scaffold) is a separate setup effort, and the skills degrade gracefully when the substrate is absent. Opt-out via `touch docs/compound/.disabled`.
+The Compounding Value System, named by loop stage: **Boot → Do Work → Observe → Retro**. Every session in any supported CLI validates the harness at boot, silently logs friction during work, and surfaces + encodes accumulated learnings at session end and at long-horizon reflection. The 5 philosophy principles are encoded inline across these bodies + the repo README (the standalone philosophy skill was retired in plan-024). These three are runtime companions to an engineering harness that the host repo has already set up, defined, and prompted; provisioning a fresh harness (governance doc + ledger scaffold) is a separate setup effort, and the skills degrade gracefully when the substrate is absent. Opt-out via `touch docs/harness/.disabled`.
 
 | Slug | One-line purpose |
 |---|---|
@@ -168,7 +168,7 @@ The Compounding Value System, named by loop stage: **Boot → Do Work → Observ
 | `harness-2-observe` | **Observe.** Silent producer — append friction/magic-wand entries to a per-agent session buffer during work. Never prompts. |
 | `harness-3-retro` | **Retro.** `--drain` = session-end soft prompt (`[s/t/p/e/d/a]`; wraps entries in a universal retro envelope; writes one `.retro.md` per save). `--harvest` = curator (scans all retros; clusters by kind+target; flags stale; top-10; `--json`; NO on-disk indexes; runtime filters `--plan`/`--agent`/`--since`/`--kind`). |
 
-The universal `.retro.md` contract lives in [`skills/compound/schemas/`](./skills/compound/schemas/) (frozen minih cross-system contract — not a skill; stays put). See [`docs/plans/023-difficulty-ledger-skill/`](./docs/plans/023-difficulty-ledger-skill/) for the design history and [`docs/plans/024-harness-nucleus/`](./docs/plans/024-harness-nucleus/) for the 6→3 loop-stage consolidation.
+The universal `.retro.md` contract lives in [`docs/harness/schemas/`](./docs/harness/schemas/) (this repo's copy of the cross-system minih **shape** contract — minih keeps its own copy, so the path is local; `harness-3-retro` also bundles a deploy copy at `harness-3-retro/references/retro.schema.json`). See [`docs/plans/023-difficulty-ledger-skill/`](./docs/plans/023-difficulty-ledger-skill/) for the design history and [`docs/plans/024-harness-nucleus/`](./docs/plans/024-harness-nucleus/) for the 6→3 loop-stage consolidation.
 
 ### `general/` — Domain-generic (1 skill)
 

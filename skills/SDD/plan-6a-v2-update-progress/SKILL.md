@@ -137,14 +137,14 @@ $ARGUMENTS
          (companion farewell already lands in `docs/retros/<agent-slug>.md`
          via auto-harvest).
 
-      ii. **`docs/compound/agents/<orchestrator-slug>/<YYYY-MM-DD>/T<HH-MM-SS>Z-<hash>.retro.md`** (universal format per workshop 005):
+      ii. **`docs/harness/agents/<orchestrator-slug>/<YYYY-MM-DD>/T<HH-MM-SS>Z-<hash>.retro.md`** (universal format per workshop 005):
          Write ONE per-run `.retro.md` file via the `resolvePath()` algorithm
          from workshop 006 § Path Resolver. The file's YAML frontmatter
-         validates against `skills/compound/schemas/retro.schema.json`.
+         validates against `docs/harness/schemas/retro.schema.json`.
          `<orchestrator-slug>` is the calling agent's slug
          (slugified per workshop 006 D8 — e.g. `claude-code`).
 
-         Sentinel check: if `docs/compound/.disabled` exists, SKIP this
+         Sentinel check: if `docs/harness/.disabled` exists, SKIP this
          write (silent no-op).
 
          Map the orchestrator retrospective to universal entries via the
@@ -161,7 +161,7 @@ $ARGUMENTS
          now (per workshop 006 D7; back-compat reader handles legacy paths
          in `harness-3-retro --harvest`).
 
-         If `docs/compound/agents/` doesn't exist, **no-op gracefully** —
+         If `docs/harness/agents/` doesn't exist, **no-op gracefully** —
          the ledger tree is provisioned by the separate engineering-harness
          setup effort, not by this skill. Skip the retro write and continue.
 
@@ -232,10 +232,10 @@ $ARGUMENTS
       execution log + the user-facing final summary.
 
    e) **Write the companion's retro as a per-run `.retro.md` under**
-      **`docs/compound/agents/<sanitized-companion-slug>/<YYYY-MM-DD>/T<HH-MM-SS>Z-<hash>.retro.md`**
+      **`docs/harness/agents/<sanitized-companion-slug>/<YYYY-MM-DD>/T<HH-MM-SS>Z-<hash>.retro.md`**
       (universal format per workshop 005 / workshop 006 § Path Resolver).
 
-      Sentinel check: if `docs/compound/.disabled` exists, SKIP this
+      Sentinel check: if `docs/harness/.disabled` exists, SKIP this
       write (silent no-op).
 
       Run the `minihToUniversal()` mapping inline (per workshop 005 § D9
@@ -285,12 +285,12 @@ This command is the **single source of truth** for progress updates AND phase-en
 
 ## Compound integration
 
-This skill is one of the heaviest **producer-side** participants in the **Compounding Value System** (the `skills/harness/` loop + the frozen `skills/compound/schemas/` contract) — both via Step 8c.ii (orchestrator retro write) and Step 9.e (companion farewell mapping + write). The integration is INLINE in those steps above (not a separate appendix-only behavior) because plan-6a's job IS to write the retro artifacts.
+This skill is one of the heaviest **producer-side** participants in the **Compounding Value System** (the `skills/harness/` loop + the frozen `docs/harness/schemas/` contract) — both via Step 8c.ii (orchestrator retro write) and Step 9.e (companion farewell mapping + write). The integration is INLINE in those steps above (not a separate appendix-only behavior) because plan-6a's job IS to write the retro artifacts.
 
-**Sentinel**: Every write to `docs/compound/` (Step 8c.ii and Step 9.e) first checks `docs/compound/.disabled`. If present, silently skip the write.
+**Sentinel**: Every write to `docs/harness/` (Step 8c.ii and Step 9.e) first checks `docs/harness/.disabled`. If present, silently skip the write.
 
-**Schema discipline**: Every `.retro.md` written by this skill MUST conform to `skills/compound/schemas/retro.schema.json` and (when applicable) the namespace sub-schemas. The agent constructs the YAML frontmatter directly per the schema — no JSON Schema validator is run in v1 (validation happens at read time in `harness-3-retro --harvest`).
+**Schema discipline**: Every `.retro.md` written by this skill MUST conform to `docs/harness/schemas/retro.schema.json` and (when applicable) the namespace sub-schemas. The agent constructs the YAML frontmatter directly per the schema — no JSON Schema validator is run in v1 (validation happens at read time in `harness-3-retro --harvest`).
 
-**Why no buffer interaction here**: plan-6a runs per-task; the silent buffer (`docs/compound/_buffers/<agent>.session-buffer.md`) is owned by `harness-2-observe` (producer) and `harness-3-retro --drain` (drain). Plan-6a's compound output is the FAREWELL retros, which bypass the buffer and write directly to per-run `.retro.md` files. The buffer is for IN-SESSION agent-observed friction; the farewells are for END-OF-PHASE structured retrospectives.
+**Why no buffer interaction here**: plan-6a runs per-task; the silent buffer (`docs/harness/_buffers/<agent>.session-buffer.md`) is owned by `harness-2-observe` (producer) and `harness-3-retro --drain` (drain). Plan-6a's compound output is the FAREWELL retros, which bypass the buffer and write directly to per-run `.retro.md` files. The buffer is for IN-SESSION agent-observed friction; the farewells are for END-OF-PHASE structured retrospectives.
 
 See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md), [workshop 005 § D9 round-trip](../../../docs/plans/023-difficulty-ledger-skill/workshops/005-universal-retro-contract.md), [workshop 006 § Path Resolver](../../../docs/plans/023-difficulty-ledger-skill/workshops/006-compound-folder-layout.md).

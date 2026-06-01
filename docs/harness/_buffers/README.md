@@ -31,5 +31,5 @@ Append-only YAML entries. Each call to `compound-1-track` appends one block:
   ...
 ```
 
-See [`skills/compound/schemas/retro.schema.json`](../../../skills/compound/schemas/retro.schema.json)
+See [`docs/harness/schemas/retro.schema.json`](../../../docs/harness/schemas/retro.schema.json)
 § `$defs.Entry` for the full schema.

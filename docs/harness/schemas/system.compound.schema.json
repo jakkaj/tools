@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/jakkaj/tools/blob/main/skills/compound/schemas/system.compound.schema.json",
+  "$id": "https://github.com/jakkaj/tools/blob/main/docs/harness/schemas/system.compound.schema.json",
   "title": "Compound system extensions",
   "description": "Per-entry compound lifecycle metadata, written under entry.system.compound",
   "type": "object",

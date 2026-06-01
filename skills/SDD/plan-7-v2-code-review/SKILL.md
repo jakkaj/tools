@@ -442,18 +442,18 @@ Next step: Apply fixes from fix-tasks file, then re-run `/plan-7-v2-code-review`
 
 ## Compound integration
 
-This skill participates in the **Compounding Value System** (the `skills/harness/` loop + the frozen `skills/compound/schemas/` contract).
+This skill participates in the **Compounding Value System** (the `skills/harness/` loop + the frozen `docs/harness/schemas/` contract).
 
-**Sentinel**: Before any compound call below, check `docs/compound/.disabled` — if present, silently skip everything in this section.
+**Sentinel**: Before any compound call below, check `docs/harness/.disabled` — if present, silently skip everything in this section.
 
 **At start**:
-- Check `docs/compound/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-3-retro --drain` BEFORE the code review.
+- Check `docs/harness/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-3-retro --drain` BEFORE the code review.
 
 **During code review**:
 - Silently call `harness-2-observe` per its trigger heuristics. Code-review-specific triggers: a finding that's hard to express in a single severity bucket; a finding where the agent had to re-read a file multiple times to understand it; a finding the spec implies but doesn't make explicit.
 - Calibration: ≤1 self-prompt per 5min; ≤5 entries per session.
 
-**Spot-check (T030 audit folded in)**: as part of the cross-cutting review, spot-check 2-3 auto-firing SDD skills for sentinel + buffer-check coverage. Use `grep -l 'docs/compound/.disabled' skills/SDD/<sample-skills>/SKILL.md` and similar. If any sampled skill is missing the sentinel check, file a finding.
+**Spot-check (T030 audit folded in)**: as part of the cross-cutting review, spot-check 2-3 auto-firing SDD skills for sentinel + buffer-check coverage. Use `grep -l 'docs/harness/.disabled' skills/SDD/<sample-skills>/SKILL.md` and similar. If any sampled skill is missing the sentinel check, file a finding.
 
 **At end** (logical pause — review complete):
 - Auto-fire `/harness-3-retro --drain` — drains the buffer.

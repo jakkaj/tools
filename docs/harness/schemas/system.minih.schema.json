@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/jakkaj/tools/blob/main/skills/compound/schemas/system.minih.schema.json",
+  "$id": "https://github.com/jakkaj/tools/blob/main/docs/harness/schemas/system.minih.schema.json",
   "title": "Minih system extensions",
   "description": "Per-retro minih run metadata, written under retro.system.minih (top-level) or entry.system.minih (per-entry)",
   "type": "object",

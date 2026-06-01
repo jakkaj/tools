@@ -162,6 +162,6 @@ Boot reports the level that is *actually working* (not aspirational).
 
 ## What Boot does NOT do
 
-- **No setup or scaffolding**. It never creates `docs/project-rules/engineering-harness.md`, `docs/compound/`, command maps, fixtures, or harness CLI scripts. Those are provisioned by the separate engineering-harness setup effort.
+- **No setup or scaffolding**. It never creates `docs/project-rules/engineering-harness.md`, `docs/harness/`, command maps, fixtures, or harness CLI scripts. Those are provisioned by the separate engineering-harness setup effort.
 - **No gates, scores, or thresholds for back-pressure**. Signal-readiness gaps are advisory improvement candidates. Boot only fails when the live Boot, Interact, or Observe checks fail.
 - **No product-specific sensor implementation**. It reports whether sensors are present or missing; it does not invent downstream project checks.

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/jakkaj/tools/blob/main/skills/compound/schemas/retro.schema.json",
+  "$id": "https://github.com/jakkaj/tools/blob/main/docs/harness/schemas/retro.schema.json",
   "title": "Retro",
   "description": "A universal retrospective — produced by minih agents, compound skills, and other agentic workflows. One retro per run/session.",
   "type": "object",

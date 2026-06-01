@@ -1,7 +1,7 @@
 ---
 name: harness-3-retro
 description: |
-  Retro stage of the harness loop (Boot → Do Work → Observe → Retro). One skill, two modes. `--drain` (session-end soft prompt) reads `docs/compound/_buffers/<agent>.session-buffer.md`; if non-empty, presents a single soft prompt with `[s/t/p/e/d/a]` action menu and a one-line encoding hint per entry; routes saved entries into per-run `.retro.md` files under `docs/compound/agents/<agent>/<date>/`. `--harvest` (long-horizon curation) scans `docs/compound/agents/**/*.retro.md` (canonical) plus legacy `docs/retros/*.md` (back-compat), validates against the universal schema, dedups, clusters by kind + target, ages stale entries, and prints a prioritized terminal view (`--json` for tooling). Encode, don't document. Empty buffer / empty tree = silent. NO on-disk index files — views computed at read time.
+  Retro stage of the harness loop (Boot → Do Work → Observe → Retro). One skill, two modes. `--drain` (session-end soft prompt) reads `docs/harness/_buffers/<agent>.session-buffer.md`; if non-empty, presents a single soft prompt with `[s/t/p/e/d/a]` action menu and a one-line encoding hint per entry; routes saved entries into per-run `.retro.md` files under `docs/harness/agents/<agent>/<date>/`. `--harvest` (long-horizon curation) scans `docs/harness/agents/**/*.retro.md` (canonical) plus legacy `docs/retros/*.md` (back-compat), validates against the universal schema, dedups, clusters by kind + target, ages stale entries, and prints a prioritized terminal view (`--json` for tooling). Encode, don't document. Empty buffer / empty tree = silent. NO on-disk index files — views computed at read time.
 ---
 
 # harness-3-retro
@@ -45,11 +45,11 @@ Each firing handles entries accumulated since the last drain. Once drained, the 
 
 ### Sentinel check
 
-If `docs/compound/.disabled` exists → silently no-op. No prompt, no output.
+If `docs/harness/.disabled` exists → silently no-op. No prompt, no output.
 
 ### Step 1 — Read the buffer
 
-Path: `docs/compound/_buffers/<agent>.session-buffer.md`
+Path: `docs/harness/_buffers/<agent>.session-buffer.md`
 
 Where `<agent>` is the calling CLI's slug (claude-code, codex, github-copilot, opencode, pi, or a companion slug like plan-6-companion).
 
@@ -118,7 +118,7 @@ system:
 
 File path via `resolvePath()` (workshop 006 § Path Resolver):
 
-`docs/compound/agents/<slugified-agent>/<YYYY-MM-DD>/T<HH-MM-SS>Z-<hash>.retro.md`
+`docs/harness/agents/<slugified-agent>/<YYYY-MM-DD>/T<HH-MM-SS>Z-<hash>.retro.md`
 
 Then **clear the buffer** (truncate to empty; keep the file).
 
@@ -258,11 +258,11 @@ The reader/curator side of the loop. Auto-fires at long-horizon reflection momen
 
 ### Sentinel check
 
-If `docs/compound/.disabled` exists → print one line: `"📴 the harness retro ledger is disabled (docs/compound/.disabled present). Remove the sentinel to re-enable."` and exit. Do not scan, do not print views.
+If `docs/harness/.disabled` exists → print one line: `"📴 the harness retro ledger is disabled (docs/harness/.disabled present). Remove the sentinel to re-enable."` and exit. Do not scan, do not print views.
 
 ### Buffer-non-empty advisory
 
-At start, check `docs/compound/_buffers/<agent>.session-buffer.md` for the calling agent. If non-empty → print one line before scanning:
+At start, check `docs/harness/_buffers/<agent>.session-buffer.md` for the calling agent. If non-empty → print one line before scanning:
 
 > ℹ️ Buffer has N unbubbled entries. Consider running `/harness-3-retro --drain` first so they land in the harvest view.
 
@@ -270,11 +270,11 @@ Then proceed with the scan anyway (the harvest reads `.retro.md` files; buffer e
 
 ### Step 1 — Scan + validate
 
-**Canonical path**: `docs/compound/agents/**/*.retro.md`
+**Canonical path**: `docs/harness/agents/**/*.retro.md`
 
 For each file:
 - Parse the YAML frontmatter (between the first two `---` lines)
-- Validate against the bundled `references/retro.schema.json` (a deployment mirror of the canonical, frozen `skills/compound/schemas/retro.schema.json` — copied into this skill folder so it travels with the skill via `npx skills add`; in a source checkout either path is identical). If neither is present, skip validation and print `⚠ retro schema not found — skipping validation` (best-effort: a missing schema never blocks the harvest).
+- Validate against the bundled `references/retro.schema.json` (a deployment mirror of the canonical, frozen `docs/harness/schemas/retro.schema.json` — copied into this skill folder so it travels with the skill via `npx skills add`; in a source checkout either path is identical). If neither is present, skip validation and print `⚠ retro schema not found — skipping validation` (best-effort: a missing schema never blocks the harvest).
 - If invalid → print a warning naming the file path + the validation error; SKIP the entire retro (strict — no half-parse)
 - If valid → add to the in-memory view
 
@@ -421,7 +421,7 @@ Field semantics:
 **Missing/empty cases**:
 
 - Empty tree → `{..., "retros": 0, "entries": {"total": 0, ...}, "top_clusters": [], "harness": {...or null}}`. Still valid JSON; consumers handle.
-- Sentinel `docs/compound/.disabled` present → emit the disabled-line on stderr; exit non-zero; **no JSON on stdout** (consumers can detect by exit code).
+- Sentinel `docs/harness/.disabled` present → emit the disabled-line on stderr; exit non-zero; **no JSON on stdout** (consumers can detect by exit code).
 - Schema-version skew on a retro → still emit JSON; skipped retros contribute to neither counts nor clusters.
 
 Consumed by `scripts/compound-value.sh` (the cross-CLI portable pretty-printer) and `just compound-value`. Other consumers should pipe `<their-CLI invokes the skill> --harvest --json | jq ...`.
@@ -494,10 +494,10 @@ The harvest computes the view in <1s for typical repos (≤100 retros). Re-compu
 For ad-hoc shell-level browsing without the skill:
 
 ```bash
-ls docs/compound/agents/*/$(date -u +%Y-%m-%d)/                # today's retros
-ls docs/compound/agents/<agent>/                                # one agent's date dirs
-cat docs/compound/agents/<agent>/<date>/*.retro.md              # the files themselves
-grep -l 'plan_id: "023-' docs/compound/agents/*/*/*.retro.md    # all plan-023 retros
+ls docs/harness/agents/*/$(date -u +%Y-%m-%d)/                # today's retros
+ls docs/harness/agents/<agent>/                                # one agent's date dirs
+cat docs/harness/agents/<agent>/<date>/*.retro.md              # the files themselves
+grep -l 'plan_id: "023-' docs/harness/agents/*/*/*.retro.md    # all plan-023 retros
 ```
 
 The tree IS the browse surface. Harvest is for clustered/prioritized views; shell tools are for raw browsing.

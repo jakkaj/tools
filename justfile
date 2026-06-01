@@ -324,7 +324,7 @@ doctor-skills:
     fi
     echo
     echo "Bundled retro-schema drift (harness-3-retro carries a copy so the schema travels with the skill via npx skills add):"
-    canon_schema="skills/compound/schemas/retro.schema.json"
+    canon_schema="docs/harness/schemas/retro.schema.json"
     bundled_schema="skills/harness/harness-3-retro/references/retro.schema.json"
     if [ -f "$canon_schema" ] && [ -f "$bundled_schema" ]; then
         if diff -q "$canon_schema" "$bundled_schema" >/dev/null 2>&1; then

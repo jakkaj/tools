@@ -1,4 +1,4 @@
-# docs/compound/ — the Compounding Value ledger
+# docs/harness/ — the Compounding Value ledger
 
 This tree is the source of truth for the compounding-value system. Every retro
 ever produced by any agent in this repo lives under `agents/<agent>/<date>/`.
@@ -28,25 +28,25 @@ source of truth.
 For ad-hoc browsing without the skill:
 
 ```bash
-ls docs/compound/agents/*/$(date -u +%Y-%m-%d)/                # today's retros
-ls docs/compound/agents/<agent>/                                # one agent's date dirs
-cat docs/compound/agents/<agent>/<date>/*.retro.md              # the files themselves
-grep -l 'plan_id: "023-' docs/compound/agents/*/*/*.retro.md    # all plan-023 retros
+ls docs/harness/agents/*/$(date -u +%Y-%m-%d)/                # today's retros
+ls docs/harness/agents/<agent>/                                # one agent's date dirs
+cat docs/harness/agents/<agent>/<date>/*.retro.md              # the files themselves
+grep -l 'plan_id: "023-' docs/harness/agents/*/*/*.retro.md    # all plan-023 retros
 ```
 
 ## Opt-out
 
-`touch docs/compound/.disabled` silences every compound skill (compound-1-track,
+`touch docs/harness/.disabled` silences every compound skill (compound-1-track,
 compound-2-bubble, compound-3-harvest). Remove the file to re-enable.
 
 ## Schema
 
 The frontmatter of every `.retro.md` file validates against
-[`skills/compound/schemas/retro.schema.json`](../../skills/compound/schemas/retro.schema.json).
+[`docs/harness/schemas/retro.schema.json`](../../docs/harness/schemas/retro.schema.json).
 
 Plus optional namespace extensions:
-- [`system.compound.schema.json`](../../skills/compound/schemas/system.compound.schema.json) — lifecycle metadata
-- [`system.minih.schema.json`](../../skills/compound/schemas/system.minih.schema.json) — minih run metadata
+- [`system.compound.schema.json`](../../docs/harness/schemas/system.compound.schema.json) — lifecycle metadata
+- [`system.minih.schema.json`](../../docs/harness/schemas/system.minih.schema.json) — minih run metadata
 
 ## Provenance
 

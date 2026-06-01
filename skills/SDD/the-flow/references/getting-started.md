@@ -93,7 +93,7 @@ Boot ─────────────────────────
 | **Retro (drain)** | `/harness-3-retro --drain` | **Auto** at phase boundaries | End of each `/plan-6` phase (and start of a skill if a prior buffer is non-empty). Surfaces a soft prompt with `[s/t/p/e/d/a]` actions (default `[a]ll-save`). You can also run it manually anytime entries have accumulated. |
 | **Retro (harvest)** | `/harness-3-retro --harvest` | **Auto** at plan completion | Fires automatically at the `/plan-6-companion` final-phase debrief and at `/plan-8` merge — the long-horizon reflection across the whole plan. In the rarer solo `/plan-6`/`/plan-7` path it's *suggested*, not auto-fired. Curated, read-only, terminal-print only. |
 
-**Opt-out**: `touch docs/compound/.disabled` silences every harness-loop call. The SDD skills check this sentinel before invoking anything.
+**Opt-out**: `touch docs/harness/.disabled` silences every harness-loop call. The SDD skills check this sentinel before invoking anything.
 
 ```mermaid
 flowchart LR

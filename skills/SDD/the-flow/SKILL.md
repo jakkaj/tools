@@ -344,7 +344,7 @@ All copy obeys **Orient → Suggest → Invite**: one decision per turn, a recom
 > [the-flow] ◆─◆─◆─◆─◆─◇─◇
 >
 > **Where we are**: Phase `<N>` landed — `<what it delivered>`; acceptance `<AC refs>` met. `/plan-6a` tracked progress for you.
-> You may have seen a retro prompt `[s/t/p/e/d/a]` at the end — that's the harness **draining** the session's friction notes; default `[a]` saves them all. (Silenced if `docs/compound/.disabled` exists.)
+> You may have seen a retro prompt `[s/t/p/e/d/a]` at the end — that's the harness **draining** the session's friction notes; default `[a]` saves them all. (Silenced if `docs/harness/.disabled` exists.)
 > Did you notice `<one execution-log discovery>`? Worth carrying forward.
 > *More phases (Full)*: this is a between-phase seam — `/compact` now, then `/plan-5` for Phase `<N+1>`. Type: `compact` or `next phase`.
 > *Last phase / Simple*: next is review — `/plan-7` (skip if a companion already reviewed every commit). Type: `review`.
@@ -405,7 +405,7 @@ USER runs the next /plan-* … then /the-flow → discovers the new artifact →
 
 ## Harness affordances (make the loop legible)
 
-**Sentinel**: before any harness narration, check `docs/compound/.disabled`. If present, **silently skip** all harness mentions.
+**Sentinel**: before any harness narration, check `docs/harness/.disabled`. If present, **silently skip** all harness mentions.
 
 - **Boot gate (before `/plan-6`)**: set the expectation in `awaiting-5` — `/plan-6` runs a Boot→Interact→Observe pre-flight; `UNAVAILABLE` is not an error, it falls back to standard testing.
 - **Observe (during work)**: silent. Mention once that the harness logs friction in the background; you don't call it.

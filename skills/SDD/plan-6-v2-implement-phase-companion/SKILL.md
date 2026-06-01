@@ -434,7 +434,7 @@ If the companion produced a **magicWand** in its farewell, consider filing it as
 
 ## Compound integration
 
-This skill participates in the **Compounding Value System** (the `skills/harness/` loop + the frozen `skills/compound/schemas/` contract) — and it's the **dominant flow** for the harness loop. The companion's final-phase debrief is where `harness-3-retro --harvest` auto-fires (replacing `/plan-7` as the harvest anchor for the typical SDD flow).
+This skill participates in the **Compounding Value System** (the `skills/harness/` loop + the frozen `docs/harness/schemas/` contract) — and it's the **dominant flow** for the harness loop. The companion's final-phase debrief is where `harness-3-retro --harvest` auto-fires (replacing `/plan-7` as the harvest anchor for the typical SDD flow).
 
 ### Three-layer context
 
@@ -445,10 +445,10 @@ This skill sits at the intersection of all three layers:
 
 ### Sentinel
 
-Before any compound call below, check `docs/compound/.disabled` — if present, silently skip everything in this section.
+Before any compound call below, check `docs/harness/.disabled` — if present, silently skip everything in this section.
 
 ### At start of each phase
-- Check `docs/compound/_buffers/<agent>.session-buffer.md` (where `<agent>` matches the calling CLI's slug — typically `plan-6-companion` when invoked via minih). If non-empty from a prior session, fire `/harness-3-retro --drain` BEFORE this phase's work.
+- Check `docs/harness/_buffers/<agent>.session-buffer.md` (where `<agent>` matches the calling CLI's slug — typically `plan-6-companion` when invoked via minih). If non-empty from a prior session, fire `/harness-3-retro --drain` BEFORE this phase's work.
 
 ### During implementation work (same as plan-6)
 - Silently call `harness-2-observe` per its trigger heuristics:
@@ -466,7 +466,7 @@ The companion is BOTH:
 1. **An orchestrator-side harness-2-observe producer** (the calls above land in `_buffers/plan-6-companion.session-buffer.md`)
 2. **A minih-runtime farewell-envelope producer** (the companion emits a `farewell.retrospective` at the end of each phase, which plan-6a's Step 9 maps via `minihToUniversal()` and writes as a per-run `.retro.md`)
 
-Both producers' outputs land in `docs/compound/agents/.../*.retro.md` — they just take different paths there.
+Both producers' outputs land in `docs/harness/agents/.../*.retro.md` — they just take different paths there.
 
 ### Farewell envelope → universal retro mapping
 

@@ -618,11 +618,11 @@ Shows all workshops in the plan folder with their types and status.
 
 ## Compound integration
 
-This skill participates in the **Compounding Value System** (the `skills/harness/` loop + the frozen `skills/compound/schemas/` contract).
+This skill participates in the **Compounding Value System** (the `skills/harness/` loop + the frozen `docs/harness/schemas/` contract).
 
-**Sentinel**: Before any compound call below, check `docs/compound/.disabled` — if present, silently skip everything in this section.
+**Sentinel**: Before any compound call below, check `docs/harness/.disabled` — if present, silently skip everything in this section.
 
-**At start**: Check `docs/compound/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-3-retro --drain` BEFORE this skill's primary work.
+**At start**: Check `docs/harness/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-3-retro --drain` BEFORE this skill's primary work.
 
 **During workshop creation**: silently call `harness-2-observe` per its trigger heuristics (any friction observed while drafting — workshop template ambiguity, decision-space gaps, missing related-workshop context, magic-wand reflex at natural pauses). Calibration: ≤1 self-prompt per 5min; ≤5 entries per session.
 
