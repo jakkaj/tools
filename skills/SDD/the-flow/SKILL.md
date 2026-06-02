@@ -71,13 +71,13 @@ This replaces the old "emit as text only" coach posture: you still always show t
 **Every** `the-flow` turn begins with a fixed one-line **host rail**, on its own line, then a blank line, then the narration. It marks the guide's voice (never confusable with a `plan-*` skill's `✅`/`📁` output) **and** shows how far down the flow we are.
 
 ```
-[the-flow] ◆─◆─◆─[◆─◇─◇]─◇
+[the-flow] ◆─◆─◆─[◆─◐─◇]─◇
 
 Where we are: …
 ```
 
-- `◆` = completed macro-milestone, `◇` = remaining, joined by `─` into one rail.
-- **Phase grouping**: the per-phase nodes are wrapped in one `[ … ]` so they read distinctly from the fixed flow nodes (Research·Spec·Plan before, Merge after) → `◆─◆─◆─[◆─◇─◇]─◇`.
+- `◆` = completed macro-milestone, `◐` = the milestone **in progress** (the current node — most visibly the phase being built during Build), `◇` = remaining; joined by `─` into one rail. **At most one `◐`** at a time (none when idle/paused between milestones).
+- **Phase grouping**: the per-phase nodes are wrapped in one `[ … ]` so they read distinctly from the fixed flow nodes (Research·Spec·Plan before, Merge after) → `◆─◆─◆─[◆─◐─◇]─◇`. During Build, the phase currently being implemented is the `◐` inside the group.
 - **Macro-milestones (Full)**: Research · Spec · Plan · Tasks · Build · Review · Merge (7). Optional/sub-steps (`/plan-1a` deep-research, `/plan-2c`, `/plan-2d`, `/plan-3a`, the fix loop) live *under* a milestone and get **no diamond** — opting in/out never changes the total.
 - **Dynamic total**: `milestones_total` is an estimate early, **recomputed at `/plan-3`** from the real phase count (Research · Spec · Plan · **one node per phase** · Merge). A 5-phase plan expands the rail (3 + 5 + 1 = 9); a 1-phase Simple plan collapses it. Re-scales **only at `/plan-3`**, then monotonic. `state.milestones_done` drives the fill.
 - **Status line** after the diamonds, in a **distinct accent colour**: `· now: <current> · next: <next>`. **Dynamic expansion** — inline when there's a single short next; when `next` has **≥2 options** (or would wrap), break `now`/`next` onto their **own lines** with options stacked (labelled + aligned, recommended first):
@@ -105,6 +105,8 @@ Where we are: …
 | `awaiting-8` / `complete` | 7/7 | `[the-flow] ◆─◆─◆─◆─◆─◆─◆` |
 
 (Simple mode collapses the per-phase group to one node, so the rail is shorter — recompute from `milestones_total` after `/plan-1b`/`/plan-3`.)
+
+The table above shows **settled** states (a stage just landed, awaiting the next command). While a stage is **actively running**, render its node as `◐` — e.g. mid-`/plan-3` the rail reads `◆─◆─◐─◇─◇─◇─◇`, settling to `◆─◆─◆─◇─◇─◇─◇` once it lands. The clearest `◐` is the phase under construction during Build: `◆─◆─◆─[◆─◐─◇─◇]─◇`.
 
 ---
 
