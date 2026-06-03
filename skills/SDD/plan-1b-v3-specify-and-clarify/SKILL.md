@@ -164,10 +164,14 @@ Auto-call `/plan-5b-flightplan --plan "${SPEC_FILE}"` (no `--phase` flag = plan-
 
 ### Workflow Mode (Round 1, Q1 unless `--simple`)
 
+**Default to Simple.** Simple is the recommended option for all but the genuinely complex work — present it first, marked `(recommended)`. Only steer toward Full when the work is clearly large/epic (CS-4/CS-5) **or** structurally demands it (multiple domains, several real phases, or required cross-cutting gates). When in doubt, pick Simple — it's cheaper to escalate a Simple plan to Full later than to carry Full ceremony on work that didn't need it.
+
 | Option | Mode | Best For | What Changes |
 |--------|------|----------|--------------|
-| A | Simple | CS-1/CS-2 tasks, single phase, quick path | Single-phase plan, inline tasks, plan-4/plan-5 optional |
-| B | Full | CS-3+ features, multiple phases | Multi-phase plan, required dossiers, all gates |
+| A | Simple **(recommended default)** | CS-1 through CS-3, single domain, one-to-few phases — the common case | Single-phase plan, inline tasks, plan-4/plan-5 optional |
+| B | Full | CS-4/CS-5, **or** genuinely multi-domain / multi-phase work that needs all gates | Multi-phase plan, required dossiers, all gates |
+
+Recommend **A (Simple)** unless the CS score is 4+ or the spec sketch already shows multiple target domains / several phases. Don't reach for Full just because the work is unfamiliar — unfamiliarity is a research/workshop signal, not a mode signal.
 
 **If Simple Mode**: spec header gets `**Mode**: Simple`; testing defaults to Lightweight.
 **If Full Mode**: spec header gets `**Mode**: Full`; all gates required.
