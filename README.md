@@ -18,6 +18,12 @@ Or install into a single project for GitHub Copilot CLI — drop `-g` to write t
 npx skills@latest add jakkaj/tools -a github-copilot
 ```
 
+Without a `--skill` filter that command opens an interactive picker. To install **all** skills non-interactively (skip the picker), add `-y`:
+
+```bash
+npx skills@latest add jakkaj/tools -a github-copilot -y
+```
+
 For all install patterns (other CLIs, project-local, single-skill, multi-CLI, universal), see **[INSTALL.md](./INSTALL.md)**.
 
 For an annotated catalog of every skill, see **[README_AGENTS.md](./README_AGENTS.md)**.
