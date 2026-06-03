@@ -11,7 +11,7 @@ A visual guide to the **spec-driven-development** skills and the **harness loop*
 Two tracks run at once:
 
 - **SDD pipeline** (you drive it) — `/plan-1a → 1b → [2c] → 3 → 5 → 6 → 7 → 8`, one step per command.
-- **Harness loop** (mostly drives itself) — `Boot → Observe → Retro`, firing automatically at the seams of the SDD skills.
+- **Harness loop** (mostly drives itself) — three skills serving the Boot, Observe, and Retro·Magic Wand stages of the full `Boot → Backpressure Check → Do Work and Observe → Retro and Magic Wand → Improve` loop, firing automatically at the seams of the SDD skills.
 
 > **New to this, or want a guide?** Run **`/the-flow`** — a conversational co-pilot that walks you through this whole pipeline: it asks what you want to build, narrates each stage, points out one insight per artifact, surfaces the optional branches + `/compact` seams + harness/backpressure cues, and tells you exactly what to type next. It *drives the `plan-*` flow on this page* — real planning + execution work, not an RPIV/`task-*` teaching loop. It coaches only — it never runs commands for you — and it's re-entrant, so it survives `/compact` and can even pick up a plan you started by hand.
 

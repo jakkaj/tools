@@ -162,15 +162,9 @@ The canonical maturity ladder is the **nucleus / self-improving** ladder — the
 
 ### Agent-harness capability axis (separate from maturity)
 
-This is a **capability axis**, not the maturity ladder — it describes what the agent-facing Boot → Interact → Observe layer can do, independent of where the engineering harness sits on the nucleus ladder above. Useful when reporting how richly an agent can drive and observe the running system.
+This is a **capability axis**, not the maturity ladder — it describes what the agent-facing Boot → Interact → Observe layer can do, independent of where the engineering harness sits on the nucleus ladder above. It is deliberately **unnumbered** so it never collides with the L0–L4 maturity levels: a bare "L2" always means maturity, never capability. Useful when reporting how richly an agent can drive and observe the running system, roughly progressing:
 
-| Capability | Meaning |
-|------------|---------|
-| C0: No interaction | Agent writes code, human tests |
-| C1: Manual boot + API | Human starts stack, agent sends requests |
-| C2: Auto boot + API | Agent starts stack, health check, API interaction |
-| C3: Full interaction + evidence | Agent boots, drives UI/CLI, captures screenshots |
-| C4: Self-healing | Auto-recovery from stale processes, auth expiry |
+**no interaction** (agent writes code, human tests) → **manual boot + API** (human starts the stack, agent sends requests) → **auto boot + API** (agent starts the stack, health check, API interaction) → **full interaction + evidence** (agent boots, drives UI/CLI, captures screenshots) → **self-healing** (auto-recovery from stale processes, auth expiry).
 
 ## What Boot does NOT do
 

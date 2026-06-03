@@ -48,7 +48,7 @@ cd tools
 | Path | What |
 |---|---|
 | `skills/SDD/` | The spec-driven-development pipeline skills (plan-*, validate, didyouknow, etc.) |
-| `skills/harness/` | The 3 harness loop-stage skills: `harness-1-boot`, `harness-2-observe`, `harness-3-retro` (Boot → Observe → Retro) |
+| `skills/harness/` | The 3 harness loop-stage skills: `harness-1-boot`, `harness-2-observe`, `harness-3-retro` (serving the loop's Boot, Observe, and Retro·Magic Wand stages) |
 | `docs/harness/` | Harness loop runtime ledger (per-agent buffers + `.retro.md` files) **and** the frozen cross-system retro `schemas/` (the minih shape contract) — not skills themselves |
 | `skills/general/` | Domain-generic skills (grill-me) |
 | `skills/personal/` | Personal / non-coding skills (shopping-hunter) |

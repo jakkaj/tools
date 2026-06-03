@@ -1,6 +1,6 @@
 # Getting Started — moved
 
-This guide has been superseded. The current visual getting-started — covering the **v3 `/plan-*` pipeline** *and* the **harness loop** (Boot → Observe → Retro), with mermaid diagrams that distinguish manual calls from auto-fired harness stages — now lives **inside the `the-flow` skill** (the conversational front-door that voices it) so it ships with the skills via `npx skills`:
+This guide has been superseded. The current visual getting-started — covering the **v3 `/plan-*` pipeline** *and* the **harness loop** (Boot → Backpressure Check → Do Work and Observe → Retro and Magic Wand → Improve), with mermaid diagrams that distinguish manual calls from auto-fired harness stages — now lives **inside the `the-flow` skill** (the conversational front-door that voices it) so it ships with the skills via `npx skills`:
 
 ➡️ **[`skills/SDD/the-flow/references/getting-started.md`](../../skills/SDD/the-flow/references/getting-started.md)**
 
