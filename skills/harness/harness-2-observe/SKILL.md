@@ -34,6 +34,8 @@ When any of these triggers, call this skill with one entry.
 
 At a natural pause in the work — between phases, after completing a discrete task, after a long search — the agent asks itself: *"If I had a magic wand right now, what would I change?"* If the answer is concrete, log it. If nothing comes to mind, **don't force it**.
 
+After finishing a discrete task, sharpen that reflex into a **proof-gap self-check**: *"Could I have proven this task's success with a command, evidence, or deterministic check — or did I infer / eyeball it?"* If you only eyeballed it, that is a missing sensor, not a clean pass: log it as `kind: difficulty` with `target: project-sensor` (see § Schema-safe signal/back-pressure encodings) so the gap can later be re-encoded as deterministic back-pressure. This is the same single self-prompt, just pointed at provability — it does not add a second prompt or raise the firing rate.
+
 > **Agents are real users.** When you (the agent) hit friction or wish for a tool that doesn't exist, that is not noise — it is the most honest feedback the harness gets. A magic-wand wish is a feature request from a real user of the infrastructure. Treat it that way: log it so the loop can compound it.
 
 **Calibration target** (anti-vibe 7 — over-introspection):
@@ -142,7 +144,7 @@ The buffer is append-only. Each call appends a single YAML block. The skill neve
 
 Per spec Q6.1: at the end of a discrete task (phase complete, file written, test passed), check the buffer:
 
-- **If buffer is EMPTY** → fire the magic-wand self-prompt (per § "B. Self-prompt at natural pauses"). Nothing has been observed this task; ask if there's a magic-wand worth logging.
+- **If buffer is EMPTY** → fire the magic-wand self-prompt (per § "B. Self-prompt at natural pauses"), pointed at provability: ask the proof-gap self-check — *could this task's success have been proven deterministically, or was it eyeballed?* — and if eyeballed, log the missing sensor. Nothing else has been observed this task; this is the one prompt worth firing while otherwise silent.
 - **If buffer is NON-EMPTY** → do NOT additionally prompt. The existing entries are sufficient signal; piling on a magic-wand check now is over-introspection (anti-vibe 7).
 
 The point is: ask once per natural pause, only when otherwise silent.
