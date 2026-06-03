@@ -1,7 +1,7 @@
 ---
 name: harness-2-observe
 description: |
-  Observe stage of the harness loop (Boot → Do Work → Observe → Retro). Silent producer: called silently during a session whenever friction or insight arises — logs one entry per call to `docs/harness/_buffers/<agent>.session-buffer.md`. No user output during work; the only user surface is `harness-3-retro --drain` at session end. Tracks compounding value — every difficulty catalogued is a gift to your future self. Calibrated for ≤1 self-prompt per 5 minutes and ≤5 entries per session (anti-vibe 7 mitigation).
+  Observe stage of the harness loop (Boot → Backpressure Check → Do Work and Observe → Retro and Magic Wand → Improve) — the Observe half of Do Work and Observe. Silent producer: called silently during a session whenever friction or insight arises — logs one entry per call to `docs/harness/_buffers/<agent>.session-buffer.md`. No user output during work; the only user surface is `harness-3-retro --drain` at session end. Tracks compounding value — every difficulty catalogued is a gift to your future self. Calibrated for ≤1 self-prompt per 5 minutes and ≤5 entries per session (anti-vibe 7 mitigation).
 ---
 
 # harness-2-observe

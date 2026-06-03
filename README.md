@@ -62,7 +62,7 @@ See **[CLAUDE.md](./CLAUDE.md)** for the contributor-facing dev guide (how to ad
 
 The `skills/harness/` family encodes one idea: **the engineering harness IS the product.** Development infrastructure — `just`/`make` recipes, build and seed scripts, test runners, env setup, plus the agent-facing Boot → Interact → Observe loop on top — is not scaffolding. It is the first-class product of engineering work, and every plan and code change should leave it better than it found it.
 
-Three skills name the loop stage they serve:
+The full loop is **Boot → Backpressure Check → Do Work and Observe → Retro and Magic Wand → Improve**. Three skills serve its recurring stages:
 
 - **`harness-1-boot`** — *Boot.* Validate the harness is healthy and report its maturity at session start. If a fresh agent can't reach a healthy, observable running system in 30-60 seconds, that is the most important thing to fix.
 - **`harness-2-observe`** — *Observe.* A silent producer that captures friction during work to a per-agent buffer, so each difficulty catalogued becomes a gift to your future self (compounding value).

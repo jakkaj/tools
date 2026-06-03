@@ -1,7 +1,7 @@
 ---
 name: harness-3-retro
 description: |
-  Retro stage of the harness loop (Boot → Do Work → Observe → Retro). One skill, two modes. `--drain` (session-end soft prompt) reads `docs/harness/_buffers/<agent>.session-buffer.md`; if non-empty, presents a single soft prompt with `[s/t/p/e/d/a]` action menu and a one-line encoding hint per entry; routes saved entries into per-run `.retro.md` files under `docs/harness/agents/<agent>/<date>/`. `--harvest` (long-horizon curation) scans `docs/harness/agents/**/*.retro.md` (canonical) plus legacy `docs/retros/*.md` (back-compat), validates against the universal schema, dedups, clusters by kind + target, ages stale entries, and prints a prioritized terminal view (`--json` for tooling). Encode, don't document. Empty buffer / empty tree = silent. NO on-disk index files — views computed at read time.
+  Retro and Magic Wand stage of the harness loop (Boot → Backpressure Check → Do Work and Observe → Retro and Magic Wand → Improve). One skill, two modes. `--drain` (session-end soft prompt) reads `docs/harness/_buffers/<agent>.session-buffer.md`; if non-empty, presents a single soft prompt with `[s/t/p/e/d/a]` action menu and a one-line encoding hint per entry; routes saved entries into per-run `.retro.md` files under `docs/harness/agents/<agent>/<date>/`. `--harvest` (long-horizon curation) scans `docs/harness/agents/**/*.retro.md` (canonical) plus legacy `docs/retros/*.md` (back-compat), validates against the universal schema, dedups, clusters by kind + target, ages stale entries, and prints a prioritized terminal view (`--json` for tooling). Encode, don't document. Empty buffer / empty tree = silent. NO on-disk index files — views computed at read time.
 ---
 
 # harness-3-retro

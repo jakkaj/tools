@@ -1,6 +1,6 @@
 ---
 name: harness-1-boot
-description: Boot stage of the harness loop (Boot → Do Work → Observe → Retro). Validate that the engineering harness is healthy at session start and report its maturity. VALIDATE mode runs the Boot → Interact → Observe health check; STATUS mode gives a quick read-only maturity report. Reads `docs/project-rules/engineering-harness.md` (legacy `agent-harness.md` / `harness.md` read as fallback, canonical-first). Reports `UNAVAILABLE` gracefully when no governance doc and no boot command exist — the governance doc is provisioned by the separate engineering-harness setup effort, not by this skill.
+description: Boot stage of the harness loop (Boot → Backpressure Check → Do Work and Observe → Retro and Magic Wand → Improve). Validate that the engineering harness is healthy at session start and report its maturity. VALIDATE mode runs the Boot → Interact → Observe health check; STATUS mode gives a quick read-only maturity report. Reads `docs/project-rules/engineering-harness.md` (legacy `agent-harness.md` / `harness.md` read as fallback, canonical-first). Reports `UNAVAILABLE` gracefully when no governance doc and no boot command exist — the governance doc is provisioned by the separate engineering-harness setup effort, not by this skill.
 ---
 # harness-1-boot
 
@@ -150,15 +150,27 @@ Read engineering-harness.md (or legacy agent-harness.md / harness.md, with migra
 
 ## Maturity model (reference)
 
+The canonical maturity ladder is the **nucleus / self-improving** ladder — the same one the engineering-harness setup effort provisions into the governance doc. Boot reports the level that is *actually working* (not aspirational), reading it from the governance doc's `## Maturity Assessment`.
+
 | Level | Meaning |
 |-------|---------|
-| L0: No harness | Agent writes code, human tests |
-| L1: Manual boot + API | Human starts stack, agent sends requests |
-| L2: Auto boot + API | Agent starts stack, health check, API interaction |
-| L3: Full interaction + evidence | Agent boots, drives UI/CLI, captures screenshots |
-| L4: Self-healing | Auto-recovery from stale processes, auth expiry |
+| L0: No harness | Commands live in tribal knowledge, scattered docs, or ad-hoc scripts |
+| L1: Front door | Governance doc, harness/, CLI skeleton, AGENTS.md pointer exist; commands may be unconfigured |
+| L2: Commands encoded | Build/test/run/health are confirmed and runnable |
+| L3: Improvement loop active | Friction log has entries; ≥1 has been encoded into the harness; magic-wand prompts have shipped harness changes |
+| L4: Self-improving | The harness regularly produces improvements during normal work; new agents onboard without human help; proof-level ceilings are tracked |
 
-Boot reports the level that is *actually working* (not aspirational).
+### Agent-harness capability axis (separate from maturity)
+
+This is a **capability axis**, not the maturity ladder — it describes what the agent-facing Boot → Interact → Observe layer can do, independent of where the engineering harness sits on the nucleus ladder above. Useful when reporting how richly an agent can drive and observe the running system.
+
+| Capability | Meaning |
+|------------|---------|
+| C0: No interaction | Agent writes code, human tests |
+| C1: Manual boot + API | Human starts stack, agent sends requests |
+| C2: Auto boot + API | Agent starts stack, health check, API interaction |
+| C3: Full interaction + evidence | Agent boots, drives UI/CLI, captures screenshots |
+| C4: Self-healing | Auto-recovery from stale processes, auth expiry |
 
 ## What Boot does NOT do
 
