@@ -261,11 +261,32 @@ awaiting-8 ──merged────────▶ complete
 | `awaiting-8` | merge plan | merge readiness | — | **harvest** reflection | user types `PROCEED`/`ABORT`; on merge → `complete` |
 | `complete` | — | — | — | suggest `/harness-3-retro --harvest` if not already | recap + stop; set `status:"complete"` |
 
+### Must-see fields to scan (the Flag beat, per stage)
+
+Where each artifact hides its **structured alarms** — lift any present, verbatim, into the Flag line. If a stage isn't listed, it rarely carries alarms (skip silently when clean).
+
+| Stage | Scan for (quote any hits) |
+|---|---|
+| `awaiting-1a` | Critical/High findings the dossier marks unresolved or contradicting the ask |
+| `awaiting-1b` | remaining `[NEEDS CLARIFICATION]` markers; low CS **Confidence**; unanswered Open Questions |
+| `awaiting-2d` | **ABSENT** / **BUILDABLE** sensors (the eyeball-gaps); a recommended **Phase 0: Establish Backpressure** |
+| `awaiting-3` | `**Status**: DRAFT`; Gate Matrix **FAIL** rows; inline `⚠️ GAP:` markers; `## Unresolved Gaps` table; Deviation Ledger entries |
+| `awaiting-5` | tasks with no/weak Done-When; a phase carrying a flagged Key Finding |
+| `awaiting-6` | acceptance criteria **not met**; blocked tasks; debt/gotchas in the Discoveries table |
+| `awaiting-7` | **CRITICAL/HIGH** findings; any verdict short of clean |
+| `awaiting-8` | unmerged-blocker notes; merge-readiness warnings |
+
 ---
 
 ## Narration scripts (paste-ready copy)
 
-All copy obeys **Orient → Suggest → Invite**: one decision per turn, a recommended default + 2–4 concrete typeable answers + an "if unsure" path. `<bracketed>` = fill from the discovered artifact (a **real** detail — never invented). **Every block is prefaced with the host rail** at that stage's fill.
+All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decision per turn, a recommended default + 2–4 concrete typeable answers + an "if unsure" path. `<bracketed>` = fill from the discovered artifact (a **real** detail — never invented). **Every block is prefaced with the host rail** at that stage's fill.
+
+**The Flag beat (don't assume the human read everything).** Between Orient and Insight, scan the just-produced artifact's **structured alarm fields** (the "Must-see fields to scan" column of the Routing Table) and surface any hits verbatim, with a confirming — not nagging — vibe: *"⚠️ Before we move on — the work flagged `<X>`, `<Y>` — just making sure you saw those."* This is distinct from the single Insight: Insight is one *interesting* detail (curiosity); Flag is the *decision-relevant must-sees* the human can't afford to miss (safety). Rules:
+> - **Lift, never derive.** Callouts are quoted from the artifact's flag fields (DRAFT status, gate FAILs, `⚠️ GAP:` markers, unresolved gaps, CRITICAL/HIGH findings, AC-not-met, ABSENT sensors, remaining `[NEEDS CLARIFICATION]`). Never invented — same grounding rule as invariant #5.
+> - **Cap it.** A few max; this is a highlight, not a dump of the whole artifact.
+> - **Silent when clean.** Nothing flagged → one line (*"nothing flagged — clean"*) or skip the beat entirely. No manufactured alarms.
+> - **Never a gate.** "Just making sure you saw" — the human acts on it or waves past. It never blocks the next step (invariant #4).
 
 ### `start` — fresh entry (no active state, no artifacts)
 > [the-flow] ◇─◇─◇─◇─◇─◇─◇
@@ -316,6 +337,7 @@ All copy obeys **Orient → Suggest → Invite**: one decision per turn, a recom
 > [the-flow] ◆─◆─◇─◇─◇─◇─◇
 >
 > **Where we are**: backpressure coverage written — **Certainty: `<Strong|Partial|Weak>`**`<; recommended Phase 0: …>`.
+> `<⚠️ Before we move on — the survey flagged <N ABSENT sensors> where you'd otherwise be eyeballing: <one-line each>. Just making sure you saw those — they're the Phase-0 candidates.>` *(omit if coverage is Strong with no ABSENT sensors)*
 > What this means: `<the criteria with EXISTS sensors are provable now; the BUILDABLE/ABSENT ones are where you'd otherwise be eyeballing>`. It's **advisory** — `/plan-3` will *consider* any Phase 0, never be forced into one.
 > Next: `/plan-3`. (Compact first if the survey was long — `compact` then `/the-flow`.) Type: `architect` or `compact`.
 
@@ -323,6 +345,7 @@ All copy obeys **Orient → Suggest → Invite**: one decision per turn, a recom
 > [the-flow] ◆─◆─◆─◇─◇─◇─◇
 >
 > **Where we are**: the plan is written — **Status: `<READY|DRAFT>`** (gates: `<matrix summary>`). validate-v2 already auto-ran.
+> `<⚠️ Before we move on — the work flagged: <DRAFT + the FAILed gate(s)> / <N unresolved gaps: "…"> / <a Deviation Ledger entry>. Just making sure you saw those.>` *(omit this line entirely if Status is READY with no gaps)*
 > Did you notice `<a phase boundary | a gate that's N/A | the DRAFT gap>`? That matters because `<why>`.
 >
 > *If DRAFT*: `<the gap>` needs a fix first — `<the suggested remedy>`, then re-run `/plan-3`. Type: `fix` (I'll walk you through it) or `show gaps`.
@@ -346,6 +369,7 @@ All copy obeys **Orient → Suggest → Invite**: one decision per turn, a recom
 > [the-flow] ◆─◆─◆─◆─◆─◇─◇
 >
 > **Where we are**: Phase `<N>` landed — `<what it delivered>`; acceptance `<AC refs>` met. `/plan-6a` tracked progress for you.
+> `<⚠️ Before we move on — the work flagged: <acceptance criterion X not met> / <task Y left blocked> / <debt logged: "…">. Just making sure you saw those before the next phase.>` *(omit if everything landed clean)*
 > You may have seen a retro prompt `[s/t/p/e/d/a]` at the end — that's the harness **draining** the session's friction notes; default `[a]` saves them all. (Silenced if `docs/harness/.disabled` exists.)
 > Did you notice `<one execution-log discovery>`? Worth carrying forward.
 > *More phases (Full)*: this is a between-phase seam — `/compact` now, then `/plan-5` for Phase `<N+1>`. Type: `compact` or `next phase`.
@@ -355,6 +379,7 @@ All copy obeys **Orient → Suggest → Invite**: one decision per turn, a recom
 > [the-flow] ◆─◆─◆─◆─◆─◆─◇
 >
 > **Where we are**: review written (`reviews/<file>`) — verdict `<…>`.
+> `<⚠️ Before we move on — the review flagged <N CRITICAL / M HIGH> findings: <one-line each>. Just making sure you saw those — they route back to a fix.>` *(omit if the verdict is clean)*
 > Worth knowing: `/plan-7` is the **inferential / eyeball** tier; `/plan-2d` earlier was the **computational** tier. Together they cover what each can't.
 > Did you notice `<one finding>`? `<It routes back to implement | it's clean>`.
 > *Findings*: fix, then re-run `/plan-7`. Type: `fix`.
