@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "kind": "flight-plan",
+  "slug": "perplexity-deep-research",
+  "plan_dir": "docs/plans/028-perplexity-deep-research",
+  "mode": "Simple",
+  "cursor": "p1",
+  "recommended_next": "merge",
+  "now": "Phase 1 built — CLI + skill installed, all ACs met",
+  "next": "Validate (user-requested) → then Review/Merge",
+  "_comment": "the-flow.md is generated FROM this file. Research was done inline by /the-flow (API endpoint, models, key location) rather than a /plan-1a dossier, since the unknowns were external (Perplexity API) not codebase.",
+  "agents": [],
+  "nodes": [
+    { "id": "research", "type": "research", "label": "Research · Perplexity API facts", "status": "done",
+      "command": "(inline: perplexity MCP + live curl probe)",
+      "ran_at": "2026-06-07T02:11Z",
+      "user_input": "we need a new skill ... goes direct to pereplxty api with the key ... need a little cli in here ... very simple please ... loko up what model perplexity has ... use the-flow skill please. build a littl prototype.",
+      "note": "Endpoint https://api.perplexity.ai/chat/completions; models sonar/sonar-pro/sonar-deep-research valid, sonar-reasoning deprecated; key in $PERPLEXITY_API_KEY. sonar-deep-research is the slow one that trips the MCP 5-min timeout.",
+      "artifacts": ["original-ask.md"], "next": ["spec"] },
+
+    { "id": "spec", "type": "spec", "label": "Spec (Simple, CS-2)", "status": "done",
+      "command": "/plan-1b --simple", "ran_at": "2026-06-07T02:13Z",
+      "user_input": "Lightweight testing · real API only · skill-body docs",
+      "note": "Single build phase; CLI bundled in skill folder; default model sonar-deep-research, default timeout 1800s.",
+      "artifacts": ["perplexity-deep-research-spec.md"], "next": ["plan"] },
+
+    { "id": "plan", "type": "plan", "label": "Plan (READY, Simple)", "status": "done",
+      "command": "/plan-3", "ran_at": "2026-06-07T02:15Z",
+      "note": "1 phase, 4 tasks, all gates PASS/N/A. Skipped heavyweight validate-v2 (CS-2 prototype).",
+      "artifacts": ["perplexity-deep-research-plan.md"], "next": ["p1"] },
+
+    { "id": "p1", "type": "phase", "phase": 1, "label": "Build CLI + skill (prototype)", "status": "done",
+      "command": "/plan-6", "ran_at": "2026-06-07T02:22Z",
+      "note": "pplx_research.py + SKILL.md written; smoke tests pass (sonar call -> Paris + 5 citations; key-unset -> exit 2); slug check OK (32); installed to ~/.agents/skills via just install-skills-from-source.",
+      "artifacts": ["skills/general/perplexity-deep-research/pplx_research.py", "skills/general/perplexity-deep-research/SKILL.md", "execution.log.md"],
+      "next": ["merge"] },
+
+    { "id": "merge", "type": "merge", "label": "Merge", "status": "assumed", "command": "/plan-8", "next": [] }
+  ]
+}

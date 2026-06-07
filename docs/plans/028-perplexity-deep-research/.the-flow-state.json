@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "slug": "perplexity-deep-research",
+  "plan_dir": "docs/plans/028-perplexity-deep-research",
+  "mode": "Simple",
+  "current_stage": "awaiting-8",
+  "pending_command": "commit to main (user must ask) — work-on-main-only repo, no PR flow",
+  "intent": "A skill + tiny CLI that calls the Perplexity HTTP API directly (bypassing the MCP server's 5-min timeout) to run long sonar-deep-research jobs. Very simple prototype.",
+  "milestones_total": 5,
+  "milestones_done": 4,
+  "last_checkpoint_at": "2026-06-07T02:30:00Z",
+  "compacted_seams": [],
+  "status": "active"
+}
