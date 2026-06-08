@@ -8,7 +8,7 @@
   "recommended_next": "p4",
   "now": "Phase 3 · Next.js + Clean Arch",
   "next": "Phase 4 · CLI Package",
-  "_comment": "WORKED-EXAMPLE TEMPLATE — copy this shape for a new flight plan, then replace nodes/agents. Validates against flight-plan.schema.json. Snapshot: a 6-phase Full plan at Phase 3 in progress. Shows every status (done/in_progress/known/assumed), each workshop as its OWN node, verbatim user_input bubbles, a companion that WRAPS the build phases, and a worker side-node. the-flow.md is generated FROM this file.",
+  "_comment": "WORKED-EXAMPLE TEMPLATE — copy this shape for a new flight plan, then replace nodes/agents. Validates against flight-plan.schema.json. Snapshot: a 6-phase Full plan at Phase 3 in progress. Shows every status (done/in_progress/known/assumed), each workshop as its OWN node, verbatim user_input bubbles, a companion that WRAPS the build phases, a worker side-node, AND the harness loop as first-class nodes (backpressure on the spine between spec and plan; harness-boot pre-flight, harness-observe, harness-retro at phase seams). Harness nodes are shown here because this repo HAS a harness; omit them all when no engineering-harness governance doc exists or docs/harness/.disabled is present. the-flow.md is generated FROM this file.",
   "agents": [
     { "id": "crc", "kind": "companion", "slug": "code-review-companion", "runtime": "minih",
       "run_id": "2026-01-19T08-22-01Z-a91f", "status": "live", "covers": ["p1", "p2", "p3", "p4", "p5", "p6"],
@@ -47,12 +47,23 @@
       "branch_of": "spec", "ran_at": "2026-01-17T17:10Z",
       "user_input": "one fake per adapter, or shared fakes?",
       "note": "one fake per port; shared test factory.",
-      "artifacts": ["workshops/002-fakes.md"], "next": ["plan"] },
+      "artifacts": ["workshops/002-fakes.md"], "next": ["bp"] },
+
+    { "id": "bp", "type": "backpressure", "label": "Backpressure Check", "status": "done",
+      "command": "/harness-2-backpressure", "ran_at": "2026-01-18T07:30Z",
+      "user_input": "check what we can prove deterministically before planning",
+      "note": "Backpressure Check stage (harness loop) — recommended between spec and architect. Certainty: Partial; recommended a Phase 0 to add a smoke route + dependency-cruiser rule. Advisory, never blocks.",
+      "artifacts": ["backpressure-coverage.md"], "next": ["plan"] },
 
     { "id": "plan", "type": "plan", "label": "Plan", "status": "done",
       "command": "/plan-3", "ran_at": "2026-01-18T08:00Z",
-      "note": "Status READY, 6 phases locked -> future phase nodes flip assumed->known.",
-      "artifacts": ["project-setup-plan.md", "project-setup.fltplan.md"], "next": ["p1"] },
+      "note": "Status READY, 6 phases locked -> future phase nodes flip assumed->known. Folded in the backpressure Phase 0.",
+      "artifacts": ["project-setup-plan.md", "project-setup.fltplan.md"], "next": ["hb"] },
+
+    { "id": "hb", "type": "harness-boot", "label": "Harness boot (pre-flight)", "status": "done",
+      "command": "/harness-1-boot", "branch_of": "p1",
+      "note": "Boot loop stage — Boot→Interact→Observe pre-flight; proves the system runs before phase code. /plan-6 auto-fires it. UNAVAILABLE is not an error.",
+      "next": ["p1"] },
 
     { "id": "p1", "type": "phase", "phase": 1, "label": "Monorepo Foundation", "status": "done",
       "note": "12/12 tasks; pnpm workspace + turborepo wired.",
@@ -74,9 +85,21 @@
     { "id": "fx3", "type": "fix-loop", "label": "fix loop?", "status": "assumed",
       "branch_of": "p3", "note": "only if Phase 3 review returns REQUEST_CHANGES.", "next": ["p4"] },
 
+    { "id": "hr2", "type": "harness-retro", "label": "Retro --drain (seam)", "status": "done",
+      "command": "/harness-4-retro --drain", "branch_of": "p2",
+      "note": "Retro loop stage — drained the session friction buffer at the Phase 1→2 seam ([s/t/p/e/d/a], default [a]).", "next": [] },
+
+    { "id": "ho", "type": "harness-observe", "label": "Observe (silent)", "status": "in_progress",
+      "branch_of": "p3",
+      "note": "Observe loop stage — runs silently during the build phases, logging friction to the session buffer; no user surface until --drain.", "next": [] },
+
     { "id": "p4", "type": "phase", "phase": 4, "label": "CLI Package", "status": "known", "next": ["p5"] },
     { "id": "p5", "type": "phase", "phase": 5, "label": "MCP Server", "status": "known", "next": ["p6"] },
     { "id": "p6", "type": "phase", "phase": 6, "label": "Docs & Polish", "status": "known", "next": ["merge"] },
-    { "id": "merge", "type": "merge", "label": "Merge", "status": "known", "command": "/plan-8", "next": [] }
+    { "id": "merge", "type": "merge", "label": "Merge", "status": "known", "command": "/plan-8", "next": ["hh"] },
+
+    { "id": "hh", "type": "harness-retro", "label": "Retro --harvest", "status": "known",
+      "command": "/harness-4-retro --harvest", "branch_of": "merge",
+      "note": "Retro loop stage — long-horizon cross-plan harvest at merge; curated, read-only terminal print.", "next": [] }
   ]
 }

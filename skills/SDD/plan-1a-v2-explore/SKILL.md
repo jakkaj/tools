@@ -409,7 +409,7 @@ Return complete findings list including any external research gaps identified."
 2. `docs/plans/*/*.md` - Plan files (Simple Mode may have inline discoveries)
 3. `docs/plans/*/tasks/*/execution.log.md` - Execution logs with detailed context
 4. `docs/harness/agents/**/*.retro.md` - **Compounding Value System retros** (universal `.retro.md` format; YAML frontmatter validates against `docs/harness/schemas/retro.schema.json`)
-5. `docs/retros/*.md` (back-compat) - legacy minih block-format ledger (auto-parsed via the same minih-block reader harness-3-retro --harvest uses)
+5. `docs/retros/*.md` (back-compat) - legacy minih block-format ledger (auto-parsed via the same minih-block reader harness-4-retro --harvest uses)
 
 **Tasks**:
 - Find ALL `## Discoveries & Learnings` sections across prior plans
@@ -1055,14 +1055,14 @@ This skill participates in the **Compounding Value System** (the `skills/harness
 **Sentinel**: Before any compound call below, check `docs/harness/.disabled` — if present, silently skip everything in this section.
 
 **At start**:
-- Check `docs/harness/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-3-retro --drain` BEFORE this skill's research work.
-- If `docs/harness/agents/**/*.retro.md` has ≥5 entries with `system.compound.status == open` AND the user has not run `harness-3-retro --harvest` in the last 7 days, print a one-liner suggesting `/harness-3-retro --harvest [--plan <slug>]`. **Do NOT auto-fire** — research start is a suggestion-only moment.
+- Check `docs/harness/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-4-retro --drain` BEFORE this skill's research work.
+- If `docs/harness/agents/**/*.retro.md` has ≥5 entries with `system.compound.status == open` AND the user has not run `harness-4-retro --harvest` in the last 7 days, print a one-liner suggesting `/harness-4-retro --harvest [--plan <slug>]`. **Do NOT auto-fire** — research start is a suggestion-only moment.
 
 **During research** (orchestrator-side, NOT subagent-side per workshop 004 § D6 — subagents stay focused on research output; orchestrator does the meta-tracking):
-- Silently call `harness-2-observe` per its trigger heuristics. Plan-1a-specific triggers: research returning zero results despite the topic being plausibly covered; subagent timing out; major contradictions between subagents that require manual reconciliation; the magic-wand reflex when synthesizing the dossier.
+- Silently call `harness-3-observe` per its trigger heuristics. Plan-1a-specific triggers: research returning zero results despite the topic being plausibly covered; subagent timing out; major contradictions between subagents that require manual reconciliation; the magic-wand reflex when synthesizing the dossier.
 - Calibration: ≤1 self-prompt per 5min; ≤5 entries per session.
 
 **At end** (logical pause — research dossier complete):
-- Auto-fire `/harness-3-retro --drain` — drains the buffer; the user sees the soft prompt with `[s/t/p/e/d/a]` actions.
+- Auto-fire `/harness-4-retro --drain` — drains the buffer; the user sees the soft prompt with `[s/t/p/e/d/a]` actions.
 
 See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md).

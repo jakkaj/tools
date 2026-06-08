@@ -45,7 +45,7 @@ The narration below uses **bare stage names** (`/plan-3`, `/plan-1b`, …). Thes
 | `/plan-1a` | `plan-1a-v2-explore` |
 | `/plan-1b` | `plan-1b-v3-specify-and-clarify` |
 | `/plan-2c` | `plan-2c-v2-workshop` |
-| `/plan-2d` | `plan-2d-backpressure-survey` |
+| `/plan-2d` | `harness-2-backpressure` (back-compat alias — the skill now lives in the harness family) |
 | `/plan-3` | `plan-3-v3-architect` |
 | `/plan-3a` | `plan-3a-v2-adr` |
 | `/plan-5` | `plan-5-v2-phase-tasks-and-brief` |
@@ -54,6 +54,10 @@ The narration below uses **bare stage names** (`/plan-3`, `/plan-1b`, …). Thes
 | `/plan-6a` | `plan-6a-v2-update-progress` |
 | `/plan-7` | `plan-7-v2-code-review` |
 | `/plan-8` | `plan-8-v2-merge` |
+| `/harness-1` | `harness-1-boot` |
+| `/harness-2` | `harness-2-backpressure` (same skill as `/plan-2d`) |
+| `/harness-3` | `harness-3-observe` |
+| `/harness-4` | `harness-4-retro` |
 
 If a slug ever fails to resolve at runtime, do **not** guess a suffix — fall back to printing the bare `/plan-N` alias (the host resolves it) and tell the user the canonical pipeline lives in `skills/SDD/`.
 
@@ -251,7 +255,7 @@ awaiting-8 ──merged────────▶ complete
 |---|---|---|---|---|---|
 | `start` | — (ask intent) | — | — | mention `/harness-1-boot --validate` optional | research-worthy → `/plan-1a` (→`awaiting-1a`); else `/plan-1b` (→`awaiting-1b`) |
 | `awaiting-1a` | `research-dossier.md` | one Critical/High finding | **YES** (dossier is large) | observe ran silently | `/plan-1b` → `awaiting-1b` |
-| `awaiting-1b` | `<slug>-spec.md` | CS score + Simple/Full + #Workshop Opportunities | **YES** (before architect) | — | branch: `/plan-2c` (→`awaiting-2c`) \| `/plan-2d` (→`awaiting-2d`) \| `/plan-3` (→`awaiting-3`) |
+| `awaiting-1b` | `<slug>-spec.md` | CS score + Simple/Full + #Workshop Opportunities | **YES** (before architect) | **backpressure is the recommended next step** (spec → backpressure → architect) | branch (recommend backpressure first): `/plan-2d` *(harness Backpressure Check, recommended)* (→`awaiting-2d`) \| `/plan-2c` *(optional workshop)* (→`awaiting-2c`) \| `/plan-3` *(skip to architect)* (→`awaiting-3`) |
 | `awaiting-2c` | newest `workshops/*.md` | the headline decision (Selected option) | — | — | `/plan-2d` (→`awaiting-2d`) \| `/plan-3` (→`awaiting-3`) |
 | `awaiting-2d` | `backpressure-coverage.md` | Certainty (Strong/Partial/Weak) + Phase 0? | — | **backpressure payoff** | `/plan-3` → `awaiting-3` |
 | `awaiting-3` | `<slug>-plan.md` | `**Status**` (READY/DRAFT) + Gate Matrix | **YES** (before implement) | validate-v2 already auto-ran | DRAFT → fix + re-run `/plan-3` (stay); Simple+READY → `/plan-6` (→`awaiting-6`); Full+READY → `/plan-5` (→`awaiting-5`) |
@@ -259,7 +263,7 @@ awaiting-8 ──merged────────▶ complete
 | `awaiting-6` | `execution.log.md` / phase status | what landed + AC met | **YES** (between phases) | **boot gate** (set expectation *before*); **drain** prompt `[s/t/p/e/d/a]` (explain *after*) | clean → `/plan-7` (→`awaiting-7`); more phases → next `/plan-5` (→`awaiting-5`) |
 | `awaiting-7` | newest `reviews/*.md` | verdict + one finding | — | contrast computational(`2d`) vs inferential(`7`) tiers | findings → fix + re-run `/plan-7` (stay); clean → `/plan-8` (→`awaiting-8`) |
 | `awaiting-8` | merge plan | merge readiness | — | **harvest** reflection | user types `PROCEED`/`ABORT`; on merge → `complete` |
-| `complete` | — | — | — | suggest `/harness-3-retro --harvest` if not already | recap + stop; set `status:"complete"` |
+| `complete` | — | — | — | suggest `/harness-4-retro --harvest` if not already | recap + stop; set `status:"complete"` |
 
 ### Must-see fields to scan (the Flag beat, per stage)
 
@@ -394,7 +398,7 @@ All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decis
 ### `complete`
 > [the-flow] ◆─◆─◆─◆─◆─◆─◆
 >
-> 🎉 That's the full loop: spec → plan → tasks → code → review → merge. The harness captured friction along the way; if you haven't, `/harness-3-retro --harvest` gives a curated cross-plan view. Nothing else queued — re-run `/the-flow` any time to start a new one.
+> 🎉 That's the full loop: spec → plan → tasks → code → review → merge. The harness captured friction along the way; if you haven't, `/harness-4-retro --harvest` gives a curated cross-plan view. Nothing else queued — re-run `/the-flow` any time to start a new one.
 
 ### Optional branch mentions (one-liners, surfaced at their seam — never new stages)
 - `awaiting-1a`: **deep-research** with your tool of choice (online agent **or** coding harness) before `/plan-1b`.
@@ -430,14 +434,21 @@ USER runs the next /plan-* … then /the-flow → discovers the new artifact →
 
 ---
 
-## Harness affordances (make the loop legible)
+## Harness loop — first-class in the flow (make the loop legible)
 
-**Sentinel**: before any harness narration, check `docs/harness/.disabled`. If present, **silently skip** all harness mentions.
+The harness loop (`Boot → Backpressure Check → Do Work and Observe → Retro and Magic Wand → Improve`) is **not** a side-show you merely *narrate* — its stages are **first-class nodes in `the-flow.json`/`the-flow.md`** (types `backpressure`, `harness-boot`, `harness-observe`, `harness-retro`; see the schema + template). Weave them into the flight plan as you go, so the loop is *visible*, not implied. This is the productisation of the engineering environment surfaced in the map.
 
-- **Boot gate (before `/plan-6`)**: set the expectation in `awaiting-5` — `/plan-6` runs a Boot→Interact→Observe pre-flight; `UNAVAILABLE` is not an error, it falls back to standard testing.
-- **Observe (during work)**: silent. Mention once that the harness logs friction in the background; you don't call it.
-- **Drain (after `/plan-6`)**: explain the `[s/t/p/e/d/a]` retro prompt the user just saw — it drains the session's friction notes; default `[a]` saves all.
-- **Harvest (at `/plan-8` / `complete`)**: a cross-plan reflection; suggest `/harness-3-retro --harvest` if it hasn't fired.
+**Sentinel (load-bearing)**: before emitting ANY harness node or narration, check that a harness exists — `docs/project-rules/engineering-harness.md` (or legacy `agent-harness.md` / `harness.md`) present AND `docs/harness/.disabled` **absent**. If either fails, **silently omit every harness node and mention** — the flight plan shows just spine + workshops, and the flow falls back to standard testing. A repo without a harness is fully supported; never nag about a missing one.
+
+When a harness exists, each stage is a node *and* a narration beat:
+
+- **Backpressure Check (`/harness-2-backpressure`, alias `/plan-2d`)** — a `backpressure` node **on the spine between spec and plan**. The recommended pre-architect step: shapes the plan around what's *provable by deterministic sensors*. Advisory; never blocks.
+- **Boot (`/harness-1-boot`)** — a `harness-boot` node before each phase; set the expectation in `awaiting-5` that `/plan-6` runs a Boot→Interact→Observe pre-flight. `UNAVAILABLE` is not an error — falls back to standard testing.
+- **Observe (`harness-3-observe`)** — a `harness-observe` node spanning the build; silent. Mention once that friction is logged in the background; you don't call it.
+- **Retro drain (`/harness-4-retro --drain`)** — a `harness-retro` node at each phase seam; explain the `[s/t/p/e/d/a]` prompt the user just saw — default `[a]` saves all.
+- **Retro harvest (`/harness-4-retro --harvest`)** — a `harness-retro` node at `/plan-8` / `complete`; a cross-plan reflection; suggest it if it hasn't fired.
+
+Every harness node is **advisory** — surfaced for legibility, never a gate, never blocks, no scores.
 
 ---
 
@@ -458,13 +469,14 @@ Every run maintains a **flight plan**: `docs/plans/<ord>-<slug>/the-flow.json` (
 **Status taxonomy → colour**: `done` 🟩 green · `in_progress` 🟧 orange · `blocked` 🟥 red · `known` 🟦 blue-grey (*designed* future, e.g. phases locked by `/plan-3`) · `assumed` ⬜ dashed grey (*speculative* future, e.g. a conditional fix loop). Transitions: `assumed → known` (at `/plan-3`) → `in_progress` → `done`; any active node → `blocked` → back to `in_progress`.
 
 **Render rules for `the-flow.md`** (see schema + template for the worked form):
-1. `flowchart TD` (vertical); emit the 5 `classDef`s (done/wip/blocked/known/assumed).
-2. **Spine** = `type ∈ {research, spec, plan, phase, merge}` linked solid `-->` in `next` order.
-3. **Excursions** (`branch_of` set: deep-research, **each** workshop, backpressure, fix-loop) = dotted `-.->` from their `branch_of`, rejoining at the spine. **Every workshop is its own node** — never collapse a loop into one blob.
-4. Each node `:::<class>` from its `status`.
-5. **User bubbles**: for every node with `user_input`, emit a `said`-class flag node (`>"🗣 …"]`) dotted (`-.-`) to it — verbatim, nothing hidden.
-6. **Agents**: `kind:companion` (`render:wrap`) → a **subgraph that wraps** its `covers[]` phases, styled with the companion colour; `kind:worker` (`render:side`) → a `worker`-class side-node linked `-. builds .->` to its `covers[]`.
-7. Legend line beneath (done/wip/blocked/known/assumed + 🗣 user input + companion + worker).
+1. `flowchart TD` (vertical); emit the `classDef`s (done/wip/blocked/known/assumed + said/companion/worker + **harness**). The `harness` class is violet (`fill:#EDE7F6,stroke:#673AB7`) so the loop reads distinctly from the spine.
+2. **Spine** = `type ∈ {research, spec, backpressure, plan, phase, merge}` linked solid `-->` in `next` order. **`backpressure` (the Backpressure Check) sits on the spine between `spec` and `plan`** — it's the recommended pre-architect step, styled with the `harness` class but on the main line (not a dotted excursion).
+3. **Excursions** (`branch_of` set: deep-research, **each** workshop, fix-loop) = dotted `-.->` from their `branch_of`, rejoining at the spine. **Every workshop is its own node** — never collapse a loop into one blob.
+4. **Harness loop nodes** (`type ∈ {harness-boot, harness-observe, harness-retro}`) = dotted `-.->` from their `branch_of`, all `:::harness`. Emit them ONLY when a harness exists AND `docs/harness/.disabled` is absent — otherwise omit every harness node (including the `backpressure` spine node falls back to a plain `spec --> plan` edge). A no-harness flight plan shows just spine + workshops.
+5. Each node `:::<class>` from its `status` (harness nodes keep `:::harness` regardless of status; convey status via the note).
+6. **User bubbles**: for every node with `user_input`, emit a `said`-class flag node (`>"🗣 …"]`) dotted (`-.-`) to it — verbatim, nothing hidden.
+7. **Agents**: `kind:companion` (`render:wrap`) → a **subgraph that wraps** its `covers[]` phases, styled with the companion colour; `kind:worker` (`render:side`) → a `worker`-class side-node linked `-. builds .->` to its `covers[]`.
+8. Legend line beneath (done/wip/blocked/known/assumed + 🗣 user input + companion + worker + 🟪 harness loop).
 
 > **Invariant**: never hand-edit `the-flow.md` as the primary — it is always a function of `the-flow.json`. This is what lets future first-class tooling drop in (production/validation/rendering off this stable contract — currently out of scope).
 

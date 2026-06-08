@@ -10,8 +10,8 @@ A visual guide to the **spec-driven-development** skills and the **harness loop*
 
 Two tracks run at once:
 
-- **SDD pipeline** (you drive it) — `/plan-1a → 1b → [2c] → 3 → 5 → 6 → 7 → 8`, one step per command.
-- **Harness loop** (mostly drives itself) — three skills serving the Boot, Observe, and Retro·Magic Wand stages of the full `Boot → Backpressure Check → Do Work and Observe → Retro and Magic Wand → Improve` loop, firing automatically at the seams of the SDD skills.
+- **SDD pipeline** (you drive it) — `/plan-1a → 1b → [2c] → [2d] → 3 → 5 → 6 → 7 → 8`, one step per command.
+- **Harness loop** (mostly drives itself) — **four** skills serving the Boot, **Backpressure Check**, Observe, and Retro·Magic Wand stages of the full `Boot → Backpressure Check → Do Work and Observe → Retro and Magic Wand → Improve` loop. The Backpressure Check (`/harness-2-backpressure`, alias `/plan-2d`) is a *recommended* step you run between the spec and the architect; the other three fire automatically at the seams of the SDD skills.
 
 > **New to this, or want a guide?** Run **`/the-flow`** — a conversational co-pilot that walks you through this whole pipeline: it asks what you want to build, narrates each stage, points out one insight per artifact, surfaces the optional branches + `/compact` seams + harness/backpressure cues, and tells you exactly what to type next. It *drives the `plan-*` flow on this page* — real planning + execution work, not an RPIV/`task-*` teaching loop. It coaches only — it never runs commands for you — and it's re-entrant, so it survives `/compact` and can even pick up a plan you started by hand.
 
@@ -38,14 +38,17 @@ flowchart TB
     end
 
     subgraph harness["HARNESS LOOP · fires at the work seams"]
+        HBP["/harness-2-backpressure<br/>Backpressure Check · recommended<br/>(spec → check → architect)"]:::harness
         HB["boot validation<br/>pre-flight before coding"]:::harness
-        HO["harness-2-observe<br/>silent, during work"]:::harness
-        HR["/harness-3-retro<br/>--drain / --harvest"]:::harness
+        HO["harness-3-observe<br/>silent, during work"]:::harness
+        HR["/harness-4-retro<br/>--drain / --harvest"]:::harness
     end
 
     P1A -.-> P1B
     P1B -.-> P2C
     P2C -.-> P3
+    P1B -.->|recommended| HBP
+    HBP -.-> P3
     P1B --> P3
     P3 --> P5
     P5 --> P6
@@ -78,7 +81,7 @@ Boot ─────────────────────────
   │                          Do Work                                    │
   │  ┌────────────────────────────────────────────────────────────┐    │
   └─►│  /plan-1a  /plan-1b  /plan-3  /plan-5  /plan-6  /plan-7      │◄───┘
-     │            (harness-2-observe fires silently throughout)     │
+     │            (harness-3-observe fires silently throughout)     │
      └────────────────────────────────────────────────────────────┘
 ```
 
@@ -88,10 +91,11 @@ Boot ─────────────────────────
 
 | Harness stage | Skill | Who calls it | When |
 |---|---|---|---|
+| **Backpressure Check** | `/harness-2-backpressure` (alias `/plan-2d`) | **You**, recommended | After the spec, before the architect (`/plan-3`). Surveys whether the scoped work is *provable by deterministic sensors* (build/type/test/lint/smoke/boot/architecture/schema) vs inference; writes `backpressure-coverage.md` and may recommend an optional "Phase 0: Establish Backpressure". A *Backpressure Check is distinct from back pressure itself* — it's advisory; the sensors prove, never the LLM. Never blocks. |
 | **Boot** | `/harness-1-boot` (or `/plan-6`'s built-in pre-phase check) | **Auto** before coding; **you** on demand | `/plan-6` and `/plan-6-companion` run a **Boot→Interact→Observe pre-phase validation before the first task** — the readiness gate that confirms the harness is healthy *before any code is written*. The standalone `/harness-1-boot --validate` runs the same check on demand (session start, or `--status` for a quick maturity read). Reports `UNAVAILABLE` (not an error) if the project has no engineering-harness governance doc. |
-| **Observe** | `harness-2-observe` | **Auto, silent** | Throughout `/plan-1a`, `/plan-6`, `/plan-7`, `/plan-8`, `/plan-2c` — whenever a skill hits friction (a tool call >30s, a search that should've matched but didn't, a retry, a backtrack, an ambiguous failure). Calibrated to ≤1 self-prompt per 5 min, ≤5 entries/session. You rarely call it yourself. |
-| **Retro (drain)** | `/harness-3-retro --drain` | **Auto** at phase boundaries | End of each `/plan-6` phase (and start of a skill if a prior buffer is non-empty). Surfaces a soft prompt with `[s/t/p/e/d/a]` actions (default `[a]ll-save`). You can also run it manually anytime entries have accumulated. |
-| **Retro (harvest)** | `/harness-3-retro --harvest` | **Auto** at plan completion | Fires automatically at the `/plan-6-companion` final-phase debrief and at `/plan-8` merge — the long-horizon reflection across the whole plan. In the rarer solo `/plan-6`/`/plan-7` path it's *suggested*, not auto-fired. Curated, read-only, terminal-print only. |
+| **Observe** | `harness-3-observe` | **Auto, silent** | Throughout `/plan-1a`, `/plan-6`, `/plan-7`, `/plan-8`, `/plan-2c` — whenever a skill hits friction (a tool call >30s, a search that should've matched but didn't, a retry, a backtrack, an ambiguous failure). Calibrated to ≤1 self-prompt per 5 min, ≤5 entries/session. You rarely call it yourself. |
+| **Retro (drain)** | `/harness-4-retro --drain` | **Auto** at phase boundaries | End of each `/plan-6` phase (and start of a skill if a prior buffer is non-empty). Surfaces a soft prompt with `[s/t/p/e/d/a]` actions (default `[a]ll-save`). You can also run it manually anytime entries have accumulated. |
+| **Retro (harvest)** | `/harness-4-retro --harvest` | **Auto** at plan completion | Fires automatically at the `/plan-6-companion` final-phase debrief and at `/plan-8` merge — the long-horizon reflection across the whole plan. In the rarer solo `/plan-6`/`/plan-7` path it's *suggested*, not auto-fired. Curated, read-only, terminal-print only. |
 
 **Opt-out**: `touch docs/harness/.disabled` silences every harness-loop call. The SDD skills check this sentinel before invoking anything.
 
@@ -100,12 +104,13 @@ flowchart LR
     classDef manual fill:#e3f2fd,stroke:#1976d2,color:#000
     classDef auto fill:#e8f5e9,stroke:#388e3c,color:#000
 
+    BP["/harness-2-backpressure<br/>━━━━━━<br/>YOU · recommended<br/>spec → check → architect"]:::manual
     B["boot validation<br/>━━━━━━<br/>AUTO · /plan-6 pre-flight<br/>(also /harness-1-boot on demand)"]:::auto
-    O["harness-2-observe<br/>━━━━━━<br/>AUTO · silent during work"]:::auto
-    D["/harness-3-retro --drain<br/>━━━━━━<br/>AUTO · each phase boundary"]:::auto
-    H["/harness-3-retro --harvest<br/>━━━━━━<br/>AUTO · plan complete"]:::auto
+    O["harness-3-observe<br/>━━━━━━<br/>AUTO · silent during work"]:::auto
+    D["/harness-4-retro --drain<br/>━━━━━━<br/>AUTO · each phase boundary"]:::auto
+    H["/harness-4-retro --harvest<br/>━━━━━━<br/>AUTO · plan complete"]:::auto
 
-    B --> O --> D --> H
+    BP --> B --> O --> D --> H
     D -.->|next phase| O
 ```
 
@@ -155,7 +160,7 @@ flowchart LR
 
 1.  /plan-1a "how are API endpoints structured here?"
     → 8 parallel subagents → docs/plans/005-api-widgets/research-dossier.md
-    → harness-2-observe quietly notes any research friction.
+    → harness-3-observe quietly notes any research friction.
 
 2.  /plan-1b "POST endpoint to create widgets (name, color)"
     → Asks testing/mock/docs/mode questions up front → api-widgets-spec.md (CS-3, Full)
@@ -173,12 +178,12 @@ flowchart LR
       (the boot gate; reports UNAVAILABLE and falls back to standard testing
       if there's no harness).
     → Implements; /plan-6a auto-tracks progress per task.
-    → harness-2-observe fires silently on friction.
-    → End of phase: /harness-3-retro --drain auto-fires → [s/t/p/e/d/a] prompt.
+    → harness-3-observe fires silently on friction.
+    → End of phase: /harness-4-retro --drain auto-fires → [s/t/p/e/d/a] prompt.
     → Companion reviews each commit live (supersedes /plan-7 here).
 
 6.  /plan-5 + /plan-6-companion for Phase 2 ...
-    → Final-phase debrief auto-fires /harness-3-retro --harvest
+    → Final-phase debrief auto-fires /harness-4-retro --harvest
       → curated friction view across the whole plan.
 
 7.  /plan-8 --plan "..."
@@ -199,6 +204,7 @@ You didn't have to type a single harness command — `/plan-6` boots the harness
 | `/plan-1a` | Deep-dive codebase research *(optional)* | `research-dossier.md` | observe (silent) |
 | `/plan-1b` | Spec + front-loaded clarifications | `<slug>-spec.md` | — |
 | `/plan-2c` | Design workshop for complex topics *(optional)* | `workshops/<topic>.md` | drains at next skill's pause |
+| `/harness-2-backpressure` (alias `/plan-2d`) | Backpressure Check — deterministic-sensor coverage survey *(recommended, after spec, before architect)* | `backpressure-coverage.md` | advisory; feeds `/plan-3`; never blocks |
 | `/plan-3` | Phased implementation plan (inline gates) | `<slug>-plan.md` + fltplan | — |
 | `/plan-5` | Task table + brief for one phase | `tasks.md` + `.fltplan.md` | drains at next skill's pause |
 | `/plan-6` | Implement one phase | code + `execution.log.md` | observe + drain (per phase) |
@@ -206,8 +212,8 @@ You didn't have to type a single harness command — `/plan-6` boots the harness
 | `/plan-6a` | Progress tracking *(auto-called by 6)* | updated tables/flight plans | writes farewell retros |
 | `/plan-7` | Code review *(rare in companion flow)* | `reviews/review.md` | observe + drain; suggests harvest |
 | `/plan-8` | Upstream merge analysis | merge plan | observe + drain + **auto harvest** |
-| `/harness-3-retro --drain` | Soft-prompt the session buffer | terminal `[s/t/p/e/d/a]` | auto at phase seams; manual anytime |
-| `/harness-3-retro --harvest` | Curated cross-plan friction view | terminal (read-only) | auto at plan completion |
+| `/harness-4-retro --drain` | Soft-prompt the session buffer | terminal `[s/t/p/e/d/a]` | auto at phase seams; manual anytime |
+| `/harness-4-retro --harvest` | Curated cross-plan friction view | terminal (read-only) | auto at plan completion |
 
 ---
 
@@ -256,4 +262,4 @@ Assigned by `/plan-1b`. Drives Simple vs Full and how much planning ceremony app
 
 > Boot proves the system runs, Observe catches friction while you work, Retro turns that friction into encoded improvements — so the harness *is* the product, and every difficulty catalogued is a gift to your future self.
 
-The three loop-stage skills live at `skills/harness/` (`harness-1-boot`, `harness-2-observe`, `harness-3-retro`); the consolidation history is in `docs/plans/024-harness-nucleus/`.
+The four loop-stage skills live at `skills/harness/` (`harness-1-boot`, `harness-2-backpressure`, `harness-3-observe`, `harness-4-retro`); the consolidation history is in `docs/plans/024-harness-nucleus/`, and the 2026-06-08 renumber that folded backpressure into the family is recorded in `CLAUDE.md` (vocabulary-freeze note).

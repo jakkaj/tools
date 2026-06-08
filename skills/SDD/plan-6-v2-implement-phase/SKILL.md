@@ -249,10 +249,10 @@ This skill participates in the **Compounding Value System** (the `skills/harness
 **Sentinel**: Before any compound call below, check `docs/harness/.disabled` — if present, silently skip everything in this section.
 
 **At start of each phase**:
-- Check `docs/harness/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-3-retro --drain` BEFORE this phase's work.
+- Check `docs/harness/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-4-retro --drain` BEFORE this phase's work.
 
 **During implementation work** (the bulk of the skill's runtime):
-- Silently call `harness-2-observe` per its trigger heuristics:
+- Silently call `harness-3-observe` per its trigger heuristics:
   - A tool call took >30 seconds and you were waiting on it
   - A search returned zero results when you expected matches
   - You retried the same operation more than once
@@ -262,10 +262,10 @@ This skill participates in the **Compounding Value System** (the `skills/harness
 - Calibration: ≤1 self-prompt per 5min; ≤5 entries per session (anti-vibe 7).
 
 **At end of EACH phase** (logical pause):
-- Auto-fire `/harness-3-retro --drain` — drains the buffer; user sees the soft prompt with `[s/t/p/e/d/a]` actions.
-- End-of-phase output reminds the user `/harness-3-retro --drain` is available if entries accumulated since the last bubble.
+- Auto-fire `/harness-4-retro --drain` — drains the buffer; user sees the soft prompt with `[s/t/p/e/d/a]` actions.
+- End-of-phase output reminds the user `/harness-4-retro --drain` is available if entries accumulated since the last bubble.
 
 **After the FINAL phase**:
-- If ≥10 unharvested entries (count `.retro.md` files where `system.compound.status == open`), print a one-liner suggesting `/harness-3-retro --harvest`. **Do NOT auto-fire** — solo `/plan-6` is the rare path; the dominant flow runs `/plan-6-companion` whose final-phase debrief auto-fires harvest.
+- If ≥10 unharvested entries (count `.retro.md` files where `system.compound.status == open`), print a one-liner suggesting `/harness-4-retro --harvest`. **Do NOT auto-fire** — solo `/plan-6` is the rare path; the dominant flow runs `/plan-6-companion` whose final-phase debrief auto-fires harvest.
 
 See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md).

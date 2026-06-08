@@ -148,6 +148,15 @@ Otherwise → **Phase Mode** (continue).
    - `Done When`: Plain language success criteria
    - `Notes`: Finding references, domain constraints, etc.
 
+   **Harness-loop tasks (first-class, best-effort)** — when a harness exists (`docs/project-rules/engineering-harness.md` or legacy name present) AND `docs/harness/.disabled` is **absent**, bookend the phase's tasks with the loop so it's visible to the implementor (and matches what `/plan-6` auto-fires):
+
+   | Status | ID | Task | Domain | Path(s) | Done When | Notes |
+   |--------|-----|------|--------|---------|-----------|-------|
+   | [ ] | T000 | **Harness boot** — `/harness-1-boot` (Boot→Interact→Observe pre-flight) | — | — | Health check green before any code | Harness loop; omit if no harness / `.disabled` |
+   | [ ] | T0xx | **Harness retro** — `/harness-4-retro --drain` | — | — | Friction buffer drained at phase end (`[s/t/p/e/d/a]`) | Harness loop; omit if no harness / `.disabled` |
+
+   `harness-3-observe` runs **silently** throughout — no task row needed. These rows are **advisory scaffolding, never gates**. **Omit them entirely** when no harness exists or the sentinel is present; the phase then uses the plan's standard testing approach.
+
    ### Context Brief
 
    **Key findings from plan**:
@@ -162,14 +171,19 @@ Otherwise → **Phase Mode** (continue).
    **Domain constraints**:
    - [Import rules, dependency direction, contract boundaries]
 
-   **Agent harness context** (if `docs/project-rules/engineering-harness.md` or legacy `agent-harness.md` / `harness.md` exists):
+   **Agent harness context** (if `docs/project-rules/engineering-harness.md` or legacy `agent-harness.md` / `harness.md` exists AND `docs/harness/.disabled` is absent):
    - **Boot**: [command from engineering-harness.md] — health check: [health URL/command]
    - **Interact**: [primary interaction method] — [example endpoint/command]
    - **Observe**: [evidence capture method] — evidence dir: [path]
    - **Maturity**: L[N] — [brief status note]
    - **Pre-phase validation**: Agent MUST validate the agent harness at start of implementation (Boot → Interact → Observe)
+   - **Harness loop touchpoints** (the four-stage loop, surfaced for legibility):
+     - *Boot* — `/harness-1-boot` at phase start (the T000 row above)
+     - *Backpressure Check* — `/harness-2-backpressure` already ran pre-architect; see `backpressure-coverage.md` for sensor coverage of this phase's criteria
+     - *Observe* — `harness-3-observe` runs silently on friction during the phase
+     - *Retro* — `/harness-4-retro --drain` at phase end (the T0xx row above)
 
-   If no agent harness: "No agent harness configured. Agent will use standard testing approach from plan."
+   If no agent harness (or `docs/harness/.disabled` present): "No agent harness configured. Agent will use standard testing approach from plan." — and omit the harness-loop task rows entirely.
 
    **Reusable from prior phases**:
    - [Test fixtures, helpers, patterns available]
@@ -551,10 +565,10 @@ This skill participates in the **Compounding Value System** (the `skills/harness
 
 **Sentinel**: Before any compound call below, check `docs/harness/.disabled` — if present, silently skip everything in this section.
 
-**At start**: Check `docs/harness/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-3-retro --drain` BEFORE this skill's primary work.
+**At start**: Check `docs/harness/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-4-retro --drain` BEFORE this skill's primary work.
 
-**During task brief authoring** (LIGHT — fewer trigger points than the deep skills): silently call `harness-2-observe` only for substantive friction (e.g. plan structure ambiguity, missing acceptance criteria in source plan, agent harness context missing when needed). Calibration: ≤1 self-prompt per 5min; ≤3 entries per session for plan-5 (lighter than the default ≤5 because plan-5 is short-horizon synthesis work).
+**During task brief authoring** (LIGHT — fewer trigger points than the deep skills): silently call `harness-3-observe` only for substantive friction (e.g. plan structure ambiguity, missing acceptance criteria in source plan, agent harness context missing when needed). Calibration: ≤1 self-prompt per 5min; ≤3 entries per session for plan-5 (lighter than the default ≤5 because plan-5 is short-horizon synthesis work).
 
-**At end**: this skill CHAINS to plan-6 — no end-of-skill `harness-3-retro --drain` here. The bubble fires inside plan-6 at end-of-phase (the next logical pause).
+**At end**: this skill CHAINS to plan-6 — no end-of-skill `harness-4-retro --drain` here. The bubble fires inside plan-6 at end-of-phase (the next logical pause).
 
 See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md).

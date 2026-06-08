@@ -42,8 +42,8 @@
         "id": { "type": "string", "description": "stable short id (spec, p3, dr, fx3)" },
         "type": {
           "type": "string",
-          "enum": ["research", "deep-research", "spec", "workshop", "backpressure", "plan", "adr", "phase", "fix-loop", "review", "merge"],
-          "description": "each workshop is its OWN workshop node (never collapsed)"
+          "enum": ["research", "deep-research", "spec", "workshop", "backpressure", "plan", "adr", "phase", "fix-loop", "review", "merge", "harness-boot", "harness-observe", "harness-retro"],
+          "description": "each workshop is its OWN workshop node (never collapsed). Harness loop stages are first-class nodes: `backpressure` (Backpressure Check, /harness-2-backpressure — sits on the spine between spec and plan), `harness-boot` (/harness-1-boot pre-flight before a phase), `harness-observe` (silent during phases), `harness-retro` (/harness-4-retro --drain at phase seams, --harvest at merge). Emit harness nodes only when a harness exists AND docs/harness/.disabled is absent — otherwise omit them entirely."
         },
         "label": { "type": "string" },
         "status": { "$ref": "#/$defs/status" },

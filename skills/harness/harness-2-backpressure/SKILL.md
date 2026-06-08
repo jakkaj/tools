@@ -1,11 +1,13 @@
 ---
-name: plan-2d-backpressure-survey
+name: harness-2-backpressure
 description: |
   Advisory deterministic-backpressure coverage survey. Runs AFTER the spec (plan-1b / plan-2c) and BEFORE the architect (plan-3). Inventories the deterministic sensors a repo already has (build / type / test / lint / smoke / boot / architecture checks, CodeQL / Roslyn / dependency-rules / data-scripts), derives the feature's experienced failure modes from the spec's acceptance criteria + target domains + risks, maps each criterion/failure-mode to a sensor (EXISTS / BUILDABLE / ABSENT × computational / inferential / human-judgement), emits a qualitative certainty rating (Strong / Partial / Weak), and — only when material behaviour/architecture gaps exist — recommends a "Phase 0: Establish Backpressure". Writes docs/plans/<ordinal>-<slug>/backpressure-coverage.md, which plan-3-v3-architect consumes. ADVISORY / best-effort only: never blocks, never flips a plan to DRAFT, no numeric thresholds, no persisted index. Honours docs/harness/.disabled.
 ---
 Please deep think / ultrathink as this is a complex task.
 
-# plan-2d-backpressure-survey
+# harness-2-backpressure
+
+The **Backpressure Check** stage of the harness loop (Boot → **Backpressure Check** → Do Work and Observe → Retro and Magic Wand → Improve), wired into the SDD flow between the spec and the architect. A *Backpressure Check is distinct from back pressure itself*: it is an advisory, LLM-assisted look at the scoped work and the deterministic sensors the repo exposes — the proof still comes from the sensors, never from the LLM saying things look good.
 
 Survey whether the planned work can be **proven by deterministic backpressure** — build failures, type errors, tests, lint, runtime/smoke checks, boot probes, architecture checks (dependency rules, ArchUnit, Roslyn analyzers, CodeQL), schema validators, data-check scripts — rather than by agent **inference** or human **eyeballing**.
 
@@ -36,7 +38,7 @@ If a future change to this skill adds a threshold, a gate, a blocking behaviour,
 
 ## Sentinel check
 
-If `docs/harness/.disabled` exists → **silently no-op**: do not run the survey, do not create or modify `backpressure-coverage.md`, do not log, do not prompt, do not error. The opt-out is absolute. (Mirrors `harness-2-observe`.)
+If `docs/harness/.disabled` exists → **silently no-op**: do not run the survey, do not create or modify `backpressure-coverage.md`, do not log, do not prompt, do not error. The opt-out is absolute. (Mirrors `harness-3-observe`.)
 
 ---
 
@@ -147,7 +149,7 @@ Overwrite if it exists (regeneration-safe). Use this template:
 **Generated**: <today>
 **Certainty**: Strong | Partial | Weak
 
-> Advisory only — informs `plan-3`. Never blocks, never gates, no scores. (See plan-2d-backpressure-survey.)
+> Advisory only — informs `plan-3`. Never blocks, never gates, no scores. (See harness-2-backpressure.)
 
 ## Existing Sensors (inventory)
 
@@ -180,7 +182,7 @@ Overwrite if it exists (regeneration-safe). Use this template:
 
 - **plan-3 Gate G6 (Testing Alignment)** checks that *test tasks exist* and acceptance criteria are *measurable* — it does not ask whether a deterministic **sensor covers the experienced failure modes**.
 - **plan-7-v2-code-review** is the **inferential / eyeball** tier — human/AI judgement after the fact. Legitimate and unchanged.
-- **plan-2d (this skill)** surveys the **computational** tier *before* architecture: can the work be *proven deterministically*, and if not, should we build the sensor first?
+- **harness-2-backpressure (this skill, alias `/plan-2d`)** surveys the **computational** tier *before* architecture: can the work be *proven deterministically*, and if not, should we build the sensor first?
 
 ## Graceful degradation
 

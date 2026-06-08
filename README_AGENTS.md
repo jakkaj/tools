@@ -113,9 +113,9 @@ Skills live at the top of the repository, mirroring the `mattpocock/skills` conv
 
 ```
 skills/
-├── SDD/           # 29 spec-driven-development pipeline skills
-├── general/       # domain-generic skills
-└── personal/      # personal / non-coding skills
+├── SDD/           # spec-driven-development pipeline skills
+├── harness/       # 4 harness-loop skills (boot / backpressure / observe / retro)
+└── general/       # domain-generic skills
 ```
 
 Categories are organizational only. They do **not** affect install commands — `npx skills` discovers `SKILL.md` files recursively and flattens by slug at install time.
@@ -124,7 +124,7 @@ Categories are organizational only. They do **not** affect install commands — 
 
 ## Skill catalog
 
-### `SDD/` — Spec-Driven Development (27 skills)
+### `SDD/` — Spec-Driven Development
 
 The active workflow for non-trivial feature work. Use these for any change large enough to benefit from explicit specification, clarification, architecture, and phase-based implementation. Each step produces an artifact that the next step consumes.
 
@@ -136,8 +136,7 @@ The active workflow for non-trivial feature work. Use these for any change large
 | `plan-2-v2-clarify` | Mid-plan clarification re-entry (≤4 questions). Soft-deprecated — for new specs use `plan-1b-v3-specify-and-clarify`. |
 | `plan-2b-v2-prep-issue` | Generate terse, industry-standard issue text for Azure DevOps / GitHub Issues. |
 | `plan-2c-v2-workshop` | Create detailed design documents for complex concepts surfaced in the spec. |
-| `plan-2d-backpressure-survey` | Advisory survey (after the spec, before `plan-3`) of whether the planned work can be *proven by deterministic backpressure* vs inference/eyeballing. Emits `backpressure-coverage.md` (sensor inventory + coverage matrix + qualitative certainty) and recommends a "Phase 0: Establish Backpressure" on gaps. Never blocks; the computational counterpart to `plan-7-v2-code-review`. |
-| `plan-3-v3-architect` | Generate a domain-aware, lean implementation plan with phases, task tables, AND seven self-validating fail-fast gates baked in. Replaces `plan-3-v2-architect` + `plan-4-v2-complete-the-plan`. |
+| `plan-3-v3-architect` | Generate a domain-aware, lean implementation plan with phases, task tables, AND seven self-validating fail-fast gates baked in. Replaces `plan-3-v2-architect` + `plan-4-v2-complete-the-plan`. (The Backpressure Check that runs before this now lives in the harness family — see `harness-2-backpressure` below, alias `/plan-2d`.) |
 | `plan-3a-v2-adr` | Generate an Architectural Decision Record from the spec and clarifications. |
 | `plan-5-v2-phase-tasks-and-brief` | Generate a tasks dossier (tasks + context brief) for a phase. |
 | `plan-5b-flightplan` | Generate a consumable Flight Plan (`.fltplan.md`) at phase or plan level. |
@@ -158,17 +157,18 @@ The active workflow for non-trivial feature work. Use these for any change large
 | `htmlify-v2` | Convert markdown, specs, plans, or findings into polished static HTML documents. |
 | `util-0-v2-handover` | Generate a domain-aware handover document for LLM agent continuity. |
 
-### `harness/` — Harness loop (3 skills)
+### `harness/` — Harness loop (4 skills)
 
-The Compounding Value System, named by loop stage: **Boot → Backpressure Check → Do Work and Observe → Retro and Magic Wand → Improve** (the three runtime skills serve Boot, the Observe half of Do Work and Observe, and Retro and Magic Wand; Backpressure Check is the optional `plan-2d` survey and Improve is encoding the fix). Every session in any supported CLI validates the harness at boot, silently logs friction during work, and surfaces + encodes accumulated learnings at session end and at long-horizon reflection. The 5 philosophy principles are encoded inline across these bodies + the repo README (the standalone philosophy skill was retired in plan-024). These three are runtime companions to an engineering harness that the host repo has already set up, defined, and prompted; provisioning a fresh harness (governance doc + ledger scaffold) is a separate setup effort, and the skills degrade gracefully when the substrate is absent. Opt-out via `touch docs/harness/.disabled`.
+The Compounding Value System, named by loop stage: **Boot → Backpressure Check → Do Work and Observe → Retro and Magic Wand → Improve**. The four loop-stage skills serve, in order, Boot (`harness-1-boot`), Backpressure Check (`harness-2-backpressure`, alias `/plan-2d` — the recommended step between the spec and the architect), the Observe half of Do Work and Observe (`harness-3-observe`), and Retro and Magic Wand (`harness-4-retro`); Improve is encoding the selected fix. Every session in any supported CLI validates the harness at boot, surveys deterministic-backpressure coverage before planning, silently logs friction during work, and surfaces + encodes accumulated learnings at session end and at long-horizon reflection. The 5 philosophy principles are encoded inline across these bodies + the repo README (the standalone philosophy skill was retired in plan-024). These are runtime companions to an engineering harness that the host repo has already set up, defined, and prompted; provisioning a fresh harness (governance doc + ledger scaffold) is a separate setup effort, and the skills degrade gracefully when the substrate is absent (or `docs/harness/.disabled` is present). Opt-out via `touch docs/harness/.disabled`. (Backpressure was folded into this family from `skills/SDD/` on 2026-06-08 — see the `CLAUDE.md` vocabulary-freeze note.)
 
 | Slug | One-line purpose |
 |---|---|
 | `harness-1-boot` | **Boot.** Validate the engineering harness is healthy + report maturity at session start. VALIDATE (3-stage Boot/Interact/Observe) + STATUS (read-only). Reads `engineering-harness.md` (legacy `agent-harness.md` / `harness.md` fallback); reports `UNAVAILABLE` gracefully when absent. |
-| `harness-2-observe` | **Observe.** Silent producer — append friction/magic-wand entries to a per-agent session buffer during work. Never prompts. |
-| `harness-3-retro` | **Retro.** `--drain` = session-end soft prompt (`[s/t/p/e/d/a]`; wraps entries in a universal retro envelope; writes one `.retro.md` per save). `--harvest` = curator (scans all retros; clusters by kind+target; flags stale; top-10; `--json`; NO on-disk indexes; runtime filters `--plan`/`--agent`/`--since`/`--kind`). |
+| `harness-2-backpressure` | **Backpressure Check.** Advisory survey (after the spec, before `plan-3`) of whether the planned work can be *proven by deterministic backpressure* vs inference/eyeballing. Emits `backpressure-coverage.md` (sensor inventory + coverage matrix + qualitative certainty) and recommends a "Phase 0: Establish Backpressure" on gaps. Never blocks; the computational counterpart to `plan-7-v2-code-review`. Alias `/plan-2d`. |
+| `harness-3-observe` | **Observe.** Silent producer — append friction/magic-wand entries to a per-agent session buffer during work. Never prompts. |
+| `harness-4-retro` | **Retro.** `--drain` = session-end soft prompt (`[s/t/p/e/d/a]`; wraps entries in a universal retro envelope; writes one `.retro.md` per save). `--harvest` = curator (scans all retros; clusters by kind+target; flags stale; top-10; `--json`; NO on-disk indexes; runtime filters `--plan`/`--agent`/`--since`/`--kind`). |
 
-The universal `.retro.md` contract lives in [`docs/harness/schemas/`](./docs/harness/schemas/) (this repo's copy of the cross-system minih **shape** contract — minih keeps its own copy, so the path is local; `harness-3-retro` also bundles a deploy copy at `harness-3-retro/references/retro.schema.json`). See [`docs/plans/023-difficulty-ledger-skill/`](./docs/plans/023-difficulty-ledger-skill/) for the design history and [`docs/plans/024-harness-nucleus/`](./docs/plans/024-harness-nucleus/) for the 6→3 loop-stage consolidation.
+The universal `.retro.md` contract lives in [`docs/harness/schemas/`](./docs/harness/schemas/) (this repo's copy of the cross-system minih **shape** contract — minih keeps its own copy, so the path is local; `harness-4-retro` also bundles a deploy copy at `harness-4-retro/references/retro.schema.json`). See [`docs/plans/023-difficulty-ledger-skill/`](./docs/plans/023-difficulty-ledger-skill/) for the design history and [`docs/plans/024-harness-nucleus/`](./docs/plans/024-harness-nucleus/) for the 6→3 loop-stage consolidation.
 
 ### `general/` — Domain-generic (1 skill)
 

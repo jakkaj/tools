@@ -60,7 +60,7 @@ cd tools
 | Path | What |
 |---|---|
 | `skills/SDD/` | The spec-driven-development pipeline skills (plan-*, validate, didyouknow, etc.) |
-| `skills/harness/` | The 3 harness loop-stage skills: `harness-1-boot`, `harness-2-observe`, `harness-3-retro` (serving the loop's Boot, Observe, and Retro·Magic Wand stages) |
+| `skills/harness/` | The 3 harness loop-stage skills: `harness-1-boot`, `harness-3-observe`, `harness-4-retro` (serving the loop's Boot, Observe, and Retro·Magic Wand stages) |
 | `docs/harness/` | Harness loop runtime ledger (per-agent buffers + `.retro.md` files) **and** the frozen cross-system retro `schemas/` (the minih shape contract) — not skills themselves |
 | `skills/general/` | Domain-generic skills (grill-me) |
 | `skills/personal/` | Personal / non-coding skills (shopping-hunter) |
@@ -77,14 +77,14 @@ The `skills/harness/` family encodes one idea: **the engineering harness IS the 
 The full loop is **Boot → Backpressure Check → Do Work and Observe → Retro and Magic Wand → Improve**. Three skills serve its recurring stages:
 
 - **`harness-1-boot`** — *Boot.* Validate the harness is healthy and report its maturity at session start. If a fresh agent can't reach a healthy, observable running system in 30-60 seconds, that is the most important thing to fix.
-- **`harness-2-observe`** — *Observe.* A silent producer that captures friction during work to a per-agent buffer, so each difficulty catalogued becomes a gift to your future self (compounding value).
-- **`harness-3-retro`** — *Retro.* `--drain` at session end surfaces what was observed and stages encoded fixes (encode, don't document); `--harvest` curates the accumulated ledger at long-horizon reflection moments.
+- **`harness-3-observe`** — *Observe.* A silent producer that captures friction during work to a per-agent buffer, so each difficulty catalogued becomes a gift to your future self (compounding value).
+- **`harness-4-retro`** — *Retro.* `--drain` at session end surfaces what was observed and stages encoded fixes (encode, don't document); `--harvest` curates the accumulated ledger at long-horizon reflection moments.
 
 **Agents are real users.** Test agents, smoke bots, CI runners, and plan-6 companions are not test scripts — they are real users of the infrastructure, and their failures and "magic wand" wishes are the most honest feedback the harness gets. The loop above exists to capture that feedback and compound it.
 
 These three are the runtime companions to an engineering harness that is already set up, defined, and prompted in the host repo. Provisioning a fresh harness (scaffolding the governance doc + ledger) is a separate setup concern; the skills degrade gracefully (`harness-1-boot` reports `UNAVAILABLE`, observe/retro no-op) when the substrate is absent.
 
-**Ownership split**: this repo owns the canonical runtime loop skills (`harness-1-boot`, `harness-2-observe`, `harness-3-retro`) and the frozen retro schema contract. Project-side setup/provisioning remains in `AI-Substrate/harness-engineering` via `engineering-harness-setup`; tools consumes the generated governance doc and ledger paths, but does not recreate that setup flow.
+**Ownership split**: this repo owns the canonical runtime loop skills (`harness-1-boot`, `harness-3-observe`, `harness-4-retro`) and the frozen retro schema contract. Project-side setup/provisioning remains in `AI-Substrate/harness-engineering` via `engineering-harness-setup`; tools consumes the generated governance doc and ledger paths, but does not recreate that setup flow.
 
 **Back-pressure signals**: the runtime loop captures not only "make this easier" friction, but also "what should the harness have proved?" gaps: missing smoke paths, visual/log evidence, architecture/static checks, security/dependency/schema checks, and other deterministic sensors. These are advisory improvement candidates, never gates or scores.
 

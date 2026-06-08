@@ -159,7 +159,7 @@ $ARGUMENTS
          `plan_id: <plan-id-from-cwd-or-branch>`, timestamps from the phase
          window. NO `docs/retros/` write — compound is the canonical path
          now (per workshop 006 D7; back-compat reader handles legacy paths
-         in `harness-3-retro --harvest`).
+         in `harness-4-retro --harvest`).
 
          If `docs/harness/agents/` doesn't exist, **no-op gracefully** —
          the ledger tree is provisioned by the separate engineering-harness
@@ -258,7 +258,7 @@ $ARGUMENTS
       The companion's retro file is the canonical record. The legacy
       `docs/retros/<companion-slug>.md` append path is NO LONGER WRITTEN
       from here (workshop 005 P1 — compound canonical for new writes;
-      back-compat reader in `harness-3-retro --harvest` handles legacy reads
+      back-compat reader in `harness-4-retro --harvest` handles legacy reads
       until minih adopts universal natively per workshop 005 P3).
 
    f) **Surface the companion's magicWand as follow-up candidate**: if
@@ -289,8 +289,8 @@ This skill is one of the heaviest **producer-side** participants in the **Compou
 
 **Sentinel**: Every write to `docs/harness/` (Step 8c.ii and Step 9.e) first checks `docs/harness/.disabled`. If present, silently skip the write.
 
-**Schema discipline**: Every `.retro.md` written by this skill MUST conform to `docs/harness/schemas/retro.schema.json` and (when applicable) the namespace sub-schemas. The agent constructs the YAML frontmatter directly per the schema — no JSON Schema validator is run in v1 (validation happens at read time in `harness-3-retro --harvest`).
+**Schema discipline**: Every `.retro.md` written by this skill MUST conform to `docs/harness/schemas/retro.schema.json` and (when applicable) the namespace sub-schemas. The agent constructs the YAML frontmatter directly per the schema — no JSON Schema validator is run in v1 (validation happens at read time in `harness-4-retro --harvest`).
 
-**Why no buffer interaction here**: plan-6a runs per-task; the silent buffer (`docs/harness/_buffers/<agent>.session-buffer.md`) is owned by `harness-2-observe` (producer) and `harness-3-retro --drain` (drain). Plan-6a's compound output is the FAREWELL retros, which bypass the buffer and write directly to per-run `.retro.md` files. The buffer is for IN-SESSION agent-observed friction; the farewells are for END-OF-PHASE structured retrospectives.
+**Why no buffer interaction here**: plan-6a runs per-task; the silent buffer (`docs/harness/_buffers/<agent>.session-buffer.md`) is owned by `harness-3-observe` (producer) and `harness-4-retro --drain` (drain). Plan-6a's compound output is the FAREWELL retros, which bypass the buffer and write directly to per-run `.retro.md` files. The buffer is for IN-SESSION agent-observed friction; the farewells are for END-OF-PHASE structured retrospectives.
 
 See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md), [workshop 005 § D9 round-trip](../../../docs/plans/023-difficulty-ledger-skill/workshops/005-universal-retro-contract.md), [workshop 006 § Path Resolver](../../../docs/plans/023-difficulty-ledger-skill/workshops/006-compound-folder-layout.md).

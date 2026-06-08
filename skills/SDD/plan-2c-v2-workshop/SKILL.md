@@ -622,10 +622,10 @@ This skill participates in the **Compounding Value System** (the `skills/harness
 
 **Sentinel**: Before any compound call below, check `docs/harness/.disabled` — if present, silently skip everything in this section.
 
-**At start**: Check `docs/harness/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-3-retro --drain` BEFORE this skill's primary work.
+**At start**: Check `docs/harness/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-4-retro --drain` BEFORE this skill's primary work.
 
-**During workshop creation**: silently call `harness-2-observe` per its trigger heuristics (any friction observed while drafting — workshop template ambiguity, decision-space gaps, missing related-workshop context, magic-wand reflex at natural pauses). Calibration: ≤1 self-prompt per 5min; ≤5 entries per session.
+**During workshop creation**: silently call `harness-3-observe` per its trigger heuristics (any friction observed while drafting — workshop template ambiguity, decision-space gaps, missing related-workshop context, magic-wand reflex at natural pauses). Calibration: ≤1 self-prompt per 5min; ≤5 entries per session.
 
-**At end**: this skill CHAINS back to plan-2 or plan-3 — no end-of-skill `harness-3-retro --drain` here. The bubble fires at the chained skill's logical pause.
+**At end**: this skill CHAINS back to plan-2 or plan-3 — no end-of-skill `harness-4-retro --drain` here. The bubble fires at the chained skill's logical pause.
 
 See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md).

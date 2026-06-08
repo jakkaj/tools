@@ -94,9 +94,9 @@ If `${PLAN_DIR}/workshops/*.md` exist:
 - Do NOT contradict workshop decisions
 - Skip research for workshopped topics
 
-If `${PLAN_DIR}/backpressure-coverage.md` exists (from `/plan-2d-backpressure-survey`):
-- Read it. Note its qualitative Certainty and its **Recommended Phase 0: Establish Backpressure** table (if present).
-- Treat a Recommended Phase 0 as an **optional, user-decided** input to phase design (see § Phase Design Principles) — NOT a gate. Absence of this artifact changes nothing (no error, no Status change).
+If `${PLAN_DIR}/backpressure-coverage.md` exists (from `/harness-2-backpressure`, the **Backpressure Check** stage of the harness loop):
+- This is the **expected** pre-architect input — the recommended flow is spec → `/harness-2-backpressure` → architect, so the plan can be shaped by what's *provable by deterministic sensors* rather than by inference. Read it. Note its qualitative Certainty and its **Recommended Phase 0: Establish Backpressure** table (if present).
+- Treat a Recommended Phase 0 as an **optional, user-decided** input to phase design (see § Phase Design Principles) — NOT a gate. Absence of this artifact changes nothing (no error, no Status change) — it's recommended, not required.
 
 ### Research Subagents (2 parallel)
 
@@ -147,7 +147,7 @@ The plan **MUST** contain these sections, in this order:
 8. `## Phases` containing `### Phase Index` table followed by per-phase blocks
 9. `## Acceptance Criteria` (testable, derived from spec)
 10. `## Risks` table
-11. `## Agent Harness Strategy` (if harness relevant — else omit cleanly)
+11. `## Agent Harness Strategy` + `## Harness Loop` (if a harness exists AND `docs/harness/.disabled` is absent — else omit both cleanly)
 12. `## Unresolved Gaps` (only if Status is `DRAFT — UNRESOLVED GAPS`; else omit)
 
 Any required section that cannot be populated correctly → still emit the heading with inline `⚠️ GAP: <reason — see Unresolved Gaps table>` marker. **Never silently omit a required section.**
@@ -234,7 +234,8 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
 - Composition/wiring phases come LAST.
 - **If agent harness is needed and doesn't exist**: Phase 0 is "Build Agent Harness". Phase 0 creates `docs/project-rules/engineering-harness.md` (canonical name) and implements Boot + Interact + Observe capabilities. Target maturity: L2 minimum. If user overrode in plan-2/plan-1b, skip Phase 0 and note override.
   - **Engineering harness prerequisite**: agent harness sits on top of a working engineering harness substrate (justfile/Makefile/dev script with a boot command healthy <60s, plus a test runner). If plan-1a research surfaced no engineering harness exists, surface as a Critical Key Finding. Engineering harness design is per-project and not modeled as a phase here.
-- **If `${PLAN_DIR}/backpressure-coverage.md` recommends a Phase 0** (from `/plan-2d-backpressure-survey`): include an **optional** "Phase 0: Establish Backpressure" whose tasks build the sensors named in that artifact's Recommended Phase 0 table (data-check scripts, dependency/architecture rules, smoke routes, CodeQL/Roslyn queries, schema checks). This is **advisory** — include it when the survey recommends it and the user wants the deterministic provability; **never gate on it and never flip Status to DRAFT for its absence**. If both this and the agent-harness Phase 0 apply, they may be one combined Phase 0 or sequential (harness substrate first).
+- **If `${PLAN_DIR}/backpressure-coverage.md` recommends a Phase 0** (from `/harness-2-backpressure`): include an **optional** "Phase 0: Establish Backpressure" whose tasks build the sensors named in that artifact's Recommended Phase 0 table (data-check scripts, dependency/architecture rules, smoke routes, CodeQL/Roslyn queries, schema checks). This is **advisory** — include it when the survey recommends it and the user wants the deterministic provability; **never gate on it and never flip Status to DRAFT for its absence**. If both this and the agent-harness Phase 0 apply, they may be one combined Phase 0 or sequential (harness substrate first).
+- **Weave the harness loop into every phase (first-class, best-effort)**: when a harness exists — i.e. `docs/project-rules/engineering-harness.md` (or legacy names) is present AND `docs/harness/.disabled` is **absent** — each phase's task table should make the loop visible rather than implicit: a **boot check** task at phase start (`/harness-1-boot` Boot→Interact→Observe pre-flight — proves the system runs before code is written), an **observe** expectation during the work (`harness-3-observe` fires silently on friction), and a **retro drain** at phase end (`/harness-4-retro --drain`). These are surfaced so the implementor (and `/plan-6`, which auto-fires them) can see the loop — they are **advisory scaffolding, never gates**: no Status flip, no blocking, no thresholds. **If no harness exists or the sentinel is present, omit them entirely** and fall back to the plan's standard testing approach — a repo without a harness is fully supported.
 - For each NEW domain, first phase includes domain setup task:
   - Create `docs/domains/<slug>/domain.md` (use format from `/extract-domain`)
   - Create source directory
@@ -253,8 +254,12 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
 
 | # | Task | Domain | Success Criteria | Notes |
 |---|------|--------|-----------------|-------|
+| N.0 | **Harness boot** — run `/harness-1-boot` (Boot→Interact→Observe pre-flight) | — | Health check green; system proven to run before code | _Harness loop — omit if no harness / `.disabled` present_ |
 | N.1 | [What to build] | [domain] | [How you know it works] | |
 | N.2 | [What to build] | [domain] | [How you know it works] | Per finding 01 |
+| N.z | **Harness retro** — `/harness-4-retro --drain` the session buffer | — | Friction notes drained at phase seam (`[s/t/p/e/d/a]`) | _Harness loop — omit if no harness / `.disabled` present_ |
+
+> The `N.0` boot and `N.z` retro rows (and the silent `harness-3-observe` running throughout) make the harness loop **first-class in the plan** — they are advisory scaffolding `/plan-6` already auto-fires, surfaced here for legibility. **Include them only when a harness exists and `docs/harness/.disabled` is absent; otherwise drop both rows entirely.** Never a gate.
 
 ### Agent Harness Strategy (if harness relevant)
 
@@ -270,6 +275,21 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
 ```
 
 If no harness and user overrode: "Agent Harness: Not applicable (user override — [reason from plan-2])."
+
+### Harness Loop (if a harness exists AND `docs/harness/.disabled` is absent — else omit)
+
+Make the harness loop a first-class, legible part of the plan. Emit this section so the implementor sees where each loop stage fires across the phases:
+
+```markdown
+## Harness Loop
+- **Backpressure Check** (`/harness-2-backpressure`, alias `/plan-2d`): ran before this plan — see `backpressure-coverage.md` (Certainty: [Strong/Partial/Weak]). [Recommended Phase 0 folded in? yes/no]
+- **Boot** (`/harness-1-boot`): pre-flight at the start of each phase (Boot→Interact→Observe); `/plan-6` auto-fires it. `UNAVAILABLE` is not an error — falls back to standard testing.
+- **Observe** (`harness-3-observe`): silent friction capture throughout implementation; no action required.
+- **Retro** (`/harness-4-retro --drain`): at each phase seam; `--harvest` at plan completion.
+- **Best-effort**: every item above is advisory and never blocks. Sentinel: if `docs/harness/.disabled` appears, this whole section is omitted and the flow uses the plan's standard testing approach.
+```
+
+**Omit this section entirely** when no `docs/project-rules/engineering-harness.md` (or legacy name) exists or `docs/harness/.disabled` is present — a repo with no harness is fully supported and should see no harness scaffolding.
 
 ### Simple Mode
 

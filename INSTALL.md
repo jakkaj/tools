@@ -91,14 +91,14 @@ npx skills@latest add jakkaj/tools --skill grill-me --skill plan-1a-v2-explore -
 `npx skills` accepts a **subfolder path appended to the repo shorthand** — this is undocumented in `--help` but supported by the `parseSource` regex in `vercel-labs/skills` (line 191). Useful when you want every skill in one category without listing each `--skill` flag.
 
 ```bash
-# All 3 harness/ loop-stage skills (harness-1-boot, harness-2-observe, harness-3-retro)
+# All 3 harness/ loop-stage skills (harness-1-boot, harness-3-observe, harness-4-retro)
 npx skills@latest add jakkaj/tools/skills/harness -a claude-code -g
 
 # All SDD/ skills (without general/ or personal/)
 npx skills@latest add jakkaj/tools/skills/SDD -a claude-code -g
 ```
 
-> Note: the universal retro `schemas/` contract now lives at `docs/harness/schemas/` (no longer under `skills/`), so there is no `skills/compound` category to install — the loop-stage skills live under `skills/harness/`, and `harness-3-retro` bundles its own deploy copy of the schema in `references/`.
+> Note: the universal retro `schemas/` contract now lives at `docs/harness/schemas/` (no longer under `skills/`), so there is no `skills/compound` category to install — the loop-stage skills live under `skills/harness/`, and `harness-4-retro` bundles its own deploy copy of the schema in `references/`.
 
 The `skills/harness/` category is the runtime loop only: Boot, Observe, and Retro. Project-side engineering-harness setup/provisioning (creating `docs/project-rules/engineering-harness.md`, `docs/harness/`, starter command maps, or harness CLI scripts) remains in the separate `AI-Substrate/harness-engineering` repository's `engineering-harness-setup` skill. If those generated artifacts are absent, the runtime skills report `UNAVAILABLE` or no-op gracefully rather than scaffolding them.
 

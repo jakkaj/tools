@@ -144,7 +144,7 @@ Read engineering-harness.md (or legacy agent-harness.md / harness.md, with migra
 
 ## Measure compounding value
 
-> **Measure.** Note what each session encodes — not for estimates, for evidence. The maturity level Boot reports IS the dashboard reading. If Session N+1 boots faster, cleaner, or at a higher maturity level than Session N because the previous session encoded what it learned, that is data proving the loop is closing. The `## History` table the validation appends is the trajectory; a maturity level that climbs (or a boot time that shrinks) over successive sessions is the compounding value made visible. A flat or regressing trajectory is a signal that observed friction is not getting encoded — check the retro ledger (`harness-3-retro --harvest`).
+> **Measure.** Note what each session encodes — not for estimates, for evidence. The maturity level Boot reports IS the dashboard reading. If Session N+1 boots faster, cleaner, or at a higher maturity level than Session N because the previous session encoded what it learned, that is data proving the loop is closing. The `## History` table the validation appends is the trajectory; a maturity level that climbs (or a boot time that shrinks) over successive sessions is the compounding value made visible. A flat or regressing trajectory is a signal that observed friction is not getting encoded — check the retro ledger (`harness-4-retro --harvest`).
 
 ---
 

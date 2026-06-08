@@ -1,10 +1,10 @@
 ---
-name: harness-3-retro
+name: harness-4-retro
 description: |
   Retro and Magic Wand stage of the harness loop (Boot → Backpressure Check → Do Work and Observe → Retro and Magic Wand → Improve). One skill, two modes. `--drain` (session-end soft prompt) reads `docs/harness/_buffers/<agent>.session-buffer.md`; if non-empty, presents a single soft prompt with `[s/t/p/e/d/a]` action menu and a one-line encoding hint per entry; routes saved entries into per-run `.retro.md` files under `docs/harness/agents/<agent>/<date>/`. `--harvest` (long-horizon curation) scans `docs/harness/agents/**/*.retro.md` (canonical) plus legacy `docs/retros/*.md` (back-compat), validates against the universal schema, dedups, clusters by kind + target, ages stale entries, and prints a prioritized terminal view (`--json` for tooling). Encode, don't document. Empty buffer / empty tree = silent. NO on-disk index files — views computed at read time.
 ---
 
-# harness-3-retro
+# harness-4-retro
 
 The **Retro** stage of the harness loop. The place the loop turns observation into encoded improvement. Two modes:
 
@@ -27,7 +27,7 @@ $ARGUMENTS
 | `--drain` | session-end bubble | end of session / logical pause / cross-session leftover | Drains the per-agent buffer via the `[s/t/p/e/d/a]` menu into `.retro.md` |
 | `--harvest` | long-horizon curate | FINAL phase / merge end / review end / ad-hoc | Scans + clusters + prioritizes `.retro.md` files; prints the curated view (or `--json`) |
 
-The producer that fills the buffer `--drain` reads is `harness-2-observe`. The Boot stage is `harness-1-boot`.
+The producer that fills the buffer `--drain` reads is `harness-3-observe`. The Boot stage is `harness-1-boot`.
 
 ---
 
@@ -38,7 +38,7 @@ The consumer-side surface of the loop. The ONE place retro talks to the user.
 ### When to fire
 
 - **Auto-fired** by pipeline skills at natural logical pauses (plan-1a end, plan-3 end, plan-6 end-of-phase, plan-6-companion end-of-phase, plan-7 end, plan-8 end)
-- **Manually fired** by the user (`/harness-3-retro --drain`) at any time
+- **Manually fired** by the user (`/harness-4-retro --drain`) at any time
 - **Start-of-skill** check on any auto-firing skill — if the buffer has leftover entries from a prior session (cross-session carryover), drain immediately
 
 Each firing handles entries accumulated since the last drain. Once drained, the buffer is empty; the next firing on an unchanged buffer is silent.
@@ -107,7 +107,7 @@ agent: <agent>
 plan_id: <plan-id-from-cwd-or-branch-detection-or-null>
 started_at: "<ISO of first entry's first_seen_at, or session start>"
 ended_at: "<now in ISO UTC>"
-summary: "harness-3-retro --drain session-end save (N entries)"
+summary: "harness-4-retro --drain session-end save (N entries)"
 entries:
   # ... all buffer entries verbatim
 system:
@@ -205,7 +205,7 @@ When saving, populate `frontmatter.plan_id` from:
 
 At the start of any auto-firing skill, before doing its primary work, check the buffer:
 
-- If `_buffers/<agent>.session-buffer.md` is non-empty → fire `harness-3-retro --drain` immediately
+- If `_buffers/<agent>.session-buffer.md` is non-empty → fire `harness-4-retro --drain` immediately
 - Then proceed with the skill's primary work
 
 This catches entries left over from a prior session (e.g. the user pressed Ctrl-C before the auto-drain fired).
@@ -254,7 +254,7 @@ The reader/curator side of the loop. Auto-fires at long-horizon reflection momen
 - **SUGGESTED at the start of**:
   - `plan-1a-explore` (if ≥5 unharvested entries — print invocation as one-liner; do NOT auto-fire)
   - `plan-3-architect` (if ≥10 unharvested entries — same)
-- **Manually** by the user at any time: `/harness-3-retro --harvest [--plan <slug>] [--agent <slug>] [--since <date>] [--kind <kind>]`
+- **Manually** by the user at any time: `/harness-4-retro --harvest [--plan <slug>] [--agent <slug>] [--since <date>] [--kind <kind>]`
 
 ### Sentinel check
 
@@ -264,7 +264,7 @@ If `docs/harness/.disabled` exists → print one line: `"📴 the harness retro 
 
 At start, check `docs/harness/_buffers/<agent>.session-buffer.md` for the calling agent. If non-empty → print one line before scanning:
 
-> ℹ️ Buffer has N unbubbled entries. Consider running `/harness-3-retro --drain` first so they land in the harvest view.
+> ℹ️ Buffer has N unbubbled entries. Consider running `/harness-4-retro --drain` first so they land in the harvest view.
 
 Then proceed with the scan anyway (the harvest reads `.retro.md` files; buffer entries are unrelated).
 
@@ -372,7 +372,7 @@ Default format:
 
 #### `--json` output (machine-readable read interface)
 
-`/harness-3-retro --harvest --json` emits the same computed view as the default render but as a single JSON document on stdout. This is a **read-time render of transient computation** — still no on-disk index, still no persisted state. Use it for `just compound-value`, CI hooks, or any downstream skill that wants programmatic access to loop status.
+`/harness-4-retro --harvest --json` emits the same computed view as the default render but as a single JSON document on stdout. This is a **read-time render of transient computation** — still no on-disk index, still no persisted state. Use it for `just compound-value`, CI hooks, or any downstream skill that wants programmatic access to loop status.
 
 **Schema** (stable contract — bump compound v1.x if changed):
 
@@ -451,17 +451,17 @@ All combinable. Each filters the scan + view to matching retros:
 - `--since <YYYY-MM-DD>` → only retros where the directory date >= `<date>` (or `started_at` if directory not date-sliced)
 - `--kind <kind>` → only entries (not retros) where `entry.kind == <kind>`; retros with no matching entries are omitted
 
-Example: `/harness-3-retro --harvest --plan 023-difficulty-ledger-skill --since 2026-05-15 --kind difficulty` — show only difficulty entries from plan 023 retros newer than May 15.
+Example: `/harness-4-retro --harvest --plan 023-difficulty-ledger-skill --since 2026-05-15 --kind difficulty` — show only difficulty entries from plan 023 retros newer than May 15.
 
 ### Pruning (`--prune`)
 
-`/harness-3-retro --harvest --prune --older-than 90d` → **dry-run by default**:
+`/harness-4-retro --harvest --prune --older-than 90d` → **dry-run by default**:
 
 1. List all retros older than 90 days
 2. Show what would be deleted
 3. Print: `"This is a dry run. Add --apply to actually delete (and recommend running on a clean git working tree)."`
 
-`/harness-3-retro --harvest --prune --older-than 90d --apply` → actually delete the files. Single-confirmation prompt before deletion.
+`/harness-4-retro --harvest --prune --older-than 90d --apply` → actually delete the files. Single-confirmation prompt before deletion.
 
 User responsibility — best-effort framing; no auto-pruning ever.
 
@@ -476,7 +476,7 @@ User responsibility — best-effort framing; no auto-pruning ever.
 
 ### `--harvest` edge cases
 
-- **Empty tree** (no `.retro.md` files anywhere): print `"🌾 No retros found. Start logging via harness-2-observe during sessions."` and exit.
+- **Empty tree** (no `.retro.md` files anywhere): print `"🌾 No retros found. Start logging via harness-3-observe during sessions."` and exit.
 - **Sentinel mid-harvest**: if `.disabled` appears mid-scan, abort. Don't write any pending lifecycle mutations.
 - **Concurrent harvests**: lifecycle mutations are last-write-wins per file. Unlikely to collide because both readers compute identical views.
 - **Hash collision in retro_id** (two retros, same ID): dedup keeps the canonical one. Print warning if both are canonical (`agents/**`); skip the second.

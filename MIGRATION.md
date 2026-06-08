@@ -51,7 +51,7 @@ rm -rf ~/.copilot/skills/*v2* ~/.copilot/skills/plan-*
 
 ## Note on the retired harness/compound command files
 
-Some of the stale files cleaned up above were the old harness/philosophy commands (the v2-era `harness`/`agent-harness`/`compound` `.md` files). Those concepts have been **consolidated into three loop-stage skills** — `harness-1-boot`, `harness-2-observe`, and `harness-3-retro` — under `skills/harness/`. The standalone philosophy command was retired (its principles are now inline). So if you see old harness or compound command files lingering in `$HOME`, delete them per the recipe above and install the three current `harness-*` skills via `npx skills` below.
+Some of the stale files cleaned up above were the old harness/philosophy commands (the v2-era `harness`/`agent-harness`/`compound` `.md` files). Those concepts have been **consolidated into three loop-stage skills** — `harness-1-boot`, `harness-3-observe`, and `harness-4-retro` — under `skills/harness/`. The standalone philosophy command was retired (its principles are now inline). So if you see old harness or compound command files lingering in `$HOME`, delete them per the recipe above and install the three current `harness-*` skills via `npx skills` below.
 
 ## Re-installing in the new layout
 

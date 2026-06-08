@@ -1,10 +1,10 @@
 ---
-name: harness-2-observe
+name: harness-3-observe
 description: |
-  Observe stage of the harness loop (Boot → Backpressure Check → Do Work and Observe → Retro and Magic Wand → Improve) — the Observe half of Do Work and Observe. Silent producer: called silently during a session whenever friction or insight arises — logs one entry per call to `docs/harness/_buffers/<agent>.session-buffer.md`. No user output during work; the only user surface is `harness-3-retro --drain` at session end. Tracks compounding value — every difficulty catalogued is a gift to your future self. Calibrated for ≤1 self-prompt per 5 minutes and ≤5 entries per session (anti-vibe 7 mitigation).
+  Observe stage of the harness loop (Boot → Backpressure Check → Do Work and Observe → Retro and Magic Wand → Improve) — the Observe half of Do Work and Observe. Silent producer: called silently during a session whenever friction or insight arises — logs one entry per call to `docs/harness/_buffers/<agent>.session-buffer.md`. No user output during work; the only user surface is `harness-4-retro --drain` at session end. Tracks compounding value — every difficulty catalogued is a gift to your future self. Calibrated for ≤1 self-prompt per 5 minutes and ≤5 entries per session (anti-vibe 7 mitigation).
 ---
 
-# harness-2-observe
+# harness-3-observe
 
 The **Observe** stage of the harness loop. Runs silently during work, capturing friction to the per-agent session buffer so the next session is cheaper. Never prompts the user.
 
@@ -77,7 +77,7 @@ Append-only YAML block per entry (one entry per call). Each entry conforms to th
   target: tooling                     # Optional. project | tooling | plan | skill | doc | infra | minih | coordination | (custom)
   severity: degrading                 # Optional. Recommended for kind=difficulty. blocking | degrading | annoying.
   workaround: "Used grep -r -I to skip binaries."              # Optional. What you did to get past it.
-  suggested_encoding: "justfile recipe wrapping ripgrep"       # Optional. Free-text hint for harness-3-retro --drain's encoding flow.
+  suggested_encoding: "justfile recipe wrapping ripgrep"       # Optional. Free-text hint for harness-4-retro --drain's encoding flow.
   system:
     compound:
       status: open                    # Initial status.
@@ -117,7 +117,7 @@ Do not invent new `kind` values such as `signal-gap`, `sensor-gap`, or `weak-bac
        first_seen_at: "2026-05-30T07:47:00Z"
 ```
 
-Use targets such as `project-sensor`, `runtime-inspectability`, `architecture-fitness`, `security`, `schema`, or `tooling` to make the missing signal visible to `harness-3-retro --harvest` without changing the schema.
+Use targets such as `project-sensor`, `runtime-inspectability`, `architecture-fitness`, `security`, `schema`, or `tooling` to make the missing signal visible to `harness-4-retro --harvest` without changing the schema.
 
 ### ID generation
 
@@ -138,7 +138,7 @@ Counters are independent per kind. A buffer with `DL-001`, `DL-002`, `MW-001` is
 
 ## Append, never rewrite
 
-The buffer is append-only. Each call appends a single YAML block. The skill never reads existing entries to validate or modify them. `harness-3-retro --drain` is the consumer that reads + drains.
+The buffer is append-only. Each call appends a single YAML block. The skill never reads existing entries to validate or modify them. `harness-4-retro --drain` is the consumer that reads + drains.
 
 ## Task-boundary heuristic
 
@@ -152,15 +152,15 @@ The point is: ask once per natural pause, only when otherwise silent.
 ## What this skill does NOT do
 
 - **No user-facing output**. Not even a one-line "logged" message. The buffer is silent; the bubble at session end is the only surface.
-- **No fix application**. Entries describe friction; encoding happens via `harness-3-retro --drain [e]ncode` (stages a diff for review).
+- **No fix application**. Entries describe friction; encoding happens via `harness-4-retro --drain [e]ncode` (stages a diff for review).
 - **No prompting the user mid-session**. Bubble-up is exclusively at session end.
-- **No buffer reading or curation**. That's `harness-3-retro --drain` (drain) and `harness-3-retro --harvest` (curate).
+- **No buffer reading or curation**. That's `harness-4-retro --drain` (drain) and `harness-4-retro --harvest` (curate).
 - **No sensor implementation**. This skill logs missing proof. It never creates product-specific smoke tests, CodeQL queries, schema checks, or setup artifacts.
 
 ## Edge cases
 
 - **Sentinel mid-write**: if `.disabled` appears between two calls, subsequent calls no-op. Already-written entries stay until next bubble.
-- **Concurrent agents**: per-agent buffer files mean no collision. Two agents call harness-2-observe simultaneously → two different files.
+- **Concurrent agents**: per-agent buffer files mean no collision. Two agents call harness-3-observe simultaneously → two different files.
 - **Malformed entry**: if the agent constructs an invalid entry (missing required field), the write fails. Better to skip the entry than to corrupt the buffer.
 - **Buffer file missing**: create it (touch). The first entry initializes it. If `_buffers/` is also missing, **no-op gracefully** (report `UNAVAILABLE`, exit silently) — the producer never auto-scaffolds; provisioning `docs/harness/` is the separate engineering-harness setup effort's job.
 - **Inference gap discovered late**: log the missing signal as the friction, not just the symptom. Prefer "no smoke/evidence path proved X" over "I was confused", because the former is encodable into deterministic back-pressure.

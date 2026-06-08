@@ -31,7 +31,7 @@ These skills (installed via `npx skills add jakkaj/tools -a <cli>` from `/skills
 | `plan-6a-v2-update-progress` | `plan-6a-update-progress` | Domain context in progress tracking |
 | `plan-7-v2-code-review` | `plan-7-code-review` | Domain Compliance Validator, anti-reinvention checks |
 | `plan-2c-v2-workshop` | `plan-2c-workshop` | Domain context in workshop design documents |
-| `plan-2d-backpressure-survey` | *(new)* | Runs after the spec, before `plan-3`. Surveys deterministic-backpressure coverage of the planned work (sensor inventory → failure modes → coverage matrix → qualitative certainty) and recommends an optional "Phase 0: Establish Backpressure" on behaviour/architecture gaps. Writes `backpressure-coverage.md`, consumed by `plan-3-v3-architect`. Advisory only — never blocks, no thresholds. Computational counterpart to `plan-7-v2-code-review`. |
+| `harness-2-backpressure` (alias `/plan-2d`) | *(new — harness-family Backpressure Check)* | The recommended step after the spec, before `plan-3`. Surveys deterministic-backpressure coverage of the planned work (sensor inventory → failure modes → coverage matrix → qualitative certainty) and recommends an optional "Phase 0: Establish Backpressure" on behaviour/architecture gaps. Writes `backpressure-coverage.md`, consumed by `plan-3-v3-architect`. Advisory only — never blocks, no thresholds. Computational counterpart to `plan-7-v2-code-review`. Lives in `skills/harness/` (folded in from SDD on 2026-06-08). |
 | `didyouknow-v2` | `didyouknow` | Domain boundary/contract insights when relevant |
 | `plan-2b-v2-prep-issue` | `plan-2b-prep-issue` | Domain metadata, labels, cross-domain dependency warnings in issues |
 

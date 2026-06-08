@@ -258,6 +258,6 @@ Draw from these categories based on `[NEEDS CLARIFICATION]` markers in the sketc
 
 Next steps:
 - **If Workshop Opportunities identified**: Consider running **/plan-2c-workshop**
-- **Before architecture (recommended)**: Run **/plan-2d-backpressure-survey** to check whether the planned work can be *proven by deterministic backpressure* (vs inference/eyeballing) — it surfaces any "Phase 0: Establish Backpressure" so `/plan-3` can bake it in. Advisory; never blocks.
+- **Before architecture (recommended)**: Run **/harness-2-backpressure** to check whether the planned work can be *proven by deterministic backpressure* (vs inference/eyeballing) — it surfaces any "Phase 0: Establish Backpressure" so `/plan-3` can bake it in. Advisory; never blocks.
 - **Otherwise**: Run **/plan-3-v3-architect** to generate the implementation plan
 - **To add clarifications later** (mid-plan or post-architect): Run **/plan-2-v2-clarify** to open a new `### Session` block
