@@ -973,6 +973,7 @@ If user says "PROCEED":
 2. Stop after each phase for verification
 3. Update checklist items as completed
 4. If any phase fails, offer rollback
+5. **After the merge completes**, fire the **plan-complete harness seam** (router-only): run `/eng-harness-flow --event plan-complete --json` and act on the envelope — the router owns the long-horizon reflection (harvest-vs-drain is its decision, never this skill's). Skip silently if the router isn't installed. Best-effort, never blocks.
 
 If user says "ABORT":
 1. Save merge plan for later reference
@@ -1018,14 +1019,7 @@ Summary:
 
 Next step: Review merge plan and type "PROCEED" to execute, or "ABORT" to cancel.
 
-After the merge executes (plan complete), fire the **plan-complete harness
-seam** (router-only; skip silently if the router isn't installed):
-
-/eng-harness-flow --event plan-complete --json
-
-…and act on the envelope — the router owns the long-horizon reflection
-(harvest-vs-drain is its decision, never this skill's). Best-effort,
-never blocks.
+(After the merge completes, the plan-complete harness reflection runs automatically when a harness is installed — nothing to do here.)
 ```
 
 If no upstream changes:

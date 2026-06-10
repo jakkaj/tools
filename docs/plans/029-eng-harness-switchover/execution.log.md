@@ -271,3 +271,14 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 ```
 
 **T014: ✅ COMPLETE — Phase 1 (T001–T014) DONE. 12/12 ACs pass. Awaiting user commit.**
+
+---
+
+## Post-review fixes (plan-7 → APPROVE WITH NOTES, 2026-06-10)
+
+`/plan-7-v2-code-review` returned **APPROVE WITH NOTES** (`reviews/review.md`); all 12 ACs re-verified live. Two non-blocking findings, both addressed **after** the plan-029 commit (`3039652`) — so they land as a follow-up, not an amend of pushed history:
+
+- **F001 (MEDIUM) — plan-8 plan-complete seam placement.** The `/eng-harness-flow --event plan-complete --json` directive sat inside the pre-merge `## Success Message` literal (printed at plan-generation, before PROCEED) and was absent from the post-merge PROCEED branch. **Fix**: moved the executable directive into `## Next Steps` → "If user says PROCEED" as step 5 (fires after the merge completes); left only a brief non-directive note in the Success Message. The top-level `## Harness seam (router-only)` doc section was already correct and is unchanged.
+- **F002 (LOW) — stale distribution mirror.** `src/jk_tools/scripts/compound-value.sh` lingered after the source `scripts/compound-value.sh` deletion (the mirror is regenerated, never hand-edited). **Fix**: ran `./scripts/sync-to-dist.sh`, which dropped the stale mirror copy (only mirror change).
+
+Both fixes verified: seam command now appears only in the executable PROCEED branch + the doctrine section (not the printed literal); mirror no longer carries `compound-value.sh`.
