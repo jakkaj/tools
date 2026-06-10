@@ -1,7 +1,7 @@
 ---
 name: plan-1b-v3-specify-and-clarify
 description: |
-  Create a feature spec AND resolve high-impact ambiguities in a single skill. Front-loads questions: asks host-independent questions (Mode/Testing/Mock/Docs) in ONE batched prompt BEFORE writing the spec, generates the sketch with those answers already applied, then asks a conditional second batch only for sketch-dependent gaps (Domain Review, Agent Harness, topic-specific markers). Cap ≤8 total. Uses batched prompting where the host supports it (e.g., Claude Code's AskUserQuestion), falls back to sequential one-at-a-time on hosts that don't. Replaces the old plan-1b → plan-2 two-skill hop.
+  Create a feature spec AND resolve high-impact ambiguities in a single skill. Front-loads questions: asks host-independent questions (Mode/Testing/Mock/Docs) in ONE batched prompt BEFORE writing the spec, generates the sketch with those answers already applied, then asks a conditional second batch only for sketch-dependent gaps (Domain Review, topic-specific markers). Cap ≤8 total. Uses batched prompting where the host supports it (e.g., Claude Code's AskUserQuestion), falls back to sequential one-at-a-time on hosts that don't. Replaces the old plan-1b → plan-2 two-skill hop.
 ---
 Please deep think / ultrathink as this is a complex task.
 
@@ -51,8 +51,7 @@ Default to batched. Fall back without ceremony — do not announce capability de
 4. Check for workshop documents:
    - If `${PLAN_DIR}/workshops/*.md` exist → read all; they are **authoritative design decisions** and must not be contradicted
 
-5. Check for agent harness:
-   - Note whether `docs/project-rules/engineering-harness.md` (or legacy `agent-harness.md` / `harness.md`) exists and its maturity level if so
+5. Harness context: owned entirely by the external eng-harness family via the **`/eng-harness-flow`** router (children never called directly) — no governance file checks or readiness questions in this skill. The post-spec seam fires in Next steps after the spec is written.
 
 ---
 
@@ -138,7 +137,6 @@ Save the spec.
 
 Only fires if at least one of these is true:
 - Target Domains contains NEW or contested entries → ask **Domain Review**
-- Agent harness state is unclear or doesn't exist → ask **Agent Harness Readiness**
 - The sketch left ≥1 critical `[NEEDS CLARIFICATION]` marker → ask up to 2 topic-specific questions
 
 **Compose Round 2** (up to 4 questions in one batched prompt). Skip Round 2 entirely if none of the conditions hold.
@@ -149,7 +147,7 @@ Submit as ONE batched call on batched hosts; sequentially on sequential hosts.
 
 After Round 2:
 - Append Q&A to the same `### Session YYYY-MM-DD` block in `## Clarifications`
-- Update affected sections immediately (`## Target Domains` for boundary adjustments, agent-harness decision recorded for `plan-3-v3-architect`, topic-specific markers replaced with resolved values)
+- Update affected sections immediately (`## Target Domains` for boundary adjustments, topic-specific markers replaced with resolved values)
 - Save the spec
 
 ---
@@ -222,14 +220,6 @@ The spec identifies these target domains:
 
 After: update spec `## Target Domains` with user's adjustments.
 
-### Agent Harness Readiness (Round 2, conditional)
-
-**If harness exists**: report current maturity (L0–L4) and ask "Is L[N] sufficient for this feature, or does it need updating?"
-
-**If no harness**: ask "This project has no agent harness (Boot → Interact → Observe feedback loop). Without one, the agent validates via unit tests and manual verification only. Note: this is the agent-side feedback layer — it sits on top of the project's engineering harness (justfile/Makefile/dev script) and assumes that substrate already works." Options: "Build agent harness as Phase 0 (Recommended)" / "Continue without agent harness" / "Feature doesn't need an agent harness".
-
-After: capture in `## Clarifications`. If "Build as Phase 0" chosen, note for `plan-3-v3-architect`. If overridden, document the override reason.
-
 ### Topic-specific (Round 2, conditional)
 
 Draw from these categories based on `[NEEDS CLARIFICATION]` markers in the sketch:
@@ -258,6 +248,10 @@ Draw from these categories based on `[NEEDS CLARIFICATION]` markers in the sketc
 
 Next steps:
 - **If Workshop Opportunities identified**: Consider running **/plan-2c-workshop**
-- **Before architecture (recommended)**: Run **/harness-2-backpressure** to check whether the planned work can be *proven by deterministic backpressure* (vs inference/eyeballing) — it surfaces any "Phase 0: Establish Backpressure" so `/plan-3` can bake it in. Advisory; never blocks.
+- **Before architecture (recommended) — fire the post-spec harness seam**: `/eng-harness-flow --event post-spec --spec "<SPEC_FILE>"` — when a harness exists the router surfaces the backpressure check (can the planned work be *proven by deterministic sensors* vs eyeballed?) and produces `backpressure-coverage.md` in the plan dir for `/plan-3` to consume. Router not installed (probe `test -f ~/.agents/skills/eng-harness-flow/SKILL.md`, fallback `~/.claude/skills/eng-harness-flow/SKILL.md`)? If the flow already warned, skip silently; otherwise print the one-time warning verbatim:
+
+  > ⚠️ No engineering harness detected — the eng-harness skills aren't installed. Continuing without one: standard testing applies, nothing else changes. (To add the harness loop: `npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y`.)
+
+  Advisory; never blocks. Never call the router's child skills directly — children are private and may move.
 - **Otherwise**: Run **/plan-3-v3-architect** to generate the implementation plan
 - **To add clarifications later** (mid-plan or post-architect): Run **/plan-2-v2-clarify** to open a new `### Session` block

@@ -60,8 +60,7 @@ cd tools
 | Path | What |
 |---|---|
 | `skills/SDD/` | The spec-driven-development pipeline skills (plan-*, validate, didyouknow, etc.) |
-| `skills/harness/` | The 3 harness loop-stage skills: `harness-1-boot`, `harness-3-observe`, `harness-4-retro` (serving the loop's Boot, Observe, and Retro·Magic Wand stages) |
-| `docs/harness/` | Harness loop runtime ledger (per-agent buffers + `.retro.md` files) **and** the frozen cross-system retro `schemas/` (the minih shape contract) — not skills themselves |
+| `docs/harness/` | Kept history + contract, not skills: the frozen cross-system retro `schemas/` (the minih shape contract) and read-only `agents/` retro history |
 | `skills/general/` | Domain-generic skills (grill-me) |
 | `skills/personal/` | Personal / non-coding skills (shopping-hunter) |
 | `agents/` | Installer infra only — `mcp/servers.json` (MCP source-of-truth) + `settings.local.json`. Legacy command sets removed; skills ship via `npx`. |
@@ -70,25 +69,21 @@ cd tools
 
 See **[CLAUDE.md](./CLAUDE.md)** for the contributor-facing dev guide (how to add or edit a skill).
 
-## The harness loop (why these skills exist)
+## The engineering harness (external — routed via `/eng-harness-flow`)
 
-The `skills/harness/` family encodes one idea: **the engineering harness IS the product.** Development infrastructure — `just`/`make` recipes, build and seed scripts, test runners, env setup, plus the agent-facing Boot → Interact → Observe loop on top — is not scaffolding. It is the first-class product of engineering work, and every plan and code change should leave it better than it found it.
+One idea survives every refactor of this repo: **the engineering harness IS the product.** Development infrastructure — `just`/`make` recipes, build and seed scripts, test runners, env setup, plus the agent-facing loop on top (Boot → Backpressure → Observe → Retro → Improve) — is not scaffolding; every plan and code change should leave it better than it found it. **Agents are real users**: test agents, smoke bots, CI runners, and plan-6 companions are real users of the infrastructure, and their failures and "magic wand" wishes are the most honest feedback the harness gets.
 
-The full loop is **Boot → Backpressure Check → Do Work and Observe → Retro and Magic Wand → Improve**. Three skills serve its recurring stages:
+The skills that serve that loop live in the external **eng-harness family** (`AI-Substrate/harness-engineering`) — this repo carries none of its own. The SDD pipeline reaches the harness through exactly one door, the **`/eng-harness-flow`** router, called at five seams with context (`--event session-start | post-spec | pre-implement | phase-end | plan-complete`); the router decides what the harness should do, and its child skills are private and never named here. To add the loop:
 
-- **`harness-1-boot`** — *Boot.* Validate the harness is healthy and report its maturity at session start. If a fresh agent can't reach a healthy, observable running system in 30-60 seconds, that is the most important thing to fix.
-- **`harness-3-observe`** — *Observe.* A silent producer that captures friction during work to a per-agent buffer, so each difficulty catalogued becomes a gift to your future self (compounding value).
-- **`harness-4-retro`** — *Retro.* `--drain` at session end surfaces what was observed and stages encoded fixes (encode, don't document); `--harvest` curates the accumulated ledger at long-horizon reflection moments.
+```bash
+npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y
+```
 
-**Agents are real users.** Test agents, smoke bots, CI runners, and plan-6 companions are not test scripts — they are real users of the infrastructure, and their failures and "magic wand" wishes are the most honest feedback the harness gets. The loop above exists to capture that feedback and compound it.
+No harness installed? The flow prints one calm warning, then proceeds with standard testing — nothing gates, nothing blocks.
 
-These three are the runtime companions to an engineering harness that is already set up, defined, and prompted in the host repo. Provisioning a fresh harness (scaffolding the governance doc + ledger) is a separate setup concern; the skills degrade gracefully (`harness-1-boot` reports `UNAVAILABLE`, observe/retro no-op) when the substrate is absent.
+**Ownership (inverted by plan-029)**: `AI-Substrate/harness-engineering` owns the harness loop end-to-end — setup/provisioning AND the runtime loop. This repo consumes the router and keeps only `docs/harness/schemas/` (its copy of the universal retro shape contract — minih keeps its own) and `docs/harness/agents/**` (frozen read-only retro history).
 
-**Ownership split**: this repo owns the canonical runtime loop skills (`harness-1-boot`, `harness-3-observe`, `harness-4-retro`) and the frozen retro schema contract. Project-side setup/provisioning remains in `AI-Substrate/harness-engineering` via `engineering-harness-setup`; tools consumes the generated governance doc and ledger paths, but does not recreate that setup flow.
-
-**Back-pressure signals**: the runtime loop captures not only "make this easier" friction, but also "what should the harness have proved?" gaps: missing smoke paths, visual/log evidence, architecture/static checks, security/dependency/schema checks, and other deterministic sensors. These are advisory improvement candidates, never gates or scores.
-
-If old deployed skill slugs linger after renames (for example retired `boot-harness` or `compound-*` runtime skills), use the read-only reports:
+If old deployed skill slugs linger after renames (for example the retired local `harness-*` loop skills), use the read-only reports:
 
 ```bash
 just skills-orphans

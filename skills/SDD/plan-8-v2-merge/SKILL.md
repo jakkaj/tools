@@ -1017,6 +1017,15 @@ Summary:
 - Recommended approach: ${APPROACH}
 
 Next step: Review merge plan and type "PROCEED" to execute, or "ABORT" to cancel.
+
+After the merge executes (plan complete), fire the **plan-complete harness
+seam** (router-only; skip silently if the router isn't installed):
+
+/eng-harness-flow --event plan-complete --json
+
+…and act on the envelope — the router owns the long-horizon reflection
+(harvest-vs-drain is its decision, never this skill's). Best-effort,
+never blocks.
 ```
 
 If no upstream changes:
@@ -1031,21 +1040,6 @@ Your branch is up to date. No merge needed.
 
 ---
 
-## Compound integration
+## Harness seam (router-only)
 
-This skill participates in the **Compounding Value System** (the `skills/harness/` loop + the frozen `docs/harness/schemas/` contract).
-
-**Sentinel**: Before any compound call below, check `docs/harness/.disabled` — if present, silently skip everything in this section.
-
-**At start**:
-- Check `docs/harness/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-4-retro --drain` BEFORE the merge analysis.
-
-**During merge analysis**:
-- Silently call `harness-3-observe` per its trigger heuristics. Merge-specific triggers: rebase conflicts that needed manual resolution; squash decisions that lost information; CI failures during the merge gate.
-- Calibration: ≤1 self-prompt per 5min; ≤5 entries per session.
-
-**At end** (pipeline endpoint — plan-completion reflection moment):
-- Auto-fire `/harness-4-retro --drain` — drains the buffer.
-- Auto-fire `/harness-4-retro --harvest` — this is the plan-completion reflection moment; the user gets a curated view of all friction encountered across the plan's lifetime. Filter scope: `--plan <slug>` derived from the branch/cwd.
-
-See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md) and § The Four Firing Sites.
+This skill fires one harness seam — **plan complete**, after the merge executes — through the single entry point `/eng-harness-flow --event plan-complete --json` (children never called directly; they are private and may move). The router owns the long-horizon reflection at plan completion. Router not installed → skip silently (the one-time warning already fired at flow entry). Best-effort, never blocks.

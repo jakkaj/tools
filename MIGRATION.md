@@ -51,7 +51,7 @@ rm -rf ~/.copilot/skills/*v2* ~/.copilot/skills/plan-*
 
 ## Note on the retired harness/compound command files
 
-Some of the stale files cleaned up above were the old harness/philosophy commands (the v2-era `harness`/`agent-harness`/`compound` `.md` files). Those concepts have been **consolidated into three loop-stage skills** — `harness-1-boot`, `harness-3-observe`, and `harness-4-retro` — under `skills/harness/`. The standalone philosophy command was retired (its principles are now inline). So if you see old harness or compound command files lingering in `$HOME`, delete them per the recipe above and install the three current `harness-*` skills via `npx skills` below.
+Some of the stale files cleaned up above were the old harness/philosophy commands (the v2-era `harness`/`agent-harness`/`compound` `.md` files). Those were first consolidated into four local loop-stage skills (`harness-1-boot`, `harness-2-backpressure`, `harness-3-observe`, `harness-4-retro` — plan-024), and then **the whole local family was retired in plan-029**: the harness loop now lives in the external `AI-Substrate/harness-engineering` repository, reached through its `/eng-harness-flow` router skill. So if you see old harness or compound command files — or the four retired `harness-*` skills — lingering in `$HOME` skill stores, delete them per the recipe above and install the external family instead: `npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y`.
 
 ## Re-installing in the new layout
 

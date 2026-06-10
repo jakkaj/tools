@@ -31,7 +31,6 @@ A skills repository, plus a dev-tooling installer. The skills are the product:
 /
 ├── skills/                     # Source-of-truth for skills (SKILL.md per skill)
 │   ├── SDD/                    # 26 spec-driven-development pipeline skills
-│   ├── harness/                # 4 harness-loop skills (boot / backpressure / observe / retro)
 │   └── general/                # general-purpose skills (grill-me, perplexity-deep-research)
 ├── agents/                     # Installer infra only (legacy command sets removed — skills ship via npx)
 │   ├── mcp/servers.json        # MCP server source-of-truth (read by install/agents.sh)
@@ -47,27 +46,22 @@ A skills repository, plus a dev-tooling installer. The skills are the product:
 └── pyproject.toml              # Package metadata (jk-tools-setup CLI)
 ```
 
-## Compounding Value System
+## Engineering harness (external, routed via `/eng-harness-flow`)
 
-The **Compounding Value System** is the harness loop: **Boot → Backpressure Check → Do Work and Observe → Retro and Magic Wand → Improve**. The four `skills/harness/` skills serve the recurring stages in loop order — Boot (`harness-1-boot`), Backpressure Check (`harness-2-backpressure`), the Observe half of Do Work and Observe (`harness-3-observe`), and Retro and Magic Wand (`harness-4-retro`); Improve is encoding the selected fix back into the repo/tooling. Backpressure Check is best-effort/advisory like the rest — it surveys whether the scoped work has enough deterministic sensors; the sensors prove, never the LLM. The principle is encode-don't-document — every difficulty catalogued is a gift to your future self — and the loop exists so observed friction becomes encoded improvement instead of prose. Three layers:
+The engineering-harness loop (**Boot → Backpressure → Observe → Retro → Improve**) is owned by the external **eng-harness family** (`AI-Substrate/harness-engineering`) — this repo carries **no harness skills of its own** (the local harness skill family was deleted in plan-029). The SDD pipeline reaches the harness through exactly **one door**: the **`/eng-harness-flow`** router, called at five seams with context — `--event session-start | post-spec | pre-implement | phase-end | plan-complete`. The router's child skills are private and never named in this repo; the router decides what (if anything) the harness does at each seam, and SDD narrates its `--json` envelope verbatim (`decision: route|redirect|noop|ambiguous`; boot verdicts `healthy / SLOW / UNHEALTHY / UNAVAILABLE`). Install: `npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y`.
 
-1. **Philosophy** — *retired as a standalone skill (plan-024).* The 5 principles ("the harness is the product", "track compounding value", "encode, don't document", "measure", "agents are real users") are now encoded inline across the `skills/harness/` skill bodies + the repo [`README.md`](./README.md) — the "encode, don't document" rule applied to itself.
-2. **Substrate** — the engineering harness governance doc `docs/project-rules/engineering-harness.md` (legacy `agent-harness.md` / `harness.md` still read as fallback, canonical-first). Provisioning this doc is a **separate engineering-harness setup effort** (not in this repo); `harness-1-boot` validates it at session start and reports `UNAVAILABLE` gracefully when absent.
-3. **Loop skills** — [`skills/harness/`](./skills/harness/) — four re-entrant loop-stage skills (in loop order):
-   - `harness-1-boot` — *Boot.* VALIDATE (3-stage Boot/Interact/Observe health check) + STATUS (read-only maturity report)
-   - `harness-2-backpressure` — *Backpressure Check.* advisory survey (after spec, before architect) of whether the scoped work is provable by deterministic sensors; writes `backpressure-coverage.md`; never blocks. (Alias `/plan-2d` kept for back-compat; was `skills/SDD/plan-2d-backpressure-survey` before plan-024's renumber.)
-   - `harness-3-observe` — *Observe.* silent producer; per-agent buffer; magic-wand reflex (≤1/5min calibrated)
-   - `harness-4-retro` — *Retro.* `--drain` = session-end soft prompt `[s/t/p/e/d/a]` (default `[a]ll-save`); `--harvest` = curator (clusters + stale + top-10; runtime filters; `--json`; no on-disk indexes, terminal print)
+**Two-layer detection, one calm warning**: at flow entry, SDD probes `test -f ~/.agents/skills/eng-harness-flow/SKILL.md` (fallback `~/.claude/skills/eng-harness-flow/SKILL.md`). No router → exactly one warning, then standard testing and silence — there is **no sentinel file**; opting out is conversational. Router present but the repo unprovisioned → the router says so once, and later seam calls pass `--prompt-optional=false`. Everything is best-effort: the harness never gates, scores, or blocks the pipeline. Observe (in-flight friction capture) is the harness's own concern once alive in-context — SDD skills carry no observe instructions.
 
-All retros conform to the universal JSON Schema in [`docs/harness/schemas/`](./docs/harness/schemas/) — produced by minih, the harness loop, and any other system that adopts the contract. **minih keeps its own copy of these schemas**, so this is *this repo's* copy of a shared **shape** contract, not a file minih reads. That makes relocating it a purely local move — done here from the old `skills/compound/schemas/` to `docs/harness/schemas/` to retire the leftover `compound` directory name. The only cross-system rule is shape + `schema_version` agreement; don't change the schema's *meaning* without bumping the version and telling minih. `harness-4-retro` bundles a deploy copy at `skills/harness/harness-4-retro/references/retro.schema.json` so the contract travels with the skill; `just doctor-skills` flags drift between the two. Cross-system back-compat: `harness-4-retro --harvest` reads minih's legacy `docs/retros/*.md` block format until minih adopts the universal contract natively (RFC pending — see workshop 005 § Acceptance Criteria for the minih RFC).
+**What stays in this repo** (the keep-list):
+- [`docs/harness/schemas/`](./docs/harness/schemas/) — this repo's copy of the universal retro **shape** contract (minih keeps its own copy; the only cross-system rule is shape + `schema_version` agreement — don't change the schema's *meaning* without bumping the version and telling minih). Custody transfer to the substrate repo is a logged cross-repo follow-up.
+- `docs/harness/agents/**` — frozen read-only retro history (mined by plan-1a's Prior Learnings Scout; read by upstream harvest as legacy back-compat).
+- [`docs/harness/README.md`](./docs/harness/README.md) — a slim pointer explaining the above.
 
 **Vocabulary freeze (plan-024, 2026-05-28 → deliberately overridden 2026-06-08)**: the freeze originally pinned three loop-stage names (`harness-1-boot`, `harness-2-observe`, `harness-3-retro`) for **≥1 quarter** to stop under-documented renames (the PL-05 vocabulary-fragility risk). On **2026-06-08** this was overridden *on purpose, with the cost understood* (~78 file-touches + folder renames): `plan-2d-backpressure-survey` was folded into the harness family as the first-class **Backpressure Check** stage, and the family was renumbered to loop order — `harness-1-boot`, `harness-2-backpressure`, `harness-3-observe` (was `-2-observe`), `harness-4-retro` (was `-3-retro`). The override exists because making the loop legible (backpressure as a first-class harness stage, numbered in order) was judged worth a one-time break. **The freeze window resets from 2026-06-08 over the new four-name surface** — these four names are now the stable public surface for **≥1 quarter**; new harness capability lands as new skills or new modes, not renames of these four. `/plan-2d` remains a back-compat alias for `harness-2-backpressure`.
 
-**Opt-out**: `touch docs/harness/.disabled` silences every harness-loop skill (the auto-firing SDD skills check this sentinel before invoking).
+> **Override #2 (plan-029, 2026-06-10)**: the four-name freeze surface was retired wholesale — `skills/harness/` was deleted and every SDD harness seam now routes through the external **`/eng-harness-flow`** router (`AI-Substrate/harness-engineering`); child skills are private and never named in this repo. The freeze window resets from 2026-06-10 over the new surface: **`/eng-harness-flow` + its `--event` vocabulary** (`session-start | post-spec | pre-implement | phase-end | plan-complete`) is the stable public surface for **≥1 quarter** — harness capability evolves upstream, never as renames of this entry point. Depth: `docs/plans/029-eng-harness-switchover/`.
 
-**Ledger surface**: this repo's own `docs/harness/` is scaffolded (runtime buffers + per-agent retros + the `schemas/` contract) — see [`docs/harness/README.md`](./docs/harness/README.md).
-
-**Depth**: see [`docs/plans/023-difficulty-ledger-skill/`](./docs/plans/023-difficulty-ledger-skill/) for the original spec + 6 workshops + implementation plan, and [`docs/plans/024-harness-nucleus/`](./docs/plans/024-harness-nucleus/) for the 6→3 loop-stage consolidation (the rename + retirement).
+**Depth**: see [`docs/plans/023-difficulty-ledger-skill/`](./docs/plans/023-difficulty-ledger-skill/) for the original spec + 6 workshops + implementation plan, [`docs/plans/024-harness-nucleus/`](./docs/plans/024-harness-nucleus/) for the 6→3 loop-stage consolidation, and [`docs/plans/029-eng-harness-switchover/`](./docs/plans/029-eng-harness-switchover/) for the switchover to the external family.
 
 ## Adding or editing a skill
 
@@ -99,9 +93,8 @@ All retros conform to the universal JSON Schema in [`docs/harness/schemas/`](./d
 
 ### Bundling a CLI or other resources with a skill
 
-A skill folder can ship more than `SKILL.md` — any sibling files travel with it through `npx skills add` and land in the canonical store next to `SKILL.md`. Two examples in this repo:
+A skill folder can ship more than `SKILL.md` — any sibling files travel with it through `npx skills add` and land in the canonical store next to `SKILL.md`. Example in this repo:
 
-- `skills/harness/harness-4-retro/references/retro.schema.json` — a bundled schema (`just doctor-skills` checks it for drift).
 - `skills/general/perplexity-deep-research/pplx_research.py` — a bundled Python CLI the skill shells out to. The skill calls the **Perplexity HTTP API directly** (`https://api.perplexity.ai/chat/completions`) with a long client-side timeout (default 1800s) so deep `sonar-deep-research` jobs **complete instead of dying at the perplexity MCP server's ~5-minute timeout**. The key comes from `$PERPLEXITY_API_KEY` (already in the env + MCP configs). Keep bundled CLIs dependency-light (Python **stdlib only**) so they run wherever the skill installs.
 
 ## Editing existing v2 skills

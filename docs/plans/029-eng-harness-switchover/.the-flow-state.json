@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "slug": "eng-harness-switchover",
+  "plan_dir": "docs/plans/029-eng-harness-switchover",
+  "mode": "Simple",
+  "current_stage": "awaiting-7",
+  "pending_command": "/plan-7-v2-code-review --plan \"docs/plans/029-eng-harness-switchover/eng-harness-switchover-plan.md\"",
+  "intent": "Switch the SDD flow + the-flow to the eng-harness family, routed EXCLUSIVELY via eng-harness-flow (child skills never called directly), with skills/harness detection + a calm no-harness warning",
+  "milestones_total": 5,
+  "milestones_done": 4,
+  "last_checkpoint_at": "2026-06-10T09:35:00Z",
+  "compacted_seams": ["awaiting-1b->3", "awaiting-3->6"],
+  "status": "active"
+}

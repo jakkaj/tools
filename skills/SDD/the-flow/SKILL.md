@@ -45,7 +45,7 @@ The narration below uses **bare stage names** (`/plan-3`, `/plan-1b`, …). Thes
 | `/plan-1a` | `plan-1a-v2-explore` |
 | `/plan-1b` | `plan-1b-v3-specify-and-clarify` |
 | `/plan-2c` | `plan-2c-v2-workshop` |
-| `/plan-2d` | `harness-2-backpressure` (back-compat alias — the skill now lives in the harness family) |
+| `/plan-2d` | `/eng-harness-flow --event post-spec --spec <spec path>` (back-compat alias — the Backpressure Check is owned by the external eng-harness family, reached only through its router) |
 | `/plan-3` | `plan-3-v3-architect` |
 | `/plan-3a` | `plan-3a-v2-adr` |
 | `/plan-5` | `plan-5-v2-phase-tasks-and-brief` |
@@ -54,10 +54,8 @@ The narration below uses **bare stage names** (`/plan-3`, `/plan-1b`, …). Thes
 | `/plan-6a` | `plan-6a-v2-update-progress` |
 | `/plan-7` | `plan-7-v2-code-review` |
 | `/plan-8` | `plan-8-v2-merge` |
-| `/harness-1` | `harness-1-boot` |
-| `/harness-2` | `harness-2-backpressure` (same skill as `/plan-2d`) |
-| `/harness-3` | `harness-3-observe` |
-| `/harness-4` | `harness-4-retro` |
+
+**Harness routing**: every harness touchpoint goes through exactly one external skill — **`/eng-harness-flow`** — with an `--event` hint (`session-start | post-spec | pre-implement | phase-end | plan-complete`) plus context flags (`--spec`, `--plan-dir`, `--phase`, `--prompt-optional`, `--json`). Never name or invoke the router's child skills — they are private and may move or rename. See § Harness seams below for detection + narration.
 
 If a slug ever fails to resolve at runtime, do **not** guess a suffix — fall back to printing the bare `/plan-N` alias (the host resolves it) and tell the user the canonical pipeline lives in `skills/SDD/`.
 
@@ -251,19 +249,19 @@ awaiting-7 ──clean─────────▶ awaiting-8 ; awaiting-7 ─
 awaiting-8 ──merged────────▶ complete
 ```
 
-| current_stage | Discover artifact | Insight source (pick 1) | Compact seam *before* next? | Harness cue | Next command → next stage |
+| current_stage | Discover artifact | Insight source (pick 1) | Compact seam *before* next? | Harness seam (router-only) | Next command → next stage |
 |---|---|---|---|---|---|
-| `start` | — (ask intent) | — | — | mention `/harness-1-boot --validate` optional | research-worthy → `/plan-1a` (→`awaiting-1a`); else `/plan-1b` (→`awaiting-1b`) |
-| `awaiting-1a` | `research-dossier.md` | one Critical/High finding | **YES** (dossier is large) | observe ran silently | `/plan-1b` → `awaiting-1b` |
-| `awaiting-1b` | `<slug>-spec.md` | CS score + Simple/Full + #Workshop Opportunities | **YES** (before architect) | **backpressure is the recommended next step** (spec → backpressure → architect) | branch (recommend backpressure first): `/plan-2d` *(harness Backpressure Check, recommended)* (→`awaiting-2d`) \| `/plan-2c` *(optional workshop)* (→`awaiting-2c`) \| `/plan-3` *(skip to architect)* (→`awaiting-3`) |
+| `start` | — (ask intent) | — | — | **session-start**: probe for the router (§ Harness seams); if installed, `--event session-start` | research-worthy → `/plan-1a` (→`awaiting-1a`); else `/plan-1b` (→`awaiting-1b`) |
+| `awaiting-1a` | `research-dossier.md` | one Critical/High finding | **YES** (dossier is large) | — | `/plan-1b` → `awaiting-1b` |
+| `awaiting-1b` | `<slug>-spec.md` | CS score + Simple/Full + #Workshop Opportunities | **YES** (before architect) | **post-spec is the recommended next step** (spec → backpressure via the router → architect) | branch (recommend backpressure first): `/plan-2d` *(= `--event post-spec --spec <path>`, recommended; router-installed only)* (→`awaiting-2d`) \| `/plan-2c` *(optional workshop)* (→`awaiting-2c`) \| `/plan-3` *(skip to architect)* (→`awaiting-3`) |
 | `awaiting-2c` | newest `workshops/*.md` | the headline decision (Selected option) | — | — | `/plan-2d` (→`awaiting-2d`) \| `/plan-3` (→`awaiting-3`) |
-| `awaiting-2d` | `backpressure-coverage.md` | Certainty (Strong/Partial/Weak) + Phase 0? | — | **backpressure payoff** | `/plan-3` → `awaiting-3` |
+| `awaiting-2d` | `backpressure-coverage.md` | Certainty (Strong/Partial/Weak) + Phase 0? | — | **backpressure payoff** (artifact produced via the router) | `/plan-3` → `awaiting-3` |
 | `awaiting-3` | `<slug>-plan.md` | `**Status**` (READY/DRAFT) + Gate Matrix | **YES** (before implement) | validate-v2 already auto-ran | DRAFT → fix + re-run `/plan-3` (stay); Simple+READY → `/plan-6` (→`awaiting-6`); Full+READY → `/plan-5` (→`awaiting-5`) |
 | `awaiting-5` | `tasks/<phase>/tasks.md` | first task's Done-When | — | — | `/plan-6 --phase … --plan …` → `awaiting-6` |
-| `awaiting-6` | `execution.log.md` / phase status | what landed + AC met | **YES** (between phases) | **boot gate** (set expectation *before*); **drain** prompt `[s/t/p/e/d/a]` (explain *after*) | clean → `/plan-7` (→`awaiting-7`); more phases → next `/plan-5` (→`awaiting-5`) |
+| `awaiting-6` | `execution.log.md` / phase status | what landed + AC met | **YES** (between phases) | **pre-implement** (set expectation *before*: `/plan-6` fires `--event pre-implement`); **phase-end** (explain *after*: `/plan-6` fired `--event phase-end`) | clean → `/plan-7` (→`awaiting-7`); more phases → next `/plan-5` (→`awaiting-5`) |
 | `awaiting-7` | newest `reviews/*.md` | verdict + one finding | — | contrast computational(`2d`) vs inferential(`7`) tiers | findings → fix + re-run `/plan-7` (stay); clean → `/plan-8` (→`awaiting-8`) |
-| `awaiting-8` | merge plan | merge readiness | — | **harvest** reflection | user types `PROCEED`/`ABORT`; on merge → `complete` |
-| `complete` | — | — | — | suggest `/harness-4-retro --harvest` if not already | recap + stop; set `status:"complete"` |
+| `awaiting-8` | merge plan | merge readiness | — | **plan-complete** seam fires after the merge (inside `/plan-8`) | user types `PROCEED`/`ABORT`; on merge → `complete` |
+| `complete` | — | — | — | — (plan-complete already fired at plan-8) | recap + stop; set `status:"complete"` |
 
 ### Must-see fields to scan (the Flag beat, per stage)
 
@@ -325,7 +323,7 @@ All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decis
 > Did you notice `<the spec flagged N Workshop Opportunities | this feature touches real behaviour>`? That matters because `<why>`.
 > Before we architect, you have up to three optional moves — all skippable, none gate anything:
 > 1. **`/plan-2c`** — workshop a tricky topic first (the spec flagged `<N>`). Worth it when a design choice is still fuzzy.
-> 2. **`/plan-2d`** — backpressure survey: can we *prove* this work deterministically before building? Advisory; surfaces an optional Phase 0.
+> 2. **`/plan-2d`** (= `/eng-harness-flow --event post-spec --spec <path>`) — backpressure survey: can we *prove* this work deterministically before building? Advisory; surfaces an optional Phase 0. *(Only offered when the router is installed.)*
 > 3. **`/compact`** — context hygiene before the architect (recommended at this seam).
 >
 > Recommended path: `compact` then `/plan-3` *(or `workshop` / `prove it` first if you want)*. Type one of: `compact`, `workshop`, `prove it`, `architect`. Unsure → `compact` then `architect`.
@@ -335,7 +333,7 @@ All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decis
 >
 > **Where we are**: workshop saved (`workshops/<file>`). Its decisions are now **authoritative** — `/plan-3` won't contradict them.
 > Did you notice it settled `<the Selected option>`? That removes `<the ambiguity it resolved>` from the plan.
-> Next: another workshop, the backpressure survey (`/plan-2d`), or straight to the architect. Recommended: `/plan-3`. Type: `another`, `prove it`, or `architect`.
+> Next: another workshop, the backpressure survey (`/plan-2d`, router-installed only), or straight to the architect. Recommended: `/plan-3`. Type: `another`, `prove it`, or `architect`.
 
 ### `awaiting-2d` → after backpressure survey
 > [the-flow] ◆─◆─◇─◇─◇─◇─◇
@@ -361,7 +359,7 @@ All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decis
 >
 > **Where we are**: Phase `<N>` tasks are tabled (`tasks/<phase>/tasks.md`) with success criteria.
 > Did you notice the first task's done-when is `<criterion>`? That's the bar the implementer codes to.
-> **Heads-up for the next step**: `/plan-6` runs a **Boot→Interact→Observe pre-flight** first — it proves the app actually runs before a line of code. No harness here? It just reports `UNAVAILABLE` (not an error) and falls back to standard testing.
+> **Heads-up for the next step**: `/plan-6` fires the **pre-implement harness seam** first (`/eng-harness-flow --event pre-implement`) — when a harness exists, the router proves the system runs before a line of code, and the verdict is narrated verbatim from its envelope (`healthy / SLOW / UNHEALTHY / UNAVAILABLE`). No router or no harness? One calm note, then standard testing.
 > **Companion option (optional)**: you can build with a live reviewer — `/plan-6-v2-implement-phase-companion` runs a `code-review-companion` (a parallel `minih` agent) that reviews every commit and **supersedes `/plan-7`**. Want a different watcher (security/perf) or a parallel **worker** (e.g. a `docs-writer`)? Spin it up with `minih run <slug>` and I'll track it on the flight view. I don't run minih myself — I just narrate and record it.
 > Next, type one of:
 >
@@ -374,7 +372,7 @@ All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decis
 >
 > **Where we are**: Phase `<N>` landed — `<what it delivered>`; acceptance `<AC refs>` met. `/plan-6a` tracked progress for you.
 > `<⚠️ Before we move on — the work flagged: <acceptance criterion X not met> / <task Y left blocked> / <debt logged: "…">. Just making sure you saw those before the next phase.>` *(omit if everything landed clean)*
-> You may have seen a retro prompt `[s/t/p/e/d/a]` at the end — that's the harness **draining** the session's friction notes; default `[a]` saves them all. (Silenced if `docs/harness/.disabled` exists.)
+> You may have seen a retro prompt `[s/t/p/e/d/a]` at the end — that's the harness draining the session's friction notes at the **phase-end seam** `/plan-6` fired (the router decides drain-vs-harvest; default `[a]` saves them all). No harness → you saw nothing, which is also fine.
 > Did you notice `<one execution-log discovery>`? Worth carrying forward.
 > *More phases (Full)*: this is a between-phase seam — `/compact` now, then `/plan-5` for Phase `<N+1>`. Type: `compact` or `next phase`.
 > *Last phase / Simple*: next is review — `/plan-7` (skip if a companion already reviewed every commit). Type: `review`.
@@ -392,13 +390,13 @@ All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decis
 ### `awaiting-8` → at merge
 > [the-flow] ◆─◆─◆─◆─◆─◆─◇
 >
-> **Where we are**: `/plan-8` produced the merge analysis. A harvest reflection across the whole plan fires here (idempotent).
+> **Where we are**: `/plan-8` produced the merge analysis. After the merge executes, it fires the **plan-complete harness seam** (`/eng-harness-flow --event plan-complete`) — the router owns the long-horizon reflection.
 > Read the merge plan, then type **`PROCEED`** to execute or **`ABORT`** to hold. I'll mark the flow complete once it merges.
 
 ### `complete`
 > [the-flow] ◆─◆─◆─◆─◆─◆─◆
 >
-> 🎉 That's the full loop: spec → plan → tasks → code → review → merge. The harness captured friction along the way; if you haven't, `/harness-4-retro --harvest` gives a curated cross-plan view. Nothing else queued — re-run `/the-flow` any time to start a new one.
+> 🎉 That's the full loop: spec → plan → tasks → code → review → merge. If a harness was installed, it captured friction along the way and reflected at the plan-complete seam — `/eng-harness-flow` any time for a harness check-in. Nothing else queued — re-run `/the-flow` any time to start a new one.
 
 ### Optional branch mentions (one-liners, surfaced at their seam — never new stages)
 - `awaiting-1a`: **deep-research** with your tool of choice (online agent **or** coding harness) before `/plan-1b`.
@@ -434,19 +432,27 @@ USER runs the next /plan-* … then /the-flow → discovers the new artifact →
 
 ---
 
-## Harness loop — first-class in the flow (make the loop legible)
+## Harness seams — routed via `/eng-harness-flow` (side by side, never merged)
 
-The harness loop (`Boot → Backpressure Check → Do Work and Observe → Retro and Magic Wand → Improve`) is **not** a side-show you merely *narrate* — its stages are **first-class nodes in `the-flow.json`/`the-flow.md`** (types `backpressure`, `harness-boot`, `harness-observe`, `harness-retro`; see the schema + template). Weave them into the flight plan as you go, so the loop is *visible*, not implied. This is the productisation of the engineering environment surfaced in the map.
+The engineering harness is a **separate loop that runs side by side with the SDD pipeline in the same context — that is all**. It is owned by the external eng-harness family and reached through exactly one door: the **`/eng-harness-flow`** router. SDD tells the router *where the work is* (`--event <seam>` + context flags); the router decides what the harness should do. Never name or invoke its child skills — they are private and may move. The seam touchpoints are still **visible nodes in `the-flow.json`/`the-flow.md`** (types `backpressure`, `harness-boot`, `harness-retro`; see the schema + template) so the user can see where the two loops touch.
 
-**Sentinel (load-bearing)**: before emitting ANY harness node or narration, check that a harness exists — `docs/project-rules/engineering-harness.md` (or legacy `agent-harness.md` / `harness.md`) present AND `docs/harness/.disabled` **absent**. If either fails, **silently omit every harness node and mention** — the flight plan shows just spine + workshops, and the flow falls back to standard testing. A repo without a harness is fully supported; never nag about a missing one.
+**Two-layer detection (load-bearing — replaces the old governance-file + sentinel checks):**
 
-When a harness exists, each stage is a node *and* a narration beat:
+**Layer 1 — is the router installed?** Probe once per flow: `test -f ~/.agents/skills/eng-harness-flow/SKILL.md` (fallback `~/.claude/skills/eng-harness-flow/SKILL.md`). On a miss, print exactly once, verbatim:
 
-- **Backpressure Check (`/harness-2-backpressure`, alias `/plan-2d`)** — a `backpressure` node **on the spine between spec and plan**. The recommended pre-architect step: shapes the plan around what's *provable by deterministic sensors*. Advisory; never blocks.
-- **Boot (`/harness-1-boot`)** — a `harness-boot` node before each phase; set the expectation in `awaiting-5` that `/plan-6` runs a Boot→Interact→Observe pre-flight. `UNAVAILABLE` is not an error — falls back to standard testing.
-- **Observe (`harness-3-observe`)** — a `harness-observe` node spanning the build; silent. Mention once that friction is logged in the background; you don't call it.
-- **Retro drain (`/harness-4-retro --drain`)** — a `harness-retro` node at each phase seam; explain the `[s/t/p/e/d/a]` prompt the user just saw — default `[a]` saves all.
-- **Retro harvest (`/harness-4-retro --harvest`)** — a `harness-retro` node at `/plan-8` / `complete`; a cross-plan reflection; suggest it if it hasn't fired.
+> ⚠️ No engineering harness detected — the eng-harness skills aren't installed. Continuing without one: standard testing applies, nothing else changes. (To add the harness loop: `npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y`.)
+
+…then **silently omit every harness node and mention for the rest of the flow** (record the outcome once in state; never re-warn). The flight plan shows just spine + workshops, and the flow falls back to standard testing. A repo without a harness is fully supported; never nag about a missing one.
+
+**Layer 2 — route the seam.** Router installed → call the seam with `--json` and act on the envelope (`decision: route|redirect|noop|ambiguous`): `route` → print-then-offer the returned command; setup-routing/`noop` → one calm line the first time (*"No engineering harness in this repo — proceeding without one; say 'set up a harness' anytime."*), then pass `--prompt-optional=false` on later seam calls. Verdicts and flags are narrated **verbatim from the envelope** (boot vocabulary: `healthy / SLOW / UNHEALTHY / UNAVAILABLE`) — never reimplement the router's checks.
+
+When the router is installed, each seam is a node *and* a narration beat:
+
+- **Post-spec (`--event post-spec --spec <path>`, alias `/plan-2d`)** — a `backpressure` node **on the spine between spec and plan**. The recommended pre-architect step: shapes the plan around what's *provable by deterministic sensors*; produces `backpressure-coverage.md`. Advisory; never blocks.
+- **Pre-implement (`--event pre-implement --phase <id> --plan-dir <p>`)** — a `harness-boot` node before each phase; set the expectation in `awaiting-5` that `/plan-6` fires it. `UNAVAILABLE` is not an error — falls back to standard testing.
+- **Phase end (`--event phase-end --plan-dir <p>`)** — a `harness-retro` node at each phase seam (fired inside `/plan-6`); explain the `[s/t/p/e/d/a]` prompt the user may have seen — the router owns drain-vs-harvest.
+- **Plan complete (`--event plan-complete`)** — a `harness-retro` node at `/plan-8` / `complete`; the long-horizon reflection, fired inside `/plan-8` after the merge.
+- **Session start (`--event session-start`)** — fired at flow entry (plan-1a or the-flow's start); usually no node, just the detection + one calm line.
 
 Every harness node is **advisory** — surfaced for legibility, never a gate, never blocks, no scores.
 
@@ -470,9 +476,9 @@ Every run maintains a **flight plan**: `docs/plans/<ord>-<slug>/the-flow.json` (
 
 **Render rules for `the-flow.md`** (see schema + template for the worked form):
 1. `flowchart TD` (vertical); emit the `classDef`s (done/wip/blocked/known/assumed + said/companion/worker + **harness**). The `harness` class is violet (`fill:#EDE7F6,stroke:#673AB7`) so the loop reads distinctly from the spine.
-2. **Spine** = `type ∈ {research, spec, backpressure, plan, phase, merge}` linked solid `-->` in `next` order. **`backpressure` (the Backpressure Check) sits on the spine between `spec` and `plan`** — it's the recommended pre-architect step, styled with the `harness` class but on the main line (not a dotted excursion).
+2. **Spine** = `type ∈ {research, spec, backpressure, plan, phase, merge}` linked solid `-->` in `next` order. **`backpressure` (the post-spec seam, routed via `/eng-harness-flow`) sits on the spine between `spec` and `plan`** — it's the recommended pre-architect step, styled with the `harness` class but on the main line (not a dotted excursion).
 3. **Excursions** (`branch_of` set: deep-research, **each** workshop, fix-loop) = dotted `-.->` from their `branch_of`, rejoining at the spine. **Every workshop is its own node** — never collapse a loop into one blob.
-4. **Harness loop nodes** (`type ∈ {harness-boot, harness-observe, harness-retro}`) = dotted `-.->` from their `branch_of`, all `:::harness`. Emit them ONLY when a harness exists AND `docs/harness/.disabled` is absent — otherwise omit every harness node (including the `backpressure` spine node falls back to a plain `spec --> plan` edge). A no-harness flight plan shows just spine + workshops.
+4. **Harness seam nodes** (`type ∈ {harness-boot, harness-retro}`) = dotted `-.->` from their `branch_of`, all `:::harness`; their `command` fields are router invocations (`/eng-harness-flow --event …`), never child-skill names. Emit them ONLY when the Layer-1 probe passes (router installed) — otherwise omit every harness node (including the `backpressure` spine node — falls back to a plain `spec --> plan` edge). A no-router flight plan shows just spine + workshops.
 5. Each node `:::<class>` from its `status` (harness nodes keep `:::harness` regardless of status; convey status via the note).
 6. **User bubbles**: for every node with `user_input`, emit a `said`-class flag node (`>"🗣 …"]`) dotted (`-.-`) to it — verbatim, nothing hidden.
 7. **Agents**: `kind:companion` (`render:wrap`) → a **subgraph that wraps** its `covers[]` phases, styled with the companion colour; `kind:worker` (`render:side`) → a `worker`-class side-node linked `-. builds .->` to its `covers[]`.

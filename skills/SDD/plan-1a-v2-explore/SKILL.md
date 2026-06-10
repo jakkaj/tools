@@ -214,36 +214,19 @@ Before launching research, check for existing domain system:
   * Note "No domain registry found — subagents will discover domain-like boundaries organically"
   * The Domain & Boundary Scout subagent (below) will identify potential domains even without a registry
 
-### 2c) Load Harness Context (engineering + agent, two-part check)
+### 2c) Harness seam — session start (router-only)
 
-Two-part check, in order. The agent harness is a layer **on top of** the engineering harness; the substrate must exist before the overlay can be designed or validated.
+The engineering harness is owned by the external **eng-harness family** (`AI-Substrate/harness-engineering`) and is reached through exactly one door: the **`/eng-harness-flow`** router. Never call its child skills directly — children are private and may move or rename. This skill fires the **session-start** seam (it is typically the first skill in a flow), in two layers:
 
-**Part 1 — Engineering harness substrate** (does a runnable boot command exist?):
+**Layer 1 — is the router installed?** Probe: `test -f ~/.agents/skills/eng-harness-flow/SKILL.md` (fallback `~/.claude/skills/eng-harness-flow/SKILL.md`). On a miss, print exactly once, verbatim:
 
-Look for any of:
-- `justfile`, `Makefile` with a dev/serve/run target
-- `package.json scripts.dev` / `scripts.start`
-- `docker-compose.yml` (top-level service)
-- `pyproject.toml` (`[tool.poetry.scripts]`, `uv run` script entries)
-- `Cargo.toml` binary, `go.mod` `cmd/`, etc.
-- Any project-conventional dev script (`bin/dev`, `scripts/start.sh`, etc.)
+> ⚠️ No engineering harness detected — the eng-harness skills aren't installed. Continuing without one: standard testing applies, nothing else changes. (To add the harness loop: `npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y`.)
 
-Outcomes:
-- **Substrate present**: note the discovered boot command for the dossier; proceed to Part 2.
-- **Substrate missing or broken** (no boot command, or no obvious health signal): **surface as a P0 research finding** — agent harness work is blocked until the engineering harness is adequate. Engineering harness design is per-project (no v2 skill creates one); the dossier should flag this as a prerequisite for any subsequent plan-3 Phase 0.
+…then silently omit every harness touchpoint for the rest of the flow (record the outcome once in the research dossier; never re-warn).
 
-**Part 2 — Agent harness governance** (Boot → Interact → Observe feedback loop):
+**Layer 2 — route the seam.** Router installed → call `/eng-harness-flow --event session-start --json` and act on the envelope (`decision: route|redirect|noop|ambiguous`): `route` → print-then-offer the returned command; setup-routing/`noop` → one calm line the first time (*"No engineering harness in this repo — proceeding without one; say 'set up a harness' anytime."*), then pass `--prompt-optional=false` on later seam calls. The router owns all harness state, signals, and verdicts — narrate verbatim from the envelope; never reimplement its checks in this skill.
 
-- If `docs/project-rules/engineering-harness.md` (or legacy `agent-harness.md` / `harness.md`) exists:
-  * Read it — note project type, maturity level (L0–L4), boot command, health check, interaction methods, observe capabilities
-  * Include agent harness status in the research dossier output (§ Agent Harness Status section)
-  * Pass agent harness context to subagents so they can reference available validation infrastructure
-  * If only the legacy `harness.md` is present, note "legacy filename — consider migrating to `engineering-harness.md`" but do NOT modify the file from this read-only research command
-- If no agent harness exists **but Part 1 substrate is present**:
-  * Note "No agent harness found — agents cannot autonomously validate running software"
-  * Add to research dossier **Workshop Opportunities**: flag that the engineering-harness governance doc + Boot/Interact/Observe loop should be established (the project's separate engineering-harness setup effort owns provisioning) on top of the existing substrate; once present, `harness-1-boot` reports a real maturity instead of `UNAVAILABLE`
-  * The research dossier should note what an agent harness would need for this project type (boot, interact, observe patterns)
-- If no agent harness exists **and Part 1 substrate is missing**: the engineering harness gap from Part 1 takes precedence — provisioning the governance doc cannot succeed without a runnable boot command. Note both gaps and recommend resolving Part 1 first.
+Either way, note the harness outcome in the dossier (one line) and pass it to subagents as context. A repo without a harness is fully supported — standard testing applies.
 
 ### 3) Launch Parallel Research Subagents
 
@@ -409,7 +392,7 @@ Return complete findings list including any external research gaps identified."
 2. `docs/plans/*/*.md` - Plan files (Simple Mode may have inline discoveries)
 3. `docs/plans/*/tasks/*/execution.log.md` - Execution logs with detailed context
 4. `docs/harness/agents/**/*.retro.md` - **Compounding Value System retros** (universal `.retro.md` format; YAML frontmatter validates against `docs/harness/schemas/retro.schema.json`)
-5. `docs/retros/*.md` (back-compat) - legacy minih block-format ledger (auto-parsed via the same minih-block reader harness-4-retro --harvest uses)
+5. `docs/retros/*.md` (back-compat) - legacy minih block-format ledger (auto-parsed via the legacy minih block reader)
 
 **Tasks**:
 - Find ALL `## Discoveries & Learnings` sections across prior plans
@@ -1046,23 +1029,5 @@ This command provides deep, actionable research into existing codebase functiona
 **Suggest next step to user:**
 
 Run **/plan-1b-specify** to create the feature specification, or **/plan-2c-workshop** if deep design exploration is needed first.
----
 
-## Compound integration
-
-This skill participates in the **Compounding Value System** (the `skills/harness/` loop + the frozen `docs/harness/schemas/` contract). Subagent 7 (Prior Learnings Scout) ALREADY reads `docs/harness/agents/**/*.retro.md` + back-compat `docs/retros/*.md` per its body spec above. The orchestrator-side additions are below.
-
-**Sentinel**: Before any compound call below, check `docs/harness/.disabled` — if present, silently skip everything in this section.
-
-**At start**:
-- Check `docs/harness/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-4-retro --drain` BEFORE this skill's research work.
-- If `docs/harness/agents/**/*.retro.md` has ≥5 entries with `system.compound.status == open` AND the user has not run `harness-4-retro --harvest` in the last 7 days, print a one-liner suggesting `/harness-4-retro --harvest [--plan <slug>]`. **Do NOT auto-fire** — research start is a suggestion-only moment.
-
-**During research** (orchestrator-side, NOT subagent-side per workshop 004 § D6 — subagents stay focused on research output; orchestrator does the meta-tracking):
-- Silently call `harness-3-observe` per its trigger heuristics. Plan-1a-specific triggers: research returning zero results despite the topic being plausibly covered; subagent timing out; major contradictions between subagents that require manual reconciliation; the magic-wand reflex when synthesizing the dossier.
-- Calibration: ≤1 self-prompt per 5min; ≤5 entries per session.
-
-**At end** (logical pause — research dossier complete):
-- Auto-fire `/harness-4-retro --drain` — drains the buffer; the user sees the soft prompt with `[s/t/p/e/d/a]` actions.
-
-See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md).
+> Harness note: the session-start seam (§ 2c) is this skill's only harness touchpoint. Friction capture, retros, and harvest are the harness family's own concern, reached through `/eng-harness-flow` — SDD never drives them directly. Subagent 7 (Prior Learnings Scout) still mines `docs/harness/agents/**/*.retro.md` + legacy `docs/retros/*.md` as read-only history.

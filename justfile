@@ -36,7 +36,6 @@ help:
     @echo "  just install-skills-from-source  - Install all skills globally to every CLI from THIS working tree (test local branch)"
     @echo ""
     @echo "Compound loop:"
-    @echo "  just compound-value              - Render harness-4-retro --harvest --json output as a compact terminal view (reads JSON on stdin)"
     @echo ""
     @echo "Diagnostics:"
     @echo "  just doctor-skills               - Diagnose skill deployment (canonical store + symlinks + orphan legacy paths)"
@@ -240,11 +239,6 @@ install-skills-from-source:
         -a claude-code -a codex -a opencode -a github-copilot -a pi -g -y
     @echo "✅ Skills installed globally from $(pwd)"
 
-# Render harness-4-retro --harvest --json output as a compact terminal view (reads JSON on stdin)
-# Usage: <json-source> | just compound-value
-compound-value:
-    @scripts/compound-value.sh
-
 # Diagnose skill deployment: canonical store + symlink validity + orphan real-dir stores at legacy paths
 # Run after any `npx skills` upgrade or when the same skill name surfaces twice in discovery.
 doctor-skills:
@@ -321,21 +315,6 @@ doctor-skills:
         else
             echo "  ✅ None"
         fi
-    fi
-    echo
-    echo "Bundled retro-schema drift (harness-4-retro carries a copy so the schema travels with the skill via npx skills add):"
-    canon_schema="docs/harness/schemas/retro.schema.json"
-    bundled_schema="skills/harness/harness-4-retro/references/retro.schema.json"
-    if [ -f "$canon_schema" ] && [ -f "$bundled_schema" ]; then
-        if diff -q "$canon_schema" "$bundled_schema" >/dev/null 2>&1; then
-            echo "  ✅ $bundled_schema matches canonical"
-        else
-            echo "  ⚠️  $bundled_schema DIFFERS from canonical — re-sync: cp $canon_schema $bundled_schema"
-        fi
-    elif [ -f "$canon_schema" ]; then
-        echo "  ⚠️  bundled copy missing — create: cp $canon_schema $bundled_schema"
-    else
-        echo "  ℹ️  canonical schema not found (run 'just doctor-skills' from repo root)"
     fi
 
 # Report skills deployed in target dirs that are NOT in this repo's source skills/ (renamed/removed/stale). READ-ONLY — prints tidy commands, deletes nothing.

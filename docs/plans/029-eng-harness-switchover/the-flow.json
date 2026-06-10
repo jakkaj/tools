@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "kind": "flight-plan",
+  "slug": "eng-harness-switchover",
+  "plan_dir": "docs/plans/029-eng-harness-switchover",
+  "mode": "Simple",
+  "cursor": "review",
+  "recommended_next": "review",
+  "now": "Build done — T001–T014 complete, 12/12 ACs verified; one commit staged for the user",
+  "next": "Review (/plan-7), then user commits + merge (/plan-8, typed PROCEED)",
+  "_comment": "No harness nodes for THIS repo's flow: the eng-harness router was absent at flow start (live no-router fixture — the pre-install probe miss became AC7 evidence). Fitting: this plan's subject IS graceful no-harness degradation. The router was installed mid-build as T001, machine-level.",
+  "agents": [],
+  "nodes": [
+    { "id": "research", "type": "research", "label": "Research", "status": "done",
+      "command": "/plan-1a", "ran_at": "2026-06-10T08:02:16Z",
+      "user_input": "lets plan this updat eproperly as the flow is very imporatnt",
+      "note": "8 parallel subagents + first-hand reads of both repos → ~130 findings. Headlines: 42-row seam map (two seam classes); ownership reversal of plan-027; freeze override #2; eng-harness-* NOT installed locally (detection is live); doctor-skills drift check breaks on deletion; plan-6a is a retro WRITER; 11 open questions queued for the spec. HARD CONSTRAINT (user): only /eng-harness-flow is ever called — children private.",
+      "artifacts": ["research-dossier.md"], "next": ["spec"] },
+
+    { "id": "spec", "type": "spec", "label": "Spec", "status": "done",
+      "command": "/plan-1b", "ran_at": "2026-06-10T08:45:00Z",
+      "user_input": "when dne that move in to spec pleae",
+      "note": "Mode Simple (user override of CS-4 rubric). 8 clarifications: observe is NOT an SDD concern (harness observes for itself in-context); .disabled sentinel concept removed; plan-6a retro-writing dropped; one cascade, ONE COMMIT; aggressive removal with explicit keep-list (schemas + agents history + slim README).",
+      "artifacts": ["eng-harness-switchover-spec.md", "eng-harness-switchover.fltplan.md"], "next": ["plan"] },
+
+    { "id": "plan", "type": "plan", "label": "Plan", "status": "done",
+      "command": "/plan-3", "ran_at": "2026-06-10T08:50:21Z",
+      "user_input": "uep run it",
+      "note": "Status READY — gates 4 PASS / 3 N/A. Single phase, 14 ordered tasks, paste-ready seam+detection contract + CLAUDE.md freeze-override paragraph. validate-v2 (4 agents): VALIDATED WITH FIXES — caught real contract drift (router says lowercase 'healthy'), AC3 case-sensitivity false-pass, missing contract re-verification pathway, AC7 evidence overclaim, AC11 stale orphan baseline. All fixed in plan + spec in lockstep.",
+      "artifacts": ["eng-harness-switchover-plan.md"], "next": ["px"] },
+
+    { "id": "px", "type": "phase", "phase": 1, "label": "Phase 1: Switchover cascade · one commit (T001–T014)", "status": "done",
+      "command": "/plan-6 --phase \"Phase 1: Switchover cascade\"", "ran_at": "2026-06-10T09:35:00Z",
+      "user_input": "we dont use companion mode in this repo just normal mode /6 please.",
+      "note": "All 14 tasks in strict order; 12/12 ACs verified with evidence. Deviations recorded: GitHub default branch lacks the family (installed from in-sync local substrate checkout; cross-repo follow-up logged); local-path install lands in ~/.claude/skills (probe's fallback path). 35 tracked files (353+/2073−) + plan folder; 32→28 skills; deploy stores tidied + redeployed. Commit is the user's — suggested message in execution.log.md.",
+      "artifacts": ["execution.log.md"], "next": ["review"] },
+
+    { "id": "review", "type": "review", "label": "Review", "status": "known",
+      "command": "/plan-7", "next": ["merge"] },
+
+    { "id": "merge", "type": "merge", "label": "Merge", "status": "assumed",
+      "command": "/plan-8", "next": [] }
+  ]
+}

@@ -90,12 +90,7 @@ Otherwise → **Phase Mode** (continue).
    - Is it in the correct domain's source tree?
    - Run `/code-concept-search-v2` for major new concepts to check for duplication
    - Flag contract changes (higher risk)
-   - **Agent harness health check** (if `docs/project-rules/engineering-harness.md` or legacy `agent-harness.md` / `harness.md` exists):
-     * Run health check command from the agent harness governance doc — is the agent harness operational?
-     * If Phase 0 is "Build Agent Harness" and this is Phase 0: skip (agent harness doesn't exist yet)
-     * If healthy → note in Context Brief: "Agent harness available at L[N]"
-     * If unhealthy → flag: "⚠️ Agent harness unhealthy — plan-6 will validate before implementation"
-     * If no agent harness → note: "No agent harness — implementation will use standard testing only"
+   - **Harness availability** (router-only — never run health checks yourself): probe `test -f ~/.agents/skills/eng-harness-flow/SKILL.md` (fallback `~/.claude/skills/eng-harness-flow/SKILL.md`). Router present → note in Context Brief: "Harness routing available via `/eng-harness-flow` — plan-6 fires the pre-implement seam before any code". Router absent → note: "No engineering harness — implementation uses standard testing only" (the one-time warning is the flow entry's job, not this skill's — don't re-warn).
 
 5) **Write tasks.md** containing:
 
@@ -148,14 +143,14 @@ Otherwise → **Phase Mode** (continue).
    - `Done When`: Plain language success criteria
    - `Notes`: Finding references, domain constraints, etc.
 
-   **Harness-loop tasks (first-class, best-effort)** — when a harness exists (`docs/project-rules/engineering-harness.md` or legacy name present) AND `docs/harness/.disabled` is **absent**, bookend the phase's tasks with the loop so it's visible to the implementor (and matches what `/plan-6` auto-fires):
+   **Harness-seam tasks (router-only, best-effort)** — when the `/eng-harness-flow` router is installed (probe above), bookend the phase's tasks with the two seams `/plan-6` fires, so they're visible to the implementor:
 
    | Status | ID | Task | Domain | Path(s) | Done When | Notes |
    |--------|-----|------|--------|---------|-----------|-------|
-   | [ ] | T000 | **Harness boot** — `/harness-1-boot` (Boot→Interact→Observe pre-flight) | — | — | Health check green before any code | Harness loop; omit if no harness / `.disabled` |
-   | [ ] | T0xx | **Harness retro** — `/harness-4-retro --drain` | — | — | Friction buffer drained at phase end (`[s/t/p/e/d/a]`) | Harness loop; omit if no harness / `.disabled` |
+   | [ ] | T000 | **Harness pre-flight** — `/eng-harness-flow --event pre-implement --phase "<Phase N>" --plan-dir <plan dir>` | — | — | Router envelope handled; verdict narrated verbatim before any code | Harness seam; omit if router not installed |
+   | [ ] | T0xx | **Harness phase-end** — `/eng-harness-flow --event phase-end --plan-dir <plan dir>` | — | — | Router envelope handled at phase end | Harness seam; omit if router not installed |
 
-   `harness-3-observe` runs **silently** throughout — no task row needed. These rows are **advisory scaffolding, never gates**. **Omit them entirely** when no harness exists or the sentinel is present; the phase then uses the plan's standard testing approach.
+   These rows are **advisory scaffolding, never gates** — the router decides what (if anything) the harness does at each seam; the skill never names the router's child skills. **Omit them entirely** when the router isn't installed; the phase then uses the plan's standard testing approach.
 
    ### Context Brief
 
@@ -171,19 +166,13 @@ Otherwise → **Phase Mode** (continue).
    **Domain constraints**:
    - [Import rules, dependency direction, contract boundaries]
 
-   **Agent harness context** (if `docs/project-rules/engineering-harness.md` or legacy `agent-harness.md` / `harness.md` exists AND `docs/harness/.disabled` is absent):
-   - **Boot**: [command from engineering-harness.md] — health check: [health URL/command]
-   - **Interact**: [primary interaction method] — [example endpoint/command]
-   - **Observe**: [evidence capture method] — evidence dir: [path]
-   - **Maturity**: L[N] — [brief status note]
-   - **Pre-phase validation**: Agent MUST validate the agent harness at start of implementation (Boot → Interact → Observe)
-   - **Harness loop touchpoints** (the four-stage loop, surfaced for legibility):
-     - *Boot* — `/harness-1-boot` at phase start (the T000 row above)
-     - *Backpressure Check* — `/harness-2-backpressure` already ran pre-architect; see `backpressure-coverage.md` for sensor coverage of this phase's criteria
-     - *Observe* — `harness-3-observe` runs silently on friction during the phase
-     - *Retro* — `/harness-4-retro --drain` at phase end (the T0xx row above)
+   **Harness context** (router-only — include when the `/eng-harness-flow` router is installed):
+   - **Entry point**: `/eng-harness-flow --event <seam> [--phase <id>] [--plan-dir <p>] --json` — the single door to the harness; child skills are private and never named here
+   - **Pre-implement seam**: fired by `/plan-6` at phase start (the T000 row above) — the router's envelope (`decision: route|redirect|noop|ambiguous`) decides what happens; verdicts narrated verbatim from the envelope
+   - **Phase-end seam**: fired by `/plan-6` at phase end (the T0xx row above)
+   - **Backpressure**: if `backpressure-coverage.md` exists in the plan dir (produced via the post-spec seam), cite its sensor coverage for this phase's criteria
 
-   If no agent harness (or `docs/harness/.disabled` present): "No agent harness configured. Agent will use standard testing approach from plan." — and omit the harness-loop task rows entirely.
+   If the router isn't installed: "No engineering harness configured. Agent will use standard testing approach from plan." — and omit the harness-seam task rows entirely.
 
    **Reusable from prior phases**:
    - [Test fixtures, helpers, patterns available]
@@ -559,16 +548,4 @@ Next step: Run **/plan-6-v2-implement-phase --phase "<Phase N: Title>" --plan "<
 
 ---
 
-## Compound integration
-
-This skill participates in the **Compounding Value System** (the `skills/harness/` loop + the frozen `docs/harness/schemas/` contract).
-
-**Sentinel**: Before any compound call below, check `docs/harness/.disabled` — if present, silently skip everything in this section.
-
-**At start**: Check `docs/harness/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-4-retro --drain` BEFORE this skill's primary work.
-
-**During task brief authoring** (LIGHT — fewer trigger points than the deep skills): silently call `harness-3-observe` only for substantive friction (e.g. plan structure ambiguity, missing acceptance criteria in source plan, agent harness context missing when needed). Calibration: ≤1 self-prompt per 5min; ≤3 entries per session for plan-5 (lighter than the default ≤5 because plan-5 is short-horizon synthesis work).
-
-**At end**: this skill CHAINS to plan-6 — no end-of-skill `harness-4-retro --drain` here. The bubble fires inside plan-6 at end-of-phase (the next logical pause).
-
-See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md).
+> Harness note: this skill carries no harness seam of its own — it *emits* the seam rows (T000/T0xx above) that `/plan-6` fires via `/eng-harness-flow`. Friction capture and retros are the harness family's own concern; SDD never drives them directly.

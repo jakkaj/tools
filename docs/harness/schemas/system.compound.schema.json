@@ -10,7 +10,7 @@
       "type": "string",
       "enum": ["open", "suggested", "encoded", "wontfix", "dismissed", "escalated", "stale"],
       "default": "open",
-      "description": "Lifecycle state of this entry. Transitions handled by compound-2-bubble + compound-3-harvest."
+      "description": "Lifecycle state of this entry. Transitions handled by the harness retro flow (drain + harvest)."
     },
     "resolved_by": {
       "type": "string",

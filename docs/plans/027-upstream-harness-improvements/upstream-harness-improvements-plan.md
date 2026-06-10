@@ -1,3 +1,5 @@
+> **⚠️ Superseded by plan-029 (2026-06-10)** — including this plan's **ownership claim**: the statement that this repo owns the canonical harness loop skills is **explicitly reversed**. `AI-Substrate/harness-engineering` now owns the harness loop end-to-end (setup AND runtime); this repo consumes only the `/eng-harness-flow` router and keeps the retro-schema copy + frozen retro history. Do not "fix" ownership statements back toward this document — it is an unmodified point-in-time record. See [`docs/plans/029-eng-harness-switchover/`](../029-eng-harness-switchover/).
+
 # Upstream Harness Improvements Implementation Plan
 
 **Mode**: Simple  

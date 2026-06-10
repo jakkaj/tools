@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/jakkaj/tools/blob/main/docs/harness/schemas/retro.schema.json",
   "title": "Retro",
-  "description": "A universal retrospective — produced by minih agents, compound skills, and other agentic workflows. One retro per run/session.",
+  "description": "A universal retrospective — produced by minih agents, the engineering-harness loop, and other agentic workflows. One retro per run/session.",
   "type": "object",
   "required": ["schema_version", "retro_id", "agent", "started_at"],
   "additionalProperties": false,
@@ -98,7 +98,7 @@
         "suggested_encoding": {
           "type": "string",
           "maxLength": 200,
-          "description": "Optional hint for compound's encoding flow. Free-text. Examples: 'justfile recipe', 'plan-1b plan', 'docs/how article', 'SKILL.md edit'."
+          "description": "Optional hint for the retro encoding flow. Free-text. Examples: 'justfile recipe', 'plan-1b plan', 'docs/how article', 'SKILL.md edit'."
         },
         "references": {
           "type": "array",

@@ -97,37 +97,27 @@ $ARGUMENTS
      * Read `## Target Domains` from spec
      * Read `## Domain Manifest` from plan
      * For each domain being modified, read `docs/domains/<slug>/domain.md`
-   - **Load agent harness context** (if `docs/project-rules/engineering-harness.md` or legacy `agent-harness.md` / `harness.md` exists):
-     * Read the agent harness governance doc — boot command, health check, interaction methods, observe capabilities, maturity level
+   - **Harness availability** (router-only): probe `test -f ~/.agents/skills/eng-harness-flow/SKILL.md` (fallback `~/.claude/skills/eng-harness-flow/SKILL.md`) — the harness is reached exclusively through the `/eng-harness-flow` router; never read governance docs or run health checks yourself
 
-2a) **Pre-Phase Agent Harness Validation** (if `docs/project-rules/engineering-harness.md`, or legacy `agent-harness.md` / `harness.md`, exists):
+2a) **Pre-Phase Harness Seam — `--event pre-implement`** (router-only):
 
-   Before starting ANY task, validate the agent harness is operational:
+   **Router not installed** (probe above misses) → if the flow already warned, proceed silently with standard testing; otherwise print exactly once, verbatim:
 
-   **Stage 1 — Boot Check** (5s if running, 60s cold boot):
-   Run health check from engineering-harness.md. If healthy → "Already running" (skip boot).
-   If not responding → run boot command, retry health check (30 × 2s = 60s max).
+   > ⚠️ No engineering harness detected — the eng-harness skills aren't installed. Continuing without one: standard testing applies, nothing else changes. (To add the harness loop: `npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y`.)
 
-   **Stage 2 — Interact Check** (5s, single attempt):
-   Send test input per engineering-harness.md § Interact. Verify a response is received.
+   …then silently omit every harness touchpoint for the rest of the phase (record the outcome once in EXEC_LOG; never re-warn).
 
-   **Stage 3 — Observe Check** (5s, single attempt):
-   Capture evidence per engineering-harness.md § Observe. Verify evidence is non-empty.
+   **Router installed** → before starting ANY task, fire the seam:
 
-   **Verdict**:
-   - ✅ HEALTHY → proceed to tasks
-   - ⚠️ SLOW (boot > 45s) → proceed with note
-   - ❌ UNHEALTHY → **stop and ask human**: "Retry" / "Continue without agent harness" / "Abort"
-   - 🔴 UNAVAILABLE (no boot command) → note and proceed with standard testing
+   `/eng-harness-flow --event pre-implement --phase "<Phase N: Title>" --plan-dir "<PLAN_DIR>" --json`
 
-   Log validation result to EXEC_LOG (check table: Boot/Interact/Observe status + duration).
-   If human overrides an unhealthy agent harness, log the override reason.
+   Act on the envelope (`decision: route|redirect|noop|ambiguous`): `route` → print-then-offer the returned command (typically the boot validation the router owns); setup-routing/`noop` → one calm line the first time (*"No engineering harness in this repo — proceeding without one; say 'set up a harness' anytime."*), then pass `--prompt-optional=false` on later seam calls. Boot verdicts are narrated **verbatim from the envelope** — vocabulary: `healthy / SLOW / UNHEALTHY / UNAVAILABLE`:
+   - `healthy` → proceed to tasks
+   - `SLOW` → proceed with note
+   - `UNHEALTHY` → **stop and ask human**: "Retry" / "Continue without harness" / "Abort"
+   - `UNAVAILABLE` → note and proceed with standard testing
 
-   **Special case — Phase 0 "Build Agent Harness"**: Skip pre-phase validation (agent harness doesn't exist yet).
-   Instead, run validation at END of Phase 0 to confirm the agent harness works.
-
-   After ALL phase tasks complete: update the agent harness governance doc § History (`docs/project-rules/engineering-harness.md`, or legacy `agent-harness.md` / `harness.md`) with what changed.
-   Use the agent harness Boot/Interact/Observe capabilities for evidence capture throughout implementation when available.
+   Log the seam outcome (envelope decision + verdict) to EXEC_LOG. If the human overrides an unhealthy harness, log the override reason. **Never copy the router's internal signals into this skill — delegate, don't reimplement.** Never call the router's child skills directly — children are private and may move.
 
 3) Execute tasks:
    Follow task order. Apply testing approach from plan:
@@ -217,23 +207,23 @@ $ARGUMENTS
 
 6) Auto-run plan-6a-v2-update-progress for each completed task.
 
-   For the **final task of the phase**, call 6a with the orchestrator
-   retrospective payload so 6a Step 8 fires:
+   For the **final task of the phase**:
    ```bash
    /plan-6a-v2-update-progress \
      --plan "<PLAN_PATH>" \
      --phase "<Phase N: Title>" \
      --task "<final-task-id>" \
-     --status completed \
-     --retrospective '<json>'
+     --status completed
    ```
 
-   Construct the retrospective JSON based on session experience —
-   schema is in `/plan-6a-v2-update-progress/SKILL.md` Step 8a. Use
-   OH-XXX prefix for difficulty IDs.
+7) **Phase-end harness seam** (router-only; skip silently if the router
+   isn't installed — the one-time warning already fired at § 2a):
 
-   No `--companion-run-id` is passed (this skill runs without a
-   companion), so 6a Step 9 (companion debrief) is skipped.
+   `/eng-harness-flow --event phase-end --plan-dir "<PLAN_DIR>" --json`
+
+   Act on the envelope; the router owns what happens at the seam
+   (drain-vs-harvest is its decision, never this skill's). Best-effort,
+   never blocks.
 
 STOP: Report phase complete. Suggest next step.
 ```
@@ -242,30 +232,11 @@ STOP: Report phase complete. Suggest next step.
 **Next step (Simple Mode)**: Run **/plan-7-v2-code-review --plan "<PLAN_PATH>"**
 ---
 
-## Compound integration
+## Harness seams (router-only)
 
-This skill participates in the **Compounding Value System** (the `skills/harness/` loop + the frozen `docs/harness/schemas/` contract).
+This skill fires exactly two harness seams, both through the single entry point `/eng-harness-flow` (children never called directly — they are private and may move):
 
-**Sentinel**: Before any compound call below, check `docs/harness/.disabled` — if present, silently skip everything in this section.
+- **Phase start** — § 2a fires `--event pre-implement --phase --plan-dir` before any task.
+- **Phase end** — step 7 fires `--event phase-end --plan-dir` after all tasks and outputs.
 
-**At start of each phase**:
-- Check `docs/harness/_buffers/<agent>.session-buffer.md`. If non-empty from a prior session, fire `/harness-4-retro --drain` BEFORE this phase's work.
-
-**During implementation work** (the bulk of the skill's runtime):
-- Silently call `harness-3-observe` per its trigger heuristics:
-  - A tool call took >30 seconds and you were waiting on it
-  - A search returned zero results when you expected matches
-  - You retried the same operation more than once
-  - You backtracked from a wrong assumption
-  - A test or build failure required guesswork to interpret
-  - The magic-wand reflex fires at a task-boundary AND the buffer is currently empty (Q6.1 — never pile on)
-- Calibration: ≤1 self-prompt per 5min; ≤5 entries per session (anti-vibe 7).
-
-**At end of EACH phase** (logical pause):
-- Auto-fire `/harness-4-retro --drain` — drains the buffer; user sees the soft prompt with `[s/t/p/e/d/a]` actions.
-- End-of-phase output reminds the user `/harness-4-retro --drain` is available if entries accumulated since the last bubble.
-
-**After the FINAL phase**:
-- If ≥10 unharvested entries (count `.retro.md` files where `system.compound.status == open`), print a one-liner suggesting `/harness-4-retro --harvest`. **Do NOT auto-fire** — solo `/plan-6` is the rare path; the dominant flow runs `/plan-6-companion` whose final-phase debrief auto-fires harvest.
-
-See: [workshop 004 § Per-Skill Integration Matrix](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md).
+The router owns everything behind the door: harness state, boot verdicts, friction capture, retros, drain-vs-harvest. This skill only narrates envelopes verbatim. Best-effort throughout — no router installed means standard testing, one calm warning, and silence.

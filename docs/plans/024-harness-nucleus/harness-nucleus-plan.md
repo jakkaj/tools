@@ -1,3 +1,5 @@
+> **⚠️ Superseded by plan-029 (2026-06-10)** — the four local loop-stage skills this plan consolidated (`harness-1-boot`, `harness-2-backpressure`, `harness-3-observe`, `harness-4-retro`) were **retired wholesale**: the harness loop now lives in the external `AI-Substrate/harness-engineering` family, reached exclusively through its `/eng-harness-flow` router (`--event` seams). This document is an unmodified point-in-time record. See [`docs/plans/029-eng-harness-switchover/`](../029-eng-harness-switchover/).
+
 # Harness Nucleus Consolidation — Implementation Plan
 
 **Mode**: Simple

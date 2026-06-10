@@ -24,7 +24,7 @@ A **code-review-companion** running in parallel:
 3. **Fire-and-forget** — pings cost milliseconds; the companion only replies if it finds issues. Zero latency on the hot path.
 4. **Asynchronous parallelism** — the main agent commits T002 while the companion is still reviewing T001. Throughput stays high; review depth stays deep.
 5. **Closes the loop deterministically** — at phase end, a `control:stop` triggers a farewell envelope that captures everything the companion saw across the phase. You fold those findings into your final report.
-6. **Writes itself into the project ledger** — the farewell drives an auto-harvested retro at `docs/retros/<slug>.md`. Future runs of *any* agent on this codebase inherit those lessons.
+6. **Closes with a farewell debrief** — findings are reconciled into the final report and the companion's magicWand is surfaced as a follow-up candidate. Harness reflection (retros, harvest) routes through `/eng-harness-flow --event plan-complete` — the harness family owns it, not this skill.
 
 The companion replaces `/plan-7-v2-code-review` for projects that have one. **Do not run /plan-7 after this skill.** The companion has already done that work, more thoroughly, with cheaper fixes.
 
@@ -212,37 +212,27 @@ Brief once. Don't re-brief mid-phase unless the scope materially changes (in whi
      * Read `## Target Domains` from spec
      * Read `## Domain Manifest` from plan
      * For each domain being modified, read `docs/domains/<slug>/domain.md`
-   - **Load agent harness context** (if `docs/project-rules/engineering-harness.md` or legacy `agent-harness.md` / `harness.md` exists):
-     * Read the agent harness governance doc — boot command, health check, interaction methods, observe capabilities, maturity level
+   - **Harness availability** (router-only): probe `test -f ~/.agents/skills/eng-harness-flow/SKILL.md` (fallback `~/.claude/skills/eng-harness-flow/SKILL.md`) — the harness is reached exclusively through the `/eng-harness-flow` router; never read governance docs or run health checks yourself
 
-## 2a) Pre-Phase Agent Harness Validation (if `docs/project-rules/engineering-harness.md`, or legacy `agent-harness.md` / `harness.md`, exists)
+## 2a) Pre-Phase Harness Seam — `--event pre-implement` (router-only)
 
-   Before starting ANY task, validate the agent harness is operational:
+   **Router not installed** (probe above misses) → if the flow already warned, proceed silently with standard testing; otherwise print exactly once, verbatim:
 
-   **Stage 1 — Boot Check** (5s if running, 60s cold boot):
-   Run health check from engineering-harness.md. If healthy → "Already running" (skip boot).
-   If not responding → run boot command, retry health check (30 × 2s = 60s max).
+   > ⚠️ No engineering harness detected — the eng-harness skills aren't installed. Continuing without one: standard testing applies, nothing else changes. (To add the harness loop: `npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y`.)
 
-   **Stage 2 — Interact Check** (5s, single attempt):
-   Send test input per engineering-harness.md § Interact. Verify a response is received.
+   …then silently omit every harness touchpoint for the rest of the phase (record the outcome once in EXEC_LOG; never re-warn).
 
-   **Stage 3 — Observe Check** (5s, single attempt):
-   Capture evidence per engineering-harness.md § Observe. Verify evidence is non-empty.
+   **Router installed** → before starting ANY task, fire the seam:
 
-   **Verdict**:
-   - ✅ HEALTHY → proceed to tasks
-   - ⚠️ SLOW (boot > 45s) → proceed with note
-   - ❌ UNHEALTHY → **stop and ask human**: "Retry" / "Continue without agent harness" / "Abort"
-   - 🔴 UNAVAILABLE (no boot command) → note and proceed with standard testing
+   `/eng-harness-flow --event pre-implement --phase "<Phase N: Title>" --plan-dir "<PLAN_DIR>" --json`
 
-   Log validation result to EXEC_LOG (check table: Boot/Interact/Observe status + duration).
-   If human overrides an unhealthy agent harness, log the override reason.
+   Act on the envelope (`decision: route|redirect|noop|ambiguous`): `route` → print-then-offer the returned command; setup-routing/`noop` → one calm line the first time (*"No engineering harness in this repo — proceeding without one; say 'set up a harness' anytime."*), then pass `--prompt-optional=false` on later seam calls. Boot verdicts are narrated **verbatim from the envelope** — vocabulary: `healthy / SLOW / UNHEALTHY / UNAVAILABLE`:
+   - `healthy` → proceed to tasks
+   - `SLOW` → proceed with note
+   - `UNHEALTHY` → **stop and ask human**: "Retry" / "Continue without harness" / "Abort"
+   - `UNAVAILABLE` → note and proceed with standard testing
 
-   **Special case — Phase 0 "Build Agent Harness"**: Skip pre-phase validation (agent harness doesn't exist yet).
-   Instead, run validation at END of Phase 0 to confirm the agent harness works.
-
-   After ALL phase tasks complete: update the agent harness governance doc § History (`docs/project-rules/engineering-harness.md`, or legacy `agent-harness.md` / `harness.md`) with what changed.
-   Use the agent harness Boot/Interact/Observe capabilities for evidence capture throughout implementation when available.
+   Log the seam outcome (envelope decision + verdict) to EXEC_LOG. If the human overrides an unhealthy harness, log the override reason. **Never copy the router's internal signals into this skill — delegate, don't reimplement.** Never call the router's child skills directly — children are private and may move.
 
 ## 3) Execute tasks
 
@@ -367,21 +357,14 @@ Brief once. Don't re-brief mid-phase unless the scope materially changes (in whi
 
    At end of phase (after the last task's commit + ping has settled),
    invoke `/plan-6a-v2-update-progress` ONE MORE TIME for the final task
-   with the full companion debrief payload:
+   with the companion debrief flags:
 
-   a) **Construct the orchestrator retrospective JSON** based on session
-      experience — what surprised you, what broke, what you'd change about
-      this skill or the harness. Use OH-XXX prefix for difficulty IDs.
-      Schema is in `/plan-6a-v2-update-progress/SKILL.md` Step 8a.
-
-   b) **Invoke 6a with both flags**:
       ```bash
       /plan-6a-v2-update-progress \
         --plan "<PLAN_PATH>" \
         --phase "<Phase N: Title>" \
         --task "<final-task-id>" \
         --status completed \
-        --retrospective '<json>' \
         --companion-run-id "$RUN_ID" \
         --companion-slug "$COMPANION_SLUG"
       ```
@@ -391,8 +374,6 @@ Brief once. Don't re-brief mid-phase unless the scope materially changes (in whi
       - Reconcile findings (using execution-log disposition table you
         kept up-to-date during the phase per Step 3's "Handling companion
         findings inline")
-      - Append paired companion + orchestrator retros to
-        `docs/retros/<plan-slug>.md`
       - Surface companion magicWand as follow-up candidate
 
    You don't run the drain ping, stop, or farewell read yourself — they
@@ -404,6 +385,16 @@ Brief once. Don't re-brief mid-phase unless the scope materially changes (in whi
    deviation, and skip the drain/stop steps but still attempt the
    farewell read (if the companion wrote one before exiting).
 
+   Then fire the **phase-end harness seam** (router-only; skip silently
+   if the router isn't installed — the one-time warning already fired):
+
+   `/eng-harness-flow --event phase-end --plan-dir "<PLAN_DIR>" --json`
+
+   …and act on the envelope. If this was the **final phase of the plan**,
+   follow with `/eng-harness-flow --event plan-complete --json` after the
+   debrief — the router owns the long-horizon reflection. Best-effort,
+   never blocks.
+
 ## 6) Output
 
    - Execution Log with per-task entries (write incrementally throughout)
@@ -412,11 +403,9 @@ Brief once. Don't re-brief mid-phase unless the scope materially changes (in whi
    - Domain files updated (domain.md changes listed)
    - Final status mapped to acceptance criteria
    - **Companion findings reconciliation table** — prepared in execution
-     log during the phase; surfaced in final summary by 6a Step 9d
-   - **Companion farewell summary** — surfaced by 6a Step 9c
-   - **Companion magicWand** (if present) — surfaced by 6a Step 9f
-   - **Orchestrator retrospective** — written by 6a Step 8 to
-     `docs/retros/<plan-slug>.md`
+     log during the phase; surfaced in final summary by 6a Step 9
+   - **Companion farewell summary** — surfaced by 6a Step 9
+   - **Companion magicWand** (if present) — surfaced by 6a Step 9
    - Suggested commit message
 
 STOP: Report phase complete. Suggest next step.
@@ -429,67 +418,15 @@ STOP: Report phase complete. Suggest next step.
 
 **Next step**: Move on to the next phase. Run `/plan-5-v2-phase-tasks-and-brief --phase "<Phase N+1: Title>" --plan "<PLAN_PATH>"` to generate that phase's tasks dossier, then re-run this skill.
 
-If the companion produced a **magicWand** in its farewell, consider filing it as a fix dossier or backlog item *before* starting the next phase — that's how the agent harness improves itself.
+If the companion produced a **magicWand** in its farewell, consider filing it as a fix dossier or backlog item *before* starting the next phase — that's how the harness improves itself.
 ---
 
-## Compound integration
+## Harness seams (router-only)
 
-This skill participates in the **Compounding Value System** (the `skills/harness/` loop + the frozen `docs/harness/schemas/` contract) — and it's the **dominant flow** for the harness loop. The companion's final-phase debrief is where `harness-4-retro --harvest` auto-fires (replacing `/plan-7` as the harvest anchor for the typical SDD flow).
+This skill fires three harness seams, all through the single entry point `/eng-harness-flow` (children never called directly — they are private and may move):
 
-### Three-layer context
+- **Phase start** — § 2a fires `--event pre-implement --phase --plan-dir` before any task.
+- **Phase end** — § 5 fires `--event phase-end --plan-dir` after the companion debrief settles.
+- **Plan complete** — after the FINAL phase's debrief, § 5 fires `--event plan-complete` — the router owns the long-horizon reflection (drain-vs-harvest is its decision, never this skill's).
 
-This skill sits at the intersection of all three layers:
-- **Philosophy**: the 5 harness principles, now encoded inline across the `skills/harness/` skill bodies + repo README (the retired philosophy skill's content) — encode, don't document; every difficulty is a gift to future sessions
-- **Substrate**: the engineering harness governance doc (`docs/project-rules/engineering-harness.md`), validated at session start by `harness-1-boot`
-- **Meta-loop**: the 3 harness loop-stage skills (`harness-1-boot`, `harness-3-observe`, `harness-4-retro`) — this skill is one of the heaviest observe-side producers
-
-### Sentinel
-
-Before any compound call below, check `docs/harness/.disabled` — if present, silently skip everything in this section.
-
-### At start of each phase
-- Check `docs/harness/_buffers/<agent>.session-buffer.md` (where `<agent>` matches the calling CLI's slug — typically `plan-6-companion` when invoked via minih). If non-empty from a prior session, fire `/harness-4-retro --drain` BEFORE this phase's work.
-
-### During implementation work (same as plan-6)
-- Silently call `harness-3-observe` per its trigger heuristics:
-  - A tool call took >30 seconds and you were waiting on it
-  - A search returned zero results when you expected matches
-  - You retried the same operation more than once
-  - You backtracked from a wrong assumption
-  - A test or build failure required guesswork to interpret
-  - The magic-wand reflex fires at a task-boundary AND the buffer is currently empty (Q6.1 — never pile on)
-- Calibration: ≤1 self-prompt per 5min; ≤5 entries per session (anti-vibe 7).
-
-### Companion as a SECOND producer (alongside orchestrator)
-
-The companion is BOTH:
-1. **An orchestrator-side harness-3-observe producer** (the calls above land in `_buffers/plan-6-companion.session-buffer.md`)
-2. **A minih-runtime farewell-envelope producer** (the companion emits a `farewell.retrospective` at the end of each phase, which plan-6a's Step 9 maps via `minihToUniversal()` and writes as a per-run `.retro.md`)
-
-Both producers' outputs land in `docs/harness/agents/.../*.retro.md` — they just take different paths there.
-
-### Farewell envelope → universal retro mapping
-
-When the companion emits a `farewell.retrospective` object at end-of-phase, plan-6a's Step 9 runs the mapping below. The mapping is per workshop 005 § D9 (deterministic, lossless):
-
-| Farewell field | Universal Entry kind | Notes |
-|----------------|---------------------|-------|
-| `farewell.retrospective.workedWell` (string) | one entry, `kind: gift` | description = farewell text verbatim |
-| `farewell.retrospective.confusing` (string) | one entry, `kind: confusion` | description = farewell text verbatim |
-| `farewell.retrospective.magicWand` (string) | one entry, `kind: magic-wand` | description = farewell text; `target` from `magicWandTarget` (defaults to `project`) |
-| `farewell.retrospective.difficulties[]` (array of objects) | one entry per element, `kind: difficulty` | each element's `category` → `target`; `severity` preserved; `workaround` preserved |
-| `farewell.retrospective.improvementSuggestions[]` (string array) | one entry per element, `kind: improvement-suggestion` | description = each string |
-| `farewell.retrospective.coordination` (string, optional) | one entry, `kind: coordination` | only if non-empty |
-
-The mapped envelope wraps these entries with `schema_version`, `retro_id`, `agent` (companion slug), timestamps from the run start/end, and `system.minih.run_dir` from the companion's run dir.
-
-See workshop 005 § D9 for the TypeScript pseudocode plan-6a Step 9 implements inline.
-
-### At end of EACH phase (logical pause)
-- Auto-fire `/harness-4-retro --drain` — drains the buffer (the orchestrator-side producer's output). User sees the soft prompt with `[s/t/p/e/d/a]` actions.
-- End-of-phase output reminds the user `/harness-4-retro --drain` is available for orchestrator-side entries; the companion-side farewell envelope already landed via plan-6a Step 9.
-
-### At the FINAL phase's debrief (the dominant-flow harvest anchor)
-- **Auto-fire `/harness-4-retro --harvest`** — this is the long-horizon reflection moment for the typical SDD flow (replaces `/plan-7` which is rare in the companion pattern). Curated view shows clustered friction across the whole plan's lifetime; user can advance lifecycle status `[r/w/s]` on stale or resolved entries.
-
-See: [workshop 004 § Per-Skill Integration Matrix + § The Four Firing Sites](../../../docs/plans/023-difficulty-ledger-skill/workshops/004-sdd-pipeline-compound-integration.md); [workshop 005 § D9 round-trip](../../../docs/plans/023-difficulty-ledger-skill/workshops/005-universal-retro-contract.md).
+The minih companion machinery (pings, farewell envelope, findings reconciliation) is **code review**, not harness — it stays exactly as specified above. The router owns everything harness-side: state, verdicts, friction capture, retros. Best-effort throughout — no router installed means standard testing, one calm warning, and silence.

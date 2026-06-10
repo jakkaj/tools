@@ -12,17 +12,22 @@ Skills are grouped by purpose. Categories are organizational only — they do **
 
 | Category | What's in it | Count |
 |---|---|---|
-| `SDD/` | The spec-driven-development (SDD) pipeline — domain-aware plan, specify, clarify, architect, workshop, implement, review skills. The active workflow for non-trivial features. | 29 |
-| `general/` | Domain-generic skills that work in any project (e.g. `grill-me` — relentlessly interrogates plans/designs until shared understanding). | 1 |
-| `personal/` | Personal / lifestyle / non-coding skills (e.g. `shopping-hunter` — product research and pricing dossiers). | 1 |
+| `SDD/` | The spec-driven-development (SDD) pipeline — domain-aware plan, specify, clarify, architect, workshop, implement, review skills. The active workflow for non-trivial features. | 26 |
+| `general/` | Domain-generic skills that work in any project (e.g. `grill-me` — interrogates plans/designs; `perplexity-deep-research`). | 2 |
 
 A full listing of every skill is in [`README_AGENTS.md`](./README_AGENTS.md).
+
+> **Engineering harness**: the harness loop is no longer published from this repo — it lives in the external **eng-harness family**. To add it (the SDD pipeline detects it and routes through its `/eng-harness-flow` router):
+>
+> ```bash
+> npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y
+> ```
 
 ---
 
 ## Canonical Install Patterns
 
-Each pattern is a one-liner. Substitute `<slug>` with a skill name (e.g. `harness-1-boot`, `grill-me`).
+Each pattern is a one-liner. Substitute `<slug>` with a skill name (e.g. `the-flow`, `grill-me`).
 
 ### (a) Install everything globally for Claude Code
 
@@ -77,7 +82,7 @@ npx skills@latest add jakkaj/tools -a claude-code -a codex -a opencode -g
 Use `--skill <slug>` to scope the install to a single skill rather than the full set:
 
 ```bash
-npx skills@latest add jakkaj/tools --skill harness-1-boot -a claude-code -g
+npx skills@latest add jakkaj/tools --skill the-flow -a claude-code -g
 ```
 
 Repeat `--skill` to install a subset:
@@ -91,16 +96,16 @@ npx skills@latest add jakkaj/tools --skill grill-me --skill plan-1a-v2-explore -
 `npx skills` accepts a **subfolder path appended to the repo shorthand** — this is undocumented in `--help` but supported by the `parseSource` regex in `vercel-labs/skills` (line 191). Useful when you want every skill in one category without listing each `--skill` flag.
 
 ```bash
-# All 3 harness/ loop-stage skills (harness-1-boot, harness-3-observe, harness-4-retro)
-npx skills@latest add jakkaj/tools/skills/harness -a claude-code -g
-
-# All SDD/ skills (without general/ or personal/)
+# All SDD/ skills (without general/)
 npx skills@latest add jakkaj/tools/skills/SDD -a claude-code -g
+
+# All general/ skills
+npx skills@latest add jakkaj/tools/skills/general -a claude-code -g
 ```
 
-> Note: the universal retro `schemas/` contract now lives at `docs/harness/schemas/` (no longer under `skills/`), so there is no `skills/compound` category to install — the loop-stage skills live under `skills/harness/`, and `harness-4-retro` bundles its own deploy copy of the schema in `references/`.
+> Note: the universal retro `schemas/` contract lives at `docs/harness/schemas/` (not under `skills/`), so it is never installed as a skill — it's this repo's copy of the cross-system shape contract.
 
-The `skills/harness/` category is the runtime loop only: Boot, Observe, and Retro. Project-side engineering-harness setup/provisioning (creating `docs/project-rules/engineering-harness.md`, `docs/harness/`, starter command maps, or harness CLI scripts) remains in the separate `AI-Substrate/harness-engineering` repository's `engineering-harness-setup` skill. If those generated artifacts are absent, the runtime skills report `UNAVAILABLE` or no-op gracefully rather than scaffolding them.
+The engineering harness (setup, boot, backpressure, observe, retro — the whole loop) is owned end-to-end by the external `AI-Substrate/harness-engineering` repository and is reached exclusively through its `/eng-harness-flow` router skill. If it isn't installed, the SDD skills print one calm warning and proceed with standard testing.
 
 After upgrading or renaming skills, `npx skills add` updates/adds but does not prune old deployed slugs. Run these read-only checks and review the suggested tidy commands manually:
 
@@ -112,13 +117,13 @@ just doctor-skills
 Combine with a `#branch` selector to install from an unmerged branch (use `#`, not `@` — the CLI parses `@` as a skill filter):
 
 ```bash
-npx skills@latest add jakkaj/tools/skills/harness#024-harness-nucleus -a claude-code -g
+npx skills@latest add jakkaj/tools/skills/SDD#<branch> -a claude-code -g
 ```
 
 Equivalent full-URL form (also supported, line 125 of the CLI's `parseSource`):
 
 ```bash
-npx skills@latest add https://github.com/jakkaj/tools/tree/main/skills/harness -a claude-code -g
+npx skills@latest add https://github.com/jakkaj/tools/tree/main/skills/SDD -a claude-code -g
 ```
 
 ### (g) Install project-locally (current directory)
