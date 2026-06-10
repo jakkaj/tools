@@ -201,132 +201,12 @@ Otherwise → **Phase Mode** (continue).
 
    **Types**: `gotcha` | `research-needed` | `unexpected-behavior` | `workaround` | `decision` | `debt` | `insight`
 
-6) **Generate Flight Plan**: Run `/plan-5b-flightplan --phase "${PHASE}" --plan "${PLAN}"`
-
-   The flight plan MUST follow this exact format (if plan-5b produces something different, fix it):
-
-   ```markdown
-   # Flight Plan: Phase N — [Title]
-
-   **Plan**: [relative link to plan.md]
-   **Phase**: Phase N: [Title]
-   **Generated**: [today]
-   **Status**: Ready for takeoff
-
-   ---
-
-   ## Departure → Destination
-
-   **Where we are**: [Concrete description of current state — what exists from prior phases]
-
-   **Where we're going**: [Concrete outcome — "A developer can...", "The system will..."]
-
-   ---
-
-   ## Domain Context
-
-   ### Domains We're Changing
-
-   | Domain | What Changes | Key Files |
-   |--------|-------------|-----------|
-   | [domain] | [summary of changes] | [key file paths] |
-
-   ### Domains We Depend On (no changes)
-
-   | Domain | What We Consume | Contract |
-   |--------|----------------|----------|
-   | [domain] | [what we use] | [contract name] |
-
-   ---
-
-   ## Flight Status
-
-   <!-- Updated by /plan-6-v2: pending → active → done. Use blocked for problems/input needed. -->
-
-   ```mermaid
-   stateDiagram-v2
-       classDef pending fill:#9E9E9E,stroke:#757575,color:#fff
-       classDef active fill:#FFC107,stroke:#FFA000,color:#000
-       classDef done fill:#4CAF50,stroke:#388E3C,color:#fff
-       classDef blocked fill:#F44336,stroke:#D32F2F,color:#fff
-
-       state "1: [Short label]" as S1
-       state "2: [Short label]" as S2
-       state "3: [Short label]" as S3
-
-       [*] --> S1
-       S1 --> S2
-       S2 --> S3
-       S3 --> [*]
-
-       class S1,S2,S3 pending
-   ```
-
-   **Legend**: grey = pending | yellow = active | red = blocked/needs input | green = done
-
-   ---
-
-   ## Stages
-
-   <!-- Updated by /plan-6-v2 during implementation: [ ] → [~] → [x] -->
-
-   - [ ] **Stage 1: [Action phrase]** — [one sentence] (`affected-file.ts`)
-   - [ ] **Stage 2: [Action phrase]** — [one sentence] (`new-file.ts` — new file)
-   - [ ] **Stage 3: [Action phrase]** — [one sentence]
-
-   ---
-
-   ## Architecture: Before & After
-
-   ```mermaid
-   flowchart LR
-       classDef existing fill:#E8F5E9,stroke:#4CAF50,color:#000
-       classDef changed fill:#FFF3E0,stroke:#FF9800,color:#000
-       classDef new fill:#E3F2FD,stroke:#2196F3,color:#000
-
-       subgraph Before["Before Phase N"]
-           B1[Component]:::existing
-       end
-
-       subgraph After["After Phase N"]
-           A1[Component]:::existing
-           A2[New Component]:::new
-           A1 --> A2
-       end
-   ```
-
-   **Legend**: existing (green, unchanged) | changed (orange, modified) | new (blue, created)
-
-   ---
-
-   ## Acceptance Criteria
-
-   - [ ] [Testable criterion]
-
-   ## Goals & Non-Goals
-
-   **Goals**: [bullet list]
-   **Non-Goals**: [bullet list]
-
-   ---
-
-   ## Checklist
-
-   - [ ] T001: [Task description]
-   - [ ] T002: [Task description]
-   ```
-
-   **CRITICAL**: The Flight Status Mermaid diagram MUST use `stateDiagram-v2` with exactly four classDefs (pending/active/done/blocked). Plan-6-v2 updates these classes as it works through tasks — this is how the user tracks live progress. If the flight plan doesn't have this diagram, regenerate it.
-
-   If the flight plan comes back without Departure→Destination, Domain Context, or Flight Status Mermaid, it's incomplete — regenerate.
-
-7) Capture directory layout at end of tasks.md:
+6) Capture directory layout at end of tasks.md:
    ```
    docs/plans/<ordinal>-<slug>/
      ├── <slug>-plan.md
      └── tasks/phase-N/
          ├── tasks.md
-         ├── tasks.fltplan.md
          └── execution.log.md   # created by plan-6
    ```
 
@@ -364,11 +244,9 @@ S5) Write subtask dossier containing:
    - Discoveries & Learnings (empty table)
    - After Subtask Completion (resumption guide)
 
-S6) Generate Flight Plan for subtask
+S6) Register subtask in plan's Subtasks Registry (create section if missing)
 
-S7) Register subtask in plan's Subtasks Registry (create section if missing)
-
-S8) Update parent task's Notes in tasks.md to reference subtask
+S7) Update parent task's Notes in tasks.md to reference subtask
 
 STOP: Do NOT edit code. Output subtask dossier and wait for human GO.
 
@@ -376,7 +254,7 @@ STOP: Do NOT edit code. Output subtask dossier and wait for human GO.
 
 ## FIX MODE
 
-Activated when `--fix` is provided. Generates a lightweight, tracked fix dossier — smaller than a subtask, with its own flight plan and execution log. For small, scoped work that still needs domain awareness, approval, and posterity.
+Activated when `--fix` is provided. Generates a lightweight, tracked fix dossier — smaller than a subtask, with its own execution log. For small, scoped work that still needs domain awareness, approval, and posterity.
 
 ### Fix vs Subtask vs Phase
 
@@ -384,7 +262,6 @@ Activated when `--fix` is provided. Generates a lightweight, tracked fix dossier
 |---|---|---|---|
 | Size | 1-5 tasks | 3-10 tasks | 5-20 tasks |
 | Needs plan? | Optional | Yes | Yes |
-| Flight plan? | Yes (mini) | Yes | Yes |
 | Execution log? | Yes | Yes | Yes |
 | Code review? | Yes | Yes | Yes |
 
@@ -482,39 +359,10 @@ _Populated during implementation._
 |------|------|------|-----------|------------|
 ```
 
-F7) Generate mini flight plan:
-   Write ${FIX_DIR}/FX${ORD}-${FIX_SLUG}.fltplan.md:
-
-```markdown
-# Flight Plan: Fix FX[ORD] — [Summary]
-
-**Fix**: [link to fix dossier]
-**Status**: Ready
-
-## What → Why
-
-**Problem**: [one sentence]
-**Fix**: [one sentence]
-
-## Domain Context
-
-| Domain | Relationship | What Changes |
-|--------|-------------|-------------|
-
-## Stages
-
-- [ ] [stage 1]
-- [ ] [stage 2]
-
-## Acceptance
-
-- [ ] [criterion]
-```
-
-F8) Create empty execution log:
+F7) Create empty execution log:
    ${FIX_DIR}/FX${ORD}-${FIX_SLUG}.log.md
 
-F9) Register fix in parent plan (if --plan provided):
+F8) Register fix in parent plan (if --plan provided):
    - Check for `## Fixes` section in plan
    - If missing, append it:
      ```markdown

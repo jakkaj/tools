@@ -59,47 +59,40 @@ Log when you encounter: something unexpected, needed research, hit a trouble spo
 
 ## 🛑 MANDATORY: UPDATE PROGRESS AFTER EVERY TASK — NO EXCEPTIONS
 
-The user watches the flight plan for live progress. Updating it is **highest priority**.
+The user watches the task table and execution log for live progress. Keeping them current is **highest priority**.
 
 After EACH task you MUST update these locations before proceeding to the next task:
 
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ Per-Task Progress Checklist — use this EVERY time, NO EXCEPTIONS      ┃
-┃                                                                       ┃
-┃ STARTING T00X:                                                        ┃
-┃ [ ] Tasks Table: [ ] → [~]                                            ┃
-┃ [ ] Architecture Map: T00X node → :::inprogress (orange)              ┃
-┃ [ ] Flight Plan § Stages: matching stage [ ] → [~]                    ┃
-┃ [ ] Flight Plan § Flight Status Mermaid: SN class pending → active    ┃
-┃ [ ] Flight Plan § Checklist: matching task [ ] → [~]                  ┃
-┃                                                                       ┃
-┃ COMPLETING T00X:                                                      ┃
-┃ [ ] Tasks Table: [~] → [x]                                            ┃
-┃ [ ] Architecture Map: T00X node → :::completed (green)                ┃
-┃ [ ] Architecture Map: File nodes touched → :::completed               ┃
-┃ [ ] Flight Plan § Stages: matching stage [~] → [x]                    ┃
-┃ [ ] Flight Plan § Flight Status Mermaid: SN class active → done       ┃
-┃ [ ] Flight Plan § Checklist: matching task [~] → [x]                  ┃
-┃ [ ] Execution Log: append task entry with evidence                    ┃
-┃ [ ] Discoveries table: add any gotchas/insights found                 ┃
-┃ [ ] 📡 COMPANION: ping review-request: T00X <sha> (fire-and-forget)   ┃
-┃ [ ] 📡 COMPANION: skim inbox for findings on prior review-requests    ┃
-┃                                                                       ┃
-┃ IF BLOCKED:                                                           ┃
-┃ [ ] Flight Plan § Flight Status Mermaid: SN class → blocked (red)     ┃
-┃ [ ] (When unblocked: change back to active and continue)              ┃
-┃                                                                       ┃
-┃ ALL TASKS COMPLETE:                                                   ┃
-┃ [ ] Flight Plan § Status: "Ready for takeoff" → "Landed"              ┃
-┃ [ ] Plan-Level Flight Plan: update Journey Map, Phases table,         ┃
-┃     and append Flight Log entry (see plan-5b-flightplan § Plan-Level) ┃
-┃ [ ] 📡 COMPANION: drain ping → control:stop → read farewell           ┃
-┃                                                                       ┃
-┃ ✓ ALL UPDATES DONE → Proceed to next task                             ┃
+┃ Per-Task Progress Checklist — use this EVERY time, NO EXCEPTIONS    ┃
+┃                                                                     ┃
+┃ STARTING T00X:                                                      ┃
+┃ [ ] Tasks Table: [ ] → [~]                                          ┃
+┃ [ ] Architecture Map: T00X node → :::inprogress (orange)            ┃
+┃                                                                     ┃
+┃ COMPLETING T00X:                                                    ┃
+┃ [ ] Tasks Table: [~] → [x]                                          ┃
+┃ [ ] Architecture Map: T00X node → :::completed (green)              ┃
+┃ [ ] Architecture Map: File nodes touched → :::completed             ┃
+┃ [ ] Execution Log: append task entry with evidence                  ┃
+┃ [ ] Discoveries table: add any gotchas/insights found               ┃
+┃ [ ] 📡 COMPANION: ping review-request: T00X <sha> (fire-and-forget)  ┃
+┃ [ ] 📡 COMPANION: skim inbox for findings on prior review-requests   ┃
+┃                                                                     ┃
+┃ IF BLOCKED:                                                         ┃
+┃ [ ] Tasks Table: mark task [!]; note the reason in the Execution Log┃
+┃ [ ] (When unblocked: change back to [~] and continue)               ┃
+┃                                                                     ┃
+┃ ALL TASKS COMPLETE:                                                 ┃
+┃ [ ] Tasks Table: confirm every phase task is [x]                    ┃
+┃ [ ] Execution Log: append a phase-complete summary                  ┃
+┃ [ ] PLAN progress section (if present): mark the phase complete     ┃
+┃ [ ] 📡 COMPANION: drain ping → control:stop → read farewell          ┃
+┃                                                                     ┃
+┃ ✓ ALL UPDATES DONE → Proceed to next task                           ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-**Phase Flight Plan location**: `tasks.fltplan.md` in the phase directory (Full Mode) or `FX###.fltplan.md` for fixes.
-**Plan-Level Flight Plan location**: `<slug>.fltplan.md` in the plan root directory.
+Progress lives in the **task table** (in `tasks.md`, or inline in the plan for Simple Mode) and the **execution log** — there is no separate flight-plan file. The journey-level view (`the-flow.md`) is regenerated by `/the-flow` itself; this skill never writes it.
 
 DO NOT start the next task until ALL updates above are done — **including the companion ping**.
 
@@ -239,17 +232,16 @@ Brief once. Don't re-brief mid-phase unless the scope materially changes (in whi
    Follow task order. Apply testing approach from plan:
 
    ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-   ┃ 🛑 STOP! RE-READ "MANDATORY: UPDATE PROGRESS" SECTION ABOVE 🛑      ┃
-   ┃                                                                      ┃
-   ┃ After EACH task you MUST update ALL locations before proceeding:     ┃
-   ┃   1. Tasks Table checkbox                                            ┃
-   ┃   2. Architecture Map diagram nodes                                  ┃
-   ┃   3. Flight Plan (stages + Mermaid status + checklist)               ┃
-   ┃   4. Execution log entry                                             ┃
-   ┃   5. 📡 COMPANION: review-request ping for T### at <sha>             ┃
-   ┃   6. 📡 COMPANION: drain inbox for findings on prior tasks           ┃
-   ┃                                                                      ┃
-   ┃ The user is watching the flight plan. Update it FIRST, then ping.    ┃
+   ┃ 🛑 STOP! RE-READ "MANDATORY: UPDATE PROGRESS" SECTION ABOVE 🛑       ┃
+   ┃                                                                    ┃
+   ┃ After EACH task you MUST update ALL locations before proceeding:   ┃
+   ┃   1. Tasks Table checkbox                                          ┃
+   ┃   2. Architecture Map diagram nodes                                ┃
+   ┃   3. Execution log entry                                           ┃
+   ┃   4. 📡 COMPANION: review-request ping for T### at <sha>            ┃
+   ┃   5. 📡 COMPANION: drain inbox for findings on prior tasks          ┃
+   ┃                                                                    ┃
+   ┃ Watch the task table + log — update them FIRST, then ping.         ┃
    ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
    **Full TDD**: RED-GREEN-REFACTOR loop per task

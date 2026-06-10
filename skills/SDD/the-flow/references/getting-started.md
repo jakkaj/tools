@@ -140,7 +140,7 @@ flowchart LR
       → api-widgets-plan.md (2 phases, with N.0/N.z harness-seam rows).
 
 4.  /plan-5 --phase "Phase 1: Route & Validation" --plan ".../api-widgets-plan.md"
-    → tasks.md + tasks.fltplan.md (T000/T0xx seam rows emitted).
+    → tasks.md (T000/T0xx seam rows emitted).
 
 5.  /plan-6-companion --phase "Phase 1: ..." --plan "..."
     → SEAM FIRST: /eng-harness-flow --event pre-implement ... — the router
@@ -172,11 +172,11 @@ You never named a harness skill — SDD told the router *where the work was* fiv
 | `/plan-1b` | Spec + front-loaded clarifications | `<slug>-spec.md` | recommends `--event post-spec` next |
 | `/plan-2c` | Design workshop for complex topics *(optional)* | `workshops/<topic>.md` | — |
 | `/plan-2d` *(alias)* | = `/eng-harness-flow --event post-spec --spec <path>` — backpressure survey *(recommended, after spec, before architect)* | `backpressure-coverage.md` | advisory; feeds `/plan-3`; never blocks |
-| `/plan-3` | Phased implementation plan (inline gates) | `<slug>-plan.md` + fltplan | emits N.0/N.z seam rows when the router is installed |
-| `/plan-5` | Task table + brief for one phase | `tasks.md` + `.fltplan.md` | emits T000/T0xx seam rows |
+| `/plan-3` | Phased implementation plan (inline gates) | `<slug>-plan.md` | emits N.0/N.z seam rows when the router is installed |
+| `/plan-5` | Task table + brief for one phase | `tasks.md` | emits T000/T0xx seam rows |
 | `/plan-6` | Implement one phase | code + `execution.log.md` | fires `--event pre-implement` + `--event phase-end` |
 | `/plan-6-companion` | Implement + live companion review | code + reviews | same seams + `--event plan-complete` after the final debrief |
-| `/plan-6a` | Progress tracking *(auto-called by 6)* | updated tables/flight plans | none (progress only) |
+| `/plan-6a` | Progress tracking *(auto-called by 6)* | updated task tables + execution log | none (progress only) |
 | `/plan-7` | Code review *(rare in companion flow)* | `reviews/review.md` | none (read-only review) |
 | `/plan-8` | Upstream merge analysis | merge plan | fires `--event plan-complete` after the merge |
 | `/eng-harness-flow` | **The harness front door** — stateless router; detects where the loop is and routes one step | routing envelope (`--json`) | the only harness skill SDD ever calls |
@@ -193,13 +193,11 @@ docs/
         ├── api-widgets-spec.md        ← /plan-1b
         ├── backpressure-coverage.md   ← post-spec seam (router-produced)
         ├── api-widgets-plan.md        ← /plan-3
-        ├── api-widgets.fltplan.md     ← auto-generated flight plan
         ├── execution.log.md           ← /plan-6
         ├── workshops/                 ← /plan-2c (optional)
         └── tasks/
             └── phase-1/
                 ├── tasks.md
-                ├── tasks.fltplan.md
                 └── execution.log.md
 ```
 

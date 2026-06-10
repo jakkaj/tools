@@ -39,7 +39,7 @@ These skills (installed via `npx skills add jakkaj/tools -a <cli>` from `/skills
 
 These work unchanged with domain-aware projects:
 
-`plan-0-constitution`, `plan-5b-flightplan`, `plan-5c-requirements-flow`, `plan-6b-worked-example`, `plan-8-merge`, `code-concept-search`, `deepresearch`, `flowspace-research`, `util-0-handover`
+`plan-0-constitution`, `plan-5c-requirements-flow`, `plan-6b-worked-example`, `plan-8-merge`, `code-concept-search`, `deepresearch`, `flowspace-research`, `util-0-handover`
 
 ## Domain System Overview
 

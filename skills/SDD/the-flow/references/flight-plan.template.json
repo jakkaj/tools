@@ -58,7 +58,7 @@
     { "id": "plan", "type": "plan", "label": "Plan", "status": "done",
       "command": "/plan-3", "ran_at": "2026-01-18T08:00Z",
       "note": "Status READY, 6 phases locked -> future phase nodes flip assumed->known. Folded in the backpressure Phase 0.",
-      "artifacts": ["project-setup-plan.md", "project-setup.fltplan.md"], "next": ["hb"] },
+      "artifacts": ["project-setup-plan.md"], "next": ["hb"] },
 
     { "id": "hb", "type": "harness-boot", "label": "Harness pre-flight (pre-implement seam)", "status": "done",
       "command": "/eng-harness-flow --event pre-implement --phase \"Phase 1\" --plan-dir docs/plans/001-project-setup", "branch_of": "p1",

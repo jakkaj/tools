@@ -152,12 +152,6 @@ After Round 2:
 
 ---
 
-## Phase 4 — Generate Flight Plan
-
-Auto-call `/plan-5b-flightplan --plan "${SPEC_FILE}"` (no `--phase` flag = plan-level mode). Status starts as "Specifying"; enriched when `/plan-3` runs.
-
----
-
 ## Standard Questions
 
 ### Workflow Mode (Round 1, Q1 unless `--simple`)
@@ -243,7 +237,7 @@ Draw from these categories based on `[NEEDS CLARIFICATION]` markers in the sketc
 
 ## Output
 
-`SPEC_FILE` written with all clarifications applied, `## Clarifications` log populated, Flight Plan generated at plan root.
+`SPEC_FILE` written with all clarifications applied, `## Clarifications` log populated.
 ```
 
 Next steps:

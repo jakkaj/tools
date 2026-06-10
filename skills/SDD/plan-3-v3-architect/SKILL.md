@@ -402,13 +402,9 @@ Unresolved gaps listed at end of plan. Common fixes:
 Re-run /plan-3-v3-architect after fixing to re-check gates.
 ```
 
-### Auto-Generate Plan-Level Flight Plan
-
-After writing the plan, auto-call `/plan-5b-flightplan --plan "${PLAN_PATH}"` (no `--phase` flag = plan-level mode). The flight plan reflects the current Status. If a flight plan already exists from plan-1b, it is enriched — Flight Log preserved.
-
 ### Auto-Run Deep Validation
 
-After the flight plan is generated, **always** auto-call the thesis-aware validator on the freshly written plan, regardless of Status:
+After the plan is written, **always** auto-call the thesis-aware validator on the freshly written plan, regardless of Status:
 
 ```
 /validate-v2 --artifact "${PLAN_PATH}"

@@ -140,7 +140,6 @@ The active workflow for non-trivial feature work. Use these for any change large
 | `plan-3-v3-architect` | Generate a domain-aware, lean implementation plan with phases, task tables, AND seven self-validating fail-fast gates baked in. Replaces `plan-3-v2-architect` + `plan-4-v2-complete-the-plan`. (The recommended Backpressure Check before this fires via the post-spec harness seam — `/eng-harness-flow --event post-spec`.) |
 | `plan-3a-v2-adr` | Generate an Architectural Decision Record from the spec and clarifications. |
 | `plan-5-v2-phase-tasks-and-brief` | Generate a tasks dossier (tasks + context brief) for a phase. |
-| `plan-5b-flightplan` | Generate a consumable Flight Plan (`.fltplan.md`) at phase or plan level. |
 | `plan-6-v2-implement-phase` | Implement exactly one approved phase using the chosen testing approach. |
 | `plan-6-v2-implement-phase-companion` | Implement a phase with a parallel code-review companion (Power-On-Mode). |
 | `plan-6a-v2-update-progress` | Update plan progress atomically with task status and domain context. |

@@ -49,7 +49,6 @@ The narration below uses **bare stage names** (`/plan-3`, `/plan-1b`, …). Thes
 | `/plan-3` | `plan-3-v3-architect` |
 | `/plan-3a` | `plan-3a-v2-adr` |
 | `/plan-5` | `plan-5-v2-phase-tasks-and-brief` |
-| `/plan-5b` | `plan-5b-flightplan` |
 | `/plan-6` | `plan-6-v2-implement-phase` (or `plan-6-v2-implement-phase-companion`) |
 | `/plan-6a` | `plan-6a-v2-update-progress` |
 | `/plan-7` | `plan-7-v2-code-review` |

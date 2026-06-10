@@ -161,7 +161,6 @@ Non-trivial changes follow the SDD pipeline in `docs/plans/NNN-<slug>/`. Each pl
 
 - `<slug>-spec.md` — feature spec (WHAT/WHY)
 - `<slug>-plan.md` — implementation plan (HOW)
-- `<slug>.fltplan.md` — flight plan / executive overview
 - `research-dossier.md` — pre-spec research (optional)
 - `workshops/` — design workshops (optional)
 - `execution.log.md` — implementation log
