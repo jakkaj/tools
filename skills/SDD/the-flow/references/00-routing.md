@@ -29,7 +29,7 @@ Ask the intent (coach.md `start` narration). After the user answers:
 4. **Write the verbatim ask** to `original-ask.md` (shape below) and mirror it into `state.intent`.
 5. Write `.the-flow-state.json` (temp file + atomic rename).
 6. Initialise `the-flow.json` (a `start`/`research` node + `assumed` future) and render `the-flow.md`.
-7. Print-and-offer `/the-flow 1a "<intent>"` (research-worthy intent) or `/the-flow 1b "<intent>"` (clear ask).
+7. Print-and-offer `/the-flow 1a explore "<intent>"` (research-worthy intent) or `/the-flow 1b specify "<intent>"` (clear ask).
 
 Stages 10/20 both **reuse** an existing `docs/plans/*-<slug>/` folder by slug — creating it first is safe.
 
@@ -67,7 +67,7 @@ Lives at `docs/plans/<ord>-<slug>/.the-flow-state.json`. Self-cleans with the pl
   "plan_dir": "docs/plans/026-the-flow",
   "mode": "unknown",
   "current_stage": "awaiting-1b",
-  "pending_command": "/the-flow 1b \"<intent>\"",
+  "pending_command": "/the-flow 1b specify \"<intent>\"",
   "intent": "<the user's one-line answer to 'what do you want to build?'>",
   "milestones_total": 7,
   "milestones_done": 2,
@@ -91,7 +91,7 @@ Lives at `docs/plans/<ord>-<slug>/.the-flow-state.json`. Self-cleans with the pl
 ## State-write ownership
 
 - **Guided mode (the dispatch + this engine) is the ONLY writer** of `.the-flow-state.json`, `the-flow.json`, and `the-flow.md`.
-- **Direct-jump stage modules NEVER write the-flow state.** A direct `/the-flow 6 …` behaves exactly like a direct `/plan-6` run did: it produces its stage artifacts and nothing else. The next guided invocation discovers those artifacts by existence (idempotency rule) and catches the state up — resume stays correct without dual writers.
+- **Direct-jump stage modules NEVER write the-flow state.** A direct `/the-flow 6 implement …` behaves exactly like a direct `/plan-6` run did: it produces its stage artifacts and nothing else. The next guided invocation discovers those artifacts by existence (idempotency rule) and catches the state up — resume stays correct without dual writers.
 - Stage modules own **their** artifacts (spec, plan, tasks, execution log, reviews); the engine never edits those.
 
 ---
@@ -118,15 +118,15 @@ The **Next** column is printed in public grammar (`/the-flow <id>`); the **Modul
 
 | current_stage | Discover artifact | Insight source (pick 1) | Compact seam *before* next? | Harness seam (router-only) | Next → next stage | Module loaded |
 |---|---|---|---|---|---|---|
-| `start` | — (ask intent) | — | — | **session-start**: probe for the router (§ Harness seams); if installed, `--event session-start` | research-worthy → `/the-flow 1a` (→`awaiting-1a`); else `/the-flow 1b` (→`awaiting-1b`) | `10-explore.md` / `20-specify.md` |
-| `awaiting-1a` | `research-dossier.md` | one Critical/High finding | **YES** (dossier is large) | — | `/the-flow 1b` → `awaiting-1b` | `20-specify.md` |
-| `awaiting-1b` | `<slug>-spec.md` | CS score + Simple/Full + #Workshop Opportunities | **YES** (before architect) | **post-spec is the recommended next step** (spec → backpressure via the router → architect) | branch (recommend backpressure first): `/eng-harness-flow --event post-spec --spec <path>` *(router-installed only)* (→`awaiting-backpressure`) \| `/the-flow 2c` *(optional workshop)* (→`awaiting-2c`) \| `/the-flow 3` *(skip to architect)* (→`awaiting-3`) | — / `25-workshop.md` / `30-architect.md` |
-| `awaiting-2c` | newest `workshops/*.md` | the headline decision (Selected option) | — | — | `/eng-harness-flow --event post-spec --spec <path>` (→`awaiting-backpressure`) \| `/the-flow 3` (→`awaiting-3`) | — / `30-architect.md` |
-| `awaiting-backpressure` | `backpressure-coverage.md` | Certainty (Strong/Partial/Weak) + Phase 0? | — | **backpressure payoff** (artifact produced via the router) | `/the-flow 3` → `awaiting-3` | `30-architect.md` |
-| `awaiting-3` | `<slug>-plan.md` | `**Status**` (READY/DRAFT) + Gate Matrix | **YES** (before implement) | validate-v2 already auto-ran | DRAFT → fix + re-run `/the-flow 3` (stay); Simple+READY → `/the-flow 6` (→`awaiting-6`); Full+READY → `/the-flow 5` (→`awaiting-5`) | `30-architect.md` / `60-implement.md` / `50-phase-tasks.md` |
-| `awaiting-5` | `tasks/<phase>/tasks.md` | first task's Done-When | — | — | `/the-flow 6 --phase … --plan …` (or `/the-flow 6c …` companion) → `awaiting-6` | `60-implement.md` / `61-implement-companion.md` |
-| `awaiting-6` | `execution.log.md` / phase status | what landed + AC met | **YES** (between phases) | **pre-implement** (set expectation *before*: stage 60 fires `--event pre-implement`); **phase-end** (explain *after*: stage 60 fired `--event phase-end`) | clean → `/the-flow 7` (→`awaiting-7`); more phases → `/the-flow 5` (→`awaiting-5`) | `70-review.md` / `50-phase-tasks.md` |
-| `awaiting-7` | newest `reviews/*.md` | verdict + one finding | — | contrast computational (post-spec backpressure) vs inferential (review) tiers | findings → fix + re-run `/the-flow 7` (stay); clean → `/the-flow 8` (→`awaiting-8`) | `70-review.md` / `80-merge.md` |
+| `start` | — (ask intent) | — | — | **session-start**: probe for the router (§ Harness seams); if installed, `--event session-start` | research-worthy → `/the-flow 1a explore` (→`awaiting-1a`); else `/the-flow 1b specify` (→`awaiting-1b`) | `10-explore.md` / `20-specify.md` |
+| `awaiting-1a` | `research-dossier.md` | one Critical/High finding | **YES** (dossier is large) | — | `/the-flow 1b specify` → `awaiting-1b` | `20-specify.md` |
+| `awaiting-1b` | `<slug>-spec.md` | CS score + Simple/Full + #Workshop Opportunities | **YES** (before architect) | **post-spec is the recommended next step** (spec → backpressure via the router → architect) | branch (recommend backpressure first): `/eng-harness-flow --event post-spec --spec <path>` *(router-installed only)* (→`awaiting-backpressure`) \| `/the-flow 2c workshop` *(optional workshop)* (→`awaiting-2c`) \| `/the-flow 3 architect` *(skip to architect)* (→`awaiting-3`) | — / `25-workshop.md` / `30-architect.md` |
+| `awaiting-2c` | newest `workshops/*.md` | the headline decision (Selected option) | — | — | `/eng-harness-flow --event post-spec --spec <path>` (→`awaiting-backpressure`) \| `/the-flow 3 architect` (→`awaiting-3`) | — / `30-architect.md` |
+| `awaiting-backpressure` | `backpressure-coverage.md` | Certainty (Strong/Partial/Weak) + Phase 0? | — | **backpressure payoff** (artifact produced via the router) | `/the-flow 3 architect` → `awaiting-3` | `30-architect.md` |
+| `awaiting-3` | `<slug>-plan.md` | `**Status**` (READY/DRAFT) + Gate Matrix | **YES** (before implement) | validate-v2 already auto-ran | DRAFT → fix + re-run `/the-flow 3 architect` (stay); Simple+READY → `/the-flow 6 implement` (→`awaiting-6`); Full+READY → `/the-flow 5 tasks` (→`awaiting-5`) | `30-architect.md` / `60-implement.md` / `50-phase-tasks.md` |
+| `awaiting-5` | `tasks/<phase>/tasks.md` | first task's Done-When | — | — | `/the-flow 6 implement --phase … --plan …` (or `/the-flow 6c companion …`) → `awaiting-6` | `60-implement.md` / `61-implement-companion.md` |
+| `awaiting-6` | `execution.log.md` / phase status | what landed + AC met | **YES** (between phases) | **pre-implement** (set expectation *before*: stage 60 fires `--event pre-implement`); **phase-end** (explain *after*: stage 60 fired `--event phase-end`) | clean → `/the-flow 7 review` (→`awaiting-7`); more phases → `/the-flow 5 tasks` (→`awaiting-5`) | `70-review.md` / `50-phase-tasks.md` |
+| `awaiting-7` | newest `reviews/*.md` | verdict + one finding | — | contrast computational (post-spec backpressure) vs inferential (review) tiers | findings → fix + re-run `/the-flow 7 review` (stay); clean → `/the-flow 8 merge` (→`awaiting-8`) | `70-review.md` / `80-merge.md` |
 | `awaiting-8` | merge plan | merge readiness | — | **plan-complete** seam fires after the merge (inside stage 80) | user types `PROCEED`/`ABORT`; on merge → `complete` | `80-merge.md` |
 | `complete` | — | — | — | — (plan-complete already fired at stage 80) | recap + stop; set `status:"complete"` | — |
 

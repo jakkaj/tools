@@ -1,11 +1,11 @@
 # Stage 60 — Implement Phase
-*(absorbed from `plan-6-v2-implement-phase`; loaded lazily via `/the-flow 6` or `/the-flow implement` — dispatch: `../../SKILL.md`)*
+*(absorbed from `plan-6-v2-implement-phase`; loaded lazily via `/the-flow 6 implement` or `/the-flow implement` — dispatch: `../../SKILL.md`)*
 
 **Purpose**: Implement exactly one approved phase or subtask using the testing approach from the plan, with domain placement rules; keep the task table + execution log live; update domain.md files after implementation.
-**Entry conditions**: Plan exists (`**Status**: READY`); Full Mode needs the phase's tasks dossier from `/the-flow 5` (`tasks/<phase-slug>/tasks.md`); Simple Mode uses inline plan tasks; human GO has been given on the dossier.
+**Entry conditions**: Plan exists (`**Status**: READY`); Full Mode needs the phase's tasks dossier from `/the-flow 5 tasks` (`tasks/<phase-slug>/tasks.md`); Simple Mode uses inline plan tasks; human GO has been given on the dossier.
 **Inputs**: Flags `--phase "<Phase N: Title>"` (Full Mode) or omitted (Simple Mode), `--plan "<abs path to plan.md>"`, optional `--subtask "<ORD-subtask-slug>"`. Reads the plan's Testing Strategy, the task table, Context Brief / Key Findings, and domain context.
 **Output contract**: Code changes + tests per the plan's testing approach; `execution.log.md` with per-task entries; task table + Architecture Map kept current per task (via `references/stages/62-progress.md`); domain.md/registry/domain-map updates; terminal report = unified diffs, evidence, domain files updated, final status vs acceptance criteria, suggested commit message.
-**Next routing**: `/the-flow 7 --phase "<Phase N: Title>" --plan "<PLAN_PATH>"` (Full Mode) or `/the-flow 7 --plan "<PLAN_PATH>"` (Simple Mode) — module `references/stages/70-review.md`. Per-task progress updates delegate to sibling module `references/stages/62-progress.md` (also directly invocable as `/the-flow 6a`).
+**Next routing**: `/the-flow 7 review --phase "<Phase N: Title>" --plan "<PLAN_PATH>"` (Full Mode) or `/the-flow 7 review --plan "<PLAN_PATH>"` (Simple Mode) — module `references/stages/70-review.md`. Per-task progress updates delegate to sibling module `references/stages/62-progress.md` (also directly invocable as `/the-flow 6a progress`).
 
 ---
 
@@ -224,8 +224,8 @@ $ARGUMENTS
 STOP: Report phase complete. Suggest next step.
 ```
 
-**Next (Full Mode)**: `/the-flow 7 --phase "<Phase N: Title>" --plan "<PLAN_PATH>"` (module `references/stages/70-review.md`)
-**Next (Simple Mode)**: `/the-flow 7 --plan "<PLAN_PATH>"` (module `references/stages/70-review.md`)
+**Next (Full Mode)**: `/the-flow 7 review --phase "<Phase N: Title>" --plan "<PLAN_PATH>"` (module `references/stages/70-review.md`)
+**Next (Simple Mode)**: `/the-flow 7 review --plan "<PLAN_PATH>"` (module `references/stages/70-review.md`)
 ---
 
 > Harness posture: `references/00-routing.md` § Harness router posture. The concrete seam invocations above are normative.

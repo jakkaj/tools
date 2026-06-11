@@ -1,6 +1,6 @@
 # The SDD Pipeline (`/the-flow`) + the Engineering Harness — Getting Started
 
-A visual guide to the **spec-driven-development** pipeline — shipped as one progressive-disclosure skill, **`the-flow`** — and the **engineering harness** that runs side by side with it. The entry point is almost always bare `/the-flow` (guided mode), or a direct jump like `/the-flow 1a` (research) / `/the-flow 1b` (spec). Everything else chains from there.
+A visual guide to the **spec-driven-development** pipeline — shipped as one progressive-disclosure skill, **`the-flow`** — and the **engineering harness** that runs side by side with it. The entry point is almost always bare `/the-flow` (guided mode), or a direct jump like `/the-flow 1a explore` (research) / `/the-flow 1b specify` (spec). Everything else chains from there.
 
 > Repo reference: the SDD pipeline lives at `skills/SDD/the-flow/` in `jakkaj/tools` — one public skill, with per-stage modules under `references/stages/`. The harness skills live in the **external** `AI-Substrate/harness-engineering` repository and are reached through exactly one door: the **`/eng-harness-flow`** router. Full command reference: `docs/skills-pipeline/README.md`. Switchover history: `docs/plans/029-eng-harness-switchover/`.
 
@@ -16,7 +16,7 @@ The pipeline used to be a family of standalone per-stage skills; it is now **one
 ```
 
 - **Guided mode** — bare `/the-flow` loads `references/coach.md` + `references/00-routing.md` + the *current* stage module only, then drives you conversationally. The rest of the pipeline stays out of context until you reach it.
-- **Direct jump** — `/the-flow 6 --phase … --plan …` (or by name: `/the-flow implement …`) loads exactly **one** stage module and runs that stage. Ids and names both resolve.
+- **Direct jump** — `/the-flow 6 implement --phase … --plan …` (or by name: `/the-flow implement …`) loads exactly **one** stage module and runs that stage. Ids and names both resolve.
 - **Back-compat** — old per-stage slugs found in pre-consolidation state files are translated by the dispatch's stage table; you never type them.
 
 | Stage | Id | Name | Module loaded |
@@ -41,7 +41,7 @@ The pipeline used to be a family of standalone per-stage skills; it is now **one
 
 Two loops run side by side in the same context — that is all. Neither owns the other:
 
-- **SDD pipeline** (you drive it) — `/the-flow 1a → 1b → [2c] → 3 → 5 → 6 → 7 → 8`, one stage per call (by id or by name). A linear journey: spec → plan → tasks → code → review → merge, with the optional post-spec backpressure seam between 1b and 3.
+- **SDD pipeline** (you drive it) — `/the-flow 1a explore → 1b → [2c] → 3 → 5 → 6 → 7 → 8`, one stage per call (by id or by name). A linear journey: spec → plan → tasks → code → review → merge, with the optional post-spec backpressure seam between 1b and 3.
 - **Engineering harness** (the external eng-harness family drives it) — a *cycle*: Boot → Backpressure → Observe → Retro → Improve. The flow's stages never run harness stages themselves; at five **seams** they tell the router *where the work is* and the router decides what (if anything) the harness should do:
 
 | Seam | Fired by | Router call |
@@ -54,7 +54,7 @@ Two loops run side by side in the same context — that is all. Neither owns the
 
 The router's child skills are **private** — they may move or rename, and no SDD stage (or user doc) ever names them. One name is stable: `/eng-harness-flow` + its `--event` vocabulary.
 
-> **New to this, or want a guide?** Run bare **`/the-flow`** — guided mode walks you through this whole pipeline: it asks what you want to build, narrates each stage, points out one insight per artifact, surfaces the optional branches + `/compact` seams + the harness seams, prints every command first, and offers to run it for you. Re-entrant — it survives `/compact` and can adopt a plan you started by hand. Already know where you're going? Jump straight in: `/the-flow 6 --phase … --plan …`.
+> **New to this, or want a guide?** Run bare **`/the-flow`** — guided mode walks you through this whole pipeline: it asks what you want to build, narrates each stage, points out one insight per artifact, surfaces the optional branches + `/compact` seams + the harness seams, prints every command first, and offers to run it for you. Re-entrant — it survives `/compact` and can adopt a plan you started by hand. Already know where you're going? Jump straight in: `/the-flow 6 implement --phase … --plan …`.
 
 ```mermaid
 flowchart TB
@@ -64,18 +64,18 @@ flowchart TB
     classDef harness fill:#f3e5f5,stroke:#7b1fa2,color:#000
 
     subgraph specify["SPECIFY · once per feature"]
-        P1A["/the-flow 1a<br/>explore"]:::optional
-        P1B["/the-flow 1b<br/>specify + clarify"]:::manual
-        P2C["/the-flow 2c<br/>workshop"]:::optional
-        P3["/the-flow 3<br/>architect"]:::manual
+        P1A["/the-flow 1a explore"]:::optional
+        P1B["/the-flow 1b specify<br/>+ clarify"]:::manual
+        P2C["/the-flow 2c workshop"]:::optional
+        P3["/the-flow 3 architect"]:::manual
     end
 
     subgraph implement["IMPLEMENT · per phase"]
-        P5["/the-flow 5<br/>phase tasks"]:::manual
-        P6["/the-flow 6<br/>implement<br/>(6c = +companion)"]:::manual
-        P6A["/the-flow 6a<br/>progress"]:::auto
-        P7["/the-flow 7<br/>review"]:::optional
-        P8["/the-flow 8<br/>merge"]:::optional
+        P5["/the-flow 5 tasks"]:::manual
+        P6["/the-flow 6 implement<br/>(6c companion = +live review)"]:::manual
+        P6A["/the-flow 6a progress"]:::auto
+        P7["/the-flow 7 review"]:::optional
+        P8["/the-flow 8 merge"]:::optional
     end
 
     subgraph harness["ENGINEERING HARNESS · one door, five seams"]
@@ -129,23 +129,23 @@ flowchart LR
 
     subgraph simple["SIMPLE · CS 1-2"]
         direction TB
-        S1["/the-flow 1b"] --> S2["/the-flow 3"] --> S3["/the-flow 6"]
+        S1["/the-flow 1b specify"] --> S2["/the-flow 3 architect"] --> S3["/the-flow 6 implement"]
     end
 
     subgraph full["FULL · CS 3-5"]
         direction TB
-        F1["/the-flow 1b"] --> F2["/the-flow 3"] --> F3["/the-flow 5"] --> F4["/the-flow 6"] --> F5["/the-flow 7"]
+        F1["/the-flow 1b specify"] --> F2["/the-flow 3 architect"] --> F3["/the-flow 5 tasks"] --> F4["/the-flow 6 implement"] --> F5["/the-flow 7 review"]
         F5 -->|next phase| F3
-        F5 --> F6["/the-flow 8"]
+        F5 --> F6["/the-flow 8 merge"]
     end
 
     class simple s
     class full f
 ```
 
-**Simple Mode** — single-phase, inline tasks. `/the-flow 1b` (front-loads clarifications) → `/the-flow 3` (one inline plan) → `/the-flow 6`. No `/the-flow 5` expansion needed.
+**Simple Mode** — single-phase, inline tasks. `/the-flow 1b specify` (front-loads clarifications) → `/the-flow 3 architect` (one inline plan) → `/the-flow 6 implement`. No `/the-flow 5 tasks` expansion needed.
 
-**Full Mode** — multi-phase. Per-phase loop of `/the-flow 5 → /the-flow 6 → /the-flow 7`, then `/the-flow 8` to merge.
+**Full Mode** — multi-phase. Per-phase loop of `/the-flow 5 tasks → /the-flow 6 implement → /the-flow 7 review`, then `/the-flow 8 merge` to merge.
 
 > **Merged stages**: stage `1b` produces the spec **and** front-loads clarifications in one pass — later mid-plan clarifications re-enter through the Re-entry section inside `references/stages/20-specify.md`. Stage `3` runs the validate gates inline as it writes the plan. There is no separate clarify or complete-the-plan stage in the flow.
 
@@ -156,35 +156,35 @@ flowchart LR
 > **Scenario**: Add a `POST /api/widgets` endpoint to an existing app. Full Mode, with the companion reviewer. Router installed; repo provisioned with a harness.
 
 ```
-1.  /the-flow 1a "how are API endpoints structured here?"
+1.  /the-flow 1a explore "how are API endpoints structured here?"
     → Fires /eng-harness-flow --event session-start (the router checks the
       harness is alive; one calm line either way).
     → 8 parallel subagents → docs/plans/005-api-widgets/research-dossier.md
 
-2.  /the-flow 1b "POST endpoint to create widgets (name, color)"
+2.  /the-flow 1b specify "POST endpoint to create widgets (name, color)"
     → Asks testing/mock/docs/mode questions up front → api-widgets-spec.md (CS-3, Full)
     → Recommended next: /eng-harness-flow --event post-spec --spec ...
       → produces backpressure-coverage.md (what's provable vs eyeballed).
 
-3.  /the-flow 3
+3.  /the-flow 3 architect
     → Reads backpressure-coverage.md; inline gates + 2 research subagents
       → api-widgets-plan.md (2 phases, with N.0/N.z harness-seam rows).
 
-4.  /the-flow 5 --phase "Phase 1: Route & Validation" --plan ".../api-widgets-plan.md"
+4.  /the-flow 5 tasks --phase "Phase 1: Route & Validation" --plan ".../api-widgets-plan.md"
     → tasks.md (T000/T0xx seam rows emitted).
 
-5.  /the-flow 6c --phase "Phase 1: ..." --plan "..."
+5.  /the-flow 6c companion --phase "Phase 1: ..." --plan "..."
     → SEAM FIRST: /eng-harness-flow --event pre-implement ... — the router
       proves the system runs before a line of code; verdict narrated
       verbatim (healthy → build).
     → Implements; the progress stage (6a) auto-tracks per task.
-    → Companion reviews each commit live (supersedes /the-flow 7 here).
+    → Companion reviews each commit live (supersedes /the-flow 7 review here).
     → End of phase: /eng-harness-flow --event phase-end ... — the router
       decides what reflection happens (you might see a [s/t/p/e/d/a] prompt).
 
-6.  /the-flow 5 + /the-flow 6c for Phase 2 ...
+6.  /the-flow 5 tasks + /the-flow 6c companion for Phase 2 ...
 
-7.  /the-flow 8 --plan "..."
+7.  /the-flow 8 merge --plan "..."
     → Merge analysis; on PROCEED the merge executes, then
       /eng-harness-flow --event plan-complete fires the long-horizon
       reflection. Feature complete 🎉
@@ -199,18 +199,18 @@ You never named a harness skill — the flow told the router *where the work was
 | Command | What it does | Produces | Harness behaviour |
 |---|---|---|---|
 | `/the-flow` | **Guided mode** — drives this whole pipeline conversationally (loads coach + routing + the current stage module only) | `.the-flow-state.json` + `the-flow.{json,md}` + `original-ask.md` | probes for the router; narrates the seams; fires them only via `/eng-harness-flow` |
-| `/the-flow 1a` · `explore` | Deep-dive codebase research *(optional)* | `research-dossier.md` | fires `--event session-start` |
-| `/the-flow 1b` · `specify` | Spec + front-loaded clarifications | `<slug>-spec.md` | recommends `--event post-spec` next |
-| `/the-flow 2c` · `workshop` | Design workshop for complex topics *(optional)* | `workshops/<topic>.md` | — |
+| `/the-flow 1a explore` · `explore` | Deep-dive codebase research *(optional)* | `research-dossier.md` | fires `--event session-start` |
+| `/the-flow 1b specify` · `specify` | Spec + front-loaded clarifications | `<slug>-spec.md` | recommends `--event post-spec` next |
+| `/the-flow 2c workshop` · `workshop` | Design workshop for complex topics *(optional)* | `workshops/<topic>.md` | — |
 | `/eng-harness-flow --event post-spec` | Backpressure survey *(recommended, after spec, before architect)* | `backpressure-coverage.md` | advisory; feeds stage 3; never blocks |
-| `/the-flow 3` · `architect` | Phased implementation plan (inline gates) | `<slug>-plan.md` | emits N.0/N.z seam rows when the router is installed |
-| `/the-flow 3a` · `adr` | Architectural Decision Record *(optional)* | `docs/adr/*.md` | — |
-| `/the-flow 5` · `tasks` | Task table + brief for one phase | `tasks.md` | emits T000/T0xx seam rows |
-| `/the-flow 6` · `implement` | Implement one phase | code + `execution.log.md` | fires `--event pre-implement` + `--event phase-end` |
-| `/the-flow 6c` · `companion` | Implement + live companion review | code + reviews | same seams + `--event plan-complete` after the final debrief |
-| `/the-flow 6a` · `progress` | Progress tracking *(auto-run by stage 6)* | updated task tables + execution log | none (progress only) |
-| `/the-flow 7` · `review` | Code review *(rare in companion flow)* | `reviews/review.md` | none (read-only review) |
-| `/the-flow 8` · `merge` | Upstream merge analysis | merge plan | fires `--event plan-complete` after the merge |
+| `/the-flow 3 architect` · `architect` | Phased implementation plan (inline gates) | `<slug>-plan.md` | emits N.0/N.z seam rows when the router is installed |
+| `/the-flow 3a adr` · `adr` | Architectural Decision Record *(optional)* | `docs/adr/*.md` | — |
+| `/the-flow 5 tasks` · `tasks` | Task table + brief for one phase | `tasks.md` | emits T000/T0xx seam rows |
+| `/the-flow 6 implement` · `implement` | Implement one phase | code + `execution.log.md` | fires `--event pre-implement` + `--event phase-end` |
+| `/the-flow 6c companion` · `companion` | Implement + live companion review | code + reviews | same seams as implement (`pre-implement` + `phase-end`) |
+| `/the-flow 6a progress` · `progress` | Progress tracking *(auto-run by stage 6)* | updated task tables + execution log | none (progress only) |
+| `/the-flow 7 review` · `review` | Code review *(rare in companion flow)* | `reviews/review.md` | none (read-only review) |
+| `/the-flow 8 merge` · `merge` | Upstream merge analysis | merge plan | fires `--event plan-complete` after the merge |
 | `/eng-harness-flow` | **The harness front door** — stateless router; detects where the loop is and routes one step | routing envelope (`--json`) | the only harness skill the flow ever calls |
 
 ---
@@ -221,12 +221,12 @@ You never named a harness skill — the flow told the router *where the work was
 docs/
 └── plans/
     └── 005-api-widgets/
-        ├── research-dossier.md        ← /the-flow 1a (optional)
-        ├── api-widgets-spec.md        ← /the-flow 1b
+        ├── research-dossier.md        ← /the-flow 1a explore (optional)
+        ├── api-widgets-spec.md        ← /the-flow 1b specify
         ├── backpressure-coverage.md   ← post-spec seam (router-produced)
-        ├── api-widgets-plan.md        ← /the-flow 3
-        ├── execution.log.md           ← /the-flow 6
-        ├── workshops/                 ← /the-flow 2c (optional)
+        ├── api-widgets-plan.md        ← /the-flow 3 architect
+        ├── execution.log.md           ← /the-flow 6 implement
+        ├── workshops/                 ← /the-flow 2c workshop (optional)
         └── tasks/
             └── phase-1/
                 ├── tasks.md
@@ -241,7 +241,7 @@ The harness's own substrate (governance doc, observe scratch, retro records) liv
 
 ### Complexity Scoring (CS 1–5)
 
-Assigned by stage 1b (`/the-flow 1b`). Drives Simple vs Full and how much planning ceremony applies.
+Assigned by stage 1b (`/the-flow 1b specify`). Drives Simple vs Full and how much planning ceremony applies.
 
 | CS | Scope | Typical Phases | Path |
 |----|-------|---------------|------|

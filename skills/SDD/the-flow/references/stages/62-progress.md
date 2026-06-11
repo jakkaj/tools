@@ -1,11 +1,11 @@
 # Stage 62 — Update Progress
-*(absorbed from `plan-6a-v2-update-progress`; loaded lazily via `/the-flow 6a` or `/the-flow progress` — dispatch: `../../SKILL.md`. This module remains **directly invocable** as `/the-flow 6a`, and is also read and followed by the implement modules — `60-implement.md` after each completed task and on the final task; `61-implement-companion.md` on the final task with the companion debrief flags.)*
+*(absorbed from `plan-6a-v2-update-progress`; loaded lazily via `/the-flow 6a progress` or `/the-flow progress` — dispatch: `../../SKILL.md`. This module remains **directly invocable** as `/the-flow 6a progress`, and is also read and followed by the implement modules — `60-implement.md` after each completed task and on the final task; `61-implement-companion.md` on the final task with the companion debrief flags.)*
 
 **Purpose**: Update plan and dossier progress tracking with task status and domain context; on the last task of a phase, optionally run the full code-review-companion debrief (Step 9) when `--companion-run-id` is provided.
-**Entry conditions**: A plan (and, in Full Mode, a phase dossier) exists; a task has just changed status — typically invoked per task by stage 60/61, or directly as `/the-flow 6a`. Companion debrief additionally requires `--status completed` on the last task in the phase + `--companion-run-id`.
+**Entry conditions**: A plan (and, in Full Mode, a phase dossier) exists; a task has just changed status — typically invoked per task by stage 60/61, or directly as `/the-flow 6a progress`. Companion debrief additionally requires `--status completed` on the last task in the phase + `--companion-run-id`.
 **Inputs**: Flags `--plan`, `--task`, `--status completed|in_progress|blocked`, `--changes "<files>"`, optional `--domain`, `--phase`, `--subtask`, `--inline`, `--companion-run-id "<run id>"`, `--companion-slug "<slug>"` (default `code-review-companion`).
 **Output contract**: Task table Status column + Architecture Map nodes updated; plan progress section updated; domain-context change record (incl. domain-map / Concepts update flags); when the debrief fires: drain ping + control:stop + farewell envelope read, findings reconciliation in the execution log, magicWand surfaced as follow-up candidate. Terminal report = files touched, whether the companion debrief fired (yes — runId / no — flag absent), follow-up candidates surfaced.
-**Next routing**: Control returns to the calling module (`references/stages/60-implement.md` or `references/stages/61-implement-companion.md`), which owns the phase-end harness seam and the next-step suggestion (`/the-flow 7` review after stage 60; `/the-flow 5` next phase after stage 61).
+**Next routing**: Control returns to the calling module (`references/stages/60-implement.md` or `references/stages/61-implement-companion.md`), which owns the phase-end harness seam and the next-step suggestion (`/the-flow 7 review` review after stage 60; `/the-flow 5 tasks` next phase after stage 61).
 
 ---
 
@@ -144,7 +144,7 @@ $ARGUMENTS
    e) **Surface the companion's magicWand as follow-up candidate**: if
       the magicWand is non-trivial, print a stderr note recommending the
       caller file a fix dossier via
-      `/the-flow 5 --fix "<companion magicWand>"` (module
+      `/the-flow 5 tasks --fix "<companion magicWand>"` (module
       `references/stages/50-phase-tasks.md`).
       Do NOT auto-create dossiers; surface only.
 
@@ -163,4 +163,4 @@ This module is the **single source of truth** for progress updates AND the compa
 - Companion implement (`61-implement-companion.md`): read this module with `--task <T> --status completed --plan <P> --companion-run-id <RUN>` — Step 9 fires.
 ---
 
-> Harness note: this module writes no retro artifacts and fires no harness seams — progress tracking and (optionally) the minih companion debrief only. Harness reflection routes through `/eng-harness-flow` at the implement stages' seams (`60-implement.md` / `61-implement-companion.md`). `docs/harness/agents/**` is frozen read-only history (mined by the explore stage's Prior Learnings Scout, `/the-flow 1a`); nothing writes there anymore.
+> Harness note: this module writes no retro artifacts and fires no harness seams — progress tracking and (optionally) the minih companion debrief only. Harness reflection routes through `/eng-harness-flow` at the implement stages' seams (`60-implement.md` / `61-implement-companion.md`). `docs/harness/agents/**` is frozen read-only history (mined by the explore stage's Prior Learnings Scout, `/the-flow 1a explore`); nothing writes there anymore.

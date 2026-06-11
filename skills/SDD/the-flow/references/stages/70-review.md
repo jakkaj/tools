@@ -1,5 +1,5 @@
 # Stage 70 — Review
-*(absorbed from `plan-7-v2-code-review`; loaded lazily via `/the-flow 7` or `/the-flow review` — dispatch: `../../SKILL.md`)*
+*(absorbed from `plan-7-v2-code-review`; loaded lazily via `/the-flow 7 review` or `/the-flow review` — dispatch: `../../SKILL.md`)*
 
 **Purpose**: Read-only per-phase code review — inspects diffs, validates domain compliance, checks for concept reinvention, verifies testing evidence, and produces structured findings as file artifacts. Does NOT modify code.
 
@@ -9,7 +9,7 @@
 
 **Output contract**: Review file `${REVIEW_FILE}` with sections A–H (verdict, summary, checklist, findings table, detailed findings, coverage map, commands, Handover Brief); computed diff saved to `reviews/_computed.diff`; fix-tasks file `${FIX_FILE}` only if verdict is REQUEST_CHANGES. Terminal report: verdict + key failure areas + exact next command.
 
-**Next routing**: REQUEST_CHANGES → `/the-flow 6 <same flags>` (module `references/stages/60-implement.md`) to apply fixes, then re-run `/the-flow 7 <same flags>` (this module). APPROVE with more phases remaining → `/the-flow 5 --phase 'Phase N+1' --plan <abs path>` (module `references/stages/50-phase-tasks.md`). APPROVE on the final phase → `/the-flow 8 --plan <plan dir>` (module `references/stages/80-merge.md`).
+**Next routing**: REQUEST_CHANGES → `/the-flow 6 implement <same flags>` (module `references/stages/60-implement.md`) to apply fixes, then re-run `/the-flow 7 review <same flags>` (this module). APPROVE with more phases remaining → `/the-flow 5 tasks --phase 'Phase N+1' --plan <abs path>` (module `references/stages/50-phase-tasks.md`). APPROVE on the final phase → `/the-flow 8 merge --plan <plan dir>` (module `references/stages/80-merge.md`).
 
 ---
 
@@ -355,8 +355,8 @@ Universal (all approaches):
 ### Next Step
 
 [Exact command to run — e.g.:
-- For fixes: "/the-flow 6 --plan /abs/path --phase 'Phase N'" (module `references/stages/60-implement.md`)
-- For next phase: "/the-flow 5 --phase 'Phase N+1' --plan /abs/path" (module `references/stages/50-phase-tasks.md`)
+- For fixes: "/the-flow 6 implement --plan /abs/path --phase 'Phase N'" (module `references/stages/60-implement.md`)
+- For next phase: "/the-flow 5 tasks --phase 'Phase N+1' --plan /abs/path" (module `references/stages/50-phase-tasks.md`)
 - If approved and final phase: "Implementation complete — consider committing"]
 ```
 
@@ -390,7 +390,7 @@ Apply in order. Re-run review after fixes.
 ## Re-Review Checklist
 
 - [ ] All critical/high fixes applied
-- [ ] Re-run `/the-flow 7` and achieve zero HIGH/CRITICAL
+- [ ] Re-run `/the-flow 7 review` and achieve zero HIGH/CRITICAL
 ```
 
 ## Step 7: Constraints
@@ -414,7 +414,7 @@ Acceptance criteria for this command:
 - If APPROVE: zero HIGH/CRITICAL findings
 - If REQUEST_CHANGES: fix tasks file created with severity-ordered fixes
 
-Next step: Apply fixes via `/the-flow 6 <same flags>` (module `references/stages/60-implement.md`), then re-run `/the-flow 7 <same flags>` (module `references/stages/70-review.md`).
+Next step: Apply fixes via `/the-flow 6 implement <same flags>` (module `references/stages/60-implement.md`), then re-run `/the-flow 7 review <same flags>` (module `references/stages/70-review.md`).
 
 ---
 

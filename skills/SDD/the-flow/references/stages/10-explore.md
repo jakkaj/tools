@@ -1,11 +1,11 @@
 # Stage 10 — explore
-*(absorbed from `plan-1a-v2-explore`; loaded lazily via `/the-flow 1a` or `/the-flow explore` — dispatch: `../../SKILL.md`)*
+*(absorbed from `plan-1a-v2-explore`; loaded lazily via `/the-flow 1a explore` or `/the-flow explore` — dispatch: `../../SKILL.md`)*
 
 **Purpose**: Deep-dive research into how existing functionality works in the codebase — produces a research dossier (or console-only report) that feeds specification.
 **Entry conditions**: A research query. No prior artifacts required — auto-detects plan context (ordinal branch / cwd / conversation) or creates a new plan folder; `--console` creates no files at all.
 **Inputs**: `"research query"` · `--plan <name>` (explicit plan folder) · `--console` (console-only output). Optional context: existing `docs/plans/<ordinal>-<slug>/`, `docs/domains/registry.md`, FlowSpace MCP when available.
 **Output contract**: `docs/plans/<ordinal>-<slug>/research-dossier.md` (or console-only report with `--console`) + terminal success block (plan-folder status, components analyzed, critical findings, prior learnings surfaced, external research opportunities, FlowSpace mode). Read-only — STOPs and waits after output.
-**Next routing**: `/the-flow 1b` (module `references/stages/20-specify.md`) to create the spec — optionally after running the suggested `/deepresearch` prompts; or `/the-flow 2c` (module `references/stages/25-workshop.md`) if deep design exploration is needed first.
+**Next routing**: `/the-flow 1b specify` (module `references/stages/20-specify.md`) to create the spec — optionally after running the suggested `/deepresearch` prompts; or `/the-flow 2c workshop` (module `references/stages/25-workshop.md`) if deep design exploration is needed first.
 
 ---
 
@@ -17,14 +17,14 @@ User input:
 ```
 $ARGUMENTS
 # Expected format:
-# /the-flow 1a "research query"              # Auto-detect context or create plan
-# /the-flow 1a --plan <name> "research query" # Explicit plan name
-# /the-flow 1a --console "research query"    # Output to console only (no files)
+# /the-flow 1a explore "research query"              # Auto-detect context or create plan
+# /the-flow 1a explore --plan <name> "research query" # Explicit plan name
+# /the-flow 1a explore --console "research query"    # Output to console only (no files)
 #
 # Examples:
-# /the-flow 1a "research how the search service works"
-# /the-flow 1a --plan authentication-upgrade "research the current auth system"
-# /the-flow 1a --console "quick question about error handling"
+# /the-flow 1a explore "research how the search service works"
+# /the-flow 1a explore --plan authentication-upgrade "research the current auth system"
+# /the-flow 1a explore --console "quick question about error handling"
 ```
 
 ## Purpose
@@ -872,7 +872,7 @@ During codebase exploration, the following knowledge gaps were identified that c
 - To conduct external research: Run the `/deepresearch` commands above, then either:
   - Paste results back to this conversation, OR
   - Save to `external-research/` folder in the plan directory
-- To skip and proceed: Run `/the-flow 1b "[feature]"` (unresolved opportunities will be noted as a soft warning)
+- To skip and proceed: Run `/the-flow 1b specify "[feature]"` (unresolved opportunities will be noted as a soft warning)
 
 ## Appendix: File Inventory
 
@@ -898,10 +898,10 @@ During codebase exploration, the following knowledge gaps were identified that c
 
 **If no external research needed (or skipping):**
 - Research-Only: Review findings and decide on action
-- Pre-Plan: Run `/the-flow 1b "[feature]"` to create specification
+- Pre-Plan: Run `/the-flow 1b specify "[feature]"` to create specification
 - Plan-Associated: Continue with plan phases
 
-Note: Unresolved research opportunities will be flagged in `/the-flow 1b` output.
+Note: Unresolved research opportunities will be flagged in `/the-flow 1b specify` output.
 
 ---
 
@@ -933,22 +933,22 @@ Note: Unresolved research opportunities will be flagged in `/the-flow 1b` output
   2. [Topic 2] - run /deepresearch prompt in report
   Save results to: external-research/[topic-slug].md
 
-- Next step (with research): Run /deepresearch prompts, then /the-flow 1b
-- Next step (skip research): Run /the-flow 1b "[feature description]"
+- Next step (with research): Run /deepresearch prompts, then /the-flow 1b specify
+- Next step (skip research): Run /the-flow 1b specify "[feature description]"
 ```
 
 ## CRITICAL: STOP AND WAIT
 
 **THIS IS A READ-ONLY RESEARCH COMMAND.** After outputting the research report:
 
-1. **DO NOT** proceed to `/the-flow 1b` or any other command
+1. **DO NOT** proceed to `/the-flow 1b specify` or any other command
 2. **DO NOT** make any code changes or create additional files
 3. **DO NOT** start implementing recommendations
 4. **STOP** and wait for the user to provide instructions
 
 The research is complete. The user will decide what to do next:
 - Run `/deepresearch` for external knowledge gaps
-- Run `/the-flow 1b` to create a specification
+- Run `/the-flow 1b specify` to create a specification
 - Ask follow-up questions
 - Take a different action entirely
 
@@ -1001,25 +1001,25 @@ The research is complete. The user will decide what to do next:
 
 ### Example 1: Quick Research (Console Output)
 ```bash
-/the-flow 1a "research how the search service works"
+/the-flow 1a explore "research how the search service works"
 ```
 Outputs research directly to console. No files created.
 
 ### Example 2: Research for New Plan
 ```bash
-/the-flow 1a --plan authentication-upgrade "research the current auth system"
+/the-flow 1a explore --plan authentication-upgrade "research the current auth system"
 ```
 Creates `docs/plans/001-authentication-upgrade/research-dossier.md`
 
 ### Example 3: Research for Existing Plan (by slug)
 ```bash
-/the-flow 1a --plan search-improvement "research search indexing strategy"
+/the-flow 1a explore --plan search-improvement "research search indexing strategy"
 ```
 If `002-search-improvement` exists, saves there. Otherwise creates new folder.
 
 ### Example 4: Research for Existing Plan (by full name)
 ```bash
-/the-flow 1a --plan 003-payment-refactor "deep dive on payment processing"
+/the-flow 1a explore --plan 003-payment-refactor "deep dive on payment processing"
 ```
 Saves to `docs/plans/003-payment-refactor/research-dossier.md`
 
@@ -1027,6 +1027,6 @@ This command provides deep, actionable research into existing codebase functiona
 
 **Suggest next step to user:**
 
-Next: `/the-flow 1b` (module `references/stages/20-specify.md`) to create the feature specification, or `/the-flow 2c` (module `references/stages/25-workshop.md`) if deep design exploration is needed first.
+Next: `/the-flow 1b specify` (module `references/stages/20-specify.md`) to create the feature specification, or `/the-flow 2c workshop` (module `references/stages/25-workshop.md`) if deep design exploration is needed first.
 
 > Harness note: the session-start seam (§ 2c) is this skill's only harness touchpoint. Friction capture, retros, and harvest are the harness family's own concern, reached through `/eng-harness-flow` — SDD never drives them directly. Subagent 7 (Prior Learnings Scout) still mines `docs/harness/agents/**/*.retro.md` + legacy `docs/retros/*.md` as read-only history.

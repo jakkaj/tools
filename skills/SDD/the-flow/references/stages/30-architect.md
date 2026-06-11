@@ -1,11 +1,11 @@
 # Stage 30 — Architect
-*(absorbed from `plan-3-v3-architect`; loaded lazily via `/the-flow 3` or `/the-flow architect` — dispatch: `../../SKILL.md`)*
+*(absorbed from `plan-3-v3-architect`; loaded lazily via `/the-flow 3 architect` or `/the-flow architect` — dispatch: `../../SKILL.md`)*
 
 **Purpose**: Generate a lean, domain-aware implementation plan with self-validating fail-fast gates (G1–G7) run inline during generation; the plan always emits, stamped `**Status**: READY` (all gates pass) or `**Status**: DRAFT — UNRESOLVED GAPS` (any gate fails, with inline `⚠️ GAP:` markers + a final `## Unresolved Gaps` table).
 **Entry conditions**: Spec exists at `docs/plans/<ordinal>-<slug>/<slug>-spec.md` with critical clarifications resolved (or `--skip-clarify`). Optional pre-architect inputs in the plan dir: `research-dossier.md`, `workshops/*.md`, `backpressure-coverage.md` (the post-spec harness seam's output). Optional repo doctrine: `docs/project-rules/{rules.md, idioms.md, architecture.md, constitution.md}`, `docs/adr/*.md`, `docs/domains/*`.
 **Inputs**: `FEATURE_SPEC` = spec path; `PLAN_PATH` = `docs/plans/<ordinal>-<slug>/<slug>-plan.md`; optional `--skip-clarify` (G1 override); today {{TODAY}}.
 **Output contract**: Writes `PLAN_PATH` containing the Gate Matrix (G1–G7) + Status header — plus inline `⚠️ GAP:` markers and a final `## Unresolved Gaps` table on any gate FAIL. Terminal report: plan path · Status · phase/task/domain counts · gate tally · next step. Then **always** auto-runs `/validate-v2 --artifact "${PLAN_PATH}"` (real skill invocation), READY or DRAFT.
-**Next routing**: READY + **Full Mode** → `/the-flow 5 --phase "<Phase 1: Title>" --plan "<PLAN_PATH>"` (module `references/stages/50-phase-tasks.md`); READY + **Simple Mode** → `/the-flow 6 --plan "<PLAN_PATH>"` (module `references/stages/60-implement.md` — inline tasks, no stage-50 expansion). DRAFT → fix gaps, then re-run `/the-flow 3` (module `references/stages/30-architect.md`; idempotent); G1 gaps via `/the-flow 1b` re-entry (module `references/stages/20-specify.md` § Re-entry: mid-plan clarifications); G4 gaps via `/the-flow 3a` (module `references/stages/35-adr.md`).
+**Next routing**: READY + **Full Mode** → `/the-flow 5 tasks --phase "<Phase 1: Title>" --plan "<PLAN_PATH>"` (module `references/stages/50-phase-tasks.md`); READY + **Simple Mode** → `/the-flow 6 implement --plan "<PLAN_PATH>"` (module `references/stages/60-implement.md` — inline tasks, no stage-50 expansion). DRAFT → fix gaps, then re-run `/the-flow 3 architect` (module `references/stages/30-architect.md`; idempotent); G1 gaps via `/the-flow 1b specify` re-entry (module `references/stages/20-specify.md` § Re-entry: mid-plan clarifications); G4 gaps via `/the-flow 3a adr` (module `references/stages/35-adr.md`).
 
 ---
 
@@ -13,7 +13,7 @@
 
 Generate a **lean, domain-aware implementation plan** with phases, task tables, acceptance criteria, AND **self-validating fail-fast gates** baked in. Replaces both the legacy `plan-3-v2-architect` and the bolt-on `plan-4-v2-complete-the-plan` validator — gates run inline and the plan emits in one of two states:
 
-- **`**Status**: READY`** — all gates passed; Full Mode plans continue to `/the-flow 5` (module `references/stages/50-phase-tasks.md`), Simple Mode plans continue directly to `/the-flow 6` (module `references/stages/60-implement.md` — inline tasks).
+- **`**Status**: READY`** — all gates passed; Full Mode plans continue to `/the-flow 5 tasks` (module `references/stages/50-phase-tasks.md`), Simple Mode plans continue directly to `/the-flow 6 implement` (module `references/stages/60-implement.md` — inline tasks).
 - **`**Status**: DRAFT — UNRESOLVED GAPS`** — one or more gates failed. The plan is **still written** (the user has context to fix) but is annotated with inline `⚠️ GAP: <reason>` markers at each violation site, plus a final `## Unresolved Gaps` summary table.
 
 The plan is always written. The user is never blocked from seeing it. But the status header + inline gap markers + summary table make it impossible to silently consume a broken plan downstream.
@@ -230,9 +230,9 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
 - Each phase should primarily target **ONE domain**. Multi-domain phases are permitted but each domain-touch is a separate task group.
 - Domain creation phases come BEFORE domain extension phases.
 - Composition/wiring phases come LAST.
-- **Harness provisioning is never an SDD phase**: when no harness exists, the external router's setup track owns standing one up (`/eng-harness-flow` routes it) — never plan a "Build Agent Harness" phase. If explore-stage research (`/the-flow 1a`, module `references/stages/10-explore.md`) surfaced that no working dev substrate exists (no boot command, no test runner), surface it as a Critical Key Finding; the plan still uses standard testing.
+- **Harness provisioning is never an SDD phase**: when no harness exists, the external router's setup track owns standing one up (`/eng-harness-flow` routes it) — never plan a "Build Agent Harness" phase. If explore-stage research (`/the-flow 1a explore`, module `references/stages/10-explore.md`) surfaced that no working dev substrate exists (no boot command, no test runner), surface it as a Critical Key Finding; the plan still uses standard testing.
 - **If `${PLAN_DIR}/backpressure-coverage.md` recommends a Phase 0** (produced via the post-spec seam): include an **optional** "Phase 0: Establish Backpressure" whose tasks build the sensors named in that artifact's Recommended Phase 0 table (data-check scripts, dependency/architecture rules, smoke routes, CodeQL/Roslyn queries, schema checks). This is **advisory** — include it when the survey recommends it and the user wants the deterministic provability; **never gate on it and never flip Status to DRAFT for its absence**.
-- **Surface the harness seams in every phase (router-only, best-effort)**: when the `/eng-harness-flow` router is installed (probe from § Harness Loading), each phase's task table should make the two seams `/the-flow 6` (module `references/stages/60-implement.md`) fires visible: a **pre-flight** task at phase start (`/eng-harness-flow --event pre-implement --phase <id> --plan-dir <p>`) and a **phase-end** task at phase end (`/eng-harness-flow --event phase-end --plan-dir <p>`). The router decides what (if anything) the harness does at each seam — never name its child skills. These are **advisory scaffolding, never gates**: no Status flip, no blocking, no thresholds. **If the router isn't installed, omit them entirely** and fall back to the plan's standard testing approach — a repo without a harness is fully supported.
+- **Surface the harness seams in every phase (router-only, best-effort)**: when the `/eng-harness-flow` router is installed (probe from § Harness Loading), each phase's task table should make the two seams `/the-flow 6 implement` (module `references/stages/60-implement.md`) fires visible: a **pre-flight** task at phase start (`/eng-harness-flow --event pre-implement --phase <id> --plan-dir <p>`) and a **phase-end** task at phase end (`/eng-harness-flow --event phase-end --plan-dir <p>`). The router decides what (if anything) the harness does at each seam — never name its child skills. These are **advisory scaffolding, never gates**: no Status flip, no blocking, no thresholds. **If the router isn't installed, omit them entirely** and fall back to the plan's standard testing approach — a repo without a harness is fully supported.
 - For each NEW domain, first phase includes domain setup task:
   - Create `docs/domains/<slug>/domain.md` (use format from `/extract-domain`)
   - Create source directory
@@ -256,7 +256,7 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
 | N.2 | [What to build] | [domain] | [How you know it works] | Per finding 01 |
 | N.z | **Harness phase-end** — `/eng-harness-flow --event phase-end --plan-dir <plan dir>` | — | Router envelope handled at phase end | _Harness seam — omit if router not installed_ |
 
-> The `N.0` and `N.z` rows make the harness seams **visible in the plan** — they are advisory scaffolding `/the-flow 6` already auto-fires, surfaced here for legibility. The router owns what happens behind each seam; never name its child skills. **Include them only when the `/eng-harness-flow` router is installed; otherwise drop both rows entirely.** Never a gate.
+> The `N.0` and `N.z` rows make the harness seams **visible in the plan** — they are advisory scaffolding `/the-flow 6 implement` already auto-fires, surfaced here for legibility. The router owns what happens behind each seam; never name its child skills. **Include them only when the `/eng-harness-flow` router is installed; otherwise drop both rows entirely.** Never a gate.
 
 ### Harness Seams (if the `/eng-harness-flow` router is installed — else omit)
 
@@ -266,8 +266,8 @@ Make the harness touchpoints legible. Emit this section so the implementor sees 
 ## Harness Seams
 - **Entry point**: `/eng-harness-flow --event <seam> [--phase <id>] [--plan-dir <p>] --json` — the single door to the engineering harness; child skills are private and never named in this plan.
 - **Backpressure** (post-spec seam): ran before this plan — see `backpressure-coverage.md` (Certainty: [Strong/Partial/Weak]). [Recommended Phase 0 folded in? yes/no]
-- **Pre-implement** (`--event pre-implement`): fired by `/the-flow 6` at the start of each phase (the N.0 rows); verdicts narrated verbatim from the router's envelope (`healthy / SLOW / UNHEALTHY / UNAVAILABLE`). `UNAVAILABLE` is not an error — falls back to standard testing.
-- **Phase end** (`--event phase-end`): fired by `/the-flow 6` at each phase seam (the N.z rows); `--event plan-complete` fires at merge (`/the-flow 8`).
+- **Pre-implement** (`--event pre-implement`): fired by `/the-flow 6 implement` at the start of each phase (the N.0 rows); verdicts narrated verbatim from the router's envelope (`healthy / SLOW / UNHEALTHY / UNAVAILABLE`). `UNAVAILABLE` is not an error — falls back to standard testing.
+- **Phase end** (`--event phase-end`): fired by `/the-flow 6 implement` at each phase seam (the N.z rows); `--event plan-complete` fires at merge (`/the-flow 8 merge`).
 - **Best-effort**: every item above is advisory and never blocks; the router decides what the harness does at each seam.
 ```
 
@@ -325,7 +325,7 @@ When `Mode: Simple`, generate a streamlined single-phase plan:
 [only if Status is DRAFT — UNRESOLVED GAPS]
 ```
 
-Simple Mode tasks use the 7-column format directly (no `/the-flow 5` expansion needed).
+Simple Mode tasks use the 7-column format directly (no `/the-flow 5 tasks` expansion needed).
 
 ## PHASE 4: Self-Validation Gate Matrix & Emit
 
@@ -389,18 +389,18 @@ Gate Matrix: [N PASS / M FAIL / K N/A]
 (Deep validation via /validate-v2 auto-runs next — always, READY or DRAFT.)
 
 [If READY + Simple Mode]
-Next: /the-flow 6 --plan "<PLAN_PATH>" (module references/stages/60-implement.md — inline tasks)
+Next: /the-flow 6 implement --plan "<PLAN_PATH>" (module references/stages/60-implement.md — inline tasks)
 
 [If READY + Full Mode]
-Next: /the-flow 5 --phase "<Phase 1: Title>" --plan "<PLAN_PATH>" (module references/stages/50-phase-tasks.md)
+Next: /the-flow 5 tasks --phase "<Phase 1: Title>" --plan "<PLAN_PATH>" (module references/stages/50-phase-tasks.md)
 
 [If DRAFT — UNRESOLVED GAPS]
 Unresolved gaps listed at end of plan. Common fixes:
-  - G1 Clarify FAIL → run /the-flow 1b re-entry (module references/stages/20-specify.md § Re-entry: mid-plan clarifications)
+  - G1 Clarify FAIL → run /the-flow 1b specify re-entry (module references/stages/20-specify.md § Re-entry: mid-plan clarifications)
   - G2/G3 Constitution/Architecture FAIL → add deviation ledger entry OR rework approach
-  - G4 ADR FAIL → run /the-flow 3a (module references/stages/35-adr.md) to add mitigation, or update plan to comply
-  - G5 Structure / G6 Testing / G7 Domain FAIL → edit plan inline, then re-run /the-flow 3 (module references/stages/30-architect.md; idempotent)
-Re-run /the-flow 3 after fixing to re-check gates.
+  - G4 ADR FAIL → run /the-flow 3a adr (module references/stages/35-adr.md) to add mitigation, or update plan to comply
+  - G5 Structure / G6 Testing / G7 Domain FAIL → edit plan inline, then re-run /the-flow 3 architect (module references/stages/30-architect.md; idempotent)
+Re-run /the-flow 3 architect after fixing to re-check gates.
 ```
 
 ### Auto-Run Deep Validation
@@ -414,6 +414,6 @@ After the plan is written, **always** auto-call the thesis-aware validator on th
 This runs whether the plan emitted `Status: READY` or `Status: DRAFT — UNRESOLVED GAPS`. The inline G1–G7 gates are lightweight structural checks done during generation; `validate-v2` is the heavier multi-agent thesis/forward-compatibility review — they are complementary, not redundant. The validator's findings are applied or surfaced per its own flow; a DRAFT plan's already-known gaps will simply be reconfirmed alongside any deeper issues the validator finds.
 ```
 
-Next step (when `Status: READY`, **Simple Mode**): Run **`/the-flow 6 --plan "<PLAN_PATH>"`** (module `references/stages/60-implement.md`) — inline tasks; deep validation has already run automatically
-Next step (when `Status: READY`, **Full Mode**): Run **`/the-flow 5 --phase "<Phase 1: Title>" --plan "<PLAN_PATH>"`** (module `references/stages/50-phase-tasks.md`) — deep validation has already run automatically
-Next step (when `Status: DRAFT — UNRESOLVED GAPS`): Address the gaps (see report above + validator findings), then re-run **`/the-flow 3`** (module `references/stages/30-architect.md`) to re-validate.
+Next step (when `Status: READY`, **Simple Mode**): Run **`/the-flow 6 implement --plan "<PLAN_PATH>"`** (module `references/stages/60-implement.md`) — inline tasks; deep validation has already run automatically
+Next step (when `Status: READY`, **Full Mode**): Run **`/the-flow 5 tasks --phase "<Phase 1: Title>" --plan "<PLAN_PATH>"`** (module `references/stages/50-phase-tasks.md`) — deep validation has already run automatically
+Next step (when `Status: DRAFT — UNRESOLVED GAPS`): Address the gaps (see report above + validator findings), then re-run **`/the-flow 3 architect`** (module `references/stages/30-architect.md`) to re-validate.

@@ -1,7 +1,7 @@
 ---
 name: the-flow
 description: |
-  The single front door to the SDD pipeline (docs/plans/): research → spec → workshop → architect → ADR → phase tasks → implement → progress → review → merge. Use when the user wants to plan, research, explore, specify, clarify, workshop, architect, write an ADR, break a phase into tasks, implement or build a phase, update progress, code-review, or merge a plan — or types /the-flow (or a legacy /plan-N command), or asks to start, resume, or adopt a plan flow. Guided mode (no args) coaches stage-by-stage from durable on-disk state; direct jump runs exactly one stage: /the-flow <id|name> [flags] — 1a|explore, 1b|specify (incl. clarify re-entry), 2c|workshop, 3|architect, 3a|adr, 5|tasks, 6|implement, 6c|companion, 6a|progress, 7|review, 8|merge. Numbers and names are equivalent: /the-flow 6 --phase "Phase 1: X" --plan "<path>" ≡ /the-flow implement --phase "Phase 1: X" --plan "<path>". Stage logic lives in references/stages/*.md, loaded lazily — one module per step.
+  The single front door to the SDD pipeline (docs/plans/): research → spec → workshop → architect → ADR → phase tasks → implement → progress → review → merge. Use when the user wants to plan, research, explore, specify, clarify, workshop, architect, write an ADR, break a phase into tasks, implement or build a phase, update progress, code-review, or merge a plan — or types /the-flow (or a legacy /plan-N command), or asks to start, resume, or adopt a plan flow. Guided mode (no args) coaches stage-by-stage from durable on-disk state; direct jump runs exactly one stage: /the-flow <id> <name> [flags] — 1a explore, 1b specify (incl. clarify re-entry), 2c workshop, 3 architect, 3a adr, 5 tasks, 6 implement, 6c companion, 6a progress, 7 review, 8 merge. Id and name each resolve alone (/the-flow 6 ≡ /the-flow implement ≡ /the-flow 6 implement), but every command the flow prints carries both — /the-flow 6 implement --phase "Phase 1: X" --plan "<path>" — so readers see what will run without knowing the numbers. Stage logic lives in references/stages/*.md, loaded lazily — one module per step.
 ---
 
 # /the-flow — SDD pipeline dispatch
@@ -18,9 +18,9 @@ One public skill for the whole SDD pipeline. Stage logic lives in [`references/s
 2. Resolve fresh / resume / adopt per 00-routing.md; load **only** the current stage's module when a step is accepted, and coach the seam.
 3. Guided mode owns all the-flow state writes (`.the-flow-state.json`, `the-flow.json`, `the-flow.md`).
 
-**Direct jump** — `/the-flow <id|name> [flags]`:
+**Direct jump** — `/the-flow <id> <name> [flags]`:
 
-1. Resolve the stage via the table below (numbers and names are equivalent).
+1. Resolve the stage via the table below. Id and name each resolve alone (`/the-flow 6` ≡ `/the-flow implement`); when both are given they must name the same stage — if they disagree, show the stage table and ask which was meant (never guess).
 2. Read **only** that module and follow it with the given flags (same flags the stage has always taken).
 3. No coach, no rail, no state writes — artifacts land where they always did; the next guided run discovers them by existence and catches state up.
 
@@ -46,7 +46,7 @@ Module missing at its path → say so and stop. Never improvise a stage from mem
 
 ## Old-slug translation (read-time)
 
-State files and docs written before the consolidation may carry commands naming retired skill slugs (e.g. a `pending_command` in `.the-flow-state.json`). Translate at read time — never execute a retired slug; rewrite in public grammar on the next state write. Flags carry over unchanged.
+State files and docs written before the consolidation may carry commands naming retired skill slugs (e.g. a `pending_command` in `.the-flow-state.json`). Translate at read time — never execute a retired slug; rewrite in public grammar (`/the-flow <id> <name> …`) on the next state write. Flags carry over unchanged.
 
 | retired slug | → stage |
 |---|---|
@@ -67,7 +67,7 @@ State files and docs written before the consolidation may carry commands naming 
 
 ## Hard invariants (every stage, both load paths)
 
-1. **Print first, then offer to run.** Print the exact command in a copyable block, then offer to run it; one accepted step per turn (guided).
+1. **Print first, then offer to run.** Print the exact command in a copyable block — always as `/the-flow <id> <name> …` (e.g. `/the-flow 6 implement …`), never a bare number, so the reader sees what it will do without knowing the ids — then offer to run it; one accepted step per turn (guided).
 2. **Nothing irreversible without explicit confirmation.** The merge (stage 8) executes **only** after the user types `PROCEED` — never on a generic "yes".
 3. **Never run `/compact`** — it is a user-typed CLI built-in. Recommend: "type `/compact` yourself, then re-run `/the-flow`".
 4. **Never gate, score, or block.** Workshops, backpressure, compaction, companions — all skippable; best-effort, no thresholds, no compliance floors.

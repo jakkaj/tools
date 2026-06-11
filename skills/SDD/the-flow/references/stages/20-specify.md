@@ -1,11 +1,11 @@
 # Stage 20 — specify
-*(absorbed from `plan-1b-v3-specify-and-clarify`; loaded lazily via `/the-flow 1b` or `/the-flow specify` — dispatch: `../../SKILL.md`)*
+*(absorbed from `plan-1b-v3-specify-and-clarify`; loaded lazily via `/the-flow 1b specify` or `/the-flow specify` — dispatch: `../../SKILL.md`)*
 
 **Purpose**: Create or update the feature spec AND resolve high-impact ambiguities in one pass — questions front-loaded before the sketch. Also hosts the mid-plan clarification re-entry (§ Re-entry, end of this module).
-**Entry conditions**: A feature description (plan folder auto-created, or reused if `/the-flow 1a` already made one). § Re-entry instead requires an existing spec.
+**Entry conditions**: A feature description (plan folder auto-created, or reused if `/the-flow 1a explore` already made one). § Re-entry instead requires an existing spec.
 **Inputs**: Feature description (`$ARGUMENTS`) · `--simple` (pre-set Mode: Simple). Optional artifacts: `${PLAN_DIR}/research-dossier.md`, `docs/domains/registry.md`, `${PLAN_DIR}/workshops/*.md`. § Re-entry input: path to an existing spec, or a plan slug.
 **Output contract**: `${PLAN_DIR}/<slug>-spec.md` with all clarifications applied and the `## Clarifications` log populated; terminal Next-steps block (workshop / post-spec harness seam / architect). § Re-entry: new `### Session YYYY-MM-DD` block + one-line coverage summary.
-**Next routing**: `/the-flow 2c` (module `references/stages/25-workshop.md`) if Workshop Opportunities were identified; recommended pre-architect seam `/eng-harness-flow --event post-spec --spec "<SPEC_FILE>"` (router-installed only); then `/the-flow 3` (module `references/stages/30-architect.md`).
+**Next routing**: `/the-flow 2c workshop` (module `references/stages/25-workshop.md`) if Workshop Opportunities were identified; recommended pre-architect seam `/eng-harness-flow --event post-spec --spec "<SPEC_FILE>"` (router-installed only); then `/the-flow 3 architect` (module `references/stages/30-architect.md`).
 
 ---
 
@@ -39,14 +39,14 @@ Default to batched. Fall back without ceremony — do not announce capability de
 
 1. Determine feature slug from user input and check for existing plan folder:
    - Generate slug from feature description
-   - If `docs/plans/*-<slug>/` already exists (created by `/the-flow 1a`) → use it
+   - If `docs/plans/*-<slug>/` already exists (created by `/the-flow 1a explore`) → use it
    - Else → create new folder with next available ordinal
    - `PLAN_DIR = docs/plans/<ordinal>-<slug>/`
    - `SPEC_FILE = ${PLAN_DIR}/<slug>-spec.md`
 
 2. Check for and incorporate existing research:
    - If `${PLAN_DIR}/research-dossier.md` exists → read fully; use to inform complexity, domains, and question framing. Add note to spec: "📚 Specification incorporates findings from research-dossier.md"
-   - Else → add note: "ℹ️ Consider running `/the-flow 1a` for deeper codebase understanding"
+   - Else → add note: "ℹ️ Consider running `/the-flow 1a explore` for deeper codebase understanding"
 
 3. Check for existing domains:
    - Load domain context per `references/00-routing.md` § Domain context loading
@@ -164,7 +164,7 @@ After Round 2:
 
 | Option | Mode | Best For | What Changes |
 |--------|------|----------|--------------|
-| A | Simple **(recommended default)** | CS-1 through CS-3, single domain, one-to-few phases — the common case | Single-phase plan, inline tasks, phase-tasks stage (`/the-flow 5`) optional |
+| A | Simple **(recommended default)** | CS-1 through CS-3, single domain, one-to-few phases — the common case | Single-phase plan, inline tasks, phase-tasks stage (`/the-flow 5 tasks`) optional |
 | B | Full | CS-4/CS-5, **or** genuinely multi-domain / multi-phase work that needs all gates | Multi-phase plan, required dossiers, all gates |
 
 Recommend **A (Simple)** unless the CS score is 4+ or the spec sketch already shows multiple target domains / several phases. Don't reach for Full just because the work is unfamiliar — unfamiliarity is a research/workshop signal, not a mode signal.
@@ -244,13 +244,13 @@ Draw from these categories based on `[NEEDS CLARIFICATION]` markers in the sketc
 `SPEC_FILE` written with all clarifications applied, `## Clarifications` log populated.
 
 Next steps:
-- **If Workshop Opportunities identified**: Consider running **`/the-flow 2c`** (module `references/stages/25-workshop.md`)
-- **Before architecture (recommended) — fire the post-spec harness seam**: `/eng-harness-flow --event post-spec --spec "<SPEC_FILE>"` — when a harness exists the router surfaces the backpressure check (can the planned work be *proven by deterministic sensors* vs eyeballed?) and produces `backpressure-coverage.md` in the plan dir for `/the-flow 3` to consume. Router not installed (probe `test -f ~/.agents/skills/eng-harness-flow/SKILL.md`, fallback `~/.claude/skills/eng-harness-flow/SKILL.md`)? If the flow already warned, skip silently; otherwise print the one-time warning verbatim:
+- **If Workshop Opportunities identified**: Consider running **`/the-flow 2c workshop`** (module `references/stages/25-workshop.md`)
+- **Before architecture (recommended) — fire the post-spec harness seam**: `/eng-harness-flow --event post-spec --spec "<SPEC_FILE>"` — when a harness exists the router surfaces the backpressure check (can the planned work be *proven by deterministic sensors* vs eyeballed?) and produces `backpressure-coverage.md` in the plan dir for `/the-flow 3 architect` to consume. Router not installed (probe `test -f ~/.agents/skills/eng-harness-flow/SKILL.md`, fallback `~/.claude/skills/eng-harness-flow/SKILL.md`)? If the flow already warned, skip silently; otherwise print the one-time warning verbatim:
 
   > ⚠️ No engineering harness detected — the eng-harness skills aren't installed. Continuing without one: standard testing applies, nothing else changes. (To add the harness loop: `npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y`.)
 
   Advisory; never blocks. Never call the router's child skills directly — children are private and may move.
-- **Otherwise**: Run **`/the-flow 3`** (module `references/stages/30-architect.md`) to generate the implementation plan
+- **Otherwise**: Run **`/the-flow 3 architect`** (module `references/stages/30-architect.md`) to generate the implementation plan
 - **To add clarifications later** (mid-plan or post-architect): use the **§ Re-entry** section of this module to open a new `### Session` block
 
 ---
@@ -264,7 +264,7 @@ Use this re-entry ONLY when:
 - The architect (stage 30), workshop (stage 25), or implementation (stage 60) surfaced new ambiguities
 - The user wants to add a clarification round mid-stream without regenerating the spec
 
-For new specs, use the main body of this module (`/the-flow 1b`) instead.
+For new specs, use the main body of this module (`/the-flow 1b specify`) instead.
 
 ```md
 User input:
@@ -317,4 +317,4 @@ See **Standard Questions** (above in this module) for the full answer tables. Ca
 
 Updated `SPEC_FILE` with a new `### Session YYYY-MM-DD` block and any section updates the answers triggered.
 
-Next: `/the-flow 3` (module `references/stages/30-architect.md`) if architect hasn't run, or re-run the downstream stage that surfaced the ambiguity.
+Next: `/the-flow 3 architect` (module `references/stages/30-architect.md`) if architect hasn't run, or re-run the downstream stage that surfaced the ambiguity.

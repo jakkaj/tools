@@ -1,11 +1,11 @@
 # Stage 50 — Phase Tasks & Brief
-*(absorbed from `plan-5-v2-phase-tasks-and-brief`; loaded lazily via `/the-flow 5` or `/the-flow tasks` — dispatch: `../../SKILL.md`)*
+*(absorbed from `plan-5-v2-phase-tasks-and-brief`; loaded lazily via `/the-flow 5 tasks` or `/the-flow tasks` — dispatch: `../../SKILL.md`)*
 
 **Purpose**: Generate an actionable tasks + context brief dossier for exactly one phase (or a subtask / lightweight tracked fix), then stop before any code changes.
-**Entry conditions**: A plan exists (Full Mode, typically `**Status**: READY` from `/the-flow 3`) and the target phase is identified. Subtask mode additionally needs a parent task ID; fix mode needs only a summary (`--plan` optional).
+**Entry conditions**: A plan exists (Full Mode, typically `**Status**: READY` from `/the-flow 3 architect`) and the target phase is identified. Subtask mode additionally needs a parent task ID; fix mode needs only a summary (`--plan` optional).
 **Inputs**: Flags `--phase "<Phase N: Title>"` + `--plan "<abs path to plan.md>"`; optional subtask mode `--subtask "<summary>" --parent "T###"`; optional fix mode `--fix "<summary>"` / `--from-review "<abs path>"` / `--fix --list`. Reads the plan's task table, Key Findings, Domain Manifest, prior-phase dossiers and execution logs.
 **Output contract**: Writes `PLAN_DIR/tasks/<phase-slug>/tasks.md` (Executive Briefing, Prior Phase Context, Pre-Implementation Check, Architecture Map, canonical 7-column Tasks table, Context Brief, Discoveries & Learnings) — or a subtask dossier `<ORD>-subtask-<slug>.md`, or a fix dossier `FX###-<slug>.md` + empty execution log. STOPS before implementation; terminal report = dossier path + wait for human GO.
-**Next routing**: `/the-flow 6 --phase "<Phase N: Title>" --plan "<PLAN_PATH>"` (module `references/stages/60-implement.md`); companion variant `/the-flow 6c` (module `references/stages/61-implement-companion.md`).
+**Next routing**: `/the-flow 6 implement --phase "<Phase N: Title>" --plan "<PLAN_PATH>"` (module `references/stages/60-implement.md`); companion variant `/the-flow 6c companion` (module `references/stages/61-implement-companion.md`).
 
 ---
 
@@ -46,7 +46,7 @@ $ARGUMENTS
 #
 # Fix mode (optional):
 # --fix "<summary>"               # Activates fix mode — lightweight tracked fix
-# --from-review "<abs path>"      # Load fixes from the review stage's fix-tasks.md (/the-flow 7)
+# --from-review "<abs path>"      # Load fixes from the review stage's fix-tasks.md (/the-flow 7 review)
 # --fix --list                    # List existing fixes
 
 ## MODE DETECTION
@@ -80,7 +80,7 @@ Otherwise → **Phase Mode** (continue).
 
    Wait for all subagents. Synthesize into Prior Phase Context section.
 
-3) **Read the plan's task table** (from the architect stage, `/the-flow 3`) for this phase. Transform and expand into detailed tasks:
+3) **Read the plan's task table** (from the architect stage, `/the-flow 3 architect`) for this phase. Transform and expand into detailed tasks:
    - Plan tasks (e.g., "2.1") become detailed tasks (T001, T002...)
    - Apply Key Findings from plan — reference specific findings in Notes
    - Every task gets a Domain from the plan's Domain Manifest
@@ -95,7 +95,7 @@ Otherwise → **Phase Mode** (continue).
    - Is it in the correct domain's source tree?
    - Run `/code-concept-search-v2` for major new concepts to check for duplication
    - Flag contract changes (higher risk)
-   - **Harness availability** (router-only — never run health checks yourself): probe `test -f ~/.agents/skills/eng-harness-flow/SKILL.md` (fallback `~/.claude/skills/eng-harness-flow/SKILL.md`). Router present → note in Context Brief: "Harness routing available via `/eng-harness-flow` — the implement stage (`/the-flow 6`) fires the pre-implement seam before any code". Router absent → note: "No engineering harness — implementation uses standard testing only" (the one-time warning is the flow entry's job, not this skill's — don't re-warn).
+   - **Harness availability** (router-only — never run health checks yourself): probe `test -f ~/.agents/skills/eng-harness-flow/SKILL.md` (fallback `~/.claude/skills/eng-harness-flow/SKILL.md`). Router present → note in Context Brief: "Harness routing available via `/eng-harness-flow` — the implement stage (`/the-flow 6 implement`) fires the pre-implement seam before any code". Router absent → note: "No engineering harness — implementation uses standard testing only" (the one-time warning is the flow entry's job, not this skill's — don't re-warn).
 
 5) **Write tasks.md** containing:
 
@@ -148,7 +148,7 @@ Otherwise → **Phase Mode** (continue).
    - `Done When`: Plain language success criteria
    - `Notes`: Finding references, domain constraints, etc.
 
-   **Harness-seam tasks (router-only, best-effort)** — when the `/eng-harness-flow` router is installed (probe above), bookend the phase's tasks with the two seams the implement stage (`/the-flow 6`) fires, so they're visible to the implementor:
+   **Harness-seam tasks (router-only, best-effort)** — when the `/eng-harness-flow` router is installed (probe above), bookend the phase's tasks with the two seams the implement stage (`/the-flow 6 implement`) fires, so they're visible to the implementor:
 
    | Status | ID | Task | Domain | Path(s) | Done When | Notes |
    |--------|-----|------|--------|---------|-----------|-------|
@@ -173,8 +173,8 @@ Otherwise → **Phase Mode** (continue).
 
    **Harness context** (router-only — include when the `/eng-harness-flow` router is installed):
    - **Entry point**: `/eng-harness-flow --event <seam> [--phase <id>] [--plan-dir <p>] --json` — the single door to the harness; child skills are private and never named here
-   - **Pre-implement seam**: fired by the implement stage (`/the-flow 6`) at phase start (the T000 row above) — the router's envelope (`decision: route|redirect|noop|ambiguous`) decides what happens; verdicts narrated verbatim from the envelope
-   - **Phase-end seam**: fired by the implement stage (`/the-flow 6`) at phase end (the T0xx row above)
+   - **Pre-implement seam**: fired by the implement stage (`/the-flow 6 implement`) at phase start (the T000 row above) — the router's envelope (`decision: route|redirect|noop|ambiguous`) decides what happens; verdicts narrated verbatim from the envelope
+   - **Phase-end seam**: fired by the implement stage (`/the-flow 6 implement`) at phase end (the T0xx row above)
    - **Backpressure**: if `backpressure-coverage.md` exists in the plan dir (produced via the post-spec seam), cite its sensor coverage for this phase's criteria
 
    If the router isn't installed: "No engineering harness configured. Agent will use standard testing approach from plan." — and omit the harness-seam task rows entirely.
@@ -199,7 +199,7 @@ Otherwise → **Phase Mode** (continue).
 
    ### Discoveries & Learnings
 
-   _Populated during implementation by the implement stage (`/the-flow 6`)._
+   _Populated during implementation by the implement stage (`/the-flow 6 implement`)._
 
    | Date | Task | Type | Discovery | Resolution | References |
    |------|------|------|-----------|------------|------------|
@@ -212,7 +212,7 @@ Otherwise → **Phase Mode** (continue).
      ├── <slug>-plan.md
      └── tasks/phase-N/
          ├── tasks.md
-         └── execution.log.md   # created by /the-flow 6
+         └── execution.log.md   # created by /the-flow 6 implement
    ```
 
 STOP: Do NOT edit code. Output tasks.md and wait for human GO.
@@ -273,7 +273,7 @@ Activated when `--fix` is provided. Generates a lightweight, tracked fix dossier
 ### When to Use
 
 - Bug fix (1-3 files)
-- Addressing review-stage (`/the-flow 7`) findings
+- Addressing review-stage (`/the-flow 7 review`) findings
 - Small enhancement within an existing domain
 - Quick refactor with clear scope
 - Config/documentation fix that needs tracking
@@ -296,7 +296,7 @@ F1) Resolve paths:
    - FIX_FILE = ${FIX_DIR}/FX${ORD}-${FIX_SLUG}.md
 
 F2) If `--from-review` provided:
-   - Read the fix-tasks file from the `/the-flow 7` review
+   - Read the fix-tasks file from the `/the-flow 7 review` review
    - Present fix tasks to user
    - User selects which to address (may group related items)
    - Use selected items to populate Problem and Tasks sections
@@ -383,21 +383,21 @@ STOP: Output fix dossier. Wait for user **APPROVE** before implementation.
 
 ```bash
 # Implement
-/the-flow 6 --fix "FX001" --plan "<PLAN_PATH>"
+/the-flow 6 implement --fix "FX001" --plan "<PLAN_PATH>"
 # or standalone:
-/the-flow 6 --fix "FX001"
+/the-flow 6 implement --fix "FX001"
 
 # Review
-/the-flow 7 --fix "FX001" --plan "<PLAN_PATH>"
+/the-flow 7 review --fix "FX001" --plan "<PLAN_PATH>"
 ```
 
-The implement stage (`/the-flow 6`, module `references/stages/60-implement.md`) reads the fix dossier, implements tasks, updates execution log, updates domain.md/domain-map.md if needed, marks fix Complete.
+The implement stage (`/the-flow 6 implement`, module `references/stages/60-implement.md`) reads the fix dossier, implements tasks, updates execution log, updates domain.md/domain-map.md if needed, marks fix Complete.
 
-The review stage (`/the-flow 7`, module `references/stages/70-review.md`) reviews the fix — same subagents scoped to fix files, validates domain compliance, produces review with handover brief.
+The review stage (`/the-flow 7 review`, module `references/stages/70-review.md`) reviews the fix — same subagents scoped to fix files, validates domain compliance, produces review with handover brief.
 ```
 
-Next: `/the-flow 6 --phase "<Phase N: Title>" --plan "<PLAN_PATH>"` (module `references/stages/60-implement.md`)
+Next: `/the-flow 6 implement --phase "<Phase N: Title>" --plan "<PLAN_PATH>"` (module `references/stages/60-implement.md`)
 
 ---
 
-> Harness note: this skill carries no harness seam of its own — it *emits* the seam rows (T000/T0xx above) that the implement stage (`/the-flow 6`) fires via `/eng-harness-flow`. Friction capture and retros are the harness family's own concern; SDD never drives them directly.
+> Harness note: this skill carries no harness seam of its own — it *emits* the seam rows (T000/T0xx above) that the implement stage (`/the-flow 6 implement`) fires via `/eng-harness-flow`. Friction capture and retros are the harness family's own concern; SDD never drives them directly.
