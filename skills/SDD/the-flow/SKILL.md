@@ -45,7 +45,6 @@ The narration below uses **bare stage names** (`/plan-3`, `/plan-1b`, …). Thes
 | `/plan-1a` | `plan-1a-v2-explore` |
 | `/plan-1b` | `plan-1b-v3-specify-and-clarify` |
 | `/plan-2c` | `plan-2c-v2-workshop` |
-| `/plan-2d` | `/eng-harness-flow --event post-spec --spec <spec path>` (back-compat alias — the Backpressure Check is owned by the external eng-harness family, reached only through its router) |
 | `/plan-3` | `plan-3-v3-architect` |
 | `/plan-3a` | `plan-3a-v2-adr` |
 | `/plan-5` | `plan-5-v2-phase-tasks-and-brief` |
@@ -81,7 +80,7 @@ Where we are: …
 - **Same-line legend**: two spaces after the pips, the milestone names ride the same line — lowercase, in rail order, joined by ` · `, the **current** one wrapped in `[…]`: `research · spec · [plan] · tasks · build · review · merge`. Brackets follow the `◐`; on a settled rail (no `◐`) bracket the first `◇` (the next milestone up). Once `/plan-3` reveals per-phase nodes, the phase group reads as one bracketed word with a counter (`[build 2/3]`); if naming every phase would overflow ~100 columns, shorten to `p1 … pN`.
 - **Phase grouping**: the per-phase nodes are wrapped in one `[ … ]` so they read distinctly from the fixed flow nodes (Research·Spec·Plan before, Merge after) → `◆─◆─◆─[◆─◐─◇]─◇`. During Build, the phase currently being implemented is the `◐` inside the group.
 - **Render the whole rail block as a fenced code block — always.** The rail line(s), any anchored companion line, and the `now`/`next` groups are ONE ``` fence (no language tag). Outside a fence markdown collapses leading spaces — and **never** fake alignment with `&nbsp;` or any HTML entity (terminals print them literally). Real spaces inside the fence are the only alignment tool.
-- **Macro-milestones (Full)**: Research · Spec · Plan · Tasks · Build · Review · Merge (7). Optional/sub-steps (`/plan-1a` deep-research, `/plan-2c`, `/plan-2d`, `/plan-3a`, the fix loop) live *under* a milestone and get **no diamond** — opting in/out never changes the total.
+- **Macro-milestones (Full)**: Research · Spec · Plan · Tasks · Build · Review · Merge (7). Optional/sub-steps (`/plan-1a` deep-research, `/plan-2c`, the post-spec backpressure check, `/plan-3a`, the fix loop) live *under* a milestone and get **no diamond** — opting in/out never changes the total.
 - **Dynamic total**: `milestones_total` is an estimate early, **recomputed at `/plan-3`** from the real phase count (Research · Spec · Plan · **one node per phase** · Merge). A 5-phase plan expands the rail (3 + 5 + 1 = 9); a 1-phase Simple plan collapses it. Re-scales **only at `/plan-3`**, then monotonic. `state.milestones_done` drives the fill.
 - **Status line** after the diamonds, in a **distinct accent colour**: `· now: <current> · next: <next>`. **Dynamic expansion** — inline when there's a single short next; when `next` has **≥2 options** (or would wrap), break `now`/`next` onto their **own lines** with options stacked (labelled + aligned, recommended first):
   ```
@@ -100,7 +99,7 @@ Where we are: …
 | `start` | 0/7 | `[the-flow] ◇─◇─◇─◇─◇─◇─◇` |
 | `awaiting-1a` | 1/7 | `[the-flow] ◆─◇─◇─◇─◇─◇─◇` |
 | `awaiting-1b` | 2/7 | `[the-flow] ◆─◆─◇─◇─◇─◇─◇` |
-| `awaiting-2c` / `awaiting-2d` | 2/7 (sub-steps) | unchanged |
+| `awaiting-2c` / `awaiting-backpressure` | 2/7 (sub-steps) | unchanged |
 | `awaiting-3` | 3/7 | `[the-flow] ◆─◆─◆─◇─◇─◇─◇` |
 | `awaiting-5` | 4/7 | `[the-flow] ◆─◆─◆─◆─◇─◇─◇` |
 | `awaiting-6` | 5/7 | `[the-flow] ◆─◆─◆─◆─◆─◇─◇` |
@@ -259,9 +258,9 @@ When invoked with **no active state** but the resolved plan folder **already hol
 ```
 start ──intent(research-worthy)──▶ awaiting-1a ──dossier──▶ awaiting-1b
 start ──intent(clear)───────────▶ awaiting-1b
-awaiting-1b ─▶ awaiting-2c | awaiting-2d | awaiting-3
-awaiting-2c ─▶ awaiting-2d | awaiting-3
-awaiting-2d ─▶ awaiting-3
+awaiting-1b ─▶ awaiting-2c | awaiting-backpressure | awaiting-3
+awaiting-2c ─▶ awaiting-backpressure | awaiting-3
+awaiting-backpressure ─▶ awaiting-3
 awaiting-3 ──Simple,READY──▶ awaiting-6
 awaiting-3 ──Full,READY────▶ awaiting-5 ──tasks──▶ awaiting-6
 awaiting-3 ──DRAFT─────────▶ awaiting-3 (fix + re-run)
@@ -274,13 +273,13 @@ awaiting-8 ──merged────────▶ complete
 |---|---|---|---|---|---|
 | `start` | — (ask intent) | — | — | **session-start**: probe for the router (§ Harness seams); if installed, `--event session-start` | research-worthy → `/plan-1a` (→`awaiting-1a`); else `/plan-1b` (→`awaiting-1b`) |
 | `awaiting-1a` | `research-dossier.md` | one Critical/High finding | **YES** (dossier is large) | — | `/plan-1b` → `awaiting-1b` |
-| `awaiting-1b` | `<slug>-spec.md` | CS score + Simple/Full + #Workshop Opportunities | **YES** (before architect) | **post-spec is the recommended next step** (spec → backpressure via the router → architect) | branch (recommend backpressure first): `/plan-2d` *(= `--event post-spec --spec <path>`, recommended; router-installed only)* (→`awaiting-2d`) \| `/plan-2c` *(optional workshop)* (→`awaiting-2c`) \| `/plan-3` *(skip to architect)* (→`awaiting-3`) |
-| `awaiting-2c` | newest `workshops/*.md` | the headline decision (Selected option) | — | — | `/plan-2d` (→`awaiting-2d`) \| `/plan-3` (→`awaiting-3`) |
-| `awaiting-2d` | `backpressure-coverage.md` | Certainty (Strong/Partial/Weak) + Phase 0? | — | **backpressure payoff** (artifact produced via the router) | `/plan-3` → `awaiting-3` |
+| `awaiting-1b` | `<slug>-spec.md` | CS score + Simple/Full + #Workshop Opportunities | **YES** (before architect) | **post-spec is the recommended next step** (spec → backpressure via the router → architect) | branch (recommend backpressure first): `/eng-harness-flow --event post-spec --spec <path>` *(backpressure check, recommended; router-installed only)* (→`awaiting-backpressure`) \| `/plan-2c` *(optional workshop)* (→`awaiting-2c`) \| `/plan-3` *(skip to architect)* (→`awaiting-3`) |
+| `awaiting-2c` | newest `workshops/*.md` | the headline decision (Selected option) | — | — | `/eng-harness-flow --event post-spec --spec <path>` (→`awaiting-backpressure`) \| `/plan-3` (→`awaiting-3`) |
+| `awaiting-backpressure` | `backpressure-coverage.md` | Certainty (Strong/Partial/Weak) + Phase 0? | — | **backpressure payoff** (artifact produced via the router) | `/plan-3` → `awaiting-3` |
 | `awaiting-3` | `<slug>-plan.md` | `**Status**` (READY/DRAFT) + Gate Matrix | **YES** (before implement) | validate-v2 already auto-ran | DRAFT → fix + re-run `/plan-3` (stay); Simple+READY → `/plan-6` (→`awaiting-6`); Full+READY → `/plan-5` (→`awaiting-5`) |
 | `awaiting-5` | `tasks/<phase>/tasks.md` | first task's Done-When | — | — | `/plan-6 --phase … --plan …` → `awaiting-6` |
 | `awaiting-6` | `execution.log.md` / phase status | what landed + AC met | **YES** (between phases) | **pre-implement** (set expectation *before*: `/plan-6` fires `--event pre-implement`); **phase-end** (explain *after*: `/plan-6` fired `--event phase-end`) | clean → `/plan-7` (→`awaiting-7`); more phases → next `/plan-5` (→`awaiting-5`) |
-| `awaiting-7` | newest `reviews/*.md` | verdict + one finding | — | contrast computational(`2d`) vs inferential(`7`) tiers | findings → fix + re-run `/plan-7` (stay); clean → `/plan-8` (→`awaiting-8`) |
+| `awaiting-7` | newest `reviews/*.md` | verdict + one finding | — | contrast computational(`post-spec backpressure`) vs inferential(`plan-7`) tiers | findings → fix + re-run `/plan-7` (stay); clean → `/plan-8` (→`awaiting-8`) |
 | `awaiting-8` | merge plan | merge readiness | — | **plan-complete** seam fires after the merge (inside `/plan-8`) | user types `PROCEED`/`ABORT`; on merge → `complete` |
 | `complete` | — | — | — | — (plan-complete already fired at plan-8) | recap + stop; set `status:"complete"` |
 
@@ -292,7 +291,7 @@ Where each artifact hides its **structured alarms** — lift any present, verbat
 |---|---|
 | `awaiting-1a` | Critical/High findings the dossier marks unresolved or contradicting the ask |
 | `awaiting-1b` | remaining `[NEEDS CLARIFICATION]` markers; low CS **Confidence**; unanswered Open Questions |
-| `awaiting-2d` | **ABSENT** / **BUILDABLE** sensors (the eyeball-gaps); a recommended **Phase 0: Establish Backpressure** |
+| `awaiting-backpressure` | **ABSENT** / **BUILDABLE** sensors (the eyeball-gaps); a recommended **Phase 0: Establish Backpressure** |
 | `awaiting-3` | `**Status**: DRAFT`; Gate Matrix **FAIL** rows; inline `⚠️ GAP:` markers; `## Unresolved Gaps` table; Deviation Ledger entries |
 | `awaiting-5` | tasks with no/weak Done-When; a phase carrying a flagged Key Finding |
 | `awaiting-6` | acceptance criteria **not met**; blocked tasks; debt/gotchas in the Discoveries table |
@@ -344,7 +343,7 @@ All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decis
 > Did you notice `<the spec flagged N Workshop Opportunities | this feature touches real behaviour>`? That matters because `<why>`.
 > Before we architect, you have up to three optional moves — all skippable, none gate anything:
 > 1. **`/plan-2c`** — workshop a tricky topic first (the spec flagged `<N>`). Worth it when a design choice is still fuzzy.
-> 2. **`/plan-2d`** (= `/eng-harness-flow --event post-spec --spec <path>`) — backpressure survey: can we *prove* this work deterministically before building? Advisory; surfaces an optional Phase 0. *(Only offered when the router is installed.)*
+> 2. **`/eng-harness-flow --event post-spec --spec <path>`** — backpressure survey: can we *prove* this work deterministically before building? Advisory; surfaces an optional Phase 0. *(Only offered when the router is installed.)*
 > 3. **`/compact`** — context hygiene before the architect (recommended at this seam).
 >
 > Recommended path: `compact` then `/plan-3` *(or `workshop` / `prove it` first if you want)*. Type one of: `compact`, `workshop`, `prove it`, `architect`. Unsure → `compact` then `architect`.
@@ -354,9 +353,9 @@ All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decis
 >
 > **Where we are**: workshop saved (`workshops/<file>`). Its decisions are now **authoritative** — `/plan-3` won't contradict them.
 > Did you notice it settled `<the Selected option>`? That removes `<the ambiguity it resolved>` from the plan.
-> Next: another workshop, the backpressure survey (`/plan-2d`, router-installed only), or straight to the architect. Recommended: `/plan-3`. Type: `another`, `prove it`, or `architect`.
+> Next: another workshop, the backpressure survey (`/eng-harness-flow --event post-spec`, router-installed only), or straight to the architect. Recommended: `/plan-3`. Type: `another`, `prove it`, or `architect`.
 
-### `awaiting-2d` → after backpressure survey
+### `awaiting-backpressure` → after backpressure survey
 > [the-flow] ◆─◆─◇─◇─◇─◇─◇
 >
 > **Where we are**: backpressure coverage written — **Certainty: `<Strong|Partial|Weak>`**`<; recommended Phase 0: …>`.
@@ -403,7 +402,7 @@ All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decis
 >
 > **Where we are**: review written (`reviews/<file>`) — verdict `<…>`.
 > `<⚠️ Before we move on — the review flagged <N CRITICAL / M HIGH> findings: <one-line each>. Just making sure you saw those — they route back to a fix.>` *(omit if the verdict is clean)*
-> Worth knowing: `/plan-7` is the **inferential / eyeball** tier; `/plan-2d` earlier was the **computational** tier. Together they cover what each can't.
+> Worth knowing: `/plan-7` is the **inferential / eyeball** tier; the post-spec backpressure check (`/eng-harness-flow --event post-spec`) earlier was the **computational** tier. Together they cover what each can't.
 > Did you notice `<one finding>`? `<It routes back to implement | it's clean>`.
 > *Findings*: fix, then re-run `/plan-7`. Type: `fix`.
 > *Clean*: next is the merge analysis — `/plan-8`. Type: `merge`.
@@ -469,7 +468,7 @@ The engineering harness is a **separate loop that runs side by side with the SDD
 
 When the router is installed, each seam is a node *and* a narration beat:
 
-- **Post-spec (`--event post-spec --spec <path>`, alias `/plan-2d`)** — a `backpressure` node **on the spine between spec and plan**. The recommended pre-architect step: shapes the plan around what's *provable by deterministic sensors*; produces `backpressure-coverage.md`. Advisory; never blocks.
+- **Post-spec (`--event post-spec --spec <path>`)** — a `backpressure` node **on the spine between spec and plan**. The recommended pre-architect step: shapes the plan around what's *provable by deterministic sensors*; produces `backpressure-coverage.md`. Advisory; never blocks.
 - **Pre-implement (`--event pre-implement --phase <id> --plan-dir <p>`)** — a `harness-boot` node before each phase; set the expectation in `awaiting-5` that `/plan-6` fires it. `UNAVAILABLE` is not an error — falls back to standard testing.
 - **Phase end (`--event phase-end --plan-dir <p>`)** — a `harness-retro` node at each phase seam (fired inside `/plan-6`); explain the `[s/t/p/e/d/a]` prompt the user may have seen — the router owns drain-vs-harvest.
 - **Plan complete (`--event plan-complete`)** — a `harness-retro` node at `/plan-8` / `complete`; the long-horizon reflection, fired inside `/plan-8` after the merge.

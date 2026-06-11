@@ -31,7 +31,7 @@ These skills (installed via `npx skills add jakkaj/tools -a <cli>` from `/skills
 | `plan-6a-v2-update-progress` | `plan-6a-update-progress` | Domain context in progress tracking |
 | `plan-7-v2-code-review` | `plan-7-code-review` | Domain Compliance Validator, anti-reinvention checks |
 | `plan-2c-v2-workshop` | `plan-2c-workshop` | Domain context in workshop design documents |
-| `/eng-harness-flow --event post-spec` (alias `/plan-2d`) | *(external — the post-spec harness seam)* | The recommended step after the spec, before `plan-3`. The external eng-harness router (`AI-Substrate/harness-engineering`) surveys deterministic-backpressure coverage of the planned work and writes `backpressure-coverage.md`, consumed by `plan-3-v3-architect`. Advisory only — never blocks, no thresholds. Computational counterpart to `plan-7-v2-code-review`. Router not installed → one calm warning, then standard testing (plan-029 switchover). |
+| `/eng-harness-flow --event post-spec` | *(external — the post-spec harness seam)* | The recommended step after the spec, before `plan-3`. The external eng-harness router (`AI-Substrate/harness-engineering`) surveys deterministic-backpressure coverage of the planned work and writes `backpressure-coverage.md`, consumed by `plan-3-v3-architect`. Advisory only — never blocks, no thresholds. Computational counterpart to `plan-7-v2-code-review`. Router not installed → one calm warning, then standard testing (plan-029 switchover). |
 | `didyouknow-v2` | `didyouknow` | Domain boundary/contract insights when relevant |
 | `plan-2b-v2-prep-issue` | `plan-2b-prep-issue` | Domain metadata, labels, cross-domain dependency warnings in issues |
 

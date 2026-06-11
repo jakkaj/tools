@@ -42,8 +42,8 @@
         "id": { "type": "string", "description": "stable short id (spec, p3, dr, fx3)" },
         "type": {
           "type": "string",
-          "enum": ["research", "deep-research", "spec", "workshop", "backpressure", "plan", "adr", "phase", "fix-loop", "review", "merge", "harness-boot", "harness-observe", "harness-retro"],
-          "description": "each workshop is its OWN workshop node (never collapsed). Harness seam touchpoints are first-class nodes whose `command` fields are ALWAYS router invocations (/eng-harness-flow --event …, never a child-skill name): `backpressure` (the post-spec seam — sits on the spine between spec and plan; produces backpressure-coverage.md), `harness-boot` (the pre-implement seam before a phase), `harness-retro` (the phase-end seam at phase seams; plan-complete at merge). `harness-observe` is retained for back-compat with historical flight plans only — observe is the harness's own concern and new plans never emit it. Emit harness nodes only when the /eng-harness-flow router is installed (probe ~/.agents/skills/eng-harness-flow/SKILL.md, fallback ~/.claude/skills/) — otherwise omit them entirely."
+          "enum": ["research", "deep-research", "spec", "workshop", "backpressure", "plan", "adr", "phase", "fix-loop", "review", "merge", "harness-boot", "harness-retro"],
+          "description": "each workshop is its OWN workshop node (never collapsed). Harness seam touchpoints are first-class nodes whose `command` fields are ALWAYS router invocations (/eng-harness-flow --event …, never a child-skill name): `backpressure` (the post-spec seam — sits on the spine between spec and plan; produces backpressure-coverage.md), `harness-boot` (the pre-implement seam before a phase), `harness-retro` (the phase-end seam at phase seams; plan-complete at merge). Observe is the harness's own concern — no observe node type exists. Emit harness nodes only when the /eng-harness-flow router is installed (probe ~/.agents/skills/eng-harness-flow/SKILL.md, fallback ~/.claude/skills/) — otherwise omit them entirely."
         },
         "label": { "type": "string" },
         "status": { "$ref": "#/$defs/status" },

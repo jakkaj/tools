@@ -16,7 +16,7 @@ Two loops run side by side in the same context — that is all. Neither owns the
 | Seam | Fired by | Router call |
 |---|---|---|
 | session start | `/plan-1a` / `/the-flow` at flow entry | `/eng-harness-flow --event session-start` |
-| post-spec | `/plan-1b` next-steps (alias `/plan-2d`) | `/eng-harness-flow --event post-spec --spec <path>` |
+| post-spec | `/plan-1b` next-steps | `/eng-harness-flow --event post-spec --spec <path>` |
 | pre-implement | `/plan-6` before any task | `/eng-harness-flow --event pre-implement --phase <id> --plan-dir <p>` |
 | phase end | `/plan-6` after the last task | `/eng-harness-flow --event phase-end --plan-dir <p>` |
 | plan complete | `/plan-8` after the merge | `/eng-harness-flow --event plan-complete` |
@@ -171,7 +171,7 @@ You never named a harness skill — SDD told the router *where the work was* fiv
 | `/plan-1a` | Deep-dive codebase research *(optional)* | `research-dossier.md` | fires `--event session-start` |
 | `/plan-1b` | Spec + front-loaded clarifications | `<slug>-spec.md` | recommends `--event post-spec` next |
 | `/plan-2c` | Design workshop for complex topics *(optional)* | `workshops/<topic>.md` | — |
-| `/plan-2d` *(alias)* | = `/eng-harness-flow --event post-spec --spec <path>` — backpressure survey *(recommended, after spec, before architect)* | `backpressure-coverage.md` | advisory; feeds `/plan-3`; never blocks |
+| `/eng-harness-flow --event post-spec` | Backpressure survey *(recommended, after spec, before architect)* | `backpressure-coverage.md` | advisory; feeds `/plan-3`; never blocks |
 | `/plan-3` | Phased implementation plan (inline gates) | `<slug>-plan.md` | emits N.0/N.z seam rows when the router is installed |
 | `/plan-5` | Task table + brief for one phase | `tasks.md` | emits T000/T0xx seam rows |
 | `/plan-6` | Implement one phase | code + `execution.log.md` | fires `--event pre-implement` + `--event phase-end` |
