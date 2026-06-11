@@ -72,18 +72,19 @@ This replaces the old "emit as text only" coach posture: you still always show t
 **Every** `the-flow` turn begins with a fixed one-line **host rail**, on its own line, then a blank line, then the narration. It marks the guide's voice (never confusable with a `plan-*` skill's `✅`/`📁` output) **and** shows how far down the flow we are.
 
 ```
-[the-flow] ◆─◆─◆─[◆─◐─◇]─◇
+[the-flow] ◆─◆─◆─[◆─◐─◇]─◇  research · spec · plan · [build 2/3] · merge
 
 Where we are: …
 ```
 
 - `◆` = completed macro-milestone, `◐` = the milestone **in progress** (the current node — most visibly the phase being built during Build), `◇` = remaining; joined by `─` into one rail. **At most one `◐`** at a time (none when idle/paused between milestones).
+- **Same-line legend**: two spaces after the pips, the milestone names ride the same line — lowercase, in rail order, joined by ` · `, the **current** one wrapped in `[…]`: `research · spec · [plan] · tasks · build · review · merge`. Brackets follow the `◐`; on a settled rail (no `◐`) bracket the first `◇` (the next milestone up). Once `/plan-3` reveals per-phase nodes, the phase group reads as one bracketed word with a counter (`[build 2/3]`); if naming every phase would overflow ~100 columns, shorten to `p1 … pN`.
 - **Phase grouping**: the per-phase nodes are wrapped in one `[ … ]` so they read distinctly from the fixed flow nodes (Research·Spec·Plan before, Merge after) → `◆─◆─◆─[◆─◐─◇]─◇`. During Build, the phase currently being implemented is the `◐` inside the group.
 - **Macro-milestones (Full)**: Research · Spec · Plan · Tasks · Build · Review · Merge (7). Optional/sub-steps (`/plan-1a` deep-research, `/plan-2c`, `/plan-2d`, `/plan-3a`, the fix loop) live *under* a milestone and get **no diamond** — opting in/out never changes the total.
 - **Dynamic total**: `milestones_total` is an estimate early, **recomputed at `/plan-3`** from the real phase count (Research · Spec · Plan · **one node per phase** · Merge). A 5-phase plan expands the rail (3 + 5 + 1 = 9); a 1-phase Simple plan collapses it. Re-scales **only at `/plan-3`**, then monotonic. `state.milestones_done` drives the fill.
 - **Status line** after the diamonds, in a **distinct accent colour**: `· now: <current> · next: <next>`. **Dynamic expansion** — inline when there's a single short next; when `next` has **≥2 options** (or would wrap), break `now`/`next` onto their **own lines** with options stacked (labelled + aligned, recommended first):
   ```
-  [the-flow] ◆─◆─◇─◇─◇
+  [the-flow] ◆─◆─◇─◇─◇  research · spec · [plan] · build · merge
    now  · spec written — CS-4, Full
    next · ▸ /plan-3        architect            (recommended)
           ▸ /plan-2c       another workshop
@@ -105,9 +106,29 @@ Where we are: …
 | `awaiting-7` | 6/7 | `[the-flow] ◆─◆─◆─◆─◆─◆─◇` |
 | `awaiting-8` / `complete` | 7/7 | `[the-flow] ◆─◆─◆─◆─◆─◆─◆` |
 
-(Simple mode collapses the per-phase group to one node, so the rail is shorter — recompute from `milestones_total` after `/plan-1b`/`/plan-3`.)
+(Simple mode collapses the per-phase group to one node, so the rail is shorter — recompute from `milestones_total` after `/plan-1b`/`/plan-3`. Rails in this table omit the same-line legend for brevity — every rendered rail carries it.)
 
 The table above shows **settled** states (a stage just landed, awaiting the next command). While a stage is **actively running**, render its node as `◐` — e.g. mid-`/plan-3` the rail reads `◆─◆─◐─◇─◇─◇─◇`, settling to `◆─◆─◆─◇─◇─◇─◇` once it lands. The clearest `◐` is the phase under construction during Build: `◆─◆─◆─[◆─◐─◇─◇]─◇`.
+
+**Harness companion rail (unified block)**: when the engineering harness loop is live in this session — the `/eng-harness-flow` router fired this turn or earlier (any seam: session-start, post-spec, pre-implement, phase-end, plan-complete) — never show two disconnected rails. Anchor the harness loop **beneath the active milestone**, and give **each flow its own voice**: its own `now`/`next`, harness lines prefixed `⚙` (text-presentation glyph, never the `⚙️` emoji — double-width wrecks alignment):
+
+```
+[the-flow]  ◆─◆─◐─◇─◇─◇─◇  research · spec · [plan] · tasks · build · review · merge
+                └─ ⚙ ◆─◐─◇─◇─◇ ↺  boot · [backpressure] · observe · retro · improve  (post-spec)
+
+ the-flow
+  now  · spec READY + validated (Simple) — AC-11 branch-canary folded in
+  next · ▸ /plan-3   architect — consumes backpressure-coverage.md
+
+ ⚙ engineering harness
+  now  · post-spec seam — running the backpressure survey
+  next · writes backpressure-coverage.md → hands control back to /plan-3
+```
+
+- Harness loop pips = Boot · Backpressure · Observe · Retro · Improve (**per-pass**; `↺` = it cycles, never "completes"). Source the harness line from the router's envelope (its `rail`/`now`/`next` fields) — **never invent its position**; if the router hasn't reported this session, omit the harness line entirely (no empty scaffolding).
+- Anchor placement: `└─` sits in the `◐` milestone's column (prefix `[the-flow]  ` = 12 chars + 2 per node ⇒ column 12 + 2 × index; settled rails anchor under the last `◆`). Column uncertain (e.g. bracket-grouped phase nodes) → a fixed 4-space indent is fine — never let alignment delay the turn.
+- The two `now`/`next` voices stay separate, **each under its own header**: ` the-flow` heads the SDD group, ` ⚙ engineering harness` heads the loop group, `now`/`next` indented one space beneath (the header owns identity — no per-line prefix). The flow's lines speak SDD position; the harness's speak loop position + what the routed skill produces and where control hands back. Don't merge them into one shared block.
+- During harness **setup** (gate not yet passed), the anchored line carries the 🧰 segment instead: `└─ 🧰 ◆─◆─◐─◇─◇ → ⚙ ◇─◇─◇─◇─◇ ↺  install · scout · [governance] · inject · boot  (setup)`.
 
 ---
 
