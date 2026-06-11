@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "kind": "flight-plan",
+  "slug": "skills-flow-architecture",
+  "plan_dir": "docs/plans/031-skills-flow-architecture",
+  "mode": "Simple",
+  "cursor": "plan",
+  "recommended_next": "build",
+  "now": "Plan · READY + validated (16 tasks, 14 ACs, decisions D-A..D-F)",
+  "next": "Build · /the-flow 6 implement --plan \"docs/plans/031-skills-flow-architecture/skills-flow-architecture-plan.md\"",
+  "_comment": "Harness nodes omitted: router installed but this repo is not provisioned (no .harness/, no governance doc) — session-start and post-spec seams noop'd; the plan's T000/T0zz seam rows fire at build and are expected to noop. Workshop ws1 predates the flow (authored 2026-06-11, pre-spec, brought across at flow start).",
+  "agents": [],
+  "nodes": [
+    { "id": "research", "type": "research", "label": "Research", "status": "done",
+      "command": "/the-flow 1a explore", "ran_at": "2026-06-11T22:26Z",
+      "user_input": "new plan, start wiht explore. bring hta tworkshop across",
+      "note": "8-subagent dossier; leak verified at exactly 147 refs; D7 fold quantified; L1/L2/L6 lints shippable day one.",
+      "artifacts": ["research-dossier.md"], "next": ["spec"] },
+
+    { "id": "ws1", "type": "workshop", "label": "Workshop 1 · composable skill flows", "status": "done",
+      "branch_of": "research", "ran_at": "2026-06-11T22:09Z", "reconstructed": true,
+      "user_input": "run a /workshop on this please",
+      "note": "Authored pre-flow (prior session, committed b1066af) and brought across. Authoritative: D1-D7 (D7: companion folds into implement as a mode); ruleset R1-R8; lints L1-L6; migration phases A-E.",
+      "artifacts": ["workshops/001-composable-skill-flows.md"], "next": ["spec"] },
+
+    { "id": "spec", "type": "spec", "label": "Spec", "status": "done",
+      "command": "/the-flow 1b specify", "ran_at": "2026-06-11T22:51Z",
+      "user_input": "continue on with spec or what ever was next then validate",
+      "note": "Mode Simple (user override); CS-3 conf 0.80; 14 ACs, scope = workshop phases A-C. validate-v2 (4 agents): 2 CRITICAL + 4 HIGH applied. Mid-architect user decision (Clarification #5): the reusable unit is a SUB-SKILL.",
+      "artifacts": ["skills-flow-architecture-spec.md"], "next": ["plan"] },
+
+    { "id": "plan", "type": "plan", "label": "Plan", "status": "done",
+      "command": "/the-flow 3 architect", "ran_at": "2026-06-11T23:21Z",
+      "user_input": "yes",
+      "note": "Status READY v1.1.0 — gates G1 PASS, G2/G3/G4 N/A, G5/G6/G7 PASS. 16 tasks (T000-T0zz) ordered A>B>C>D, decisions D-A..D-F (incl. D-E sub-skill naming, D-F declared delegation). Auto-validated by validate-v2 (4 agents): 2 CRITICAL (PROCEED-line vs L1 collision; 60->62 sibling-path delegation) + 5 HIGH applied in v1.1.0.",
+      "artifacts": ["skills-flow-architecture-plan.md"], "next": ["build"] },
+
+    { "id": "build", "type": "phase", "phase": 1, "label": "Build · Phase 1 (A→B→C→D, 16 tasks)", "status": "known",
+      "command": "/the-flow 6 implement --plan \"docs/plans/031-skills-flow-architecture/skills-flow-architecture-plan.md\"",
+      "next": ["review"] },
+
+    { "id": "review", "type": "review", "label": "Review", "status": "assumed",
+      "command": "/the-flow 7 review", "next": ["merge"] },
+
+    { "id": "merge", "type": "merge", "label": "Merge", "status": "assumed",
+      "command": "/the-flow 8 merge", "next": [] }
+  ]
+}
