@@ -1,15 +1,19 @@
----
-name: plan-1b-v3-specify-and-clarify
-description: |
-  Create a feature spec AND resolve high-impact ambiguities in a single skill. Front-loads questions: asks host-independent questions (Mode/Testing/Mock/Docs) in ONE batched prompt BEFORE writing the spec, generates the sketch with those answers already applied, then asks a conditional second batch only for sketch-dependent gaps (Domain Review, topic-specific markers). Cap ≤8 total. Uses batched prompting where the host supports it (e.g., Claude Code's AskUserQuestion), falls back to sequential one-at-a-time on hosts that don't. Replaces the old plan-1b → plan-2 two-skill hop.
----
-Please deep think / ultrathink as this is a complex task.
+# Stage 20 — specify
+*(absorbed from `plan-1b-v3-specify-and-clarify`; loaded lazily via `/the-flow 1b` or `/the-flow specify` — dispatch: `../../SKILL.md`)*
 
-# plan-1b-v3-specify-and-clarify
+**Purpose**: Create or update the feature spec AND resolve high-impact ambiguities in one pass — questions front-loaded before the sketch. Also hosts the mid-plan clarification re-entry (§ Re-entry, end of this module).
+**Entry conditions**: A feature description (plan folder auto-created, or reused if `/the-flow 1a` already made one). § Re-entry instead requires an existing spec.
+**Inputs**: Feature description (`$ARGUMENTS`) · `--simple` (pre-set Mode: Simple). Optional artifacts: `${PLAN_DIR}/research-dossier.md`, `docs/domains/registry.md`, `${PLAN_DIR}/workshops/*.md`. § Re-entry input: path to an existing spec, or a plan slug.
+**Output contract**: `${PLAN_DIR}/<slug>-spec.md` with all clarifications applied and the `## Clarifications` log populated; terminal Next-steps block (workshop / post-spec harness seam / architect). § Re-entry: new `### Session YYYY-MM-DD` block + one-line coverage summary.
+**Next routing**: `/the-flow 2c` (module `references/stages/25-workshop.md`) if Workshop Opportunities were identified; recommended pre-architect seam `/eng-harness-flow --event post-spec --spec "<SPEC_FILE>"` (router-installed only); then `/the-flow 3` (module `references/stages/30-architect.md`).
+
+---
+
+## Procedure
 
 Create or update the feature **spec** AND resolve high-impact ambiguities in **one pass**. Front-loads the host-independent questions BEFORE the spec sketch so the resulting document arrives already-clarified, then only asks a second batch for genuinely sketch-dependent topics.
 
-This skill replaces the legacy `plan-1b-v2-specify` + `plan-2-v2-clarify` pair. The old `plan-2-v2-clarify` is preserved as a soft-deprecated re-entry point for adding clarifications to an existing spec mid-plan.
+This stage replaces the legacy two-skill specify → clarify hop. Mid-plan clarification re-entry is preserved as the **§ Re-entry** section at the end of this module.
 
 ```md
 User input:
@@ -35,18 +39,18 @@ Default to batched. Fall back without ceremony — do not announce capability de
 
 1. Determine feature slug from user input and check for existing plan folder:
    - Generate slug from feature description
-   - If `docs/plans/*-<slug>/` already exists (created by `/plan-1a-explore`) → use it
+   - If `docs/plans/*-<slug>/` already exists (created by `/the-flow 1a`) → use it
    - Else → create new folder with next available ordinal
    - `PLAN_DIR = docs/plans/<ordinal>-<slug>/`
    - `SPEC_FILE = ${PLAN_DIR}/<slug>-spec.md`
 
 2. Check for and incorporate existing research:
    - If `${PLAN_DIR}/research-dossier.md` exists → read fully; use to inform complexity, domains, and question framing. Add note to spec: "📚 Specification incorporates findings from research-dossier.md"
-   - Else → add note: "ℹ️ Consider running `/plan-1a-explore` for deeper codebase understanding"
+   - Else → add note: "ℹ️ Consider running `/the-flow 1a` for deeper codebase understanding"
 
 3. Check for existing domains:
-   - If `docs/domains/registry.md` exists → read it; read `docs/domains/domain-map.md` if present; for each domain scan `docs/domains/<slug>/domain.md` for relevant contracts/composition
-   - Else → note that domains will be identified as part of this spec
+   - Load domain context per `references/00-routing.md` § Domain context loading
+   - If no domain registry exists → note that domains will be identified as part of this spec
 
 4. Check for workshop documents:
    - If `${PLAN_DIR}/workshops/*.md` exist → read all; they are **authoritative design decisions** and must not be contradicted
@@ -113,7 +117,7 @@ Populate `SPEC_FILE` with these sections (Markdown headings):
   - **Confidence**: {0.00-1.00}
   - **Assumptions**, **Dependencies**, **Risks**, **Phases**
 
-  CS rubric — S=Surface Area, I=Integration, D=Data/State, N=Novelty, F=Non-Functional, T=Testing/Rollout (each 0-2). Total P → CS: 0-2=CS-1, 3-4=CS-2, 5-7=CS-3, 8-9=CS-4, 10-12=CS-5.
+  > Complexity: CS 1–5 only — no time estimates (rubric: `references/00-routing.md` § Shared conventions).
 
 - `## Acceptance Criteria` — numbered, testable scenarios framed as observable outcomes
 - `## Risks & Assumptions`
@@ -160,7 +164,7 @@ After Round 2:
 
 | Option | Mode | Best For | What Changes |
 |--------|------|----------|--------------|
-| A | Simple **(recommended default)** | CS-1 through CS-3, single domain, one-to-few phases — the common case | Single-phase plan, inline tasks, plan-4/plan-5 optional |
+| A | Simple **(recommended default)** | CS-1 through CS-3, single domain, one-to-few phases — the common case | Single-phase plan, inline tasks, phase-tasks stage (`/the-flow 5`) optional |
 | B | Full | CS-4/CS-5, **or** genuinely multi-domain / multi-phase work that needs all gates | Multi-phase plan, required dossiers, all gates |
 
 Recommend **A (Simple)** unless the CS score is 4+ or the spec sketch already shows multiple target domains / several phases. Don't reach for Full just because the work is unfamiliar — unfamiliarity is a research/workshop signal, not a mode signal.
@@ -238,14 +242,79 @@ Draw from these categories based on `[NEEDS CLARIFICATION]` markers in the sketc
 ## Output
 
 `SPEC_FILE` written with all clarifications applied, `## Clarifications` log populated.
-```
 
 Next steps:
-- **If Workshop Opportunities identified**: Consider running **/plan-2c-workshop**
-- **Before architecture (recommended) — fire the post-spec harness seam**: `/eng-harness-flow --event post-spec --spec "<SPEC_FILE>"` — when a harness exists the router surfaces the backpressure check (can the planned work be *proven by deterministic sensors* vs eyeballed?) and produces `backpressure-coverage.md` in the plan dir for `/plan-3` to consume. Router not installed (probe `test -f ~/.agents/skills/eng-harness-flow/SKILL.md`, fallback `~/.claude/skills/eng-harness-flow/SKILL.md`)? If the flow already warned, skip silently; otherwise print the one-time warning verbatim:
+- **If Workshop Opportunities identified**: Consider running **`/the-flow 2c`** (module `references/stages/25-workshop.md`)
+- **Before architecture (recommended) — fire the post-spec harness seam**: `/eng-harness-flow --event post-spec --spec "<SPEC_FILE>"` — when a harness exists the router surfaces the backpressure check (can the planned work be *proven by deterministic sensors* vs eyeballed?) and produces `backpressure-coverage.md` in the plan dir for `/the-flow 3` to consume. Router not installed (probe `test -f ~/.agents/skills/eng-harness-flow/SKILL.md`, fallback `~/.claude/skills/eng-harness-flow/SKILL.md`)? If the flow already warned, skip silently; otherwise print the one-time warning verbatim:
 
   > ⚠️ No engineering harness detected — the eng-harness skills aren't installed. Continuing without one: standard testing applies, nothing else changes. (To add the harness loop: `npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y`.)
 
   Advisory; never blocks. Never call the router's child skills directly — children are private and may move.
-- **Otherwise**: Run **/plan-3-v3-architect** to generate the implementation plan
-- **To add clarifications later** (mid-plan or post-architect): Run **/plan-2-v2-clarify** to open a new `### Session` block
+- **Otherwise**: Run **`/the-flow 3`** (module `references/stages/30-architect.md`) to generate the implementation plan
+- **To add clarifications later** (mid-plan or post-architect): use the **§ Re-entry** section of this module to open a new `### Session` block
+
+---
+
+## Re-entry: mid-plan clarifications *(absorbed from plan-2-v2-clarify)*
+
+This is the **mid-plan re-entry point** for clarifications. The original "create-spec-then-interrogate-spec" two-skill flow has been collapsed into the main body of this module (above), which front-loads questions before the spec is sketched.
+
+Use this re-entry ONLY when:
+- A spec already exists (created by this stage, or by a legacy specify skill)
+- The architect (stage 30), workshop (stage 25), or implementation (stage 60) surfaced new ambiguities
+- The user wants to add a clarification round mid-stream without regenerating the spec
+
+For new specs, use the main body of this module (`/the-flow 1b`) instead.
+
+```md
+User input:
+
+$ARGUMENTS
+
+# Expects: path to an existing spec, or a plan slug.
+```
+
+### Tool-capability detection
+
+- **Batched host** (e.g., Claude Code's `AskUserQuestion`): submit the round as ONE batched call (up to 4 questions).
+- **Sequential host**: submit one at a time, preserving the cap.
+
+### Flow
+
+1. Resolve `PLAN_DIR` from the spec path provided; set `FEATURE_SPEC = ${PLAN_DIR}/<slug>-spec.md`.
+2. Scan the existing spec for unresolved gaps:
+   - `[NEEDS CLARIFICATION: …]` markers
+   - Missing or thin Testing Strategy / Documentation Strategy / Target Domains
+   - Open Questions section entries
+   - Domain Review needed (Target Domains contains new/contested entries not yet reviewed)
+   - Agent Harness decision missing
+3. Choose **up to 4 highest-impact questions** from the gap list. Skip questions already answered in earlier `### Session` blocks.
+4. Submit as ONE batched prompt (batched host) or sequentially (fallback). Cap = 4.
+5. Append answers to `## Clarifications` → `### Session YYYY-MM-DD` (new block — do not modify earlier sessions).
+6. Update affected spec sections immediately (Target Domains, Testing Strategy, Documentation Strategy, ACs, Risks, etc.). Save.
+7. Emit a one-line coverage summary: "Resolved N/M open gaps. Remaining: …".
+
+### Question catalogue (draw from these, only if relevant)
+
+See **Standard Questions** (above in this module) for the full answer tables. Categories:
+
+- **Workflow Mode** — only if Mode is unset (rare for re-entry)
+- **Testing Strategy** — only if `## Testing Strategy` is missing
+- **Mock Usage** — only if testing exists but mock policy is unset
+- **Documentation Strategy** — only if `## Documentation Strategy` is missing
+- **Domain Review** — only if Target Domains has unreviewed NEW/contested entries
+- **Agent Harness Readiness** — only if harness decision not recorded
+- **Topic-specific** — drawn from `[NEEDS CLARIFICATION]` markers (data model, FRs, NFRs, integrations, edge cases, terminology)
+
+### Gates
+
+- Spec file must exist; ERROR if not found
+- At least one unresolved gap identified; if none, exit silently with "No clarifications needed."
+- Cap of 4 questions per invocation (run again for further rounds)
+- No critical `[NEEDS CLARIFICATION]` markers remaining after the session (or surface the survivors in the coverage summary)
+
+### Output
+
+Updated `SPEC_FILE` with a new `### Session YYYY-MM-DD` block and any section updates the answers triggered.
+
+Next: `/the-flow 3` (module `references/stages/30-architect.md`) if architect hasn't run, or re-run the downstream stage that surfaced the ambiguity.

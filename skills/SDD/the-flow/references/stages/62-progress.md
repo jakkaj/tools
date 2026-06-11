@@ -1,8 +1,15 @@
+# Stage 62 — Update Progress
+*(absorbed from `plan-6a-v2-update-progress`; loaded lazily via `/the-flow 6a` or `/the-flow progress` — dispatch: `../../SKILL.md`. This module remains **directly invocable** as `/the-flow 6a`, and is also read and followed by the implement modules — `60-implement.md` after each completed task and on the final task; `61-implement-companion.md` on the final task with the companion debrief flags.)*
+
+**Purpose**: Update plan and dossier progress tracking with task status and domain context; on the last task of a phase, optionally run the full code-review-companion debrief (Step 9) when `--companion-run-id` is provided.
+**Entry conditions**: A plan (and, in Full Mode, a phase dossier) exists; a task has just changed status — typically invoked per task by stage 60/61, or directly as `/the-flow 6a`. Companion debrief additionally requires `--status completed` on the last task in the phase + `--companion-run-id`.
+**Inputs**: Flags `--plan`, `--task`, `--status completed|in_progress|blocked`, `--changes "<files>"`, optional `--domain`, `--phase`, `--subtask`, `--inline`, `--companion-run-id "<run id>"`, `--companion-slug "<slug>"` (default `code-review-companion`).
+**Output contract**: Task table Status column + Architecture Map nodes updated; plan progress section updated; domain-context change record (incl. domain-map / Concepts update flags); when the debrief fires: drain ping + control:stop + farewell envelope read, findings reconciliation in the execution log, magicWand surfaced as follow-up candidate. Terminal report = files touched, whether the companion debrief fired (yes — runId / no — flag absent), follow-up candidates surfaced.
+**Next routing**: Control returns to the calling module (`references/stages/60-implement.md` or `references/stages/61-implement-companion.md`), which owns the phase-end harness seam and the next-step suggestion (`/the-flow 7` review after stage 60; `/the-flow 5` next phase after stage 61).
+
 ---
-name: plan-6a-v2-update-progress
-description: Update plan progress with task status and domain context. V2 standalone rewrite.
----
-# plan-6a-v2-update-progress
+
+## Procedure
 
 Update plan and dossier progress tracking with task status. Adds domain context to change tracking. **Companion debrief** when called with `--companion-run-id` on the last task of a phase.
 
@@ -68,11 +75,11 @@ $ARGUMENTS
 
 8) (Retired) Orchestrator retrospective — this duty left SDD entirely.
    Retros, friction capture, and harvest belong to the harness family,
-   reached only through the `/eng-harness-flow` router (plan-6 and
-   plan-6-companion fire its phase-end / plan-complete seams). This
-   skill writes no retro artifacts and prompts no retrospective
-   questions. (Step number kept so callers' "Step 9" references stay
-   stable.)
+   reached only through the `/eng-harness-flow` router (the implement
+   stages — `60-implement.md` and `61-implement-companion.md` — fire its
+   phase-end / plan-complete seams). This skill writes no retro artifacts
+   and prompts no retrospective questions. (Step number kept so callers'
+   "Step 9" references stay stable.)
 
 9) Companion debrief (phase-end conditional — fires ONLY when ALL of:
    `--status completed`, last-task-in-phase, AND `--companion-run-id`
@@ -83,7 +90,8 @@ $ARGUMENTS
    farewell to read.
 
    **If `--companion-run-id` WAS provided** (signals a companion ran in
-   parallel during the phase, e.g. from `/plan-6-v2-implement-phase-companion`):
+   parallel during the phase, e.g. from the companion implement module,
+   `references/stages/61-implement-companion.md`):
 
    a) **Drain ping** (give the companion a final-sweep opportunity):
       ```bash
@@ -136,7 +144,8 @@ $ARGUMENTS
    e) **Surface the companion's magicWand as follow-up candidate**: if
       the magicWand is non-trivial, print a stderr note recommending the
       caller file a fix dossier via
-      `/plan-5-v2-phase-tasks-and-brief --fix "<companion magicWand>"`.
+      `/the-flow 5 --fix "<companion magicWand>"` (module
+      `references/stages/50-phase-tasks.md`).
       Do NOT auto-create dossiers; surface only.
 
 10) Report what was updated:
@@ -145,13 +154,13 @@ $ARGUMENTS
     - Any follow-up candidates surfaced
 ```
 
-This command is the **single source of truth** for progress updates AND the companion debrief. Always delegate both to this command rather than manually editing task tables or hand-running drain/stop sequences.
+This module is the **single source of truth** for progress updates AND the companion debrief. Always delegate both to this module rather than manually editing task tables or hand-running drain/stop sequences.
 
-**Why the companion debrief lives here**: 6a already owns the "last task in phase" branch (the phase-complete summary in the execution log + task table). Adding the conditional companion debrief (Step 9) means `/plan-6-v2-implement-phase-companion` gets full phase-end ceremony coverage for free with zero duplication.
+**Why the companion debrief lives here**: this module already owns the "last task in phase" branch (the phase-complete summary in the execution log + task table). Adding the conditional companion debrief (Step 9) means the companion implement module (`61-implement-companion.md`) gets full phase-end ceremony coverage for free with zero duplication.
 
 **Call signature symmetry**:
-- Non-companion plan-6: `/plan-6a-v2-update-progress --task <T> --status completed --plan <P>` — Step 9 skipped (no flag).
-- Companion plan-6: `/plan-6a-v2-update-progress --task <T> --status completed --plan <P> --companion-run-id <RUN>` — Step 9 fires.
+- Non-companion implement (`60-implement.md`): read this module with `--task <T> --status completed --plan <P>` — Step 9 skipped (no flag).
+- Companion implement (`61-implement-companion.md`): read this module with `--task <T> --status completed --plan <P> --companion-run-id <RUN>` — Step 9 fires.
 ---
 
-> Harness note: this skill writes no retro artifacts and fires no harness seams — progress tracking and (optionally) the minih companion debrief only. Harness reflection routes through `/eng-harness-flow` at plan-6 / plan-6-companion's seams. `docs/harness/agents/**` is frozen read-only history (mined by plan-1a's Prior Learnings Scout); nothing writes there anymore.
+> Harness note: this module writes no retro artifacts and fires no harness seams — progress tracking and (optionally) the minih companion debrief only. Harness reflection routes through `/eng-harness-flow` at the implement stages' seams (`60-implement.md` / `61-implement-companion.md`). `docs/harness/agents/**` is frozen read-only history (mined by the explore stage's Prior Learnings Scout, `/the-flow 1a`); nothing writes there anymore.

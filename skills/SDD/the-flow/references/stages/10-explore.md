@@ -1,10 +1,15 @@
----
-name: plan-1a-v2-explore
-description: Deep-dive research into existing codebase functionality. Auto-detects plan context or creates new plan folder. Integrates with FlowSpace MCP when available. Domain-aware v2.
----
-Please deep think / ultrathink as this is a complex task.
+# Stage 10 — explore
+*(absorbed from `plan-1a-v2-explore`; loaded lazily via `/the-flow 1a` or `/the-flow explore` — dispatch: `../../SKILL.md`)*
 
-# plan-1a-explore
+**Purpose**: Deep-dive research into how existing functionality works in the codebase — produces a research dossier (or console-only report) that feeds specification.
+**Entry conditions**: A research query. No prior artifacts required — auto-detects plan context (ordinal branch / cwd / conversation) or creates a new plan folder; `--console` creates no files at all.
+**Inputs**: `"research query"` · `--plan <name>` (explicit plan folder) · `--console` (console-only output). Optional context: existing `docs/plans/<ordinal>-<slug>/`, `docs/domains/registry.md`, FlowSpace MCP when available.
+**Output contract**: `docs/plans/<ordinal>-<slug>/research-dossier.md` (or console-only report with `--console`) + terminal success block (plan-folder status, components analyzed, critical findings, prior learnings surfaced, external research opportunities, FlowSpace mode). Read-only — STOPs and waits after output.
+**Next routing**: `/the-flow 1b` (module `references/stages/20-specify.md`) to create the spec — optionally after running the suggested `/deepresearch` prompts; or `/the-flow 2c` (module `references/stages/25-workshop.md`) if deep design exploration is needed first.
+
+---
+
+## Procedure
 
 **Research and understand** how existing functionality works in the codebase. Perfect for arbitrary research questions or pre-planning exploration.
 
@@ -12,14 +17,14 @@ User input:
 ```
 $ARGUMENTS
 # Expected format:
-# /plan-1a-explore "research query"              # Auto-detect context or create plan
-# /plan-1a-explore --plan <name> "research query" # Explicit plan name
-# /plan-1a-explore --console "research query"    # Output to console only (no files)
+# /the-flow 1a "research query"              # Auto-detect context or create plan
+# /the-flow 1a --plan <name> "research query" # Explicit plan name
+# /the-flow 1a --console "research query"    # Output to console only (no files)
 #
 # Examples:
-# /plan-1a-explore "research how the search service works"
-# /plan-1a-explore --plan authentication-upgrade "research the current auth system"
-# /plan-1a-explore --console "quick question about error handling"
+# /the-flow 1a "research how the search service works"
+# /the-flow 1a --plan authentication-upgrade "research the current auth system"
+# /the-flow 1a --console "quick question about error handling"
 ```
 
 ## Purpose
@@ -203,16 +208,10 @@ This ensures agents always use the best available FlowSpace capabilities, even i
 
 ### 2b) Load Domain Context
 
-Before launching research, check for existing domain system:
+Load domain context per `references/00-routing.md` § Domain context loading. Stage-specific additions:
 
-- If `docs/domains/registry.md` exists:
-  * Read the registry — understand what domains are already formalized
-  * Read `docs/domains/domain-map.md` if it exists — understand domain topology and contract relationships
-  * For domains relevant to the research topic, read `docs/domains/<slug>/domain.md` for contracts, composition, boundaries
-  * Pass domain context to subagents so they can reference known domains in findings
-- If no domain registry exists:
-  * Note "No domain registry found — subagents will discover domain-like boundaries organically"
-  * The Domain & Boundary Scout subagent (below) will identify potential domains even without a registry
+- Pass domain context to subagents so they can reference known domains in findings
+- If no domain registry exists: note "No domain registry found — subagents will discover domain-like boundaries organically" — the Domain & Boundary Scout subagent (below) will identify potential domains even without a registry
 
 ### 2c) Harness seam — session start (router-only)
 
@@ -873,7 +872,7 @@ During codebase exploration, the following knowledge gaps were identified that c
 - To conduct external research: Run the `/deepresearch` commands above, then either:
   - Paste results back to this conversation, OR
   - Save to `external-research/` folder in the plan directory
-- To skip and proceed: Run `/plan-1b-specify "[feature]"` (unresolved opportunities will be noted as a soft warning)
+- To skip and proceed: Run `/the-flow 1b "[feature]"` (unresolved opportunities will be noted as a soft warning)
 
 ## Appendix: File Inventory
 
@@ -899,10 +898,10 @@ During codebase exploration, the following knowledge gaps were identified that c
 
 **If no external research needed (or skipping):**
 - Research-Only: Review findings and decide on action
-- Pre-Plan: Run `/plan-1b-specify "[feature]"` to create specification
+- Pre-Plan: Run `/the-flow 1b "[feature]"` to create specification
 - Plan-Associated: Continue with plan phases
 
-Note: Unresolved research opportunities will be flagged in `/plan-1b-specify` output.
+Note: Unresolved research opportunities will be flagged in `/the-flow 1b` output.
 
 ---
 
@@ -934,22 +933,22 @@ Note: Unresolved research opportunities will be flagged in `/plan-1b-specify` ou
   2. [Topic 2] - run /deepresearch prompt in report
   Save results to: external-research/[topic-slug].md
 
-- Next step (with research): Run /deepresearch prompts, then /plan-1b-specify
-- Next step (skip research): Run /plan-1b-specify "[feature description]"
+- Next step (with research): Run /deepresearch prompts, then /the-flow 1b
+- Next step (skip research): Run /the-flow 1b "[feature description]"
 ```
 
 ## CRITICAL: STOP AND WAIT
 
 **THIS IS A READ-ONLY RESEARCH COMMAND.** After outputting the research report:
 
-1. **DO NOT** proceed to `/plan-1b-specify` or any other command
+1. **DO NOT** proceed to `/the-flow 1b` or any other command
 2. **DO NOT** make any code changes or create additional files
 3. **DO NOT** start implementing recommendations
 4. **STOP** and wait for the user to provide instructions
 
 The research is complete. The user will decide what to do next:
 - Run `/deepresearch` for external knowledge gaps
-- Run `/plan-1b-specify` to create a specification
+- Run `/the-flow 1b` to create a specification
 - Ask follow-up questions
 - Take a different action entirely
 
@@ -982,19 +981,19 @@ The research is complete. The user will decide what to do next:
 
 ## Integration with Other Commands
 
-### With plan-1b-specify
+### With the specify stage (`references/stages/20-specify.md`)
 - Checks for research-dossier.md in plan folder
 - Checks for external-research/*.md files with /deepresearch results
 - Incorporates findings into specification
 - References critical discoveries
 - Soft warning if external research opportunities were not addressed
 
-### With plan-3-architect
+### With the architect stage (`references/stages/30-architect.md`)
 - If research exists, reduces redundant discovery
 - References research finding IDs
 - Focuses on implementation planning
 
-### With plan-2-clarify
+### With clarify re-entry (`references/stages/20-specify.md` § Re-entry)
 - Can reference research to inform questions
 - May trigger additional targeted research
 
@@ -1002,25 +1001,25 @@ The research is complete. The user will decide what to do next:
 
 ### Example 1: Quick Research (Console Output)
 ```bash
-/plan-1a-explore "research how the search service works"
+/the-flow 1a "research how the search service works"
 ```
 Outputs research directly to console. No files created.
 
 ### Example 2: Research for New Plan
 ```bash
-/plan-1a-explore --plan authentication-upgrade "research the current auth system"
+/the-flow 1a --plan authentication-upgrade "research the current auth system"
 ```
 Creates `docs/plans/001-authentication-upgrade/research-dossier.md`
 
 ### Example 3: Research for Existing Plan (by slug)
 ```bash
-/plan-1a-explore --plan search-improvement "research search indexing strategy"
+/the-flow 1a --plan search-improvement "research search indexing strategy"
 ```
 If `002-search-improvement` exists, saves there. Otherwise creates new folder.
 
 ### Example 4: Research for Existing Plan (by full name)
 ```bash
-/plan-1a-explore --plan 003-payment-refactor "deep dive on payment processing"
+/the-flow 1a --plan 003-payment-refactor "deep dive on payment processing"
 ```
 Saves to `docs/plans/003-payment-refactor/research-dossier.md`
 
@@ -1028,6 +1027,6 @@ This command provides deep, actionable research into existing codebase functiona
 
 **Suggest next step to user:**
 
-Run **/plan-1b-specify** to create the feature specification, or **/plan-2c-workshop** if deep design exploration is needed first.
+Next: `/the-flow 1b` (module `references/stages/20-specify.md`) to create the feature specification, or `/the-flow 2c` (module `references/stages/25-workshop.md`) if deep design exploration is needed first.
 
 > Harness note: the session-start seam (§ 2c) is this skill's only harness touchpoint. Friction capture, retros, and harvest are the harness family's own concern, reached through `/eng-harness-flow` — SDD never drives them directly. Subagent 7 (Prior Learnings Scout) still mines `docs/harness/agents/**/*.retro.md` + legacy `docs/retros/*.md` as read-only history.

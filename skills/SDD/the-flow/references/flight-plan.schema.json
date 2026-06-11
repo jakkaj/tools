@@ -52,7 +52,7 @@
           "items": { "type": "string" },
           "description": "downstream node ids (DAG edges); [] for terminal"
         },
-        "command": { "type": "string", "description": "the /plan-* or tool command this node runs; for harness nodes, always a router invocation (/eng-harness-flow --event …)" },
+        "command": { "type": "string", "description": "the /the-flow stage command (e.g. /the-flow 3, /the-flow 6 --phase …) or tool command this node runs; for harness nodes, always a router invocation (/eng-harness-flow --event …)" },
         "ran_at": { "type": "string", "description": "ISO timestamp when executed (adoption: artifact mtime, best-effort)" },
         "user_input": { "type": "string", "description": "VERBATIM user words that drove this step (audit → 🗣 bubble)" },
         "reconstructed": { "type": "boolean", "description": "true when user_input/ran_at were back-filled by adoption rather than captured live" },
@@ -93,7 +93,7 @@
           "enum": ["wrap", "side"],
           "description": "wrap=companion subgraph around covers[] · side=worker side-node into covers[] (defaults from kind)"
         },
-        "driver": { "type": "string", "description": "the skill that runs it (e.g. /plan-6-v2-implement-phase-companion); blank if user minih-ran it ad-hoc" },
+        "driver": { "type": "string", "description": "the command that runs it (e.g. /the-flow 6c); blank if user minih-ran it ad-hoc" },
         "note": { "type": "string", "description": "role / what it watches or builds" }
       }
     }

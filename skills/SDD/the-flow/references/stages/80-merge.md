@@ -1,10 +1,19 @@
----
-name: plan-8-v2-merge
-description: Analyze upstream changes from main and generate merge plan document. Domain-aware v2.
----
-Please deep think / ultrathink as this is a complex task.
+# Stage 80 — Merge
+*(absorbed from `plan-8-v2-merge`; loaded lazily via `/the-flow 8` or `/the-flow merge` — dispatch: `../../SKILL.md`)*
 
-# plan-8-v2-merge (alias: /8, /merge)
+**Purpose**: Analyze upstream changes from the target branch (default `main`) and generate a comprehensive merge plan document — diagrams, conflict tables, regression risks, ordered steps — before any merge execution. Analysis only by default; merge execution runs ONLY after the user explicitly types `PROCEED`.
+
+**Entry conditions**: All phases implemented and reviewed (stages 6/7 complete); clean working tree (no uncommitted changes); on a branch (not detached HEAD); plan folder resolvable (contains `*-spec.md`); target branch exists and is reachable.
+
+**Inputs**: Flags — `--plan "<abs path to docs/plans/<ordinal>-<slug>/>"` (optional; auto-detect from current directory), `--target "main"` (optional; branch to merge from, default `main`). Input artifacts — git history (ancestor/HEAD/target), your spec/plan/execution logs, upstream plan folders under `docs/plans/`, `docs/domains/**` (optional).
+
+**Output contract**: Merge plan document written to `${PLAN_DIR}/merge/${DATE}/merge-plan.md`; terminal success message with upstream-plan/conflict/risk counts and the explicit "type PROCEED / ABORT" prompt. On PROCEED only: phased merge execution with checkpoints and rollback, post-merge validation checklist, then the `/eng-harness-flow --event plan-complete --json` harness seam.
+
+**Next routing**: Terminal stage — after a successful merge the flow is complete (the plan-complete harness seam fires from this module's procedure). On ABORT the merge plan is saved for later; re-enter with `/the-flow 8 --plan "<plan dir>"` (this module, `references/stages/80-merge.md`).
+
+---
+
+## Procedure
 
 Analyze upstream changes from main and generate a comprehensive merge plan document before any merge execution. This command discovers all plans that landed in main since you branched, identifies conflicts with your work, and creates a crystal-clear merge plan document with diagrams, tables, and step-by-step instructions.
 
@@ -984,7 +993,7 @@ If user says "ABORT":
 
 **Resume commands** (for later):
 - Review merge plan: \`cat ${PLAN_DIR}/merge/${DATE}/merge-plan.md\`
-- Retry merge: \`/8 --plan "${PLAN_DIR}"\`
+- Retry merge: \`/the-flow 8 --plan "${PLAN_DIR}"\` (module `references/stages/80-merge.md`)
 - Manual merge: \`git merge ${TARGET}\`
 
 ---

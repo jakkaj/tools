@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "slug": "flow-skill-consolidation",
+  "plan_dir": "docs/plans/030-flow-skill-consolidation",
+  "mode": "Simple",
+  "current_stage": "complete",
+  "pending_command": "",
+  "intent": "Consolidate the 13 main-flow SDD skills into one progressive-disclosure the-flow skill with lazy-loaded stage modules; utilities stay public; back up current skills for fast rollback",
+  "milestones_total": 6,
+  "milestones_done": 6,
+  "last_checkpoint_at": "2026-06-11T11:11:11Z",
+  "compacted_seams": ["awaiting-6", "awaiting-7"],
+  "harness": "router-installed; repo-unprovisioned — pre-implement/phase-end/plan-complete seams all nooped quietly (--prompt-optional=false)",
+  "fix_loop": "review #1 REQUEST_CHANGES → fix pass FT-001..FT-005 applied + redeployed → re-review WAIVED by user → merged",
+  "status": "complete"
+}

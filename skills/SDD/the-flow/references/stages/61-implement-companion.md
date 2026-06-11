@@ -1,21 +1,26 @@
----
-name: plan-6-v2-implement-phase-companion
-description: Implement exactly one approved phase with a parallel code-review-companion (Power-On-Mode) — companion reviews each commit live, supersedes /plan-7-v2-code-review.
----
-Please deep think / ultrathink as this is a complex task.
+# Stage 61 — Implement Phase (Companion)
+*(absorbed from `plan-6-v2-implement-phase-companion`; loaded lazily via `/the-flow 6c` or `/the-flow companion` — dispatch: `../../SKILL.md`)*
 
-# plan-6-v2-implement-phase-companion
+**Purpose**: Implement exactly one approved phase with a parallel `code-review-companion` agent (Power-On-Mode) that reviews every commit live — inline review supersedes the post-hoc review stage (`/the-flow 7`).
+**Entry conditions**: Same as stage 60 (plan READY, tasks dossier or inline tasks, human GO) **plus** `minih` on `$PATH` and a bootable companion agent slug. `--no-companion` (or a failed boot) falls back to the standard implement flow.
+**Inputs**: Flags `--phase "<Phase N: Title>"` (Full Mode) or omitted (Simple Mode), `--plan "<abs path to plan.md>"`, optional `--subtask "<ORD-subtask-slug>"`, optional `--companion-slug "<slug>"` (default: `code-review-companion`), optional `--no-companion`. Reads the plan's Testing Strategy, task table, Context Brief / Key Findings, domain context.
+**Output contract**: Everything stage 60 produces (code + tests, execution log, domain.md updates, diffs, evidence, suggested commit message) **plus** companion artifacts: per-commit review-request pings logged with finding dispositions, the companion findings reconciliation table, farewell envelope summary, and the companion's magicWand surfaced as a follow-up candidate (the debrief itself runs in `references/stages/62-progress.md` Step 9).
+**Next routing**: Another phase remains → `/the-flow 5 --phase "<Phase N+1: Title>" --plan "<PLAN_PATH>"` (module `references/stages/50-phase-tasks.md`), then re-run this stage. Final phase → `/the-flow 8 --plan "<PLAN_PATH>"` (module `references/stages/80-merge.md` — stage 80 owns the `plan-complete` harness seam, fired after merge execution). `/the-flow 7` is **NOT** required after this stage. Final-task progress + companion debrief delegate to sibling module `references/stages/62-progress.md` (also `/the-flow 6a`).
+
+---
+
+## Procedure
 
 Implement **exactly one** approved phase or subtask **with a parallel `code-review-companion` agent** running in Power-On-Mode. The companion reviews every commit live, fires findings asynchronously, and writes a farewell envelope you read before reporting completion.
 
-This skill is a sibling of `plan-6-v2-implement-phase` — same domain placement rules, same testing approach, same progress-tracking discipline — but with **inline review by a companion** instead of a separate post-hoc `/plan-7-v2-code-review` pass.
+This stage is a sibling of the standard implement stage (`/the-flow 6`, module `references/stages/60-implement.md`) — same domain placement rules, same testing approach, same progress-tracking discipline — but with **inline review by a companion** instead of a separate post-hoc `/the-flow 7` review pass.
 
 
 ## 🎯 Why a companion (read this first)
 
 > **A companion is the cheapest review you'll ever buy.** It's already running. It's already paid for. It's watching.
 
-Post-hoc review (`/plan-7-v2-code-review`) catches issues *after* a phase lands — by which point the cost of a fix is much higher: context is gone, you've moved on, the fix needs its own commit, its own review pass, its own integration. You pay the cost of being wrong twice.
+Post-hoc review (`/the-flow 7`) catches issues *after* a phase lands — by which point the cost of a fix is much higher: context is gone, you've moved on, the fix needs its own commit, its own review pass, its own integration. You pay the cost of being wrong twice.
 
 A **code-review-companion** running in parallel:
 
@@ -24,9 +29,9 @@ A **code-review-companion** running in parallel:
 3. **Fire-and-forget** — pings cost milliseconds; the companion only replies if it finds issues. Zero latency on the hot path.
 4. **Asynchronous parallelism** — the main agent commits T002 while the companion is still reviewing T001. Throughput stays high; review depth stays deep.
 5. **Closes the loop deterministically** — at phase end, a `control:stop` triggers a farewell envelope that captures everything the companion saw across the phase. You fold those findings into your final report.
-6. **Closes with a farewell debrief** — findings are reconciled into the final report and the companion's magicWand is surfaced as a follow-up candidate. Harness reflection (retros, harvest) routes through `/eng-harness-flow --event plan-complete` — the harness family owns it, not this skill.
+6. **Closes with a farewell debrief** — findings are reconciled into the final report and the companion's magicWand is surfaced as a follow-up candidate. Long-horizon harness reflection (retros, harvest) happens at the `plan-complete` seam, which stage 80 (merge) fires after merge execution — never this stage.
 
-The companion replaces `/plan-7-v2-code-review` for projects that have one. **Do not run /plan-7 after this skill.** The companion has already done that work, more thoroughly, with cheaper fixes.
+The companion replaces the post-hoc review stage (`/the-flow 7`) for projects that have one. **Do not run `/the-flow 7` after this stage.** The companion has already done that work, more thoroughly, with cheaper fixes.
 
 
 ## 🛟 If you don't know minih
@@ -43,7 +48,7 @@ This skill drives the companion through `minih` (the canonical companion runtime
 
 **If `minih --version` fails** (not on `$PATH`):
 - First, point the user at `https://github.com/AI-Substrate/minih` to install.
-- If install isn't an option for this session, **fall back to running without companion** — log the deviation in the execution log and proceed with the standard plan-6 flow (you may then run `/plan-7-v2-code-review` afterward as a recovery review). Do NOT block the phase.
+- If install isn't an option for this session, **fall back to running without companion** — log the deviation in the execution log and proceed with the standard implement flow (`references/stages/60-implement.md`) (you may then run `/the-flow 7` afterward as a recovery review). Do NOT block the phase.
 
 When this skill writes references in execution logs, surfaces companion findings, or briefs users — **link the canonical URLs above** so future readers can self-onboard the same way.
 
@@ -106,7 +111,8 @@ $ARGUMENTS
 # --plan "<abs path to plan.md>"
 # --subtask "<ORD-subtask-slug>" (optional)
 # --companion-slug "<slug>" (optional, default: code-review-companion)
-# --no-companion (optional escape hatch — falls back to standard plan-6 + /plan-7 flow)
+# --no-companion (optional escape hatch — falls back to the standard implement
+#   flow (/the-flow 6) + /the-flow 7 review)
 
 ## Step 0: Boot or attach the companion
 
@@ -135,7 +141,7 @@ b) **If no active run, boot one:**
 
    **Boot failure modes:**
    - `E122 GH_TOKEN not set` → `export GH_TOKEN=$(gh auth token)` and retry. The Copilot CLI runtime doesn't reliably inherit; explicit export is required.
-   - Boot times out / no active run after 12s → wait another 30s, re-check. If still no active run after two attempts, **fall back to no-companion mode**: log the deviation in execution.log.md, proceed without companion, and run `/plan-7-v2-code-review` afterward.
+   - Boot times out / no active run after 12s → wait another 30s, re-check. If still no active run after two attempts, **fall back to no-companion mode**: log the deviation in execution.log.md, proceed without companion, and run `/the-flow 7` afterward.
    - Agent slug doesn't exist → halt and ask user. Do NOT silently fabricate a slug.
 
 c) **Verify the companion is alive:**
@@ -201,10 +207,7 @@ Brief once. Don't re-brief mid-phase unless the scope materially changes (in whi
    - Read Testing Strategy from plan (approach + mock usage)
    - Read task table from PHASE_DOC
    - Read Context Brief / Key Findings for hazards to watch for
-   - **Load domain context**:
-     * Read `## Target Domains` from spec
-     * Read `## Domain Manifest` from plan
-     * For each domain being modified, read `docs/domains/<slug>/domain.md`
+   - **Load domain context** per `references/00-routing.md` § Domain context loading
    - **Harness availability** (router-only): probe `test -f ~/.agents/skills/eng-harness-flow/SKILL.md` (fallback `~/.claude/skills/eng-harness-flow/SKILL.md`) — the harness is reached exclusively through the `/eng-harness-flow` router; never read governance docs or run health checks yourself
 
 ## 2a) Pre-Phase Harness Seam — `--event pre-implement` (router-only)
@@ -341,27 +344,28 @@ Brief once. Don't re-brief mid-phase unless the scope materially changes (in whi
 
       For UNCHANGED contracts: no Concepts updates needed.
 
-## 5) Phase-end ceremony — delegate to /plan-6a-v2-update-progress
+## 5) Phase-end ceremony — delegate to the progress module (`references/stages/62-progress.md`)
 
-   Skip this step if `--no-companion` was used (6a is still called per
-   task and on the last task — but Step 9 of 6a, the companion debrief,
-   is skipped because `--companion-run-id` is omitted).
+   Skip this step if `--no-companion` was used (the progress module is
+   still followed per task and on the last task — but Step 9 of
+   `62-progress.md`, the companion debrief, is skipped because
+   `--companion-run-id` is omitted).
 
    At end of phase (after the last task's commit + ping has settled),
-   invoke `/plan-6a-v2-update-progress` ONE MORE TIME for the final task
-   with the companion debrief flags:
+   read `references/stages/62-progress.md` and follow it ONE MORE TIME
+   for the final task with the companion debrief flags:
 
       ```bash
-      /plan-6a-v2-update-progress \
-        --plan "<PLAN_PATH>" \
-        --phase "<Phase N: Title>" \
-        --task "<final-task-id>" \
-        --status completed \
-        --companion-run-id "$RUN_ID" \
-        --companion-slug "$COMPANION_SLUG"
+      --plan "<PLAN_PATH>" \
+      --phase "<Phase N: Title>" \
+      --task "<final-task-id>" \
+      --status completed \
+      --companion-run-id "$RUN_ID" \
+      --companion-slug "$COMPANION_SLUG"
       ```
 
-      6a Step 9 then handles the entire companion debrief automatically:
+      `62-progress.md` Step 9 then handles the entire companion debrief
+      automatically:
       - Drain ping → wait → control:stop → read farewell envelope
       - Reconcile findings (using execution-log disposition table you
         kept up-to-date during the phase per Step 3's "Handling companion
@@ -369,23 +373,25 @@ Brief once. Don't re-brief mid-phase unless the scope materially changes (in whi
       - Surface companion magicWand as follow-up candidate
 
    You don't run the drain ping, stop, or farewell read yourself — they
-   live in 6a. This is the single source of truth.
+   live in the progress module (`references/stages/62-progress.md`).
+   This is the single source of truth.
 
    **If the companion died mid-phase** (verdict became `stale` or
    `completed` before the final ping): pass `--companion-run-id` anyway.
-   6a's Step 9 will detect the dead session via `minih status`, log the
-   deviation, and skip the drain/stop steps but still attempt the
-   farewell read (if the companion wrote one before exiting).
+   The progress module's Step 9 will detect the dead session via
+   `minih status`, log the deviation, and skip the drain/stop steps but
+   still attempt the farewell read (if the companion wrote one before
+   exiting).
 
    Then fire the **phase-end harness seam** (router-only; skip silently
    if the router isn't installed — the one-time warning already fired):
 
    `/eng-harness-flow --event phase-end --plan-dir "<PLAN_DIR>" --json`
 
-   …and act on the envelope. If this was the **final phase of the plan**,
-   follow with `/eng-harness-flow --event plan-complete --json` after the
-   debrief — the router owns the long-horizon reflection. Best-effort,
-   never blocks.
+   …and act on the envelope. Best-effort, never blocks. (The
+   `plan-complete` seam is **not** fired here — stage 80 owns it,
+   after merge execution. If this was the final phase, the next step
+   is merge analysis: `/the-flow 8 --plan "<PLAN_PATH>"`.)
 
 ## 6) Output
 
@@ -395,9 +401,11 @@ Brief once. Don't re-brief mid-phase unless the scope materially changes (in whi
    - Domain files updated (domain.md changes listed)
    - Final status mapped to acceptance criteria
    - **Companion findings reconciliation table** — prepared in execution
-     log during the phase; surfaced in final summary by 6a Step 9
-   - **Companion farewell summary** — surfaced by 6a Step 9
-   - **Companion magicWand** (if present) — surfaced by 6a Step 9
+     log during the phase; surfaced in final summary by `62-progress.md`
+     Step 9
+   - **Companion farewell summary** — surfaced by `62-progress.md` Step 9
+   - **Companion magicWand** (if present) — surfaced by `62-progress.md`
+     Step 9
    - Suggested commit message
 
 STOP: Report phase complete. Suggest next step.
@@ -406,19 +414,23 @@ STOP: Report phase complete. Suggest next step.
 
 **Phase complete.** Live review was handled by the `code-review-companion` running in parallel — every commit was reviewed at commit time, findings were folded back inline, and the farewell envelope is on file.
 
-**`/plan-7-v2-code-review` is NOT required after this skill** — it would duplicate the review the companion already performed (and you already addressed). Running it would re-litigate findings already resolved and add latency without value.
+**`/the-flow 7` is NOT required after this stage** — it would duplicate the review the companion already performed (and you already addressed). Running it would re-litigate findings already resolved and add latency without value.
 
-**Next step**: Move on to the next phase. Run `/plan-5-v2-phase-tasks-and-brief --phase "<Phase N+1: Title>" --plan "<PLAN_PATH>"` to generate that phase's tasks dossier, then re-run this skill.
+**Next step** — branch on remaining phases:
+
+- **Another phase remains**: run `/the-flow 5 --phase "<Phase N+1: Title>" --plan "<PLAN_PATH>"` (module `references/stages/50-phase-tasks.md`) to generate that phase's tasks dossier, then re-run this stage (`/the-flow 6c`).
+- **That was the final phase**: run `/the-flow 8 --plan "<PLAN_PATH>"` (module `references/stages/80-merge.md`) for the merge analysis. Stage 80 owns the `plan-complete` harness seam, fired after merge execution.
 
 If the companion produced a **magicWand** in its farewell, consider filing it as a fix dossier or backlog item *before* starting the next phase — that's how the harness improves itself.
 ---
 
 ## Harness seams (router-only)
 
-This skill fires three harness seams, all through the single entry point `/eng-harness-flow` (children never called directly — they are private and may move):
+This skill fires two harness seams, both through the single entry point `/eng-harness-flow` (children never called directly — they are private and may move):
 
 - **Phase start** — § 2a fires `--event pre-implement --phase --plan-dir` before any task.
 - **Phase end** — § 5 fires `--event phase-end --plan-dir` after the companion debrief settles.
-- **Plan complete** — after the FINAL phase's debrief, § 5 fires `--event plan-complete` — the router owns the long-horizon reflection (drain-vs-harvest is its decision, never this skill's).
+
+The `plan-complete` seam is owned by stage 80 (merge) and fires after merge execution — never from this stage.
 
 The minih companion machinery (pings, farewell envelope, findings reconciliation) is **code review**, not harness — it stays exactly as specified above. The router owns everything harness-side: state, verdicts, friction capture, retros. Best-effort throughout — no router installed means standard testing, one calm warning, and silence.

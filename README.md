@@ -125,7 +125,7 @@ Below is the story told stage-by-stage, referring to the command names only as "
 
 Before any work can start, **system-level constraints** must be established. Not because it's bureaucratic, but because an agent will otherwise "helpfully" fill gaps with invention. The most expensive failure mode is when it confidently reintroduces patterns already rejected, violates architecture boundaries, or rebuilds something the system already has.
 
-So the workflow begins with a constitution: a set of **rules of engagement** that is always "in the room" for every feature and every plan. In this implementation, `/plan-0-constitution` creates the canonical doctrine files—guiding principles, enforceable rules, idioms/patterns, and architecture boundaries—under `docs/project-rules/`.
+So the workflow begins with a constitution: a set of **rules of engagement** that is always "in the room" for every feature and every plan. In this implementation, the `plan-0-v2-constitution` utility skill creates the canonical doctrine files—guiding principles, enforceable rules, idioms/patterns, and architecture boundaries—under `docs/project-rules/`.
 
 The important conceptual move here is not the file creation; it's the **synchronization**: doctrine must be explicitly enforced "downstream" across planning, tasks, implementation, and review. In this flow, that's stated directly: doctrine must be enforced across Constitution → Rules & Idioms → Plan/Tasks/Implementation.
 
@@ -150,7 +150,7 @@ The discipline here is resisting the urge to write the spec immediately.
 
 Instead, step 1a brings the **raw idea and core requirements** and asks the agent to do the work that humans often skip under pressure: understand what already exists, what must be respected, and what the real problem edges look like.
 
-In this implementation, `/plan-1a-explore` is explicitly "research before specification," producing a research dossier (or console output) and using parallelism to cover the landscape. 
+In this implementation, the explore stage (`/the-flow 1a`) is explicitly "research before specification," producing a research dossier (or console output) and using parallelism to cover the landscape. 
 
 Conceptually, this stage exists to create a **research dossier** that turns a vague intention into high-fidelity context:
 
@@ -176,7 +176,7 @@ Only after the research dossier exists should the spec be written.
 
 This is the moment where the workflow becomes explicitly **technology-free**: it forces stating what the user needs and why it matters, before deciding how to implement it. This implementation calls this out directly: create the spec from natural language, focusing on user value (WHAT/WHY) with "no tech choices."
 
-In this system, `/plan-1b-specify` produces the spec document in a feature folder and uses a canonical structure that includes goals, non-goals, acceptance criteria, risks/assumptions, open questions, and placeholders for testing and documentation strategy.
+In this system, the specify stage (`/the-flow 1b`) produces the spec document in a feature folder and uses a canonical structure that includes goals, non-goals, acceptance criteria, risks/assumptions, open questions, and placeholders for testing and documentation strategy.
 
 Here's the key story beat: **1a feeds 1b**. The spec step explicitly checks for an existing research dossier and external research results, reads them, and incorporates them into the spec (including informing complexity scoring and calling out what was incorporated).
 
@@ -197,7 +197,7 @@ So Chapter 2 does something disciplined: ask **a small number of high-impact que
 
 The first question is non-negotiable: the workflow mode—Simple or Full—must be decided, because the rest of the workflow changes materially based on complexity.
 
-If Simple mode is chosen (best for CS-1/CS-2), the flow tightens: testing defaults to lightweight, the plan becomes single-phase with inline tasks, and plan-4/plan-5 become optional (effectively moving faster into implementation).
+If Simple mode is chosen (best for CS-1/CS-2), the flow tightens: testing defaults to lightweight, the plan becomes single-phase with inline tasks, and the separate task-expansion stage (`/the-flow 5`) is skipped entirely — the plan goes straight to implementation (`/the-flow 6`).
 If Full mode is chosen (CS-3+), there's a commitment to multi-phase planning and stronger gates.
 
 **Why this chapter matters in SDD:**
@@ -209,7 +209,7 @@ This is where "spec as aspiration" becomes "spec as executable intent." The ambi
 
 Sometimes the work needs to be represented in Jira/Azure DevOps/GitHub Issues. But a good workflow is explicit about a key idea: the issue is **not** the spec; it's a signpost.
 
-So there's an optional step to generate structured issue text from the spec/plan artifacts for external tracking (`/plan-2b-prep-issue`), keeping acceptance criteria, goals, non-goals, and complexity visible without collapsing the whole world into an issue tracker description.
+So there's an optional step to generate structured issue text from the spec/plan artifacts for external tracking (the `plan-2b-v2-prep-issue` utility skill), keeping acceptance criteria, goals, non-goals, and complexity visible without collapsing the whole world into an issue tracker description.
 
 **Why this matters:**
 It prevents the common "Jira becomes the spec" failure, while still meeting organizational tracking needs.
@@ -220,7 +220,7 @@ It prevents the common "Jira becomes the spec" failure, while still meeting orga
 
 Now the story shifts: once the team knows what's being built and has resolved ambiguity, "how" finally enters the room.
 
-In this system, `/plan-3-architect` explicitly states "never skip—this is the implementation blueprint."
+In this system, the architect stage (`/the-flow 3`) explicitly states "never skip—this is the implementation blueprint."
 
 The blueprint isn't just a checklist. It's a structured plan document that includes:
 
@@ -255,11 +255,11 @@ It prevents "local optimum" decisions from being repeated as accidental architec
 
 ## Chapter 4: Readiness gates are baked into the plan (not a separate validation pass)
 
-Earlier versions of the pipeline had a separate `/plan-4-complete-the-plan` step that ran post-hoc validators against the plan. That step has been **collapsed into `/plan-3-v3-architect`** — the gates now run inline during generation.
+Earlier versions of the pipeline had a separate `/plan-4-complete-the-plan` step that ran post-hoc validators against the plan. That step has been **collapsed into the architect stage** — the gates now run inline during generation.
 
-`/plan-3-v3-architect` produces the plan in one of two states:
+The architect stage (`/the-flow 3`) produces the plan in one of two states:
 
-- **`Status: READY`** — all seven gates (Clarify, Constitution, Architecture, ADR, Structure, Testing Alignment, Domain Completeness) passed; the plan is consumable by `/plan-5`.
+- **`Status: READY`** — all seven gates (Clarify, Constitution, Architecture, ADR, Structure, Testing Alignment, Domain Completeness) passed; Full Mode plans continue to `/the-flow 5`, Simple Mode plans continue directly to `/the-flow 6`.
 - **`Status: DRAFT — UNRESOLVED GAPS`** — one or more gates failed. The plan is **still written** (so the user has context to fix), but is annotated inline with `⚠️ GAP: …` markers at each violation site, plus a final `## Unresolved Gaps` table that names exactly what to fix and where.
 
 Conceptually, this is still the **pre-spend gate** — plan deficiencies caught before the most expensive activity (implementation) begins. The shift is from "generator → safety net → maybe fix" to "fail-fast generator that emits the plan AND the gap list in one pass."
@@ -273,7 +273,7 @@ The cost curve is real: mistakes found in plan are cheaper than mistakes found i
 
 At this point, the focus stops being "the whole feature" and starts being **one phase at a time**.
 
-The `/plan-5-phase-tasks-and-brief` command generates a phase dossier including:
+The phase-tasks stage (`/the-flow 5`) generates a phase dossier including:
 
 * a 9-column task table (with explicit Validation criteria per task),
 * an alignment brief (objectives, non-goals, critical findings, ADR constraints, test plan),
@@ -311,7 +311,7 @@ This is where teams and agents catch conceptual misalignment before it becomes c
 
 Only now does implementation begin.
 
-The `/plan-6-implement-phase` stage is explicit: this is where coding happens, and it follows the chosen testing approach (Full TDD, TAD, Lightweight, Manual, or Hybrid). It creates an execution log and captures evidence, commands run, and outputs.
+The implement stage (`/the-flow 6`) is explicit: this is where coding happens, and it follows the chosen testing approach (Full TDD, TAD, Lightweight, Manual, or Hybrid). It creates an execution log and captures evidence, commands run, and outputs.
 
 Crucially, it automatically calls the progress updater after *each* task.
 
@@ -324,7 +324,7 @@ This is where SDD can go wrong if it isn't instrumented: without evidence, "impl
 
 This is one of the most distinctive parts of this design: progress tracking is not "tick a checkbox." It's an atomic synchronization across the plan, the phase dossier, and the footnote ledgers.
 
-The `/plan-6a-update-progress` stage updates all three locations, validates link integrity and status consistency, and declares the execution incomplete if any location isn't updated.
+The progress stage (`/the-flow 6a`) updates all three locations, validates link integrity and status consistency, and declares the execution incomplete if any location isn't updated.
 
 The system also defines a stable identity scheme ("FlowSpace Node IDs") for linking tasks/logs to concrete code entities (file/class/method/function).
 
@@ -339,7 +339,7 @@ This is how shallow "activity metrics" (LoC, commits) shift to evidence-based tr
 
 Finally, review.
 
-The `/plan-7-code-review` stage is explicitly comprehensive: it checks bidirectional link integrity (task↔log, task↔footnote, plan↔dossier, parent↔subtask), validates doctrine gates (testing approach, mock usage), and runs quality/safety reviews (correctness, security, performance, observability).
+The review stage (`/the-flow 7`) is explicitly comprehensive: it checks bidirectional link integrity (task↔log, task↔footnote, plan↔dossier, parent↔subtask), validates doctrine gates (testing approach, mock usage), and runs quality/safety reviews (correctness, security, performance, observability).
 
 It produces a review report and, when needed, a fix-task artifact, and returns a clear verdict: APPROVE vs REQUEST_CHANGES.
 

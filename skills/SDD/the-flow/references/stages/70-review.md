@@ -1,10 +1,19 @@
----
-name: plan-7-v2-code-review
-description: Read-only per-phase code review with domain compliance validation. V2 standalone rewrite.
----
-Please deep think / ultrathink as this is a complex task.
+# Stage 70 — Review
+*(absorbed from `plan-7-v2-code-review`; loaded lazily via `/the-flow 7` or `/the-flow review` — dispatch: `../../SKILL.md`)*
 
-# plan-7-v2-code-review
+**Purpose**: Read-only per-phase code review — inspects diffs, validates domain compliance, checks for concept reinvention, verifies testing evidence, and produces structured findings as file artifacts. Does NOT modify code.
+
+**Entry conditions**: A phase has been implemented (stage 6 finished — execution log written, changes committed or in working tree); `--plan` points to an existing plan.md with `**Mode**: Simple` or `**Mode**: Full`; in Full Mode the phase's tasks dossier (`tasks/<phase-slug>/tasks.md`) exists.
+
+**Inputs**: Flags — `--plan "<abs path to plan.md>"` (required), `--phase "<Phase N: Title>"` (required for Full Mode, omit for Simple Mode), `--diff-file "<abs path to unified.diff>"` (optional; otherwise computed from git), `--strict` (optional; treat HIGH as blocking). Input artifacts — plan, spec, phase tasks doc, execution.log.md, git diffs, `docs/domains/**`, `docs/project-rules/**`.
+
+**Output contract**: Review file `${REVIEW_FILE}` with sections A–H (verdict, summary, checklist, findings table, detailed findings, coverage map, commands, Handover Brief); computed diff saved to `reviews/_computed.diff`; fix-tasks file `${FIX_FILE}` only if verdict is REQUEST_CHANGES. Terminal report: verdict + key failure areas + exact next command.
+
+**Next routing**: REQUEST_CHANGES → `/the-flow 6 <same flags>` (module `references/stages/60-implement.md`) to apply fixes, then re-run `/the-flow 7 <same flags>` (this module). APPROVE with more phases remaining → `/the-flow 5 --phase 'Phase N+1' --plan <abs path>` (module `references/stages/50-phase-tasks.md`). APPROVE on the final phase → `/the-flow 8 --plan <plan dir>` (module `references/stages/80-merge.md`).
+
+---
+
+## Procedure
 
 Read-only code review that inspects diffs, verifies domain compliance, checks for concept reinvention, and produces structured findings with file artifacts. Does NOT modify code.
 
@@ -192,7 +201,7 @@ Only flag genuine duplication, not incidental similarity."
 
 **Wait for all subagents to complete.** (5 subagents)
 
-> Live-runtime validation is no longer a review subagent — running software is the harness family's concern, reached through `/eng-harness-flow` at plan-6's seams. The review consumes the execution-log evidence those seams produced; it never boots anything itself.
+> Live-runtime validation is no longer a review subagent — running software is the harness family's concern, reached through `/eng-harness-flow` at the implement stage's seams (stage 6, `references/stages/60-implement.md`). The review consumes the execution-log evidence those seams produced; it never boots anything itself.
 
 ## Step 4: Synthesize Results
 
@@ -217,7 +226,7 @@ Write `${REVIEW_FILE}` (create `reviews/` dir if needed):
 **Spec**: [absolute path to spec.md]
 **Phase**: [phase title, or "Simple Mode"]
 **Date**: [today]
-**Reviewer**: Automated (plan-7-v2)
+**Reviewer**: Automated (the-flow stage 7 — review)
 **Testing Approach**: [from spec]
 
 ## A) Verdict
@@ -346,8 +355,8 @@ Universal (all approaches):
 ### Next Step
 
 [Exact command to run — e.g.:
-- For fixes: "/plan-6-v2-implement-phase --plan /abs/path --phase 'Phase N'"
-- For next phase: "/plan-5-v2-phase-tasks-and-brief --phase 'Phase N+1' --plan /abs/path"
+- For fixes: "/the-flow 6 --plan /abs/path --phase 'Phase N'" (module `references/stages/60-implement.md`)
+- For next phase: "/the-flow 5 --phase 'Phase N+1' --plan /abs/path" (module `references/stages/50-phase-tasks.md`)
 - If approved and final phase: "Implementation complete — consider committing"]
 ```
 
@@ -381,7 +390,7 @@ Apply in order. Re-run review after fixes.
 ## Re-Review Checklist
 
 - [ ] All critical/high fixes applied
-- [ ] Re-run `/plan-7-v2-code-review` and achieve zero HIGH/CRITICAL
+- [ ] Re-run `/the-flow 7` and achieve zero HIGH/CRITICAL
 ```
 
 ## Step 7: Constraints
@@ -405,8 +414,8 @@ Acceptance criteria for this command:
 - If APPROVE: zero HIGH/CRITICAL findings
 - If REQUEST_CHANGES: fix tasks file created with severity-ordered fixes
 
-Next step: Apply fixes from fix-tasks file, then re-run `/plan-7-v2-code-review`.
+Next step: Apply fixes via `/the-flow 6 <same flags>` (module `references/stages/60-implement.md`), then re-run `/the-flow 7 <same flags>` (module `references/stages/70-review.md`).
 
 ---
 
-> Harness note: this skill carries no harness seam of its own — it's a read-only review. The phase-end seam already fired inside plan-6 (`/eng-harness-flow --event phase-end`), and plan-complete fires at plan-8. Friction capture and retros are the harness family's own concern; SDD never drives them directly.
+> Harness note: this stage carries no harness seam of its own — it's a read-only review. The phase-end seam already fired inside the implement stage (stage 6, `/eng-harness-flow --event phase-end`), and plan-complete fires at the merge stage (stage 8, `references/stages/80-merge.md`). Friction capture and retros are the harness family's own concern; SDD never drives them directly.

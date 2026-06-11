@@ -12,7 +12,7 @@ Skills are grouped by purpose. Categories are organizational only — they do **
 
 | Category | What's in it | Count |
 |---|---|---|
-| `SDD/` | The spec-driven-development (SDD) pipeline — domain-aware plan, specify, clarify, architect, workshop, implement, review skills. The active workflow for non-trivial features. | 26 |
+| `SDD/` | The spec-driven-development (SDD) pipeline — `the-flow` (one skill driving research → spec → architect → implement → review → merge) plus 12 utility skills. The active workflow for non-trivial features. | 13 |
 | `general/` | Domain-generic skills that work in any project (e.g. `grill-me` — interrogates plans/designs; `perplexity-deep-research`). | 2 |
 
 A full listing of every skill is in [`README_AGENTS.md`](./README_AGENTS.md).
@@ -88,7 +88,7 @@ npx skills@latest add jakkaj/tools --skill the-flow -a claude-code -g
 Repeat `--skill` to install a subset:
 
 ```bash
-npx skills@latest add jakkaj/tools --skill grill-me --skill plan-1a-v2-explore -a claude-code -g
+npx skills@latest add jakkaj/tools --skill grill-me --skill the-flow -a claude-code -g
 ```
 
 ### (f2) Install a whole category via subfolder shorthand

@@ -56,9 +56,9 @@ npx skills@latest add jakkaj/tools \
   --skill the-flow \
   -a claude-code -a codex -g
 
-# Three planning skills into Claude Code + Copilot CLI, project-local
+# The whole SDD pipeline (one skill) into Claude Code + Copilot CLI, project-local
 npx skills@latest add jakkaj/tools \
-  --skill plan-1a-v2-explore --skill plan-1b-v3-specify-and-clarify --skill plan-3-v3-architect \
+  --skill the-flow \
   -a claude-code -a github-copilot
 ```
 
@@ -73,7 +73,7 @@ Use `--skill <slug>` to scope the install to a single skill (repeat for several)
 npx skills@latest add jakkaj/tools --skill the-flow -a claude-code -g
 
 # A few skills, project-local for Codex
-npx skills@latest add jakkaj/tools --skill grill-me --skill plan-1a-v2-explore -a codex
+npx skills@latest add jakkaj/tools --skill grill-me --skill the-flow -a codex
 ```
 
 ### Auto-detect
@@ -125,30 +125,20 @@ Categories are organizational only. They do **not** affect install commands — 
 
 ## Skill catalog
 
-### `SDD/` — Spec-Driven Development
+### `SDD/` — Spec-Driven Development (13 skills: 1 main flow + 12 utilities)
 
-The active workflow for non-trivial feature work. Use these for any change large enough to benefit from explicit specification, clarification, architecture, and phase-based implementation. Each step produces an artifact that the next step consumes.
+The active workflow for non-trivial feature work. Use these for any change large enough to benefit from explicit specification, clarification, architecture, and phase-based implementation. Each stage produces an artifact that the next stage consumes.
+
+> **Historical note**: the main flow used to ship as 12 separate per-stage `/plan-*` skills (explore → … → merge). Those were consolidated into the single `the-flow` skill below; the old per-stage slugs no longer exist.
 
 | Slug | One-line purpose |
 |---|---|
+| `the-flow` | The SDD pipeline in one skill — dispatch + 11 lazily-loaded stage modules (explore, specify+clarify, workshop, architect, adr, tasks, implement, companion, progress, review, merge). Guided coach via `/the-flow`; direct jump via `/the-flow <id\|name>`. |
 | `plan-0-v2-constitution` | Establish or refresh the project constitution before planning begins. |
-| `plan-1a-v2-explore` | Deep-dive research into existing codebase functionality before specification. |
-| `plan-1b-v3-specify-and-clarify` | Create a feature spec AND resolve high-impact ambiguities in one skill with front-loaded batched questions. Replaces `plan-1b-v2-specify` + `plan-2-v2-clarify`. |
-| `plan-2-v2-clarify` | Mid-plan clarification re-entry (≤4 questions). Soft-deprecated — for new specs use `plan-1b-v3-specify-and-clarify`. |
 | `plan-2b-v2-prep-issue` | Generate terse, industry-standard issue text for Azure DevOps / GitHub Issues. |
-| `plan-2c-v2-workshop` | Create detailed design documents for complex concepts surfaced in the spec. |
-| `plan-3-v3-architect` | Generate a domain-aware, lean implementation plan with phases, task tables, AND seven self-validating fail-fast gates baked in. Replaces `plan-3-v2-architect` + `plan-4-v2-complete-the-plan`. (The recommended Backpressure Check before this fires via the post-spec harness seam — `/eng-harness-flow --event post-spec`.) |
-| `plan-3a-v2-adr` | Generate an Architectural Decision Record from the spec and clarifications. |
-| `plan-5-v2-phase-tasks-and-brief` | Generate a tasks dossier (tasks + context brief) for a phase. |
-| `plan-6-v2-implement-phase` | Implement exactly one approved phase using the chosen testing approach. |
-| `plan-6-v2-implement-phase-companion` | Implement a phase with a parallel code-review companion (Power-On-Mode). |
-| `plan-6a-v2-update-progress` | Update plan progress atomically with task status and domain context. |
 | `plan-6b-worked-example` | Generate a runnable worked example demonstrating a phase's implementation. |
-| `plan-7-v2-code-review` | Read-only per-phase code review with domain compliance validation. |
-| `plan-8-v2-merge` | Analyze upstream changes from `main` and generate a merge plan. |
 | `plan-v2-extract-domain` | Collaboratively identify and formalize a codebase concept as a named domain. |
 | `validate-v2` | Launch parallel subagents to validate produced work with structured lens coverage. |
-| `the-flow` | Guided co-pilot **front-door** that *drives* you through the `plan-*` pipeline (`/plan-1a → 1b → [2c] → [2d] → 3 → 5 → 6 → 7 → 8`) like an expert beside you: asks what you want to build, narrates each stage, points out one insight per artifact, surfaces optional branches + `/compact` seams + the harness seams (routed via `/eng-harness-flow`), and tells you exactly what to type next. Re-entrant (survives `/compact`) and can **adopt** a plan already in flight. Drives the `plan-*` family for real planning + execution work (not an RPIV/`task-*` teaching loop). Bundles the visual pipeline guide at `references/getting-started.md`. |
 | `install-hve-core-rpiv` | Install or update local skill-shaped HVE Core RPI/RPIV task skills from the current authoritative HVE Core source. |
 | `code-concept-search-v2` | Find a concept in the codebase by walking through code like a human engineer. |
 | `deepresearch-v2` | Craft structured research prompts for deep-research agents. |

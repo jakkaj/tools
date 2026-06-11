@@ -1,10 +1,15 @@
----
-name: plan-2c-v2-workshop
-description: Create detailed design documents for complex concepts identified in the spec's Workshop Opportunities, or any topic needing deep exploration. Domain-aware v2.
----
-Please deep think / ultrathink as this is a complex task.
+# Stage 25 — workshop
+*(absorbed from `plan-2c-v2-workshop`; loaded lazily via `/the-flow 2c` or `/the-flow workshop` — dispatch: `../../SKILL.md`)*
 
-# plan-2c-workshop
+**Purpose**: Create a detailed design document — a working reference — that explores a complex concept in depth before architecture, from the spec's Workshop Opportunities or any topic needing deep exploration.
+**Entry conditions**: An existing plan folder (`docs/plans/<ordinal>-<slug>/`); the plan's spec for `--from-spec` and context. Optional stage — can run any time during planning.
+**Inputs**: `<plan>` (ordinal, slug, or path) + `"<topic>"` · `--from-spec` (pick from the spec's Workshop Opportunities) · `--list` (list existing workshops). Context: `${PLAN_DIR}/<slug>-spec.md`, `research-dossier.md`, existing `workshops/*.md`, domain registry.
+**Output contract**: `${PLAN_DIR}/workshops/<NNN>-<topic-slug>.md` (typed design doc with value frame, proof levels, evidence ledger) + terminal success block (type, proof level, value axes, key questions, related workshops, next steps).
+**Next routing**: `/eng-harness-flow --event post-spec --spec <path>` (recommended backpressure seam before architect, router-installed only) or `/the-flow 3` (module `references/stages/30-architect.md`); another workshop via `/the-flow 2c` again.
+
+---
+
+## Procedure
 
 Create a **detailed design document** that explores a complex concept in depth. Workshops are working reference documents - practical, concrete, and useful during implementation.
 
@@ -13,14 +18,14 @@ User input:
 
 $ARGUMENTS
 # Expected formats:
-# /plan-2c-workshop <plan> "<topic>"           # Workshop a specific topic
-# /plan-2c-workshop <plan> --from-spec         # Pick from spec's Workshop Opportunities
-# /plan-2c-workshop <plan> --list              # List existing workshops
+# /the-flow 2c <plan> "<topic>"           # Workshop a specific topic
+# /the-flow 2c <plan> --from-spec         # Pick from spec's Workshop Opportunities
+# /the-flow 2c <plan> --list              # List existing workshops
 #
 # Examples:
-# /plan-2c-workshop 003-workflow-service "CLI command flows"
-# /plan-2c-workshop workflow-service "WorkUnit data model"
-# /plan-2c-workshop 003-workflow-service --from-spec
+# /the-flow 2c 003-workflow-service "CLI command flows"
+# /the-flow 2c workflow-service "WorkUnit data model"
+# /the-flow 2c 003-workflow-service --from-spec
 ```
 
 ## Purpose
@@ -152,7 +157,7 @@ Workshops in docs/plans/003-workflow-service/:
   001-cli-command-flows.md (CLI Flow) - Created 2024-01-15
   002-workunit-data-model.md (Data Model) - Created 2024-01-16
   
-Run: /plan-2c-v2-workshop 003-workflow-service "<topic>" to create new
+Run: /the-flow 2c 003-workflow-service "<topic>" to create new
 ```
 
 **--from-spec mode**: Read spec's Workshop Opportunities and prompt user to select
@@ -194,10 +199,8 @@ Select topic number (or 'all' to create all): _
    - Understand cross-references needed
    - Maintain consistency
 
-4. **Load domain context** (if `docs/domains/registry.md` exists)
-   - Read spec's `## Target Domains` to understand which domains are relevant
-   - Read `docs/domains/domain-map.md` if it exists — understand how domains connect and what contracts flow between them
-   - For domains this workshop topic relates to, read `docs/domains/<slug>/domain.md`
+4. **Load domain context**
+   - Load domain context per `references/00-routing.md` § Domain context loading
    - Note existing contracts and composition — the workshop design should respect domain boundaries
    - If the workshop is designing a new service/adapter/model, check which domain it belongs to
    - If the topic spans multiple domains, note the cross-domain contracts needed
@@ -537,7 +540,7 @@ Related workshops in this plan:
 Next steps:
   - Review and refine the workshop document
   - Mark as 'Approved' when design is finalized
-  - Continue with /plan-2-clarify or /plan-3-architect
+  - Continue with /the-flow 1b § Re-entry (clarifications) or /the-flow 3 (architect)
 ```
 
 ## Workshop Document Principles
@@ -558,11 +561,11 @@ Next steps:
 
 ## Integration with Other Commands
 
-### From plan-1b-specify
+### From the specify stage (`references/stages/20-specify.md`)
 - Spec identifies Workshop Opportunities
-- `/plan-2c-workshop --from-spec` picks from that list
+- `/the-flow 2c --from-spec` picks from that list
 
-### Into plan-3-architect
+### Into the architect stage (`references/stages/30-architect.md`)
 - Architect checks for `workshops/*.md` in plan folder
 - Incorporates workshop decisions into phase planning
 - Reduces discovery work for workshopped topics
@@ -593,27 +596,27 @@ Next steps:
 
 ### Example 1: CLI Flow Workshop
 ```bash
-/plan-2c-workshop 003-workflow-service "CLI command flows"
+/the-flow 2c 003-workflow-service "CLI command flows"
 ```
 Creates `docs/plans/003-workflow-service/workshops/cli-command-flows.md` with command examples, ASCII flow diagrams, output formats, error codes.
 
 ### Example 2: Data Model Workshop
 ```bash
-/plan-2c-workshop workflow-service "WorkUnit data model"
+/the-flow 2c workflow-service "WorkUnit data model"
 ```
 Creates workshop with TypeScript types, JSON schemas, mermaid ER diagrams, file structure, validation rules.
 
 ### Example 3: From Spec Opportunities
 ```bash
-/plan-2c-workshop 003-workflow-service --from-spec
+/the-flow 2c 003-workflow-service --from-spec
 ```
 Shows list of Workshop Opportunities from spec, user selects which to create.
 
 ### Example 4: List Existing
 ```bash
-/plan-2c-workshop 003-workflow-service --list
+/the-flow 2c 003-workflow-service --list
 ```
 Shows all workshops in the plan folder with their types and status.
 ---
 
-> Harness note: this skill carries no harness seam of its own — it chains back to plan-1b/plan-3, and harness routing (via `/eng-harness-flow`) happens at those skills' seams. Friction capture and retros are the harness family's own concern; SDD never drives them directly.
+> Harness note: this stage carries no harness seam of its own — it chains back to the specify (`references/stages/20-specify.md`) and architect (`references/stages/30-architect.md`) stages, and harness routing (via `/eng-harness-flow`) happens at those stages' seams. Friction capture and retros are the harness family's own concern; SDD never drives them directly.

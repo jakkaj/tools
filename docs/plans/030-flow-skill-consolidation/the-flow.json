@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "kind": "flight-plan",
+  "slug": "flow-skill-consolidation",
+  "plan_dir": "docs/plans/030-flow-skill-consolidation",
+  "mode": "Simple",
+  "cursor": "merge",
+  "recommended_next": "merge",
+  "now": "COMPLETE — re-review waived by user; committed + pushed to main",
+  "next": "— (flow complete)",
+  "_comment": "Post-spec backpressure seam was skipped — router installed but repo has no adopted harness; node removed once its moment passed. Pre-implement + phase-end seams nooped quietly during build.",
+  "nodes": [
+    {
+      "id": "spec",
+      "type": "spec",
+      "label": "Spec · consolidate main-flow skills into the-flow",
+      "status": "done",
+      "next": ["plan"],
+      "command": "/the-flow 1b \"Consolidate the 13 main-flow SDD skills into one progressive-disclosure the-flow skill with lazy-loaded stage modules; back up current skills for fast rollback\"",
+      "ran_at": "2026-06-11T09:14:41Z",
+      "user_input": "plan to do it. get a new plan folder up. plan to bcakup our current skills somewhere so we can quickly get back if this sucks ;)",
+      "note": "2-round batched clarify (7 Qs): Simple Mode, Lightweight testing, no mocks, existing docs only; rollback = git tag pre-flow-consolidation, atomic cutover, dispatch = numbers + names. CS-3.",
+      "artifacts": ["docs/plans/030-flow-skill-consolidation/flow-skill-consolidation-spec.md"]
+    },
+    {
+      "id": "plan",
+      "type": "plan",
+      "label": "Plan · READY v1.1.0 (gates 4 PASS / 3 N/A; 4-lens validation applied)",
+      "status": "done",
+      "next": ["phases"],
+      "command": "/the-flow 3 --spec \"docs/plans/030-flow-skill-consolidation/flow-skill-consolidation-spec.md\"",
+      "ran_at": "2026-06-11T09:35:23Z",
+      "user_input": "run architect now",
+      "note": "2 research scouts → 6 Critical/High findings (stale resume state, cross-module rewiring, catalog blast radius, discovery description, inert migrate script, deploy orphans). validate-v2 4 lenses; HIGH+ fixes applied → v1.1.0. 15 tasks T000–T014.",
+      "artifacts": ["docs/plans/030-flow-skill-consolidation/flow-skill-consolidation-plan.md"]
+    },
+    {
+      "id": "phases",
+      "type": "phase",
+      "phase": 1,
+      "label": "Build ✔ · tag 44ba70f → coach/routing → 11 modules → 83-line dispatch → 12 folders deleted → catalogs+.vscode swept → deployed+tidied → drive verified",
+      "status": "done",
+      "next": ["review"],
+      "command": "/the-flow 6 --plan \"docs/plans/030-flow-skill-consolidation/flow-skill-consolidation-plan.md\"",
+      "ran_at": "2026-06-11T10:27:31Z",
+      "user_input": "yes",
+      "note": "15/15 tasks, 12/12 ACs. Harness seams (pre-implement T000, phase-end T014) nooped quietly — no adopted harness. Deviations logged: 4 utility cross-ref lines, .vscode blown away (user-directed mid-build), module provenance lines kept. Live proof: session skill discovery now lists only the-flow; 030 resume ran through the translation table.",
+      "artifacts": ["docs/plans/030-flow-skill-consolidation/execution.log.md"]
+    },
+    {
+      "id": "review",
+      "type": "review",
+      "label": "Review #1 · REQUEST_CHANGES — 2 HIGH (61 fires plan-complete pre-merge; 30 routes Simple READY to /the-flow 5) + 3 MEDIUM",
+      "status": "done",
+      "next": ["fix"],
+      "command": "/the-flow 7 --plan \"docs/plans/030-flow-skill-consolidation/flow-skill-consolidation-plan.md\"",
+      "ran_at": "2026-06-11T10:53:00Z",
+      "user_input": "Review completed: REQUEST_CHANGES.",
+      "note": "User ran the review themselves (first real direct-jump exercise of stage 70). F001 HIGH: companion stage 61 fires plan-complete before merge (stage 80 owns it). F002 HIGH: architect READY text always routes to /the-flow 5, ignoring Simple Mode → /the-flow 6. F003 MED: live /plan-* refs in README/INSTALL/3 utilities. F004 MED: Domain Manifest omits changed non-plan files. F005 MED: behavioural evidence summarized, not reproducible. Coverage confidence 80%.",
+      "artifacts": [
+        "docs/plans/030-flow-skill-consolidation/reviews/review.md",
+        "docs/plans/030-flow-skill-consolidation/reviews/fix-tasks.md",
+        "docs/plans/030-flow-skill-consolidation/reviews/_computed.diff"
+      ]
+    },
+    {
+      "id": "fix",
+      "type": "phase",
+      "phase": 1,
+      "branch_of": "review",
+      "label": "Fix loop ✔ · FT-001..FT-005 applied + redeployed (61 plan-complete → stage 80; 30 mode-branched; README/INSTALL/3 utilities swept; manifest +4 rows; evidence captured)",
+      "status": "done",
+      "next": ["review-2"],
+      "command": "/the-flow 6 --plan \"docs/plans/030-flow-skill-consolidation/flow-skill-consolidation-plan.md\"",
+      "ran_at": "2026-06-11T11:04:11Z",
+      "user_input": "yeah do it run teh fixes",
+      "note": "FT-001: 5 sites in 61 (not just the cited block) — plan-complete invocation removed, deliberate AC11 delta 9→8 documented. FT-002: 4 sites in 30 — Simple READY → /the-flow 6. FT-003 widened: review's grep missed 6 more live README narrative hits (L128/153/179/314/327/342) — all fixed; 1 labeled-historical hit remains. FT-004: manifest +4 rows. FT-005: reproducible command/output evidence appended to execution log. NEW FLAG: docs/skills-pipeline/codebase.md = stale 9,738-line pack of deleted v1 agents/commands — deletion candidate, awaiting user say-so.",
+      "artifacts": ["docs/plans/030-flow-skill-consolidation/execution.log.md"]
+    },
+    {
+      "id": "review-2",
+      "type": "review",
+      "label": "Re-review · WAIVED by user (fix pass evidence accepted)",
+      "status": "done",
+      "next": ["merge"],
+      "command": "/the-flow 7 --plan \"docs/plans/030-flow-skill-consolidation/flow-skill-consolidation-plan.md\"",
+      "ran_at": "2026-06-11T11:11:11Z",
+      "user_input": "no its finde, commit and push. close it out",
+      "note": "User waived the re-review after the fix pass (5/5 fix tasks applied + redeployed, evidence in execution log) and explicitly authorized commit + push."
+    },
+    {
+      "id": "merge",
+      "type": "merge",
+      "label": "Merge ✔ · committed + pushed to main (explicit user instruction)",
+      "status": "done",
+      "next": [],
+      "command": "/the-flow 8 --plan \"docs/plans/030-flow-skill-consolidation/flow-skill-consolidation-plan.md\"",
+      "ran_at": "2026-06-11T11:11:11Z",
+      "note": "Work happened directly on main (repo convention — no branches); merge = commit + push. Authorized by the user's explicit 'commit and push. close it out'. plan-complete harness seam nooped quietly (router installed, repo unprovisioned, --prompt-optional=false)."
+    }
+  ]
+}

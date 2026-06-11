@@ -30,7 +30,7 @@ A skills repository, plus a dev-tooling installer. The skills are the product:
 ```
 /
 ├── skills/                     # Source-of-truth for skills (SKILL.md per skill)
-│   ├── SDD/                    # 26 spec-driven-development pipeline skills
+│   ├── SDD/                    # the-flow (pipeline dispatch + stage modules) + 12 utility skills
 │   └── general/                # general-purpose skills (grill-me, perplexity-deep-research)
 ├── agents/                     # Installer infra only (legacy command sets removed — skills ship via npx)
 │   ├── mcp/servers.json        # MCP server source-of-truth (read by install/agents.sh)
@@ -39,7 +39,7 @@ A skills repository, plus a dev-tooling installer. The skills are the product:
 │   ├── plans/                  # Plan folders (NNN-slug/) produced by the SDD pipeline
 │   └── skills-pipeline/        # Documentation for the SDD pipeline (README, getting-started, etc.)
 ├── install/                    # Per-tool installer scripts (rust.sh, agents.sh, ...)
-├── scripts/                    # Utility scripts (sync-to-dist, migrate-skills, check-skill-slugs, ...)
+├── scripts/                    # Utility scripts (sync-to-dist, check-skill-slugs, plan-ordinal, ...)
 ├── src/jk_tools/               # Auto-synced distribution mirror — DO NOT EDIT
 ├── setup.sh                    # Entry-point dev-tooling installer
 ├── setup_manager.py            # Python orchestrator (rich progress, runs install/*.sh)
@@ -97,9 +97,9 @@ A skill folder can ship more than `SKILL.md` — any sibling files travel with i
 
 - `skills/general/perplexity-deep-research/pplx_research.py` — a bundled Python CLI the skill shells out to. The skill calls the **Perplexity HTTP API directly** (`https://api.perplexity.ai/chat/completions`) with a long client-side timeout (default 1800s) so deep `sonar-deep-research` jobs **complete instead of dying at the perplexity MCP server's ~5-minute timeout**. The key comes from `$PERPLEXITY_API_KEY` (already in the env + MCP configs). Keep bundled CLIs dependency-light (Python **stdlib only**) so they run wherever the skill installs.
 
-## Editing existing v2 skills
+## Editing the SDD pipeline (`the-flow`)
 
-The 27 SDD skills were migrated from the legacy v2 command set by `scripts/migrate-skills.py` (retained in `scripts/` for replay/audit). To edit a skill, just edit `skills/SDD/<slug>/SKILL.md` directly. Body is byte-identical to the legacy source; the frontmatter has been normalized to `name:` + `description:` only.
+The main SDD flow is **one skill**: `skills/SDD/the-flow/` — a dispatch `SKILL.md` (≤150 lines: stage table, old-slug translation table, hard invariants) plus lazily-loaded modules under `references/` (`00-routing.md` = the guided-mode engine, `coach.md` = the narration voice, `stages/NN-<name>.md` = one module per stage). To change stage behaviour, edit the **stage module**, not the dispatch — the dispatch only routes. The 12 per-stage `plan-*` skills were consolidated into this structure on 2026-06-11 (plan-030, atomic cutover); rollback anchor: git tag `pre-flow-consolidation`. The 12 utility skills under `skills/SDD/` are ordinary standalone skills — edit their `SKILL.md` directly. The old `scripts/migrate-skills.py` (which generated the v2 skills from the long-gone `agents/v2-commands/`) was deleted in the same plan — git history retains it.
 
 ## Source / distribution sync
 
@@ -151,7 +151,6 @@ The installer:
 ## Testing changes
 
 - **Slug-collision check**: `scripts/check-skill-slugs.sh`
-- **Body byte-diff** (after re-running migration): `python3 scripts/migrate-skills.py` (idempotent — `[skip] <slug>` on every entry if no source changes).
 - **MCP smoke**: run `./setup.sh` in a sandbox and confirm MCP config files appear in `~/.claude.json`, `~/.codex/config.toml`, `~/.config/opencode/opencode.json`, etc.
 - **Skills smoke** (against pushed branch): `npx skills@latest add jakkaj/tools --skill <slug> -a claude-code -g` and inspect `~/.claude/skills/<slug>/SKILL.md`.
 
@@ -187,10 +186,10 @@ The setup script checks for and installs each tool via its own `install/<tool>.s
 
 ### What gets synced to `src/jk_tools/`
 
-✅ **Synced**: `agents/mcp/`, `agents/settings.local.json`, `scripts/`, `install/`, `setup_manager.py`, `.vscode/plan-*.md`.
+✅ **Synced**: `agents/mcp/`, `agents/settings.local.json`, `scripts/`, `install/`, `setup_manager.py`.
 ❌ **Not synced — published directly**: `skills/` (consumed by `npx skills` at install time, never mirrored).
 ❌ **Not synced — package-only**: `src/jk_tools/__init__.py`, `src/jk_tools/cli.py`.
-❌ **Not synced — project-specific**: `.vscode/settings.json`, `.vscode/mcp.json`.
+❌ **Not synced — generated on demand**: `./.vscode/mcp.json` (the repo carries no committed `.vscode/` — removed 2026-06-11; `install/agents.sh` regenerates the project MCP config at setup).
 
 ## Adding new tools & tool development guidelines
 

@@ -43,11 +43,11 @@ Examine the conversation context to determine what artifact was just produced. C
 
 | Category | Detection Signal | Agent Focus |
 |----------|-----------------|-------------|
-| **Tasks Dossier** | Recent plan-5 skill invocation, tasks.md file created/modified | Line numbers, code snippets, cross-references, dependency chain |
-| **Code Changes** | Recent plan-6 skill invocation, source files edited | Correctness, edge cases, missing error handling, contract compliance |
-| **Plan** | Recent plan-3 skill invocation, plan.md created | Phase coherence, risk coverage, domain alignment, missing tasks |
-| **Spec** | Recent plan-1b skill invocation, spec.md created | Ambiguities, missing acceptance criteria, scope gaps |
-| **Workshop** | Recent plan-2c skill invocation, workshop file created | Factual accuracy, code examples vs actual source, decision coverage, proof-level fit |
+| **Tasks Dossier** | Tasks dossier just produced (phase-tasks stage), tasks.md file created/modified | Line numbers, code snippets, cross-references, dependency chain |
+| **Code Changes** | Phase implementation just ran (implement stage), source files edited | Correctness, edge cases, missing error handling, contract compliance |
+| **Plan** | Implementation plan just produced (architect stage), plan.md created | Phase coherence, risk coverage, domain alignment, missing tasks |
+| **Spec** | Feature spec just produced (specify stage), spec.md created | Ambiguities, missing acceptance criteria, scope gaps |
+| **Workshop** | Workshop document just produced (workshop stage), workshop file created | Factual accuracy, code examples vs actual source, decision coverage, proof-level fit |
 | **General** | Anything else | Correctness, completeness, consistency |
 
 ### Step 1.25: Establish the Validation Thesis (mandatory)

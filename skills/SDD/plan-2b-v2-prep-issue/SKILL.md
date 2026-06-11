@@ -23,7 +23,7 @@ User input:
 
 $ARGUMENTS
 # Optional flags:
-# --phase N     # Generate Story/Task level issue for phase N (requires plan-5 output)
+# --phase N     # Generate Story/Task level issue for phase N (requires /the-flow 5 output)
 # --type TYPE   # Override auto-detected type: feature|story|task
 
 ## Workflow
@@ -35,7 +35,7 @@ $ARGUMENTS
      * SPEC_FILE = `${PLAN_DIR}/<slug>-spec.md` (REQUIRED)
      * PLAN_FILE = `${PLAN_DIR}/<slug>-plan.md` (optional)
      * TASKS_DIR = `${PLAN_DIR}/tasks/` (optional)
-   - If SPEC_FILE not found: ERROR "Spec not found. Run /plan-1b-v2-specify first."
+   - If SPEC_FILE not found: ERROR "Spec not found. Run /the-flow 1b first."
 
 2) **Load domain context** (additive — skip if no domains):
    - If `docs/domains/registry.md` exists → read registered domains
@@ -275,9 +275,9 @@ Copy the above to your issue tracker, or:
 
 ## Integration Notes
 
-- Can run after /plan-1b-v2-specify (spec only → feature issue)
-- Can run after /plan-3-v3-architect (with plan context → richer feature issue with domain impact)
-- Can run after /plan-5-v2-phase-tasks-and-brief (with --phase N → domain-aware story issues)
+- Can run after /the-flow 1b (spec only → feature issue)
+- Can run after /the-flow 3 (with plan context → richer feature issue with domain impact)
+- Can run after /the-flow 5 (with --phase N → domain-aware story issues)
 - Multiple runs accumulate in issues/ folder (one file per issue)
 - Domain awareness is additive — issues generate correctly without domains
 ```

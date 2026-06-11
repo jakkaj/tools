@@ -95,7 +95,7 @@ next:{
   tasks_file:"<absolute-path-to-tasks.md>",
   why:"<one-liner>",
   validate:["<success criterion>", ...≤3],
-  cmd:"/plan-6-v2-implement-phase --phase \"<phase>\" --plan \"<path>\" --task \"<id>\""
+  cmd:"/the-flow 6 --phase \"<phase>\" --plan \"<path>\" --task \"<id>\""
 }
 
 refs:{plan:"<path> §<anchor|?>", tasks_file:"<absolute-path-to-tasks.md|?>", log:"<.../execution.log.md|?>", paths:["<key dir/file>", ...≤5]}
@@ -157,7 +157,7 @@ Plan: <path> • Phase: <name> • Feature: <slug> • Progress: <x/y or %> • 
 - Immediate: <task‑id> — <why>
   - Tasks file: <absolute-path-to-tasks.md>
   - Validation: <≤3 criteria>
-  - Resume: `/plan-6-v2-implement-phase --phase "<phase>" --plan "<path>" --task "<id>"`
+  - Resume: `/the-flow 6 --phase "<phase>" --plan "<path>" --task "<id>"`
 - Then (≤4): T0xx — <one‑liner> (deps: <ids>)
 
 ## 12) References
@@ -246,7 +246,7 @@ next:{
   tasks_file:"/workspaces/.../tasks/phase-5/tasks.md",
   why:"service layer needed before router",
   validate:["unit tests green","returns domain type only","no caching"],
-  cmd:"/plan-6-v2-implement-phase --phase \"Phase 5: WebRTC\" --plan \"/workspaces/.../realtime-chatbot-plan.md\" --task \"T032\""
+  cmd:"/the-flow 6 --phase \"Phase 5: WebRTC\" --plan \"/workspaces/.../realtime-chatbot-plan.md\" --task \"T032\""
 }
 
 refs:{plan:"/workspaces/.../realtime-chatbot-plan.md § Phase 5", tasks_file:"/workspaces/.../tasks/phase-5/tasks.md", log:"/workspaces/.../tasks/phase-5/execution.log.md", paths:["src/backend/app/","tests/","src/ui/components/"]}

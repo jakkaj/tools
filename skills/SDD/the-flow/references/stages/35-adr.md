@@ -1,12 +1,17 @@
----
-name: plan-3a-v2-adr
-description: Generate an Architectural Decision Record (ADR) from the feature spec and clarifications; persist to docs/adr and cross-link into the plan. Domain-aware v2.
----
-Please deep think / ultrathink as this is a complex task.
+# Stage 35 — ADR
+*(absorbed from `plan-3a-v2-adr`; loaded lazily via `/the-flow 3a` or `/the-flow adr` — dispatch: `../../SKILL.md`)*
 
-# plan-3a-v2-adr
+**Purpose**: Generate a high-quality, domain-aware Architectural Decision Record (ADR) from the feature spec (and optional plan), persist it under `docs/adr/`, and wire cross-links so downstream stages import its constraints. Includes domain impact analysis, domain map integration, and domain.md backlinks.
+**Entry conditions**: Spec exists (`--spec` REQUIRED — abort if missing). Optional: plan file (`--plan`), doctrine files at `docs/project-rules/`, existing ADRs at `docs/adr/`, domain registry/docs at `docs/domains/`.
+**Inputs**: Flags — `--spec` (required), `--plan`, `--title`, `--status` (Proposed|Accepted|Rejected|Superseded|Deprecated; default Proposed), `--stakeholders`, `--replace NNNN`, `--non-interactive`, `--supersedes NNNN`.
+**Output contract**: Atomic write of `docs/adr/adr-NNNN-[title-slug].md` (strict structure: full front matter; Status; Context; Decision; mandatory Domain Impact; ≥3 POS + ≥3 NEG Consequences; ≥2 Alternatives; Implementation Notes; References) + updated `docs/adr/README.md` index + backlinks into spec (`## ADRs`), plan (`## ADR Ledger`, if present), affected `domain.md` files, and domain map (if required). Terminal report: "✅ ADR created" with file path, status, domains, backlink summary, ADR Ledger table, Domain Impact Summary table — or "❌ ADR creation failed" with actionable validation errors.
+**Next routing**: Proceed to `/the-flow 3` (module `references/stages/30-architect.md`) — the architect's G4 gate imports `Status: Accepted` ADRs as constraints; or rerun `/the-flow 3a` (module `references/stages/35-adr.md`) for additional decisions.
 
-Generate a high-quality, **domain-aware ADR** from the spec (and optional plan), save it under `docs/adr/`, and wire cross-links so /plan-3-v3-architect and /plan-5-v2 can import constraints. Includes domain impact analysis, domain map integration, and domain.md backlinks.
+---
+
+## Procedure
+
+Generate a high-quality, **domain-aware ADR** from the spec (and optional plan), save it under `docs/adr/`, and wire cross-links so the architect stage (`/the-flow 3`, module `references/stages/30-architect.md`) and the phase-tasks stage (`/the-flow 5`, module `references/stages/50-phase-tasks.md`) can import constraints. Includes domain impact analysis, domain map integration, and domain.md backlinks.
 
 ```md
 User input:
@@ -42,13 +47,8 @@ $ARGUMENTS
 
 ### Domain Context Loading
 
-Before research, load domain system context:
+Before research, load domain context per `references/00-routing.md` § Domain context loading.
 
-- **Read `## Target Domains` from spec** → list of existing and NEW domains relevant to this decision
-- If `docs/domains/registry.md` exists → read all registered domains
-- If `docs/domains/domain-map.md` exists → read the domain architecture diagram to understand current topology, contract relationships, and dependency flows
-- For each existing domain in spec's target list → read `docs/domains/<slug>/domain.md`
-  * Note: contracts (public interfaces), composition (internal structure), dependencies, boundary (owns/excludes)
 - For each NEW domain in spec → note the sketch (Purpose, Boundary Owns/Excludes)
 - If no domain system exists → note "No domain registry found — domain impact will be inferred from spec and codebase"
 
@@ -414,8 +414,8 @@ Domain Impact Summary:
 | [slug] | [modify]    | [summary]       | [yes/no]   |
 
 Next steps:
-- Option A: proceed to /plan-3-v3-architect (plan uses this ADR)
-- Option B: rerun /plan-3a-v2-adr for additional decisions
+- Option A: proceed to /the-flow 3 (module references/stages/30-architect.md) (plan uses this ADR)
+- Option B: rerun /the-flow 3a (module references/stages/35-adr.md) for additional decisions
 - Option C: review ADR at docs/adr/adr-NNNN-[title-slug].md
 ```
 
@@ -467,5 +467,5 @@ Fix these issues and retry with --replace NNNN flag
 * Dependency rules apply: business → infrastructure ✅, infrastructure → business ❌, business → business via contracts only ⚠️
 
 Next steps:
-- Proceed to **/plan-3-v3-architect** (plan uses this ADR)
-- Or rerun **/plan-3a-v2-adr** for additional decisions
+- Proceed to **`/the-flow 3`** (module `references/stages/30-architect.md`) — the plan uses this ADR
+- Or rerun **`/the-flow 3a`** (module `references/stages/35-adr.md`) for additional decisions

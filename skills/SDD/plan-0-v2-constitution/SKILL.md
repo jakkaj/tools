@@ -243,7 +243,7 @@ Include amendment date as ISO 8601."
      - `tests/fixtures/` – shared test data, realistic examples preferred
 
      **7. Mock Usage Policy**
-     - Follow project-specific mock policy (Avoid | Targeted | Liberal - set in plan-2-clarify)
+     - Follow project-specific mock policy (Avoid | Targeted | Liberal - set in the spec's clarify pass, `/the-flow 1b`)
      - When mocking, document WHY the real dependency isn't used
      - Prefer real data/fixtures over mocks when practical
      - Mocks SHOULD be simple and behavior-focused, not implementation-focused
@@ -467,4 +467,4 @@ Canonical paths enforced by this command
 
 Run this command once per project (or whenever the guiding principles change) before executing planning or implementation phases.
 
-Next step (when happy): Run **/plan-1a-v2-explore** for research, **/plan-1b-v2-specify** to capture the feature specification, or **/plan-v2-extract-domain** to formalize existing code as a named domain.
+Next step (when happy): Run **/the-flow 1a** for research, **/the-flow 1b** to capture the feature specification, or **/plan-v2-extract-domain** to formalize existing code as a named domain.

@@ -430,11 +430,11 @@ This is used for targeted grep patterns, NOT as the primary search strategy. The
 ## Integration Points
 
 This command is designed to be called by:
-- **plan-3-v2 Domain & Pattern Scout**: anti-reinvention check against domain Concepts tables
-- **Pre-Implementation Audit subagent** (plan-5 step 5a/S4): duplication check for new files
-- **plan-1a-v2-explore**: codebase research subagents checking for existing implementations
+- **the architect stage's (`/the-flow 3`) Domain & Pattern Scout**: anti-reinvention check against domain Concepts tables
+- **Pre-Implementation Audit subagent** (`/the-flow 5` step 5a/S4): duplication check for new files
+- **the explore stage (`/the-flow 1a`)**: codebase research subagents checking for existing implementations
 - **Direct user invocation**: "does this thing already exist before I build it?"
-- **plan-6-v2**: mid-implementation discovery when agent encounters a concept that might exist elsewhere
+- **the implement stage (`/the-flow 6`)**: mid-implementation discovery when agent encounters a concept that might exist elsewhere
 
 When called as a subagent, the structured output format allows parent commands to parse findings programmatically.
 

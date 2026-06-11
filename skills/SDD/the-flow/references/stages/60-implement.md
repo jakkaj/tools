@@ -1,10 +1,15 @@
----
-name: plan-6-v2-implement-phase
-description: Implement exactly one approved phase or subtask using the testing approach from the plan, with domain placement rules. V2 standalone rewrite.
----
-Please deep think / ultrathink as this is a complex task.
+# Stage 60 — Implement Phase
+*(absorbed from `plan-6-v2-implement-phase`; loaded lazily via `/the-flow 6` or `/the-flow implement` — dispatch: `../../SKILL.md`)*
 
-# plan-6-v2-implement-phase
+**Purpose**: Implement exactly one approved phase or subtask using the testing approach from the plan, with domain placement rules; keep the task table + execution log live; update domain.md files after implementation.
+**Entry conditions**: Plan exists (`**Status**: READY`); Full Mode needs the phase's tasks dossier from `/the-flow 5` (`tasks/<phase-slug>/tasks.md`); Simple Mode uses inline plan tasks; human GO has been given on the dossier.
+**Inputs**: Flags `--phase "<Phase N: Title>"` (Full Mode) or omitted (Simple Mode), `--plan "<abs path to plan.md>"`, optional `--subtask "<ORD-subtask-slug>"`. Reads the plan's Testing Strategy, the task table, Context Brief / Key Findings, and domain context.
+**Output contract**: Code changes + tests per the plan's testing approach; `execution.log.md` with per-task entries; task table + Architecture Map kept current per task (via `references/stages/62-progress.md`); domain.md/registry/domain-map updates; terminal report = unified diffs, evidence, domain files updated, final status vs acceptance criteria, suggested commit message.
+**Next routing**: `/the-flow 7 --phase "<Phase N: Title>" --plan "<PLAN_PATH>"` (Full Mode) or `/the-flow 7 --plan "<PLAN_PATH>"` (Simple Mode) — module `references/stages/70-review.md`. Per-task progress updates delegate to sibling module `references/stages/62-progress.md` (also directly invocable as `/the-flow 6a`).
+
+---
+
+## Procedure
 
 Implement **exactly one** approved phase or subtask using the **testing approach from the plan**. Apply domain placement rules. Update domain.md files after implementation.
 
@@ -86,10 +91,7 @@ $ARGUMENTS
    - Read Testing Strategy from plan (approach + mock usage)
    - Read task table from PHASE_DOC
    - Read Context Brief / Key Findings for hazards to watch for
-   - **Load domain context**:
-     * Read `## Target Domains` from spec
-     * Read `## Domain Manifest` from plan
-     * For each domain being modified, read `docs/domains/<slug>/domain.md`
+   - **Load domain context** per `references/00-routing.md` § Domain context loading
    - **Harness availability** (router-only): probe `test -f ~/.agents/skills/eng-harness-flow/SKILL.md` (fallback `~/.claude/skills/eng-harness-flow/SKILL.md`) — the harness is reached exclusively through the `/eng-harness-flow` router; never read governance docs or run health checks yourself
 
 2a) **Pre-Phase Harness Seam — `--event pre-implement`** (router-only):
@@ -197,15 +199,17 @@ $ARGUMENTS
    - Final status mapped to acceptance criteria
    - Suggested commit message
 
-6) Auto-run plan-6a-v2-update-progress for each completed task.
+6) For each completed task, read `references/stages/62-progress.md` and follow it
+   (auto-run — same flags per task: `--plan "<PLAN_PATH>" --phase "<Phase N: Title>"
+   --task "<task-id>" --status completed`).
 
-   For the **final task of the phase**:
+   For the **final task of the phase**, read `references/stages/62-progress.md` and
+   follow it with:
    ```bash
-   /plan-6a-v2-update-progress \
-     --plan "<PLAN_PATH>" \
-     --phase "<Phase N: Title>" \
-     --task "<final-task-id>" \
-     --status completed
+   --plan "<PLAN_PATH>" \
+   --phase "<Phase N: Title>" \
+   --task "<final-task-id>" \
+   --status completed
    ```
 
 7) **Phase-end harness seam** (router-only; skip silently if the router
@@ -220,15 +224,8 @@ $ARGUMENTS
 STOP: Report phase complete. Suggest next step.
 ```
 
-**Next step (Full Mode)**: Run **/plan-7-v2-code-review --phase "<Phase N: Title>" --plan "<PLAN_PATH>"**
-**Next step (Simple Mode)**: Run **/plan-7-v2-code-review --plan "<PLAN_PATH>"**
+**Next (Full Mode)**: `/the-flow 7 --phase "<Phase N: Title>" --plan "<PLAN_PATH>"` (module `references/stages/70-review.md`)
+**Next (Simple Mode)**: `/the-flow 7 --plan "<PLAN_PATH>"` (module `references/stages/70-review.md`)
 ---
 
-## Harness seams (router-only)
-
-This skill fires exactly two harness seams, both through the single entry point `/eng-harness-flow` (children never called directly — they are private and may move):
-
-- **Phase start** — § 2a fires `--event pre-implement --phase --plan-dir` before any task.
-- **Phase end** — step 7 fires `--event phase-end --plan-dir` after all tasks and outputs.
-
-The router owns everything behind the door: harness state, boot verdicts, friction capture, retros, drain-vs-harvest. This skill only narrates envelopes verbatim. Best-effort throughout — no router installed means standard testing, one calm warning, and silence.
+> Harness posture: `references/00-routing.md` § Harness router posture. The concrete seam invocations above are normative.
