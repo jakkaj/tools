@@ -3,13 +3,15 @@
   "slug": "the-flow",
   "plan_dir": "docs/plans/031-skills-flow-architecture",
   "mode": "Simple",
-  "current_stage": "awaiting-7",
-  "pending_command": "/the-flow 7 review --plan \"docs/plans/031-skills-flow-architecture/skills-flow-architecture-plan.md\"",
+  "current_stage": "complete",
+  "pending_command": null,
   "intent": "Composable skills-flow architecture (workshop 001): sub-skills as contract-bound verbs, flow-level graph owns all routing, firm templates + lints — a shareable pattern with the-flow as exemplar",
   "milestones_total": 6,
-  "milestones_done": 4,
-  "last_checkpoint_at": "2026-06-12T01:56Z",
-  "compacted_seams": ["post-1a", "pre-6", "mid-6"],
-  "harness": "router installed; repo not provisioned (no .harness/, no governance doc) — all four seams noop'd calmly (session-start, post-spec, pre-implement T000, phase-end T0zz); --prompt-optional=false honoured throughout; plan-complete seam remains for stage 8",
-  "status": "active"
+  "milestones_done": 6,
+  "last_checkpoint_at": "2026-06-12T02:55Z",
+  "compacted_seams": ["post-1a", "pre-6", "mid-6", "post-fix-pass"],
+  "harness": "router installed; repo not provisioned (no .harness/, no governance doc) — all five seams noop'd calmly (session-start, post-spec, pre-implement T000, phase-end T0zz, plan-complete at close-out); --prompt-optional=false honoured throughout",
+  "status": "complete",
+  "closed_at": "2026-06-12T02:55Z",
+  "close_note": "Review REQUEST_CHANGES → 5 fix tasks applied + verified; re-review waived by user. No merge stage (main-only repo): work committed directly to main as b07ad7d and pushed on the user's explicit ask. Flow closed on user request."
 }

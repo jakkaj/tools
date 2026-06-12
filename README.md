@@ -24,6 +24,16 @@ Without a `--skill` filter that command opens an interactive picker. To install 
 npx skills@latest add jakkaj/tools -a github-copilot -y
 ```
 
+Just want the spec-driven flow (**the-flow** — the whole `/the-flow` SDD pipeline ships as one skill, sub-skills included)? Scope the install with `--skill`:
+
+```bash
+# Project-local for GitHub Copilot CLI — run from the target repo's root
+npx skills@latest add jakkaj/tools --skill the-flow -a github-copilot
+
+# Or globally for Claude Code
+npx skills@latest add jakkaj/tools --skill the-flow -a claude-code -g
+```
+
 For all install patterns (other CLIs, project-local, single-skill, multi-CLI, universal), see **[INSTALL.md](./INSTALL.md)**.
 
 For an annotated catalog of every skill, see **[README_AGENTS.md](./README_AGENTS.md)**.

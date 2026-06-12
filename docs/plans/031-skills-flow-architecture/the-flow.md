@@ -16,14 +16,15 @@ flowchart TD
     spec["Spec<br/>/the-flow 1b specify<br/>✅ Simple · CS-3 · 14 ACs · sub-skill named · validated"]:::done
     plan["Plan<br/>/the-flow 3 architect<br/>✅ READY v1.1.0 · 16 tasks · D-A..D-F · validated"]:::done
     build["Build · Phase 1 (A→B→C→D, 17 tasks)<br/>/the-flow 6 implement --plan …<br/>✅ 17/17 tasks · 14/14 ACs · L1 163→0 · lint exit 0 · deployed"]:::done
-    review["Review<br/>/the-flow 7 review --plan …"]:::known
-    merge["Merge<br/>/the-flow 8 merge"]:::assumed
+    review["Review<br/>/the-flow 7 review --plan …<br/>✅ REQUEST_CHANGES → 5 fixes applied + verified · re-review waived"]:::done
+    merge["Merge (administrative close)<br/>✅ no merge stage — main-only repo · committed b07ad7d + pushed"]:::done
 
     u_research>"🗣 new plan, start wiht explore. bring hta tworkshop across"]:::said
     u_ws1>"🗣 run a /workshop on this please"]:::said
     u_spec>"🗣 continue on with spec or what ever was next then validate"]:::said
     u_plan>"🗣 yes · i think we should call the things we have in the wf a sub-skill"]:::said
     u_build>"🗣 make sure we have commited our working changes first hten implement please · please stop at a natural seam for a compaction"]:::said
+    u_merge>"🗣 commit and push please · close our the flow"]:::said
 
     research --> spec
     research -.-> ws1
@@ -38,13 +39,14 @@ flowchart TD
     u_spec -.- spec
     u_plan -.- plan
     u_build -.- build
+    u_merge -.- merge
 ```
 
 **Legend**: 🟩 done · 🟧 in progress · 🟥 blocked · 🟦 known (designed) · ⬜ dashed = assumed (speculative) · 🗣 verbatim user input · 🟪 harness loop (omitted — repo not provisioned)
 
-- **Now**: Build · Phase 1 **complete** (17/17 tasks, 14/14 ACs — pattern doc + lint shipped; the-flow restructured, L1 163→0, lint exit 0; T014 fresh-agent variant flow passed; deployed byte-identical; `check-flow` in `ci`)
-- **Next**: Review · `/the-flow 7 review --plan "docs/plans/031-skills-flow-architecture/skills-flow-architecture-plan.md"`
+- **Now**: **Flow closed.** Review fixes applied + verified (re-review waived by user); all plan-031 work committed directly to `main` as `b07ad7d` (36 files, +5510/−1890) and pushed.
+- Review verdict was REQUEST_CHANGES — 5 fix tasks (FT-001..FT-005), all applied + verified: lint's next-step family made case-insensitive + plural (true L1 baseline ≈165, two `## Next Steps` leaks fixed), L3 now catches verb-led + id-only view literals, stale 61/stage-numbering prose cleaned ×4, AC7/AC13 reconciled to the four authorized literal classes.
+- No merge stage executed: this repo works on **main only** — there was no branch to merge; stage 8's PROCEED gate never applied.
 - Mid-architect user decision (spec Clarification #5 / plan D-E): the reusable unit inside a flow is a **sub-skill** — named by a verb, composed by the flow's Registry+Graph.
-- Harness: router installed, repo not provisioned — all four seams (session-start, post-spec, pre-implement T000, phase-end T0zz) noop'd calmly, exactly as the plan expected.
+- Harness: router installed, repo not provisioned — all five seams (session-start, post-spec, pre-implement T000, phase-end T0zz, plan-complete at close-out) noop'd calmly, exactly as the plan expected.
 - Build paused once mid-phase for a user-requested `/compact` (after T012) and resumed at T013 — seam logged in `execution.log.md`.
-- Everything since `bb6de93` is **uncommitted working tree** (git read-only rule; commit only on your ask).

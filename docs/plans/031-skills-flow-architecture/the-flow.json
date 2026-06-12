@@ -4,11 +4,9 @@
   "slug": "skills-flow-architecture",
   "plan_dir": "docs/plans/031-skills-flow-architecture",
   "mode": "Simple",
-  "cursor": "build",
-  "recommended_next": "review",
-  "now": "Build · Phase 1 complete (17/17 tasks, 14/14 ACs; lint exit 0; L1 163→0; deployed)",
-  "next": "Review · /the-flow 7 review --plan \"docs/plans/031-skills-flow-architecture/skills-flow-architecture-plan.md\"",
-  "_comment": "Harness nodes omitted: router installed but this repo is not provisioned (no .harness/, no governance doc) — session-start, post-spec, pre-implement (T000) and phase-end (T0zz) seams all noop'd calmly, as the plan expected. Workshop ws1 predates the flow (authored 2026-06-11, pre-spec, brought across at flow start). Build paused once mid-phase for a user-requested /compact (seam logged in execution.log.md) and resumed at T013.",
+  "cursor": "merge",
+  "now": "Flow closed · review fixes applied + verified (re-review waived); work committed directly to main (b07ad7d) and pushed",
+  "_comment": "Harness nodes omitted: router installed but this repo is not provisioned (no .harness/, no governance doc) — all five seams (session-start, post-spec, pre-implement T000, phase-end T0zz, plan-complete at close-out) noop'd calmly, as the plan expected. Workshop ws1 predates the flow (authored 2026-06-11, pre-spec, brought across at flow start). Build paused once mid-phase for a user-requested /compact (seam logged in execution.log.md) and resumed at T013.",
   "agents": [],
   "nodes": [
     { "id": "research", "type": "research", "label": "Research", "status": "done",
@@ -39,13 +37,19 @@
       "command": "/the-flow 6 implement --plan \"docs/plans/031-skills-flow-architecture/skills-flow-architecture-plan.md\"",
       "ran_at": "2026-06-12T01:56Z",
       "user_input": "make sure we have commited our working changes first hten implement please · please stop at a natural seam for a compaction",
-      "note": "17/17 tasks, 14/14 ACs. Pattern doc + lint shipped; L1 163→0; lint exit 0 (0 warnings); frozen surfaces byte-verified (seam strings, PROCEED gate, State-write ownership); T014 fresh-agent variant flow (/shipnote) assembled from the doc alone, lint exit 0; deployed — canonical store byte-identical to source; check-flow wired into ci. Paused mid-phase for /compact after T012, resumed at T013. Uncommitted (git read-only; bb6de93 was the user-asked pre-build commit).",
+      "note": "17/17 tasks, 14/14 ACs. Pattern doc + lint shipped; L1 163→0; lint exit 0 (0 warnings); frozen surfaces byte-verified (seam strings, PROCEED gate, State-write ownership); T014 fresh-agent variant flow (/shipnote) assembled from the doc alone, lint exit 0; deployed — canonical store byte-identical to source; check-flow wired into ci. Paused mid-phase for /compact after T012, resumed at T013.",
       "artifacts": ["execution.log.md"], "next": ["review"] },
 
-    { "id": "review", "type": "review", "label": "Review", "status": "known",
-      "command": "/the-flow 7 review --plan \"docs/plans/031-skills-flow-architecture/skills-flow-architecture-plan.md\"", "next": ["merge"] },
+    { "id": "review", "type": "review", "label": "Review", "status": "done",
+      "command": "/the-flow 7 review --plan \"docs/plans/031-skills-flow-architecture/skills-flow-architecture-plan.md\"",
+      "ran_at": "2026-06-12T02:40Z",
+      "note": "REQUEST_CHANGES — 5 fix tasks (FT-001..FT-005): L1 case-sensitivity blind spot (true baseline ≈165, two ## Next Steps leaks survived the build), L3 missed verb-led + id-only view literals, stale 61/stage-numbering prose ×4, AC7/AC13 wording. All 5 applied + verified (lint exit 0, planted-leak self-tests caught on the right branches, gate phrases byte-intact, redeployed). Re-review waived by user — flow closed after commit b07ad7d.",
+      "artifacts": ["reviews/review.md", "reviews/fix-tasks.md", "reviews/_computed.diff"], "next": ["merge"] },
 
-    { "id": "merge", "type": "merge", "label": "Merge", "status": "assumed",
-      "command": "/the-flow 8 merge", "next": [] }
+    { "id": "merge", "type": "merge", "label": "Merge (administrative close — no merge stage)", "status": "done",
+      "ran_at": "2026-06-12T02:55Z",
+      "user_input": "commit and push please · close our the flow",
+      "note": "No merge executed: this repo works on main only (no branches), so stage 8 had nothing to merge. On the user's explicit ask, all plan-031 work was committed directly to main as b07ad7d (36 files, +5510/−1890) and pushed. plan-complete harness seam noop'd (router installed, repo unprovisioned). Flow closed.",
+      "next": [] }
   ]
 }

@@ -329,3 +329,17 @@ Build summary: pattern doc + lint script shipped and proven (T014 fresh-agent as
 
 **Verification**: `just check-flow` → exit 0, 0 warnings. Re-review checklist grep (`^## Next Steps|\*\*Next steps?\*\*|Stage 60/61|61-implement-companion` across the skill) → 0 hits. Seam invocation strings byte-intact in every edited file (20-specify's diff vs HEAD = the documented T008 re-homing delta only). Redeployed: canonical store byte-identical to source.
 
+
+---
+
+## Flow close-out — 2026-06-12
+
+**User**: "commit and push please" → "close our the flow"
+
+- **Commit**: all plan-031 work (build + review fix pass + skill removals) committed directly to `main` as `b07ad7d` (36 files, +5510/−1890) and pushed — first explicit git ask since `bb6de93`.
+- **Re-review**: waived by user — flow closed after the fix pass was verified (lint exit 0 / 0 warnings; planted-leak self-tests; gate phrases byte-intact; redeployed byte-identical).
+- **Merge stage**: not executed — this repo works on main only (no branches), so stage 8 had nothing to merge; the PROCEED gate never applied. Recorded as an administrative close on the merge node.
+- **Plan-complete harness seam** (`/eng-harness-flow --event plan-complete --plan-dir "docs/plans/031-skills-flow-architecture" --json --prompt-optional=false`): router installed, repo unprovisioned (no `.harness/`, no governance doc) → adoption gate S2/S4 missing → `decision: noop`, narrated calmly. Fifth and final seam of this flow; all five noop'd as the plan expected.
+- **State**: `.the-flow-state.json` → `status: complete` (milestones 6/6, pending_command null); `the-flow.json` review + merge nodes → done; `the-flow.md` regenerated from JSON.
+
+**FLOW CLOSED.**

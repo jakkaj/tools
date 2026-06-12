@@ -66,10 +66,14 @@ npx skills@latest add jakkaj/tools \
 
 ### Just one skill (or a few)
 
-Use `--skill <slug>` to scope the install to a single skill (repeat for several):
+Use `--skill <slug>` to scope the install to a single skill (repeat for several). The most common pick is the spec-driven flow itself — **the-flow** ships the entire `/the-flow` SDD pipeline (dispatch + all lazily-loaded sub-skills) as one skill:
 
 ```bash
-# Single skill, globally for Claude Code
+# Just the spec-driven flow (the-flow), project-local for GitHub Copilot CLI
+# — run from the target repo's root
+npx skills@latest add jakkaj/tools --skill the-flow -a github-copilot
+
+# Same, globally for Claude Code
 npx skills@latest add jakkaj/tools --skill the-flow -a claude-code -g
 
 # A few skills, project-local for Codex
