@@ -13,8 +13,8 @@
     { "id": "crc", "kind": "companion", "slug": "code-review-companion", "runtime": "minih",
       "run_id": "2026-01-19T08-22-01Z-a91f", "status": "live", "covers": ["p1", "p2", "p3", "p4", "p5", "p6"],
       "render": "wrap",
-      "driver": "/the-flow 6c companion",
-      "note": "wraps the build phases; reviews each commit live (fire-and-forget pings); supersedes /the-flow 7 review." },
+      "driver": "/the-flow 6 implement --companion",
+      "note": "wraps the build phases; reviews each commit live (fire-and-forget pings); supersedes the post-hoc review stage." },
     { "id": "docw", "kind": "worker", "slug": "docs-writer", "runtime": "minih",
       "status": "queued", "covers": ["p6"], "render": "side",
       "note": "drafts package READMEs in parallel during the Docs phase." }

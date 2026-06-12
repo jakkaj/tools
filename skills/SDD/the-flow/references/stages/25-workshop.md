@@ -1,11 +1,15 @@
-# Stage 25 — workshop
-*(absorbed from `plan-2c-v2-workshop`; loaded lazily via `/the-flow 2c workshop` or `/the-flow workshop` — dispatch: `../../SKILL.md`)*
+# workshop
 
-**Purpose**: Create a detailed design document — a working reference — that explores a complex concept in depth before architecture, from the spec's Workshop Opportunities or any topic needing deep exploration.
-**Entry conditions**: An existing plan folder (`docs/plans/<ordinal>-<slug>/`); the plan's spec for `--from-spec` and context. Optional stage — can run any time during planning.
-**Inputs**: `<plan>` (ordinal, slug, or path) + `"<topic>"` · `--from-spec` (pick from the spec's Workshop Opportunities) · `--list` (list existing workshops). Context: `${PLAN_DIR}/<slug>-spec.md`, `research-dossier.md`, existing `workshops/*.md`, domain registry.
-**Output contract**: `${PLAN_DIR}/workshops/<NNN>-<topic-slug>.md` (typed design doc with value frame, proof levels, evidence ledger) + terminal success block (type, proof level, value axes, key questions, related workshops, next steps).
-**Next routing**: `/eng-harness-flow --event post-spec --spec <path>` (recommended backpressure seam before architect, router-installed only) or `/the-flow 3 architect` (module `references/stages/30-architect.md`); another workshop via `/the-flow 2c workshop` again.
+> Sub-skill — part of a verb library. Knows nothing about any flow:
+> no stage ids, no successor/predecessor names, no flow commands.
+> Composition is the bundling flow's job.
+
+**Verb**: workshop
+**Purpose**: Create a detailed design document — a working reference — that explores a complex concept in depth before architecture, from the spec's Workshop Opportunities or any topic needing deep exploration. Optional — can run any time during planning.
+**Consumes**: an existing plan folder (`docs/plans/<ordinal>-<slug>/`) · `${PLAN_DIR}/<slug>-spec.md` (required for `--from-spec`, otherwise context) · `research-dossier.md` (optional) · existing `workshops/*.md` (optional) · domain registry (optional)
+**Flags**: `<plan>` (ordinal, slug, or path) + `"<topic>"` · `--from-spec` (pick from the spec's Workshop Opportunities) · `--list` (list existing workshops)
+**Produces**: `${PLAN_DIR}/workshops/<NNN>-<topic-slug>.md` (typed design doc with value frame, proof levels, evidence ledger) + terminal success block (type, proof level, value axes, key questions, related workshops)
+**Side effects**: none
 
 ---
 
@@ -17,15 +21,15 @@ Create a **detailed design document** that explores a complex concept in depth. 
 User input:
 
 $ARGUMENTS
-# Expected formats:
-# /the-flow 2c workshop <plan> "<topic>"           # Workshop a specific topic
-# /the-flow 2c workshop <plan> --from-spec         # Pick from spec's Workshop Opportunities
-# /the-flow 2c workshop <plan> --list              # List existing workshops
+# Expected argument forms (flags are this verb's own — the flow renders the full command):
+# <plan> "<topic>"           # Workshop a specific topic
+# <plan> --from-spec         # Pick from spec's Workshop Opportunities
+# <plan> --list              # List existing workshops
 #
 # Examples:
-# /the-flow 2c workshop 003-workflow-service "CLI command flows"
-# /the-flow 2c workshop workflow-service "WorkUnit data model"
-# /the-flow 2c workshop 003-workflow-service --from-spec
+# 003-workflow-service "CLI command flows"
+# workflow-service "WorkUnit data model"
+# 003-workflow-service --from-spec
 ```
 
 ## Purpose
@@ -157,7 +161,7 @@ Workshops in docs/plans/003-workflow-service/:
   001-cli-command-flows.md (CLI Flow) - Created 2024-01-15
   002-workunit-data-model.md (Data Model) - Created 2024-01-16
   
-Run: /the-flow 2c workshop 003-workflow-service "<topic>" to create new
+Run this verb again with: 003-workflow-service "<topic>" to create new
 ```
 
 **--from-spec mode**: Read spec's Workshop Opportunities and prompt user to select
@@ -537,10 +541,9 @@ Status: Draft
 Related workshops in this plan:
   - workunit-data-model.md (Data Model)
 
-Next steps:
+Refinement:
   - Review and refine the workshop document
   - Mark as 'Approved' when design is finalized
-  - Continue with /the-flow 1b specify § Re-entry (clarifications) or /the-flow 3 architect (architect)
 ```
 
 ## Workshop Document Principles
@@ -559,15 +562,15 @@ Next steps:
 12. **Evidence Trail** - Leave behind diagrams, examples, schemas, test scenarios, tables, or other proof artifacts
 13. **Fresh Entrant Test** - A new human or agent can enter the topic and act without reconstructing missing context
 
-## Integration with Other Commands
+## Integration with neighbouring verbs (via artifacts — the wire protocol)
 
-### From the specify stage (`references/stages/20-specify.md`)
-- Spec identifies Workshop Opportunities
-- `/the-flow 2c workshop --from-spec` picks from that list
+### From the specify verb
+- The spec identifies Workshop Opportunities
+- This verb's `--from-spec` flag picks from that list
 
-### Into the architect stage (`references/stages/30-architect.md`)
-- Architect checks for `workshops/*.md` in plan folder
-- Incorporates workshop decisions into phase planning
+### Into the architect verb
+- The architect checks for `workshops/*.md` in the plan folder
+- Incorporates workshop decisions into phase planning (they are authoritative)
 - Reduces discovery work for workshopped topics
 - References workshop documents in relevant phases
 
@@ -596,27 +599,35 @@ Next steps:
 
 ### Example 1: CLI Flow Workshop
 ```bash
-/the-flow 2c workshop 003-workflow-service "CLI command flows"
+# arguments to this verb:
+003-workflow-service "CLI command flows"
 ```
 Creates `docs/plans/003-workflow-service/workshops/cli-command-flows.md` with command examples, ASCII flow diagrams, output formats, error codes.
 
 ### Example 2: Data Model Workshop
 ```bash
-/the-flow 2c workshop workflow-service "WorkUnit data model"
+# arguments to this verb:
+workflow-service "WorkUnit data model"
 ```
 Creates workshop with TypeScript types, JSON schemas, mermaid ER diagrams, file structure, validation rules.
 
 ### Example 3: From Spec Opportunities
 ```bash
-/the-flow 2c workshop 003-workflow-service --from-spec
+# arguments to this verb:
+003-workflow-service --from-spec
 ```
 Shows list of Workshop Opportunities from spec, user selects which to create.
 
 ### Example 4: List Existing
 ```bash
-/the-flow 2c workshop 003-workflow-service --list
+# arguments to this verb:
+003-workflow-service --list
 ```
 Shows all workshops in the plan folder with their types and status.
 ---
 
-> Harness note: this stage carries no harness seam of its own — it chains back to the specify (`references/stages/20-specify.md`) and architect (`references/stages/30-architect.md`) stages, and harness routing (via `/eng-harness-flow`) happens at those stages' seams. Friction capture and retros are the harness family's own concern; SDD never drives them directly.
+> Harness note: this verb carries no harness seam of its own — harness routing (via `/eng-harness-flow`) happens at the flow's seams. Friction capture and retros are the harness family's own concern; SDD never drives them directly.
+
+## Exit
+
+Print the output-contract summary (✅ block: what was produced, where, key fields). Then STOP. Do not name a next stage. If invoked standalone, end with exactly: "Routing is the flow's job — run the parent flow bare to continue."

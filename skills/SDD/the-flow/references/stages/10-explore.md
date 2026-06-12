@@ -1,11 +1,15 @@
-# Stage 10 — explore
-*(absorbed from `plan-1a-v2-explore`; loaded lazily via `/the-flow 1a explore` or `/the-flow explore` — dispatch: `../../SKILL.md`)*
+# explore
 
+> Sub-skill — part of a verb library. Knows nothing about any flow:
+> no stage ids, no successor/predecessor names, no flow commands.
+> Composition is the bundling flow's job.
+
+**Verb**: explore
 **Purpose**: Deep-dive research into how existing functionality works in the codebase — produces a research dossier (or console-only report) that feeds specification.
-**Entry conditions**: A research query. No prior artifacts required — auto-detects plan context (ordinal branch / cwd / conversation) or creates a new plan folder; `--console` creates no files at all.
-**Inputs**: `"research query"` · `--plan <name>` (explicit plan folder) · `--console` (console-only output). Optional context: existing `docs/plans/<ordinal>-<slug>/`, `docs/domains/registry.md`, FlowSpace MCP when available.
-**Output contract**: `docs/plans/<ordinal>-<slug>/research-dossier.md` (or console-only report with `--console`) + terminal success block (plan-folder status, components analyzed, critical findings, prior learnings surfaced, external research opportunities, FlowSpace mode). Read-only — STOPs and waits after output.
-**Next routing**: `/the-flow 1b specify` (module `references/stages/20-specify.md`) to create the spec — optionally after running the suggested `/deepresearch` prompts; or `/the-flow 2c workshop` (module `references/stages/25-workshop.md`) if deep design exploration is needed first.
+**Consumes**: a research query. No prior artifacts required — auto-detects plan context (ordinal branch / cwd / conversation) or creates a new plan folder; `--console` creates no files at all. Optional context: existing `docs/plans/<ordinal>-<slug>/`, `docs/domains/registry.md`, FlowSpace MCP when available.
+**Flags**: `"research query"` · `--plan <name>` (explicit plan folder) · `--console` (console-only output)
+**Produces**: `docs/plans/<ordinal>-<slug>/research-dossier.md` (or console-only report with `--console`) + terminal success block (plan-folder status, components analyzed, critical findings, prior learnings surfaced, external research opportunities, FlowSpace mode). Read-only — STOPs and waits after output.
+**Side effects**: fires the session-start harness seam at flow entry when invoked as the flow's first stage (router-only, best-effort)
 
 ---
 
@@ -16,15 +20,15 @@
 User input:
 ```
 $ARGUMENTS
-# Expected format:
-# /the-flow 1a explore "research query"              # Auto-detect context or create plan
-# /the-flow 1a explore --plan <name> "research query" # Explicit plan name
-# /the-flow 1a explore --console "research query"    # Output to console only (no files)
+# Expected argument forms (flags are this verb's own — the flow renders the full command):
+# "research query"                       # Auto-detect context or create plan
+# --plan <name> "research query"         # Explicit plan name
+# --console "research query"             # Output to console only (no files)
 #
 # Examples:
-# /the-flow 1a explore "research how the search service works"
-# /the-flow 1a explore --plan authentication-upgrade "research the current auth system"
-# /the-flow 1a explore --console "quick question about error handling"
+# "research how the search service works"
+# --plan authentication-upgrade "research the current auth system"
+# --console "quick question about error handling"
 ```
 
 ## Purpose
@@ -872,7 +876,7 @@ During codebase exploration, the following knowledge gaps were identified that c
 - To conduct external research: Run the `/deepresearch` commands above, then either:
   - Paste results back to this conversation, OR
   - Save to `external-research/` folder in the plan directory
-- To skip and proceed: Run `/the-flow 1b specify "[feature]"` (unresolved opportunities will be noted as a soft warning)
+- To skip and proceed: continue to specification (unresolved opportunities will be noted as a soft warning)
 
 ## Appendix: File Inventory
 
@@ -887,21 +891,21 @@ During codebase exploration, the following knowledge gaps were identified that c
 ### Configuration Files
 [Config files that affect this system]
 
-## Next Steps
+## Artifact Handoff
 
 [Based on mode and external research opportunities]
 
 **If External Research Opportunities identified:**
 1. Run `/deepresearch` prompts above (copy-paste ready)
-2. Save results to `external-research/` folder OR paste back to conversation
-3. Then proceed to specification
+2. Save results to `external-research/` folder OR paste back to conversation — they travel with the dossier
+3. The dossier is then complete for its consumer
 
-**If no external research needed (or skipping):**
-- Research-Only: Review findings and decide on action
-- Pre-Plan: Run `/the-flow 1b specify "[feature]"` to create specification
-- Plan-Associated: Continue with plan phases
+**Consumer notes by mode:**
+- Research-Only: the dossier is the deliverable — review findings and decide on action
+- Pre-Plan: the dossier is ready for whichever consumer the parent flow selects
+- Plan-Associated: the dossier feeds the plan folder it belongs to
 
-Note: Unresolved research opportunities will be flagged in `/the-flow 1b specify` output.
+Note: Unresolved research opportunities will be flagged in the specify verb's output.
 
 ---
 
@@ -933,22 +937,22 @@ Note: Unresolved research opportunities will be flagged in `/the-flow 1b specify
   2. [Topic 2] - run /deepresearch prompt in report
   Save results to: external-research/[topic-slug].md
 
-- Next step (with research): Run /deepresearch prompts, then /the-flow 1b specify
-- Next step (skip research): Run /the-flow 1b specify "[feature description]"
+- With research: run the /deepresearch prompts first, then continue to specification
+- Skipping research: specification comes next
 ```
 
 ## CRITICAL: STOP AND WAIT
 
 **THIS IS A READ-ONLY RESEARCH COMMAND.** After outputting the research report:
 
-1. **DO NOT** proceed to `/the-flow 1b specify` or any other command
+1. **DO NOT** proceed to any other verb or command
 2. **DO NOT** make any code changes or create additional files
 3. **DO NOT** start implementing recommendations
 4. **STOP** and wait for the user to provide instructions
 
 The research is complete. The user will decide what to do next:
 - Run `/deepresearch` for external knowledge gaps
-- Run `/the-flow 1b specify` to create a specification
+- Continue to specification
 - Ask follow-up questions
 - Take a different action entirely
 
@@ -979,21 +983,21 @@ The research is complete. The user will decide what to do next:
 ✅ **Research gaps identified**: External research opportunities with ready-to-use /deepresearch prompts
 ✅ **Stops after output**: Does NOT proceed to other commands or actions without user instruction
 
-## Integration with Other Commands
+## Integration with neighbouring verbs (via artifacts — the wire protocol)
 
-### With the specify stage (`references/stages/20-specify.md`)
-- Checks for research-dossier.md in plan folder
-- Checks for external-research/*.md files with /deepresearch results
+### With the specify verb
+- It checks for research-dossier.md in the plan folder
+- It checks for external-research/*.md files with /deepresearch results
 - Incorporates findings into specification
 - References critical discoveries
 - Soft warning if external research opportunities were not addressed
 
-### With the architect stage (`references/stages/30-architect.md`)
+### With the architect verb
 - If research exists, reduces redundant discovery
 - References research finding IDs
 - Focuses on implementation planning
 
-### With clarify re-entry (`references/stages/20-specify.md` § Re-entry)
+### With the specify verb's § Re-entry (clarifications)
 - Can reference research to inform questions
 - May trigger additional targeted research
 
@@ -1001,32 +1005,36 @@ The research is complete. The user will decide what to do next:
 
 ### Example 1: Quick Research (Console Output)
 ```bash
-/the-flow 1a explore "research how the search service works"
+# arguments to this verb:
+"research how the search service works"
 ```
 Outputs research directly to console. No files created.
 
 ### Example 2: Research for New Plan
 ```bash
-/the-flow 1a explore --plan authentication-upgrade "research the current auth system"
+# arguments to this verb:
+--plan authentication-upgrade "research the current auth system"
 ```
 Creates `docs/plans/001-authentication-upgrade/research-dossier.md`
 
 ### Example 3: Research for Existing Plan (by slug)
 ```bash
-/the-flow 1a explore --plan search-improvement "research search indexing strategy"
+# arguments to this verb:
+--plan search-improvement "research search indexing strategy"
 ```
 If `002-search-improvement` exists, saves there. Otherwise creates new folder.
 
 ### Example 4: Research for Existing Plan (by full name)
 ```bash
-/the-flow 1a explore --plan 003-payment-refactor "deep dive on payment processing"
+# arguments to this verb:
+--plan 003-payment-refactor "deep dive on payment processing"
 ```
 Saves to `docs/plans/003-payment-refactor/research-dossier.md`
 
-This command provides deep, actionable research into existing codebase functionality, filling the critical gap between needing to change something and understanding how it currently works. It adapts to available tools (FlowSpace or standard) and integrates seamlessly with the planning workflow when desired.
+This verb provides deep, actionable research into existing codebase functionality, filling the critical gap between needing to change something and understanding how it currently works. It adapts to available tools (FlowSpace or standard) and integrates seamlessly with the planning workflow when desired.
 
-**Suggest next step to user:**
+> Harness note: the session-start seam (§ 2c) is this verb's only harness touchpoint. Friction capture, retros, and harvest are the harness family's own concern, reached through `/eng-harness-flow` — SDD never drives them directly. Subagent 7 (Prior Learnings Scout) still mines `docs/harness/agents/**/*.retro.md` + legacy `docs/retros/*.md` as read-only history.
 
-Next: `/the-flow 1b specify` (module `references/stages/20-specify.md`) to create the feature specification, or `/the-flow 2c workshop` (module `references/stages/25-workshop.md`) if deep design exploration is needed first.
+## Exit
 
-> Harness note: the session-start seam (§ 2c) is this skill's only harness touchpoint. Friction capture, retros, and harvest are the harness family's own concern, reached through `/eng-harness-flow` — SDD never drives them directly. Subagent 7 (Prior Learnings Scout) still mines `docs/harness/agents/**/*.retro.md` + legacy `docs/retros/*.md` as read-only history.
+Print the output-contract summary (✅ block: what was produced, where, key fields). Then STOP. Do not name a next stage. If invoked standalone, end with exactly: "Routing is the flow's job — run the parent flow bare to continue."

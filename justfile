@@ -214,7 +214,7 @@ dev-cycle: clean setup test
     @echo "✅ Development cycle complete"
 
 # CI/CD simulation - run all checks
-ci: check-deps clean setup test test-uvx lint build
+ci: check-deps clean setup test test-uvx lint build check-flow
     @echo ""
     @echo "✅ All CI checks passed!"
 
@@ -354,6 +354,10 @@ skills-orphans:
         echo "ℹ️  Review the lists above, then paste a 'tidy:' line to remove. Nothing was deleted."
         echo "   NOTE: legitimately hand-installed local-only skills (e.g. pack-code) also appear here — only tidy what you recognise as stale/renamed."
     fi
+
+# Lint a flow skill against the flow-architecture pattern (docs/skills-pipeline/flow-architecture.md)
+check-flow flow_dir="skills/SDD/the-flow":
+    ./scripts/check-flow-architecture.sh {{flow_dir}}
 
 # Create a release build with checks
 release: ci

@@ -1,6 +1,6 @@
 # Skills Pipeline — Domain-Aware Plan Workflow
 
-The active spec-driven-development pipeline ships as **one skill — `the-flow`** (installed via `npx skills add jakkaj/tools -a <cli>` from `/skills/SDD/the-flow/`): a dispatch `SKILL.md` plus lazily-loaded stage modules under `references/stages/`. Invoke it as `/the-flow <id> <name> [flags]` — id and name each resolve alone (`/the-flow 6 …` ≡ `/the-flow implement …`), and every printed command carries both so readers see what will run; with no stage argument it acts as a guided coach. A handful of standalone utility skills (constitution, prep-issue, handover, validate, …) accompany it. The pipeline incorporates:
+The active spec-driven-development pipeline ships as **one skill — `the-flow`** (installed via `npx skills add jakkaj/tools -a <cli>` from `/skills/SDD/the-flow/`), built to the **flow-architecture pattern** ([`flow-architecture.md`](./flow-architecture.md) — sub-skills as contract-bound verbs, one flow-level Registry + Graph, one command grammar, deterministic lints via `just check-flow`): a dispatch `SKILL.md` (Registry + grammar) plus lazily-loaded **sub-skills** under `references/stages/`. Invoke it as `/the-flow <id> <verb> [flags]` — id and verb each resolve alone (`/the-flow 6 …` ≡ `/the-flow implement …`), and every printed command carries both so readers see what will run; with no stage argument it acts as a guided coach. A handful of standalone utility skills (constitution, prep-issue, handover, validate, …) accompany it. The pipeline incorporates:
 
 - **Domain system**: First-class business domain boundaries that own code, contracts, and composition
 - **Leaner output**: Slimmer plan and task artifacts that provide guardrails without removing implementor agency
@@ -16,7 +16,7 @@ The active spec-driven-development pipeline ships as **one skill — `the-flow`*
 
 ## Commands
 
-The main flow is one skill: `the-flow` dispatches on `<id|name>` and lazily loads the matching stage module from `references/stages/`. Each row below maps a stage (or utility) to the legacy v1 command it replaces.
+The main flow is one skill: `the-flow` dispatches on `<id|verb>` and lazily loads the matching sub-skill from `references/stages/`. Each row below maps a stage (or utility) to the legacy v1 command it replaces.
 
 | Command | Replaces | What's Different |
 |---------|----------|-----------------|
@@ -29,7 +29,7 @@ The main flow is one skill: `the-flow` dispatches on `<id|name>` and lazily load
 | `/the-flow 3a adr` (`references/stages/35-adr.md`) | `plan-3a-adr` | Domain impact analysis, domain map integration, domain.md backlinks |
 | `/the-flow 5 tasks` (`references/stages/50-phase-tasks.md`) | `plan-5-phase-tasks-and-brief` | 7-column task table with Domain column, simplified prior-phase review |
 | `/the-flow 6 implement` (`references/stages/60-implement.md`) | `plan-6-implement-phase` | Domain placement rules, post-implementation domain.md updates |
-| `/the-flow 6c companion` (`references/stages/61-implement-companion.md`) | *(new — sibling of the implement stage)* | Same as `/the-flow 6 implement` + parallel `code-review-companion` (Power-On-Mode via `minih`). Companion reviews each commit live; **supersedes `/the-flow 7 review`** for projects with a companion agent. |
+| `/the-flow 6 implement --companion` (the implement verb's companion mode) | *(formerly the separate `6c` stage — typed `6c`/`companion` still alias-resolves here)* | Same as `/the-flow 6 implement` + parallel `code-review-companion` (Power-On-Mode via `minih`). Companion reviews each commit live; **supersedes `/the-flow 7 review`** for projects with a companion agent. |
 | `/the-flow 6a progress` (`references/stages/62-progress.md`) | `plan-6a-update-progress` | Domain context in progress tracking |
 | `/the-flow 7 review` (`references/stages/70-review.md`) | `plan-7-code-review` | Domain Compliance Validator, anti-reinvention checks |
 | `/the-flow 8 merge` (`references/stages/80-merge.md`) | `plan-8-merge` | Analyze upstream changes from `main` and generate a merge plan, domain-aware |
@@ -42,7 +42,7 @@ The main flow is one skill: `the-flow` dispatches on `<id|name>` and lazily load
 
 These work unchanged with domain-aware projects:
 
-`plan-0-constitution`, `plan-5c-requirements-flow`, `plan-6b-worked-example`, `code-concept-search`, `deepresearch`, `flowspace-research`, `util-0-handover`
+`plan-0-constitution`, `plan-5c-requirements-flow`, `deepresearch`, `flowspace-research`, `util-0-handover`
 
 ## Domain System Overview
 

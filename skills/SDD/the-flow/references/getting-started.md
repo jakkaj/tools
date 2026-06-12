@@ -1,25 +1,26 @@
+<!-- 🔄 RENDERED from SKILL.md § Registry + references/00-routing.md § Graph — regenerate against those masters, never hand-edit as the primary. -->
 # The SDD Pipeline (`/the-flow`) + the Engineering Harness — Getting Started
 
 A visual guide to the **spec-driven-development** pipeline — shipped as one progressive-disclosure skill, **`the-flow`** — and the **engineering harness** that runs side by side with it. The entry point is almost always bare `/the-flow` (guided mode), or a direct jump like `/the-flow 1a explore` (research) / `/the-flow 1b specify` (spec). Everything else chains from there.
 
-> Repo reference: the SDD pipeline lives at `skills/SDD/the-flow/` in `jakkaj/tools` — one public skill, with per-stage modules under `references/stages/`. The harness skills live in the **external** `AI-Substrate/harness-engineering` repository and are reached through exactly one door: the **`/eng-harness-flow`** router. Full command reference: `docs/skills-pipeline/README.md`. Switchover history: `docs/plans/029-eng-harness-switchover/`.
+> Repo reference: the SDD pipeline lives at `skills/SDD/the-flow/` in `jakkaj/tools` — one public skill built to the flow-architecture pattern (`docs/skills-pipeline/flow-architecture.md`), with per-stage **sub-skills** under `references/stages/`. The harness skills live in the **external** `AI-Substrate/harness-engineering` repository and are reached through exactly one door: the **`/eng-harness-flow`** router. Full command reference: `docs/skills-pipeline/README.md`. Switchover history: `docs/plans/029-eng-harness-switchover/`.
 
 ---
 
 ## One public skill, progressive disclosure
 
-The pipeline used to be a family of standalone per-stage skills; it is now **one skill** with lazily-loaded stage modules. Same pipeline, same stages, same order, same optional branches — only the surface changed. The public grammar is:
+The pipeline used to be a family of standalone per-stage skills; it is now **one skill** composed of lazily-loaded **sub-skills** (contract-bound verbs that know nothing about the flow — the dispatch's Registry assigns their ids, and the Graph in `references/00-routing.md` owns every edge). Same pipeline, same stages, same order, same optional branches — only the surface changed. The public grammar is:
 
 ```
 /the-flow                       # guided mode — the co-pilot drives
-/the-flow <id|name> [flags]     # direct jump — run exactly one stage
+/the-flow <id|verb> [flags]     # direct jump — run exactly one stage
 ```
 
-- **Guided mode** — bare `/the-flow` loads `references/coach.md` + `references/00-routing.md` + the *current* stage module only, then drives you conversationally. The rest of the pipeline stays out of context until you reach it.
-- **Direct jump** — `/the-flow 6 implement --phase … --plan …` (or by name: `/the-flow implement …`) loads exactly **one** stage module and runs that stage. Ids and names both resolve.
-- **Back-compat** — old per-stage slugs found in pre-consolidation state files are translated by the dispatch's stage table; you never type them.
+- **Guided mode** — bare `/the-flow` loads `references/coach.md` + `references/00-routing.md` + the *current* stage's sub-skill only, then drives you conversationally. The rest of the pipeline stays out of context until you reach it.
+- **Direct jump** — `/the-flow 6 implement --phase … --plan …` loads exactly **one** sub-skill and runs that stage. Ids and verbs each resolve alone when typed (`6` ≡ `implement`); printed commands always carry both.
+- **Back-compat** — old per-stage slugs found in pre-consolidation state files (and typed `6c`/`companion`) are translated by the dispatch's translation/alias table; you never type them.
 
-| Stage | Id | Name | Module loaded |
+| Stage | Id | Verb | Sub-skill loaded |
 |---|---|---|---|
 | Explore (research) | `1a` | `explore` | `references/stages/10-explore.md` |
 | Specify + clarify | `1b` | `specify` | `references/stages/20-specify.md` — mid-plan clarify re-entry lives inside, as a Re-entry section |
@@ -27,13 +28,12 @@ The pipeline used to be a family of standalone per-stage skills; it is now **one
 | Architect | `3` | `architect` | `references/stages/30-architect.md` |
 | ADR | `3a` | `adr` | `references/stages/35-adr.md` |
 | Phase tasks | `5` | `tasks` | `references/stages/50-phase-tasks.md` |
-| Implement | `6` | `implement` | `references/stages/60-implement.md` |
-| Implement + companion | `6c` | `companion` | `references/stages/61-implement-companion.md` |
+| Implement | `6` | `implement` | `references/stages/60-implement.md` — `--companion` mode adds a live minih reviewer |
 | Progress | `6a` | `progress` | `references/stages/62-progress.md` |
 | Review | `7` | `review` | `references/stages/70-review.md` |
 | Merge | `8` | `merge` | `references/stages/80-merge.md` |
 
-> **What changed (formerly)**: each stage was its own public skill — `/plan-1a`, `/plan-1b`, `/plan-2` (clarify — now the Re-entry section of stage 1b), `/plan-2c`, `/plan-3`, `/plan-3a`, `/plan-5`, `/plan-6` (+ its companion variant, now stage 6c), `/plan-6a`, `/plan-7`, `/plan-8`. Those skills are deleted; `/the-flow <id|name> [flags]` is the only public surface for the main flow. The utility skills (`validate-v2`, `flowspace-research-v2`, `deepresearch-v2`, `didyouknow-v2`, `htmlify-v2`, `plan-0-v2-constitution`, `plan-2b-v2-prep-issue`, `plan-6b-worked-example`, `plan-v2-extract-domain`, `util-0-v2-handover`, `code-concept-search-v2`, `install-hve-core-rpiv`) are unchanged and still called by their own names.
+> **What changed (formerly)**: each stage was its own public skill — `/plan-1a`, `/plan-1b`, `/plan-2` (clarify — now the Re-entry section of stage 1b), `/plan-2c`, `/plan-3`, `/plan-3a`, `/plan-5`, `/plan-6` (+ its companion variant, now the implement verb's `--companion` mode), `/plan-6a`, `/plan-7`, `/plan-8`. Those skills are deleted; `/the-flow <id|verb> [flags]` is the only public surface for the main flow (typed `6c` or `companion` still resolves, via the alias table, to implement with `--companion`). The utility skills (`validate-v2`, `flowspace-research-v2`, `deepresearch-v2`, `didyouknow-v2`, `htmlify-v2`, `plan-0-v2-constitution`, `plan-2b-v2-prep-issue`, `plan-v2-extract-domain`, `util-0-v2-handover`, `install-hve-core-rpiv`) are unchanged and still called by their own names.
 
 ---
 
@@ -46,11 +46,11 @@ Two loops run side by side in the same context — that is all. Neither owns the
 
 | Seam | Fired by | Router call |
 |---|---|---|
-| session start | `/the-flow` at flow entry / stage 1a | `/eng-harness-flow --event session-start` |
-| post-spec | stage 1b next-steps | `/eng-harness-flow --event post-spec --spec <path>` |
-| pre-implement | stage 6 before any task | `/eng-harness-flow --event pre-implement --phase <id> --plan-dir <p>` |
-| phase end | stage 6 after the last task | `/eng-harness-flow --event phase-end --plan-dir <p>` |
-| plan complete | stage 8 after the merge | `/eng-harness-flow --event plan-complete` |
+| session start | `/the-flow` at flow entry / the explore verb | `/eng-harness-flow --event session-start` |
+| post-spec | the flow, between spec and architect (a Graph edge decoration) | `/eng-harness-flow --event post-spec --spec <path>` |
+| pre-implement | the implement verb, before any task | `/eng-harness-flow --event pre-implement --phase <id> --plan-dir <p>` |
+| phase end | the implement verb, after the last task | `/eng-harness-flow --event phase-end --plan-dir <p>` |
+| plan complete | the merge verb, after the merge | `/eng-harness-flow --event plan-complete` |
 
 The router's child skills are **private** — they may move or rename, and no SDD stage (or user doc) ever names them. One name is stable: `/eng-harness-flow` + its `--event` vocabulary.
 
@@ -72,7 +72,7 @@ flowchart TB
 
     subgraph implement["IMPLEMENT · per phase"]
         P5["/the-flow 5 tasks"]:::manual
-        P6["/the-flow 6 implement<br/>(6c companion = +live review)"]:::manual
+        P6["/the-flow 6 implement<br/>(--companion = +live review)"]:::manual
         P6A["/the-flow 6a progress"]:::auto
         P7["/the-flow 7 review"]:::optional
         P8["/the-flow 8 merge"]:::optional
@@ -173,16 +173,16 @@ flowchart LR
 4.  /the-flow 5 tasks --phase "Phase 1: Route & Validation" --plan ".../api-widgets-plan.md"
     → tasks.md (T000/T0xx seam rows emitted).
 
-5.  /the-flow 6c companion --phase "Phase 1: ..." --plan "..."
+5.  /the-flow 6 implement --companion --phase "Phase 1: ..." --plan "..."
     → SEAM FIRST: /eng-harness-flow --event pre-implement ... — the router
       proves the system runs before a line of code; verdict narrated
       verbatim (healthy → build).
-    → Implements; the progress stage (6a) auto-tracks per task.
-    → Companion reviews each commit live (supersedes /the-flow 7 review here).
+    → Implements; the progress verb (6a) auto-tracks per task.
+    → Companion mode reviews each commit live (supersedes /the-flow 7 review here).
     → End of phase: /eng-harness-flow --event phase-end ... — the router
       decides what reflection happens (you might see a [s/t/p/e/d/a] prompt).
 
-6.  /the-flow 5 tasks + /the-flow 6c companion for Phase 2 ...
+6.  /the-flow 5 tasks + /the-flow 6 implement --companion for Phase 2 ...
 
 7.  /the-flow 8 merge --plan "..."
     → Merge analysis; on PROCEED the merge executes, then
@@ -206,9 +206,8 @@ You never named a harness skill — the flow told the router *where the work was
 | `/the-flow 3 architect` · `architect` | Phased implementation plan (inline gates) | `<slug>-plan.md` | emits N.0/N.z seam rows when the router is installed |
 | `/the-flow 3a adr` · `adr` | Architectural Decision Record *(optional)* | `docs/adr/*.md` | — |
 | `/the-flow 5 tasks` · `tasks` | Task table + brief for one phase | `tasks.md` | emits T000/T0xx seam rows |
-| `/the-flow 6 implement` · `implement` | Implement one phase | code + `execution.log.md` | fires `--event pre-implement` + `--event phase-end` |
-| `/the-flow 6c companion` · `companion` | Implement + live companion review | code + reviews | same seams as implement (`pre-implement` + `phase-end`) |
-| `/the-flow 6a progress` · `progress` | Progress tracking *(auto-run by stage 6)* | updated task tables + execution log | none (progress only) |
+| `/the-flow 6 implement` · `implement` | Implement one phase — add `--companion` for live companion review (typed `6c`/`companion` alias here) | code + `execution.log.md` (+ reviews in companion mode) | fires `--event pre-implement` + `--event phase-end` |
+| `/the-flow 6a progress` · `progress` | Progress tracking *(auto-run by the implement verb)* | updated task tables + execution log | none (progress only) |
 | `/the-flow 7 review` · `review` | Code review *(rare in companion flow)* | `reviews/review.md` | none (read-only review) |
 | `/the-flow 8 merge` · `merge` | Upstream merge analysis | merge plan | fires `--event plan-complete` after the merge |
 | `/eng-harness-flow` | **The harness front door** — stateless router; detects where the loop is and routes one step | routing envelope (`--json`) | the only harness skill the flow ever calls |

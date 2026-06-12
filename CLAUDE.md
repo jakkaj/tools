@@ -30,7 +30,7 @@ A skills repository, plus a dev-tooling installer. The skills are the product:
 ```
 /
 ├── skills/                     # Source-of-truth for skills (SKILL.md per skill)
-│   ├── SDD/                    # the-flow (pipeline dispatch + stage modules) + 12 utility skills
+│   ├── SDD/                    # the-flow (pipeline dispatch + sub-skills) + 10 utility skills
 │   └── general/                # general-purpose skills (grill-me, perplexity-deep-research)
 ├── agents/                     # Installer infra only (legacy command sets removed — skills ship via npx)
 │   ├── mcp/servers.json        # MCP server source-of-truth (read by install/agents.sh)
@@ -91,6 +91,8 @@ The engineering-harness loop (**Boot → Backpressure → Observe → Retro → 
 
 6. **Commit**. No further sync step is required — skills are read directly from `skills/` by the Vercel CLI.
 
+> **Authoring a multi-stage flow skill?** Don't imitate an existing flow by hand — follow the **flow-architecture pattern** ([`docs/skills-pipeline/flow-architecture.md`](./docs/skills-pipeline/flow-architecture.md)): sub-skills as contract-bound verbs, one flow-level Registry + Graph, one Command grammar, banner-marked views. `scripts/check-flow-architecture.sh <flow-dir>` (or `just check-flow`) tells you deterministically when you're done. It supersedes the old progressive-disclosure step-module template (whose "Next routing instruction" section bred a 163-reference leak).
+
 ### Bundling a CLI or other resources with a skill
 
 A skill folder can ship more than `SKILL.md` — any sibling files travel with it through `npx skills add` and land in the canonical store next to `SKILL.md`. Example in this repo:
@@ -99,7 +101,7 @@ A skill folder can ship more than `SKILL.md` — any sibling files travel with i
 
 ## Editing the SDD pipeline (`the-flow`)
 
-The main SDD flow is **one skill**: `skills/SDD/the-flow/` — a dispatch `SKILL.md` (≤150 lines: stage table, old-slug translation table, hard invariants) plus lazily-loaded modules under `references/` (`00-routing.md` = the guided-mode engine, `coach.md` = the narration voice, `stages/NN-<name>.md` = one module per stage). To change stage behaviour, edit the **stage module**, not the dispatch — the dispatch only routes. The 12 per-stage `plan-*` skills were consolidated into this structure on 2026-06-11 (plan-030, atomic cutover); rollback anchor: git tag `pre-flow-consolidation`. The 12 utility skills under `skills/SDD/` are ordinary standalone skills — edit their `SKILL.md` directly. The old `scripts/migrate-skills.py` (which generated the v2 skills from the long-gone `agents/v2-commands/`) was deleted in the same plan — git history retains it.
+The main SDD flow is **one skill**: `skills/SDD/the-flow/`, built to the **flow-architecture pattern** ([`docs/skills-pipeline/flow-architecture.md`](./docs/skills-pipeline/flow-architecture.md) — read it before editing). The structure: the dispatch `SKILL.md` owns the **Registry** (id ↔ verb ↔ module, the single master) + the **Command grammar** (defined exactly once) + the translation/alias table; `references/00-routing.md` owns the **Graph** (the single owner of "what's next") + state contract; `references/coach.md` is the narration voice (render slots, never literal commands); `references/getting-started.md` is a banner-marked **rendered view** (regenerate, never hand-edit); `references/stages/*.md` are the **sub-skills** — contract-bound verbs that know nothing about the flow (no stage ids, no successor names, no flow commands). To change stage behaviour, edit the **sub-skill**; to change routing, edit the **Graph**; to change the command surface, edit the **grammar line** (one edit — that's the point). Lint any change with `just check-flow` (`scripts/check-flow-architecture.sh`) — hard-fail, deterministic. History: the 12 per-stage `plan-*` skills were consolidated on 2026-06-11 (plan-030, rollback tag `pre-flow-consolidation`); the sub-skill/Registry/Graph restructure + companion fold (6c → `implement --companion`, typed `6c` still alias-resolves) landed in plan-031 (`docs/plans/031-skills-flow-architecture/`). The 10 utility skills under `skills/SDD/` are ordinary standalone skills — edit their `SKILL.md` directly. The old `scripts/migrate-skills.py` (which generated the v2 skills from the long-gone `agents/v2-commands/`) was deleted in plan-030 — git history retains it.
 
 ## Source / distribution sync
 

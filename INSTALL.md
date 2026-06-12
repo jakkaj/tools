@@ -12,7 +12,7 @@ Skills are grouped by purpose. Categories are organizational only — they do **
 
 | Category | What's in it | Count |
 |---|---|---|
-| `SDD/` | The spec-driven-development (SDD) pipeline — `the-flow` (one skill driving research → spec → architect → implement → review → merge) plus 12 utility skills. The active workflow for non-trivial features. | 13 |
+| `SDD/` | The spec-driven-development (SDD) pipeline — `the-flow` (one skill driving research → spec → architect → implement → review → merge) plus 10 utility skills. The active workflow for non-trivial features. | 11 |
 | `general/` | Domain-generic skills that work in any project (e.g. `grill-me` — interrogates plans/designs; `perplexity-deep-research`). | 2 |
 
 A full listing of every skill is in [`README_AGENTS.md`](./README_AGENTS.md).

@@ -1,11 +1,15 @@
-# Stage 62 — Update Progress
-*(absorbed from `plan-6a-v2-update-progress`; loaded lazily via `/the-flow 6a progress` or `/the-flow progress` — dispatch: `../../SKILL.md`. This module remains **directly invocable** as `/the-flow 6a progress`, and is also read and followed by the implement modules — `60-implement.md` after each completed task and on the final task; `61-implement-companion.md` on the final task with the companion debrief flags.)*
+# progress
 
-**Purpose**: Update plan and dossier progress tracking with task status and domain context; on the last task of a phase, optionally run the full code-review-companion debrief (Step 9) when `--companion-run-id` is provided.
-**Entry conditions**: A plan (and, in Full Mode, a phase dossier) exists; a task has just changed status — typically invoked per task by stage 60/61, or directly as `/the-flow 6a progress`. Companion debrief additionally requires `--status completed` on the last task in the phase + `--companion-run-id`.
-**Inputs**: Flags `--plan`, `--task`, `--status completed|in_progress|blocked`, `--changes "<files>"`, optional `--domain`, `--phase`, `--subtask`, `--inline`, `--companion-run-id "<run id>"`, `--companion-slug "<slug>"` (default `code-review-companion`).
-**Output contract**: Task table Status column + Architecture Map nodes updated; plan progress section updated; domain-context change record (incl. domain-map / Concepts update flags); when the debrief fires: drain ping + control:stop + farewell envelope read, findings reconciliation in the execution log, magicWand surfaced as follow-up candidate. Terminal report = files touched, whether the companion debrief fired (yes — runId / no — flag absent), follow-up candidates surfaced.
-**Next routing**: Control returns to the calling module (`references/stages/60-implement.md` or `references/stages/61-implement-companion.md`), which owns the phase-end harness seam and the next-step suggestion (`/the-flow 7 review` review after stage 60; `/the-flow 5 tasks` next phase after stage 61).
+> Sub-skill — part of a verb library. Knows nothing about any flow:
+> no stage ids, no successor/predecessor names, no flow commands.
+> Composition is the bundling flow's job.
+
+**Verb**: progress
+**Purpose**: Update plan and dossier progress tracking with task status and domain context; on the last task of a phase, optionally run the full code-review-companion debrief (Step 9) when `--companion-run-id` is provided. Directly invocable, and also read and followed by the implement verb (a declared delegation): after each completed task, and on the final task — with the companion debrief flags when its companion mode ran. Control returns to the caller when this verb finishes.
+**Consumes**: a plan (and, in Full Mode, a phase dossier); a task that has just changed status. Companion debrief additionally requires `--status completed` on the last task in the phase + `--companion-run-id`.
+**Flags**: `--plan`, `--task`, `--status completed|in_progress|blocked`, `--changes "<files>"`, optional `--domain`, `--phase`, `--subtask`, `--inline`, `--companion-run-id "<run id>"`, `--companion-slug "<slug>"` (default `code-review-companion`)
+**Produces**: Task table Status column + Architecture Map nodes updated; plan progress section updated; domain-context change record (incl. domain-map / Concepts update flags); when the debrief fires: drain ping + control:stop + farewell envelope read, findings reconciliation in the execution log, magicWand surfaced as follow-up candidate. Terminal report = files touched, whether the companion debrief fired (yes — runId / no — flag absent), follow-up candidates surfaced.
+**Side effects**: none (no harness seams — the calling verb owns those)
 
 ---
 
@@ -76,8 +80,8 @@ $ARGUMENTS
 8) (Retired) Orchestrator retrospective — this duty left SDD entirely.
    Retros, friction capture, and harvest belong to the harness family,
    reached only through the `/eng-harness-flow` router (the implement
-   stages — `60-implement.md` and `61-implement-companion.md` — fire its
-   phase-end / plan-complete seams). This skill writes no retro artifacts
+   verb fires the phase-end seam; the merge verb fires plan-complete).
+   This skill writes no retro artifacts
    and prompts no retrospective questions. (Step number kept so callers'
    "Step 9" references stay stable.)
 
@@ -90,8 +94,8 @@ $ARGUMENTS
    farewell to read.
 
    **If `--companion-run-id` WAS provided** (signals a companion ran in
-   parallel during the phase, e.g. from the companion implement module,
-   `references/stages/61-implement-companion.md`):
+   parallel during the phase — the implement verb's companion mode passes
+   it on the final task):
 
    a) **Drain ping** (give the companion a final-sweep opportunity):
       ```bash
@@ -143,9 +147,8 @@ $ARGUMENTS
 
    e) **Surface the companion's magicWand as follow-up candidate**: if
       the magicWand is non-trivial, print a stderr note recommending the
-      caller file a fix dossier via
-      `/the-flow 5 tasks --fix "<companion magicWand>"` (module
-      `references/stages/50-phase-tasks.md`).
+      caller file a fix dossier (the tasks verb's `--fix "<companion magicWand>"`
+      mode owns that).
       Do NOT auto-create dossiers; surface only.
 
 10) Report what was updated:
@@ -154,13 +157,17 @@ $ARGUMENTS
     - Any follow-up candidates surfaced
 ```
 
-This module is the **single source of truth** for progress updates AND the companion debrief. Always delegate both to this module rather than manually editing task tables or hand-running drain/stop sequences.
+This sub-skill is the **single source of truth** for progress updates AND the companion debrief. Always delegate both here rather than manually editing task tables or hand-running drain/stop sequences.
 
-**Why the companion debrief lives here**: this module already owns the "last task in phase" branch (the phase-complete summary in the execution log + task table). Adding the conditional companion debrief (Step 9) means the companion implement module (`61-implement-companion.md`) gets full phase-end ceremony coverage for free with zero duplication.
+**Why the companion debrief lives here**: this sub-skill already owns the "last task in phase" branch (the phase-complete summary in the execution log + task table). Adding the conditional companion debrief (Step 9) means the implement verb's companion mode gets full phase-end ceremony coverage for free with zero duplication.
 
-**Call signature symmetry**:
-- Non-companion implement (`60-implement.md`): read this module with `--task <T> --status completed --plan <P>` — Step 9 skipped (no flag).
-- Companion implement (`61-implement-companion.md`): read this module with `--task <T> --status completed --plan <P> --companion-run-id <RUN>` — Step 9 fires.
+**Call signature symmetry** (how the implement verb's declared delegation calls this):
+- Standard run: `--task <T> --status completed --plan <P>` — Step 9 skipped (no flag).
+- Companion-mode run: `--task <T> --status completed --plan <P> --companion-run-id <RUN>` — Step 9 fires.
 ---
 
-> Harness note: this module writes no retro artifacts and fires no harness seams — progress tracking and (optionally) the minih companion debrief only. Harness reflection routes through `/eng-harness-flow` at the implement stages' seams (`60-implement.md` / `61-implement-companion.md`). `docs/harness/agents/**` is frozen read-only history (mined by the explore stage's Prior Learnings Scout, `/the-flow 1a explore`); nothing writes there anymore.
+> Harness note: this sub-skill writes no retro artifacts and fires no harness seams — progress tracking and (optionally) the minih companion debrief only. Harness reflection routes through `/eng-harness-flow` at the implement verb's seams. `docs/harness/agents/**` is frozen read-only history (mined by the explore verb's Prior Learnings Scout); nothing writes there anymore.
+
+## Exit
+
+Print the output-contract summary (✅ block: what was updated, whether the debrief fired, follow-ups surfaced). Then STOP. Do not name a next stage. If invoked standalone, end with exactly: "Routing is the flow's job — run the parent flow bare to continue."

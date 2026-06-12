@@ -93,7 +93,7 @@
           "enum": ["wrap", "side"],
           "description": "wrap=companion subgraph around covers[] · side=worker side-node into covers[] (defaults from kind)"
         },
-        "driver": { "type": "string", "description": "the command that runs it (e.g. /the-flow 6c companion); blank if user minih-ran it ad-hoc" },
+        "driver": { "type": "string", "description": "the command that runs it (e.g. the implement verb with its --companion flag, rendered via the dispatch's Command grammar); blank if user minih-ran it ad-hoc" },
         "note": { "type": "string", "description": "role / what it watches or builds" }
       }
     }

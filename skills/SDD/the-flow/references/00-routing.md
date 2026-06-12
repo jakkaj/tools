@@ -2,7 +2,7 @@
 
 Loaded by the dispatch ([`../SKILL.md`](../SKILL.md)) in **guided mode**, together with [`coach.md`](./coach.md) and the **current stage module only**. Direct jumps (`/the-flow <id|name> [flags]`) do not load this file up front — a stage module may cite a `§ Shared conventions` block below and pull it lazily when needed; that is still progressive disclosure.
 
-This file owns: entry paths, the state contract, **state-write ownership**, the stage machine, the routing table, the must-see flag fields, harness-seam detection, flight-plan bookkeeping, and the shared conventions the stage modules cite.
+This file owns: entry paths, the state contract, **state-write ownership**, the **Graph** (the single owner of "what's next" — flow-architecture pattern, `docs/skills-pipeline/flow-architecture.md`), the must-see flag fields, harness-seam detection, flight-plan bookkeeping, and the shared conventions the sub-skills cite.
 
 ---
 
@@ -29,7 +29,7 @@ Ask the intent (coach.md `start` narration). After the user answers:
 4. **Write the verbatim ask** to `original-ask.md` (shape below) and mirror it into `state.intent`.
 5. Write `.the-flow-state.json` (temp file + atomic rename).
 6. Initialise `the-flow.json` (a `start`/`research` node + `assumed` future) and render `the-flow.md`.
-7. Print-and-offer `/the-flow 1a explore "<intent>"` (research-worthy intent) or `/the-flow 1b specify "<intent>"` (clear ask).
+7. Print-and-offer the **explore** edge (research-worthy intent) or the **specify** edge (clear ask) — the command is rendered from the dispatch's Command grammar + Registry, with the intent as the verb's argument.
 
 Stages 10/20 both **reuse** an existing `docs/plans/*-<slug>/` folder by slug — creating it first is safe.
 
@@ -44,7 +44,7 @@ Stages 10/20 both **reuse** an existing `docs/plans/*-<slug>/` folder by slug �
 
 ### Resume (exactly one active state)
 
-Read the state. Discover the artifact for `current_stage` (Routing table below). Apply the **idempotency rule**, narrate (coach.md), then hand-crank `the-flow.json`/`.md` (§ Flight plan).
+Read the state. Discover the artifact for `current_stage` (Graph below). Apply the **idempotency rule**, narrate (coach.md), then hand-crank `the-flow.json`/`.md` (§ Flight plan).
 
 **Idempotency rule (every resume)**: discover the artifact for `current_stage` by existence at its expected path (newest if several, scoped by `last_checkpoint_at` mtime).
 - **Found** → narrate the stage's insight, persist the next stage + `pending_command`, print-and-offer the next command.
@@ -67,7 +67,7 @@ Lives at `docs/plans/<ord>-<slug>/.the-flow-state.json`. Self-cleans with the pl
   "plan_dir": "docs/plans/026-the-flow",
   "mode": "unknown",
   "current_stage": "awaiting-1b",
-  "pending_command": "/the-flow 1b specify \"<intent>\"",
+  "pending_command": "<the next runnable command — rendered via the dispatch's Command grammar + Registry at write time>",
   "intent": "<the user's one-line answer to 'what do you want to build?'>",
   "milestones_total": 7,
   "milestones_done": 2,
@@ -78,8 +78,8 @@ Lives at `docs/plans/<ord>-<slug>/.the-flow-state.json`. Self-cleans with the pl
 ```
 
 - `mode`: `"Simple" | "Full" | "unknown"` — read from the spec header after stage 20.
-- `current_stage`: keyed on the step just issued (`awaiting-<id>`) — the routing table keys on it.
-- `pending_command`: the next runnable command in **public `/the-flow` grammar**; legacy values naming retired `plan-*` slugs are translated at read time (dispatch table) and rewritten in new grammar on the next state write.
+- `current_stage`: keyed on the step just issued (`awaiting-<id>`) — the Graph keys on it.
+- `pending_command`: the next runnable command in **public grammar**, rendered via the dispatch's Command grammar + Registry **at write time** (slots are never stored in state); legacy values naming retired `plan-*` slugs are translated at read time (dispatch table) and rewritten in current grammar on the next state write.
 - `milestones_total`: macro-milestones for this run's mode (Full=7, Simple≈4); set after stage 20, recomputed at stage 30, then stable.
 - `milestones_done`: completed macro-milestones → drives the rail fill.
 - `last_checkpoint_at`: captured via `date -u +%FT%TZ`; used for artifact-discovery-by-mtime.
@@ -88,6 +88,8 @@ Lives at `docs/plans/<ord>-<slug>/.the-flow-state.json`. Self-cleans with the pl
 
 **Single terminal**: one conversation alternates stage runs and `/the-flow` check-ins; `/compact` is the hygiene valve.
 
+<!-- The section below is a frozen contract (PL-15) quoted byte-identical across plans — its command example is exempt from lint L3 via the marker. -->
+<!-- lint:allow-flow-commands -->
 ## State-write ownership
 
 - **Guided mode (the dispatch + this engine) is the ONLY writer** of `.the-flow-state.json`, `the-flow.json`, and `the-flow.md`.
@@ -96,39 +98,23 @@ Lives at `docs/plans/<ord>-<slug>/.the-flow-state.json`. Self-cleans with the pl
 
 ---
 
-## Stage machine
+## Graph
 
-```
-start ──intent(research-worthy)──▶ awaiting-1a ──dossier──▶ awaiting-1b
-start ──intent(clear)───────────▶ awaiting-1b
-awaiting-1b ─▶ awaiting-2c | awaiting-backpressure | awaiting-3
-awaiting-2c ─▶ awaiting-backpressure | awaiting-3
-awaiting-backpressure ─▶ awaiting-3
-awaiting-3 ──Simple,READY──▶ awaiting-6
-awaiting-3 ──Full,READY────▶ awaiting-5 ──tasks──▶ awaiting-6
-awaiting-3 ──DRAFT─────────▶ awaiting-3 (fix + re-run)
-awaiting-6 ──phase done────▶ awaiting-7 ; awaiting-6 ──next phase (Full)──▶ awaiting-5
-awaiting-7 ──clean─────────▶ awaiting-8 ; awaiting-7 ──fixes──▶ awaiting-6
-awaiting-8 ──merged────────▶ complete
-```
+The deterministic core — **the single owner of "what's next"** (flow-architecture R1). Edges name **verbs** in bold, never commands: the printed command is rendered at narration time from the dispatch's **Command grammar + Registry** (an accepted edge loads the verb's module from its Registry row). Decorations carry everything that rides an edge: compact hints, wrapping harness seams, gates, mode notes. The **insight** column feeds the coach's Insight beat. Target states are implied by the offered verb's id (`awaiting-<id>`); exceptions are written inline.
 
-## Routing table (the deterministic core)
-
-The **Next** column is printed in public grammar (`/the-flow <id>`); the **Module** column is what an accepted offer loads (one file under [`stages/`](./stages/)).
-
-| current_stage | Discover artifact | Insight source (pick 1) | Compact seam *before* next? | Harness seam (router-only) | Next → next stage | Module loaded |
-|---|---|---|---|---|---|---|
-| `start` | — (ask intent) | — | — | **session-start**: probe for the router (§ Harness seams); if installed, `--event session-start` | research-worthy → `/the-flow 1a explore` (→`awaiting-1a`); else `/the-flow 1b specify` (→`awaiting-1b`) | `10-explore.md` / `20-specify.md` |
-| `awaiting-1a` | `research-dossier.md` | one Critical/High finding | **YES** (dossier is large) | — | `/the-flow 1b specify` → `awaiting-1b` | `20-specify.md` |
-| `awaiting-1b` | `<slug>-spec.md` | CS score + Simple/Full + #Workshop Opportunities | **YES** (before architect) | **post-spec is the recommended next step** (spec → backpressure via the router → architect) | branch (recommend backpressure first): `/eng-harness-flow --event post-spec --spec <path>` *(router-installed only)* (→`awaiting-backpressure`) \| `/the-flow 2c workshop` *(optional workshop)* (→`awaiting-2c`) \| `/the-flow 3 architect` *(skip to architect)* (→`awaiting-3`) | — / `25-workshop.md` / `30-architect.md` |
-| `awaiting-2c` | newest `workshops/*.md` | the headline decision (Selected option) | — | — | `/eng-harness-flow --event post-spec --spec <path>` (→`awaiting-backpressure`) \| `/the-flow 3 architect` (→`awaiting-3`) | — / `30-architect.md` |
-| `awaiting-backpressure` | `backpressure-coverage.md` | Certainty (Strong/Partial/Weak) + Phase 0? | — | **backpressure payoff** (artifact produced via the router) | `/the-flow 3 architect` → `awaiting-3` | `30-architect.md` |
-| `awaiting-3` | `<slug>-plan.md` | `**Status**` (READY/DRAFT) + Gate Matrix | **YES** (before implement) | validate-v2 already auto-ran | DRAFT → fix + re-run `/the-flow 3 architect` (stay); Simple+READY → `/the-flow 6 implement` (→`awaiting-6`); Full+READY → `/the-flow 5 tasks` (→`awaiting-5`) | `30-architect.md` / `60-implement.md` / `50-phase-tasks.md` |
-| `awaiting-5` | `tasks/<phase>/tasks.md` | first task's Done-When | — | — | `/the-flow 6 implement --phase … --plan …` (or `/the-flow 6c companion …`) → `awaiting-6` | `60-implement.md` / `61-implement-companion.md` |
-| `awaiting-6` | `execution.log.md` / phase status | what landed + AC met | **YES** (between phases) | **pre-implement** (set expectation *before*: stage 60 fires `--event pre-implement`); **phase-end** (explain *after*: stage 60 fired `--event phase-end`) | clean → `/the-flow 7 review` (→`awaiting-7`); more phases → `/the-flow 5 tasks` (→`awaiting-5`) | `70-review.md` / `50-phase-tasks.md` |
-| `awaiting-7` | newest `reviews/*.md` | verdict + one finding | — | contrast computational (post-spec backpressure) vs inferential (review) tiers | findings → fix + re-run `/the-flow 7 review` (stay); clean → `/the-flow 8 merge` (→`awaiting-8`) | `70-review.md` / `80-merge.md` |
-| `awaiting-8` | merge plan | merge readiness | — | **plan-complete** seam fires after the merge (inside stage 80) | user types `PROCEED`/`ABORT`; on merge → `complete` | `80-merge.md` |
-| `complete` | — | — | — | — (plan-complete already fired at stage 80) | recap + stop; set `status:"complete"` | — |
+| state | evidence (artifact) | edges (on evidence → offer) | decorations | insight (pick 1) |
+|---|---|---|---|---|
+| `start` | — (ask intent) | research-worthy → **explore** · clear → **specify** | seam: session-start — probe for the router (§ Harness seams); if installed, `--event session-start` | — |
+| `awaiting-1a` | `research-dossier.md` | → **specify** | compact ✓ (dossier is large) | one Critical/High finding |
+| `awaiting-1b` | `<slug>-spec.md` | → **architect** · opt: **workshop** | compact ✓ (before architect) · seam: post-spec is the **recommended next step** — `/eng-harness-flow --event post-spec --spec <path>` *(router-installed only)* → `awaiting-backpressure` | CS score + Simple/Full + #Workshop Opportunities |
+| `awaiting-2c` | newest `workshops/*.md` | another → **workshop** · → **architect** | seam: post-spec still offered — `/eng-harness-flow --event post-spec --spec <path>` *(router-installed only)* → `awaiting-backpressure` | the headline decision (Selected option) |
+| `awaiting-backpressure` | `backpressure-coverage.md` | → **architect** | backpressure payoff (artifact produced via the router) | Certainty (Strong/Partial/Weak) + Phase 0? |
+| `awaiting-3` | `<slug>-plan.md` | DRAFT → fix + re-run **architect** (stay) · Simple+READY → **implement** · Full+READY → **tasks** | compact ✓ (before implement) · validate-v2 already auto-ran | `**Status**` (READY/DRAFT) + Gate Matrix |
+| `awaiting-5` | `tasks/<phase>/tasks.md` | → **implement** (± its `--companion` mode — offer it here) | the implement verb fires the pre-implement seam itself before task 1 (in-procedure side effect) | first task's Done-When |
+| `awaiting-6` | `execution.log.md` / phase status | clean → **review** · more phases (Full) → **tasks** | compact ✓ (between phases) · seams fired in-verb: `--event pre-implement` (set expectation *before*), `--event phase-end` (explain *after*) · review **skippable if a companion reviewed every commit** | what landed + AC met |
+| `awaiting-7` | newest `reviews/*.md` | findings → fix + re-run **review** (stay) · clean → **merge** | tier contrast: computational (post-spec backpressure) vs inferential (review) | verdict + one finding |
+| `awaiting-8` | merge plan | typed `PROCEED` → `complete` | gate: typed PROCEED/ABORT — never a generic "yes" · seam: plan-complete fires inside the merge verb after execution | merge readiness |
+| `complete` | — | recap + stop; set `status:"complete"` | (plan-complete already fired in-verb) | — |
 
 ## Must-see fields to scan (the Flag beat, per stage)
 
@@ -164,8 +150,8 @@ The engineering harness is a **separate loop that runs side by side with the SDD
 **The five seams** (each a node *and* a narration beat when the router is installed):
 
 - **Post-spec** (`--event post-spec --spec <path>`) — a `backpressure` node **on the spine between spec and plan**; the recommended pre-architect step; produces `backpressure-coverage.md`. Advisory; never blocks.
-- **Pre-implement** (`--event pre-implement --phase <id> --plan-dir <p>`) — a `harness-boot` node before each phase; fired by stage 60/61. `UNAVAILABLE` is not an error — falls back to standard testing.
-- **Phase end** (`--event phase-end --plan-dir <p>`) — a `harness-retro` node at each phase seam (fired inside stage 60/61); the router owns drain-vs-harvest.
+- **Pre-implement** (`--event pre-implement --phase <id> --plan-dir <p>`) — a `harness-boot` node before each phase; fired inside the implement verb. `UNAVAILABLE` is not an error — falls back to standard testing.
+- **Phase end** (`--event phase-end --plan-dir <p>`) — a `harness-retro` node at each phase seam (fired inside the implement verb); the router owns drain-vs-harvest.
 - **Plan complete** (`--event plan-complete`) — a `harness-retro` node at stage 80 / `complete`; fired inside stage 80 after the merge.
 - **Session start** (`--event session-start`) — fired at flow entry; usually no node, just detection + one calm line.
 

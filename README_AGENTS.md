@@ -125,7 +125,7 @@ Categories are organizational only. They do **not** affect install commands — 
 
 ## Skill catalog
 
-### `SDD/` — Spec-Driven Development (13 skills: 1 main flow + 12 utilities)
+### `SDD/` — Spec-Driven Development (11 skills: 1 main flow + 10 utilities)
 
 The active workflow for non-trivial feature work. Use these for any change large enough to benefit from explicit specification, clarification, architecture, and phase-based implementation. Each stage produces an artifact that the next stage consumes.
 
@@ -133,14 +133,12 @@ The active workflow for non-trivial feature work. Use these for any change large
 
 | Slug | One-line purpose |
 |---|---|
-| `the-flow` | The SDD pipeline in one skill — dispatch + 11 lazily-loaded stage modules (explore, specify+clarify, workshop, architect, adr, tasks, implement, companion, progress, review, merge). Guided coach via `/the-flow`; direct jump via `/the-flow <id\|name>`. |
+| `the-flow` | The SDD pipeline in one skill — dispatch (Registry + grammar) + 10 lazily-loaded sub-skills (explore, specify+clarify, workshop, architect, adr, tasks, implement (`--companion` mode for live review), progress, review, merge). Guided coach via `/the-flow`; direct jump via `/the-flow <id\|verb>`. |
 | `plan-0-v2-constitution` | Establish or refresh the project constitution before planning begins. |
 | `plan-2b-v2-prep-issue` | Generate terse, industry-standard issue text for Azure DevOps / GitHub Issues. |
-| `plan-6b-worked-example` | Generate a runnable worked example demonstrating a phase's implementation. |
 | `plan-v2-extract-domain` | Collaboratively identify and formalize a codebase concept as a named domain. |
 | `validate-v2` | Launch parallel subagents to validate produced work with structured lens coverage. |
 | `install-hve-core-rpiv` | Install or update local skill-shaped HVE Core RPI/RPIV task skills from the current authoritative HVE Core source. |
-| `code-concept-search-v2` | Find a concept in the codebase by walking through code like a human engineer. |
 | `deepresearch-v2` | Craft structured research prompts for deep-research agents. |
 | `didyouknow-v2` | Surface critical insights conversationally to build shared understanding. |
 | `flowspace-research-v2` | FlowSpace-first codebase research with parallel subagent exploration. |

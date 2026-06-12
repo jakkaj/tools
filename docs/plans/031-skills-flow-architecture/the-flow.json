@@ -4,11 +4,11 @@
   "slug": "skills-flow-architecture",
   "plan_dir": "docs/plans/031-skills-flow-architecture",
   "mode": "Simple",
-  "cursor": "plan",
-  "recommended_next": "build",
-  "now": "Plan · READY + validated (16 tasks, 14 ACs, decisions D-A..D-F)",
-  "next": "Build · /the-flow 6 implement --plan \"docs/plans/031-skills-flow-architecture/skills-flow-architecture-plan.md\"",
-  "_comment": "Harness nodes omitted: router installed but this repo is not provisioned (no .harness/, no governance doc) — session-start and post-spec seams noop'd; the plan's T000/T0zz seam rows fire at build and are expected to noop. Workshop ws1 predates the flow (authored 2026-06-11, pre-spec, brought across at flow start).",
+  "cursor": "build",
+  "recommended_next": "review",
+  "now": "Build · Phase 1 complete (17/17 tasks, 14/14 ACs; lint exit 0; L1 163→0; deployed)",
+  "next": "Review · /the-flow 7 review --plan \"docs/plans/031-skills-flow-architecture/skills-flow-architecture-plan.md\"",
+  "_comment": "Harness nodes omitted: router installed but this repo is not provisioned (no .harness/, no governance doc) — session-start, post-spec, pre-implement (T000) and phase-end (T0zz) seams all noop'd calmly, as the plan expected. Workshop ws1 predates the flow (authored 2026-06-11, pre-spec, brought across at flow start). Build paused once mid-phase for a user-requested /compact (seam logged in execution.log.md) and resumed at T013.",
   "agents": [],
   "nodes": [
     { "id": "research", "type": "research", "label": "Research", "status": "done",
@@ -35,12 +35,15 @@
       "note": "Status READY v1.1.0 — gates G1 PASS, G2/G3/G4 N/A, G5/G6/G7 PASS. 16 tasks (T000-T0zz) ordered A>B>C>D, decisions D-A..D-F (incl. D-E sub-skill naming, D-F declared delegation). Auto-validated by validate-v2 (4 agents): 2 CRITICAL (PROCEED-line vs L1 collision; 60->62 sibling-path delegation) + 5 HIGH applied in v1.1.0.",
       "artifacts": ["skills-flow-architecture-plan.md"], "next": ["build"] },
 
-    { "id": "build", "type": "phase", "phase": 1, "label": "Build · Phase 1 (A→B→C→D, 16 tasks)", "status": "known",
+    { "id": "build", "type": "phase", "phase": 1, "label": "Build · Phase 1 (A→B→C→D, 17 tasks)", "status": "done",
       "command": "/the-flow 6 implement --plan \"docs/plans/031-skills-flow-architecture/skills-flow-architecture-plan.md\"",
-      "next": ["review"] },
+      "ran_at": "2026-06-12T01:56Z",
+      "user_input": "make sure we have commited our working changes first hten implement please · please stop at a natural seam for a compaction",
+      "note": "17/17 tasks, 14/14 ACs. Pattern doc + lint shipped; L1 163→0; lint exit 0 (0 warnings); frozen surfaces byte-verified (seam strings, PROCEED gate, State-write ownership); T014 fresh-agent variant flow (/shipnote) assembled from the doc alone, lint exit 0; deployed — canonical store byte-identical to source; check-flow wired into ci. Paused mid-phase for /compact after T012, resumed at T013. Uncommitted (git read-only; bb6de93 was the user-asked pre-build commit).",
+      "artifacts": ["execution.log.md"], "next": ["review"] },
 
-    { "id": "review", "type": "review", "label": "Review", "status": "assumed",
-      "command": "/the-flow 7 review", "next": ["merge"] },
+    { "id": "review", "type": "review", "label": "Review", "status": "known",
+      "command": "/the-flow 7 review --plan \"docs/plans/031-skills-flow-architecture/skills-flow-architecture-plan.md\"", "next": ["merge"] },
 
     { "id": "merge", "type": "merge", "label": "Merge", "status": "assumed",
       "command": "/the-flow 8 merge", "next": [] }

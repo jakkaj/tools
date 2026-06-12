@@ -1,3 +1,4 @@
+<!-- 🔄 RENDERED from flight-plan.template.json — regenerate, never hand-edit this file as the primary. -->
 # `the-flow.md` template (flight view)
 
 > **Worked-example template** — copy this shape. It is **generated from [`flight-plan.template.json`](./flight-plan.template.json)** (the source of truth); never hand-edit the rendered `the-flow.md` as the primary. Snapshot: a 6-phase Full plan, Phases 1–2 done, **Phase 3 in progress**. Every workshop is its **own node**; each stage where the user typed shows a **verbatim 🗣 speech bubble**; the `code-review-companion` **wraps** the build phases (subgraph); a `docs-writer` **worker** is a side-node; the **harness seams** appear as first-class violet nodes whose commands are router invocations (`/eng-harness-flow --event …`) — they vanish entirely when the router isn't installed.

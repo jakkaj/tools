@@ -15,14 +15,15 @@ flowchart TD
     ws1["Workshop 1 · composable skill flows<br/>✅ D1–D7 · R1–R8 · L1–L6 (authoritative)"]:::done
     spec["Spec<br/>/the-flow 1b specify<br/>✅ Simple · CS-3 · 14 ACs · sub-skill named · validated"]:::done
     plan["Plan<br/>/the-flow 3 architect<br/>✅ READY v1.1.0 · 16 tasks · D-A..D-F · validated"]:::done
-    build["Build · Phase 1 (A→B→C→D, 16 tasks)<br/>/the-flow 6 implement --plan …"]:::known
-    review["Review<br/>/the-flow 7 review"]:::assumed
+    build["Build · Phase 1 (A→B→C→D, 17 tasks)<br/>/the-flow 6 implement --plan …<br/>✅ 17/17 tasks · 14/14 ACs · L1 163→0 · lint exit 0 · deployed"]:::done
+    review["Review<br/>/the-flow 7 review --plan …"]:::known
     merge["Merge<br/>/the-flow 8 merge"]:::assumed
 
     u_research>"🗣 new plan, start wiht explore. bring hta tworkshop across"]:::said
     u_ws1>"🗣 run a /workshop on this please"]:::said
     u_spec>"🗣 continue on with spec or what ever was next then validate"]:::said
     u_plan>"🗣 yes · i think we should call the things we have in the wf a sub-skill"]:::said
+    u_build>"🗣 make sure we have commited our working changes first hten implement please · please stop at a natural seam for a compaction"]:::said
 
     research --> spec
     research -.-> ws1
@@ -36,11 +37,14 @@ flowchart TD
     u_ws1 -.- ws1
     u_spec -.- spec
     u_plan -.- plan
+    u_build -.- build
 ```
 
 **Legend**: 🟩 done · 🟧 in progress · 🟥 blocked · 🟦 known (designed) · ⬜ dashed = assumed (speculative) · 🗣 verbatim user input · 🟪 harness loop (omitted — repo not provisioned)
 
-- **Now**: Plan · READY v1.1.0 (`skills-flow-architecture-plan.md` — 16 tasks, 14 ACs, decisions D-A…D-F; validate-v2 applied 2 CRITICAL + 5 HIGH fixes)
-- **Next**: Build · `/the-flow 6 implement --plan "docs/plans/031-skills-flow-architecture/skills-flow-architecture-plan.md"`
+- **Now**: Build · Phase 1 **complete** (17/17 tasks, 14/14 ACs — pattern doc + lint shipped; the-flow restructured, L1 163→0, lint exit 0; T014 fresh-agent variant flow passed; deployed byte-identical; `check-flow` in `ci`)
+- **Next**: Review · `/the-flow 7 review --plan "docs/plans/031-skills-flow-architecture/skills-flow-architecture-plan.md"`
 - Mid-architect user decision (spec Clarification #5 / plan D-E): the reusable unit inside a flow is a **sub-skill** — named by a verb, composed by the flow's Registry+Graph.
-- Harness: router installed, repo not provisioned — seams noop; the plan's T000/T0zz seam rows fire at build (expect calm noop).
+- Harness: router installed, repo not provisioned — all four seams (session-start, post-spec, pre-implement T000, phase-end T0zz) noop'd calmly, exactly as the plan expected.
+- Build paused once mid-phase for a user-requested `/compact` (after T012) and resumed at T013 — seam logged in `execution.log.md`.
+- Everything since `bb6de93` is **uncommitted working tree** (git read-only rule; commit only on your ask).

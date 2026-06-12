@@ -1,15 +1,19 @@
-# Stage 70 — Review
-*(absorbed from `plan-7-v2-code-review`; loaded lazily via `/the-flow 7 review` or `/the-flow review` — dispatch: `../../SKILL.md`)*
+# review
 
+> Sub-skill — part of a verb library. Knows nothing about any flow:
+> no stage ids, no successor/predecessor names, no flow commands.
+> Composition is the bundling flow's job.
+
+**Verb**: review
 **Purpose**: Read-only per-phase code review — inspects diffs, validates domain compliance, checks for concept reinvention, verifies testing evidence, and produces structured findings as file artifacts. Does NOT modify code.
 
-**Entry conditions**: A phase has been implemented (stage 6 finished — execution log written, changes committed or in working tree); `--plan` points to an existing plan.md with `**Mode**: Simple` or `**Mode**: Full`; in Full Mode the phase's tasks dossier (`tasks/<phase-slug>/tasks.md`) exists.
+**Consumes**: an implemented phase (the implement verb finished — execution log written, changes committed or in working tree); plan.md with `**Mode**: Simple` or `**Mode**: Full`; in Full Mode the phase's tasks dossier (`tasks/<phase-slug>/tasks.md`); spec, git diffs, `docs/domains/**`, `docs/project-rules/**`.
 
-**Inputs**: Flags — `--plan "<abs path to plan.md>"` (required), `--phase "<Phase N: Title>"` (required for Full Mode, omit for Simple Mode), `--diff-file "<abs path to unified.diff>"` (optional; otherwise computed from git), `--strict` (optional; treat HIGH as blocking). Input artifacts — plan, spec, phase tasks doc, execution.log.md, git diffs, `docs/domains/**`, `docs/project-rules/**`.
+**Flags**: `--plan "<abs path to plan.md>"` (required), `--phase "<Phase N: Title>"` (required for Full Mode, omit for Simple Mode), `--diff-file "<abs path to unified.diff>"` (optional; otherwise computed from git), `--strict` (optional; treat HIGH as blocking).
 
-**Output contract**: Review file `${REVIEW_FILE}` with sections A–H (verdict, summary, checklist, findings table, detailed findings, coverage map, commands, Handover Brief); computed diff saved to `reviews/_computed.diff`; fix-tasks file `${FIX_FILE}` only if verdict is REQUEST_CHANGES. Terminal report: verdict + key failure areas + exact next command.
+**Produces**: Review file `${REVIEW_FILE}` with sections A–H (verdict, summary, checklist, findings table, detailed findings, coverage map, commands, Handover Brief); computed diff saved to `reviews/_computed.diff`; fix-tasks file `${FIX_FILE}` only if verdict is REQUEST_CHANGES. Terminal report: verdict + key failure areas.
 
-**Next routing**: REQUEST_CHANGES → `/the-flow 6 implement <same flags>` (module `references/stages/60-implement.md`) to apply fixes, then re-run `/the-flow 7 review <same flags>` (this module). APPROVE with more phases remaining → `/the-flow 5 tasks --phase 'Phase N+1' --plan <abs path>` (module `references/stages/50-phase-tasks.md`). APPROVE on the final phase → `/the-flow 8 merge --plan <plan dir>` (module `references/stages/80-merge.md`).
+**Side effects**: none (read-only; no harness seams)
 
 ---
 
@@ -140,7 +144,7 @@ Launch **5 subagents** in parallel (single message with 5 Task tool calls):
 - `docs/domains/domain-map.md` — to understand existing capabilities
 
 For each major new component (service, adapter, repository, handler):
-1. Run `/code-concept-search-v2 \"<component concept>\"` against the codebase
+1. Search the codebase for \"<component concept>\" — scan `docs/domains/*/domain.md` § Concepts tables first, then source
 2. Check domain contracts for overlapping capabilities
 3. Flag if similar functionality exists in another domain
 
@@ -201,7 +205,7 @@ Only flag genuine duplication, not incidental similarity."
 
 **Wait for all subagents to complete.** (5 subagents)
 
-> Live-runtime validation is no longer a review subagent — running software is the harness family's concern, reached through `/eng-harness-flow` at the implement stage's seams (stage 6, `references/stages/60-implement.md`). The review consumes the execution-log evidence those seams produced; it never boots anything itself.
+> Live-runtime validation is no longer a review subagent — running software is the harness family's concern, reached through `/eng-harness-flow` at the implement verb's seams. The review consumes the execution-log evidence those seams produced; it never boots anything itself.
 
 ## Step 4: Synthesize Results
 
@@ -226,7 +230,7 @@ Write `${REVIEW_FILE}` (create `reviews/` dir if needed):
 **Spec**: [absolute path to spec.md]
 **Phase**: [phase title, or "Simple Mode"]
 **Date**: [today]
-**Reviewer**: Automated (the-flow stage 7 — review)
+**Reviewer**: Automated (the review verb)
 **Testing Approach**: [from spec]
 
 ## A) Verdict
@@ -352,12 +356,12 @@ Universal (all approaches):
 | File (absolute path) | What's Missing |
 |---------------------|----------------|
 
-### Next Step
+### Handback
 
-[Exact command to run — e.g.:
-- For fixes: "/the-flow 6 implement --plan /abs/path --phase 'Phase N'" (module `references/stages/60-implement.md`)
-- For next phase: "/the-flow 5 tasks --phase 'Phase N+1' --plan /abs/path" (module `references/stages/50-phase-tasks.md`)
-- If approved and final phase: "Implementation complete — consider committing"]
+[State the verdict's consequence in verb terms — the flow renders any command:
+- REQUEST_CHANGES: "fixes go back through the implement verb (same flags), then re-run this review"
+- APPROVE, more phases: "next phase's task expansion comes next"
+- APPROVE, final phase: "Implementation complete — consider committing"]
 ```
 
 ## Step 6: Write Fix Tasks (if REQUEST_CHANGES)
@@ -390,7 +394,7 @@ Apply in order. Re-run review after fixes.
 ## Re-Review Checklist
 
 - [ ] All critical/high fixes applied
-- [ ] Re-run `/the-flow 7 review` and achieve zero HIGH/CRITICAL
+- [ ] Re-run this review verb and achieve zero HIGH/CRITICAL
 ```
 
 ## Step 7: Constraints
@@ -414,8 +418,12 @@ Acceptance criteria for this command:
 - If APPROVE: zero HIGH/CRITICAL findings
 - If REQUEST_CHANGES: fix tasks file created with severity-ordered fixes
 
-Next step: Apply fixes via `/the-flow 6 implement <same flags>` (module `references/stages/60-implement.md`), then re-run `/the-flow 7 review <same flags>` (module `references/stages/70-review.md`).
+On REQUEST_CHANGES: fixes travel back through the implement verb (same flags), then this review re-runs.
 
 ---
 
-> Harness note: this stage carries no harness seam of its own — it's a read-only review. The phase-end seam already fired inside the implement stage (stage 6, `/eng-harness-flow --event phase-end`), and plan-complete fires at the merge stage (stage 8, `references/stages/80-merge.md`). Friction capture and retros are the harness family's own concern; SDD never drives them directly.
+> Harness note: this verb carries no harness seam of its own — it's a read-only review. The phase-end seam already fired inside the implement verb (`/eng-harness-flow --event phase-end`), and plan-complete fires inside the merge verb. Friction capture and retros are the harness family's own concern; SDD never drives them directly.
+
+## Exit
+
+Print the output-contract summary (✅ block: verdict, review file path, key failure areas). Then STOP. Do not name a next stage. If invoked standalone, end with exactly: "Routing is the flow's job — run the parent flow bare to continue."

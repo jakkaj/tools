@@ -1,15 +1,19 @@
-# Stage 80 — Merge
-*(absorbed from `plan-8-v2-merge`; loaded lazily via `/the-flow 8 merge` or `/the-flow merge` — dispatch: `../../SKILL.md`)*
+# merge
 
-**Purpose**: Analyze upstream changes from the target branch (default `main`) and generate a comprehensive merge plan document — diagrams, conflict tables, regression risks, ordered steps — before any merge execution. Analysis only by default; merge execution runs ONLY after the user explicitly types `PROCEED`.
+> Sub-skill — part of a verb library. Knows nothing about any flow:
+> no stage ids, no successor/predecessor names, no flow commands.
+> Composition is the bundling flow's job.
 
-**Entry conditions**: All phases implemented and reviewed (stages 6/7 complete); clean working tree (no uncommitted changes); on a branch (not detached HEAD); plan folder resolvable (contains `*-spec.md`); target branch exists and is reachable.
+**Verb**: merge
+**Purpose**: Analyze upstream changes from the target branch (default `main`) and generate a comprehensive merge plan document — diagrams, conflict tables, regression risks, ordered steps — before any merge execution. Analysis only by default; merge execution runs ONLY after the user explicitly types `PROCEED`. On ABORT the merge plan is saved for later; re-enter with this verb and the same `--plan`.
 
-**Inputs**: Flags — `--plan "<abs path to docs/plans/<ordinal>-<slug>/>"` (optional; auto-detect from current directory), `--target "main"` (optional; branch to merge from, default `main`). Input artifacts — git history (ancestor/HEAD/target), your spec/plan/execution logs, upstream plan folders under `docs/plans/`, `docs/domains/**` (optional).
+**Consumes**: all phases implemented and reviewed; clean working tree (no uncommitted changes); on a branch (not detached HEAD); plan folder resolvable (contains `*-spec.md`); target branch exists and is reachable. Input artifacts — git history (ancestor/HEAD/target), your spec/plan/execution logs, upstream plan folders under `docs/plans/`, `docs/domains/**` (optional).
 
-**Output contract**: Merge plan document written to `${PLAN_DIR}/merge/${DATE}/merge-plan.md`; terminal success message with upstream-plan/conflict/risk counts and the explicit "type PROCEED / ABORT" prompt. On PROCEED only: phased merge execution with checkpoints and rollback, post-merge validation checklist, then the `/eng-harness-flow --event plan-complete --json` harness seam.
+**Flags**: `--plan "<abs path to docs/plans/<ordinal>-<slug>/>"` (optional; auto-detect from current directory), `--target "main"` (optional; branch to merge from, default `main`).
 
-**Next routing**: Terminal stage — after a successful merge the flow is complete (the plan-complete harness seam fires from this module's procedure). On ABORT the merge plan is saved for later; re-enter with `/the-flow 8 merge --plan "<plan dir>"` (this module, `references/stages/80-merge.md`).
+**Produces**: Merge plan document written to `${PLAN_DIR}/merge/${DATE}/merge-plan.md`; terminal success message with upstream-plan/conflict/risk counts and the explicit "type PROCEED / ABORT" prompt. On PROCEED only: phased merge execution with checkpoints and rollback, post-merge validation checklist.
+
+**Side effects**: on PROCEED only, after merge execution: fires the `/eng-harness-flow --event plan-complete --json` harness seam (router-only, best-effort).
 
 ---
 
@@ -973,7 +977,7 @@ git branch -D backup-${DATE}-pre-merge  # optional cleanup
 
 ---
 
-## Next Steps
+## PROCEED/ABORT execution gate
 
 **After generating merge plan document:**
 
@@ -991,9 +995,11 @@ If user says "ABORT":
    - Rebase instead of merge
    - Manual conflict resolution first
 
-**Resume commands** (for later):
+## Recovery commands
+
+For picking the merge back up later:
 - Review merge plan: \`cat ${PLAN_DIR}/merge/${DATE}/merge-plan.md\`
-- Retry merge: \`/the-flow 8 merge --plan "${PLAN_DIR}"\` (module `references/stages/80-merge.md`)
+- Retry merge: re-run this verb with \`--plan "${PLAN_DIR}"\`
 - Manual merge: \`git merge ${TARGET}\`
 
 ---
@@ -1026,7 +1032,7 @@ Summary:
 - Regression risks: ${RISK_COUNT}
 - Recommended approach: ${APPROACH}
 
-Next step: Review merge plan and type "PROCEED" to execute, or "ABORT" to cancel.
+Decision gate: Review merge plan and type "PROCEED" to execute, or "ABORT" to cancel.
 
 (After the merge completes, the plan-complete harness reflection runs automatically when a harness is installed — nothing to do here.)
 ```
@@ -1046,3 +1052,7 @@ Your branch is up to date. No merge needed.
 ## Harness seam (router-only)
 
 This skill fires one harness seam — **plan complete**, after the merge executes — through the single entry point `/eng-harness-flow --event plan-complete --json` (children never called directly; they are private and may move). The router owns the long-horizon reflection at plan completion. Router not installed → skip silently (the one-time warning already fired at flow entry). Best-effort, never blocks.
+
+## Exit
+
+Print the output-contract summary (✅ block: merge plan path, conflict/risk counts, the PROCEED/ABORT prompt — execution only on the typed gate). Then STOP. Do not name a next stage. If invoked standalone, end with exactly: "Routing is the flow's job — run the parent flow bare to continue."
