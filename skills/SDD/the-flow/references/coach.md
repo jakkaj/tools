@@ -93,6 +93,38 @@ Where we are: …
 
 ---
 
+## The Seam Digest — the at-a-glance recap/preview
+
+After the rail, every seam turn renders a **Seam Digest**: a short, numbered recap of what just happened and what's next, so the user orients at a glance and confirms without re-reading prose. It is the narration cadence (§ Narration scripts: Orient → Flag → Insight → Suggest → Invite) **rendered as scannable lists** — same content, same sourcing rules, different shape. On by default at every seam; the rail shows *position*, the digest shows *substance*.
+
+**Shape** — one or more **facets**, each a bold label + a numbered list, **one sentence per item**:
+
+> **Just did**
+> 1. <what the last stage produced — concrete, from the artifact>
+> 2. <the one insight worth carrying forward>
+>
+> **Next up**
+> 1. <why the recommended step matters> → {{render-edge: <state> → <verb>}}
+> 2. <a second option, only if the seam genuinely forks>
+>
+> **Watch-outs** *(only when the Flag beat has hits)*
+> 1. <a must-see field, lifted verbatim>
+>
+> **Optional** *(only when a side-path fits here)*
+> 1. <a one-line branch mention>
+
+Then the print-then-offer command block + the offer line follow exactly as before — the digest replaces the prose recap, **not** the command or the offer.
+
+**Rules:**
+- **Contextual facets — drop when empty.** *Just did · Next up · Watch-outs · Optional* is the **default** set, not a cage. Render only the facets with real content this turn: `start` has no *Just did*; `complete` has no *Next up*; a clean seam drops *Watch-outs*. Swap in a seam-fitting facet when it earns its place (*Decisions locked*, *Still open*, *Blocked on*) — the set is contextual, chosen to fit the moment.
+- **As short as possible — no fixed cap, but every line earns its place.** One sentence, no sub-bullets, no padding. A facet that would be a single obvious item folds back into one prose line instead. The digest is a glance, not a report — when in doubt, cut a line rather than add one.
+- **Lift, never invent** (dispatch invariant #5). Every item is grounded in a real artifact, the Graph's **insight** column, or the **must-see fields** ([00-routing.md](./00-routing.md)). *Next up* items render from the Graph edges via the same `{{render-edge}}` slots — **never hand-write a command in the digest**.
+- **Rail first, digest second.** The host rail is still the first thing on the turn (the map); the digest is the sentences beneath it. Don't restate the rail's `now`/`next` as digest prose — *Next up* is the typeable detail *behind* the rail's `next`, not a second copy of it.
+
+**Summon — `recap`.** The user may type `recap` at any time to reprint the current Seam Digest from durable state **without advancing** — the same idempotent reprint as a post-`/compact` resume (discover the current artifact, re-render the digest + the pending command, never move the cursor). Always available; never a stage.
+
+---
+
 ## Tell the agent to mirror the flow (every turn)
 
 You are usually running inside a coding agent. On every turn, **instruct that agent** to:
@@ -104,7 +136,7 @@ You are usually running inside a coding agent. On every turn, **instruct that ag
 
 ## Narration scripts (paste-ready copy)
 
-All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decision per turn, a recommended default + 2–4 concrete typeable answers + an "if unsure" path. `<bracketed>` = fill from the discovered artifact (a **real** detail — never invented). **Every block is prefaced with the host rail** at that stage's fill.
+All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decision per turn, a recommended default + 2–4 concrete typeable answers + an "if unsure" path. `<bracketed>` = fill from the discovered artifact (a **real** detail — never invented). **Every block is prefaced with the host rail** at that stage's fill, then rendered as the **Seam Digest** (§ The Seam Digest — the at-a-glance recap/preview): a block's "Where we are" prose is the *Just did* facet, its Flag beat is *Watch-outs*, its Suggest/Type options are *Next up*, and its branch mentions are *Optional*. The per-state scripts below are the **content source** for each seam's digest — wording to lift, rendered through the digest shape, not a second competing prose format.
 
 **Render slots — commands are never written here.** `{{render-edge: <state> → <verb> [flags]}}` is a **slot**: at narration time, expand it via the Graph row for `<state>` + the Registry row for `<verb>` + the dispatch's § Command grammar, and print the rendered command in a copyable block. Never print a slot raw, and never hand-write a literal command in a narration script — the Grammar is defined once and rendered everywhere (flow-architecture R4/D5). Teaching prose may name verbs ("next is the architect") — verbs are Registry-stable.
 
