@@ -6,7 +6,7 @@
 
 **Verb**: adr
 **Purpose**: Generate a high-quality, domain-aware Architectural Decision Record (ADR) from the feature spec (and optional plan), persist it under `docs/adr/`, and wire cross-links so downstream consumers import its constraints (the architect's G4 gate reads `Status: Accepted` ADRs). Includes domain impact analysis, domain map integration, and domain.md backlinks.
-**Consumes**: spec (`--spec` REQUIRED — abort if missing) · plan file (`--plan`, optional) · doctrine files at `docs/project-rules/` (optional) · existing ADRs at `docs/adr/` (optional) · domain registry/docs at `docs/domains/` (optional)
+**Consumes**: business source via `--spec` (REQUIRED — accepts a unified `<slug>-plan.md` (reads its `## Business Specification`) or a legacy `<slug>-spec.md`; abort if missing) · plan file (`--plan`, optional) · doctrine files at `docs/project-rules/` (optional) · existing ADRs at `docs/adr/` (optional) · domain registry/docs at `docs/domains/` (optional)
 **Flags**: `--spec` (required), `--plan`, `--title`, `--status` (Proposed|Accepted|Rejected|Superseded|Deprecated; default Proposed), `--stakeholders`, `--replace NNNN`, `--non-interactive`, `--supersedes NNNN`
 **Produces**: Atomic write of `docs/adr/adr-NNNN-[title-slug].md` (strict structure: full front matter; Status; Context; Decision; mandatory Domain Impact; ≥3 POS + ≥3 NEG Consequences; ≥2 Alternatives; Implementation Notes; References) + updated `docs/adr/README.md` index + backlinks into spec (`## ADRs`), plan (`## ADR Ledger`, if present), affected `domain.md` files, and domain map (if required). Terminal report: "✅ ADR created" with file path, status, domains, backlink summary, ADR Ledger table, Domain Impact Summary table — or "❌ ADR creation failed" with actionable validation errors.
 **Side effects**: none
@@ -22,7 +22,7 @@ User input:
 
 $ARGUMENTS
 # Expected flags:
-# --spec  "<abs path to docs/plans/<ordinal>-<slug>/<slug>-spec.md>"     # REQUIRED
+# --spec  "<abs path to the unified <ordinal>-<slug>/<slug>-plan.md, or a legacy <slug>-spec.md>"     # REQUIRED
 # --plan  "<abs path to docs/plans/<ordinal>-<slug>/<slug>-plan.md>"     # OPTIONAL (link if present)
 # --title "Decision Title"                                               # OPTIONAL (derive if absent)
 # --status "Proposed|Accepted|Rejected|Superseded|Deprecated"            # OPTIONAL (default "Proposed")
@@ -34,12 +34,12 @@ $ARGUMENTS
 
 ## 0) Inputs & Pre-flight
 
-* **FEATURE_SPEC** = `--spec` (REQUIRED; abort if missing)
+* **FEATURE_SPEC** = `--spec` (REQUIRED; a unified `<slug>-plan.md` or a legacy `<slug>-spec.md`; abort if missing)
 * **PLAN_PATH**    = `--plan` (OPTIONAL; used for backlinks)
 * **TODAY**        = {{TODAY}}
 
 **Pre-flight checks:**
-1. Abort if `--spec` missing. Read spec (entire file).
+1. Abort if `--spec` missing. Read the `--spec` file (entire file); when it is a unified `<slug>-plan.md`, the business content is under `## Business Specification` (the implementation plan is under `## Implementation Plan`).
 2. If `--plan` exists, read for references only.
 3. If doctrine files exist (`docs/project-rules/{constitution.md, rules.md, idioms.md, architecture.md}`), load for alignment cues.
 4. Compute ADR dir = `docs/adr/` (mkdir -p if needed). Scan for `adr-*.md`.
@@ -287,7 +287,7 @@ superseded_by: ""                  # Leave empty (filled when superseded)
   - `- **IMP-004**: [Domain artifacts to update — domain.md, registry.md, domain-map.md as applicable]`
 
 * `## References` (MUST include spec/plan/domain links)
-  - `- **REF-001**: [Spec](../../<ordinal>-<slug>/<slug>-spec.md)`
+  - `- **REF-001**: [Spec](../../<ordinal>-<slug>/<slug>-plan.md)` (the unified plan's `## Business Specification`; or a legacy `<slug>-spec.md`)
   - `- **REF-002**: [Plan](../../<ordinal>-<slug>/<slug>-plan.md)` (if --plan provided)
   - `- **REF-003**: [Related ADRs or external docs]`
   - `- **REF-004**: [Standards/frameworks referenced]`
@@ -307,12 +307,12 @@ superseded_by: ""                  # Leave empty (filled when superseded)
 
 ### Update ADR References
 * In `## References`, include:
-  - `[Spec](../../<ordinal>-<slug>/<slug>-spec.md)` (always)
+  - `[Spec](../../<ordinal>-<slug>/<slug>-plan.md)` (always — the unified plan's business section; or a legacy `<slug>-spec.md`)
   - `[Plan](../../<ordinal>-<slug>/<slug>-plan.md)` (if --plan provided)
   - `[Domain: <slug>](../../domains/<slug>/domain.md)` (for each affected domain)
 
-### Update Spec with ADR Backlink
-* Open spec file
+### Update the business source with an ADR Backlink
+* Open the business source (the unified `<slug>-plan.md`, or a legacy `<slug>-spec.md`)
 * Look for `## ADRs` section (create after `## ADR Seeds` if missing)
 * Append: `- ADR-NNNN: [Decision Title] ({{TODAY}}) – status: <status> – domains: [slug, slug]`
 

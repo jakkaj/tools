@@ -34,56 +34,55 @@ The per-block "Type: …" prompts below are **branch selectors** (which option t
 **Every** guided turn begins with a fixed one-line **host rail**, on its own line, then a blank line, then the narration. It marks the guide's voice (never confusable with a stage's `✅`/`📁` output) **and** shows how far down the flow we are.
 
 ```
-[the-flow] ◆─◆─◆─[◆─◐─◇]─◇  research · spec · plan · [build 2/3] · merge
+[the-flow] ◆─◆─[◆─◐─◇]─◇  research · plan · [build 2/3] · merge
 
 Where we are: …
 ```
 
 - `◆` = completed macro-milestone, `◐` = the milestone **in progress**, `◇` = remaining; joined by `─` into one rail. **At most one `◐`** at a time (none when idle/paused between milestones).
-- **Same-line legend**: two spaces after the pips, the milestone names ride the same line — lowercase, in rail order, joined by ` · `, the **current** one wrapped in `[…]`. Brackets follow the `◐`; on a settled rail (no `◐`) bracket the first `◇` (the next milestone up). Once stage 30 reveals per-phase nodes, the phase group reads as one bracketed word with a counter (`[build 2/3]`); if naming every phase would overflow ~100 columns, shorten to `p1 … pN`.
+- **Same-line legend**: two spaces after the pips, the milestone names ride the same line — lowercase, in rail order, joined by ` · `, the **current** one wrapped in `[…]`. Brackets follow the `◐`; on a settled rail (no `◐`) bracket the first `◇` (the next milestone up). Once the `plan` pass reveals per-phase nodes, the phase group reads as one bracketed word with a counter (`[build 2/3]`); if naming every phase would overflow ~100 columns, shorten to `p1 … pN`.
 - **Phase grouping**: per-phase nodes are wrapped in one `[ … ]` so they read distinctly from the fixed flow nodes → `◆─◆─◆─[◆─◐─◇]─◇`. During Build, the phase currently being implemented is the `◐` inside the group.
 - **Render the whole rail block as a fenced code block — always.** The rail line(s), any anchored companion line, and the `now`/`next` groups are ONE ``` fence (no language tag). Outside a fence markdown collapses leading spaces — and **never** fake alignment with `&nbsp;` or any HTML entity (terminals print them literally). Real spaces inside the fence are the only alignment tool.
-- **Macro-milestones (Full)**: Research · Spec · Plan · Tasks · Build · Review · Merge (7). Optional/sub-steps (deep-research, workshops, the post-spec backpressure check, ADRs, the fix loop) live *under* a milestone and get **no diamond** — opting in/out never changes the total.
-- **Dynamic total**: `milestones_total` is an estimate early, **recomputed at stage 30** from the real phase count (Research · Spec · Plan · **one node per phase** · Merge). A 5-phase plan expands the rail (3 + 5 + 1 = 9); a 1-phase Simple plan collapses it. Re-scales **only at stage 30**, then monotonic. `state.milestones_done` drives the fill.
+- **Macro-milestones (Full)**: Research · Plan · Tasks · Build · Review · Merge (6). The old separate Spec + Plan milestones collapse into **one `Plan` pip** — the atomic `plan` verb writes both halves (business spec + implementation plan) in one pass, so the pip fills once that document exists. Optional/sub-steps (deep-research, workshops, the post-spec backpressure check, ADRs, the fix loop) live *under* a milestone and get **no diamond** — opting in/out never changes the total.
+- **Dynamic total**: `milestones_total` is an estimate early, **recomputed during the `plan` pass** from the real phase count revealed in the implementation half (Research · Plan · **one node per phase** · Merge). A 5-phase plan expands the rail (2 + 5 + 1 = 8); a 1-phase Simple plan collapses it. Re-scales **only at the `plan` pass**, then monotonic. `state.milestones_done` drives the fill.
 - **Status line** after the diamonds: `· now: <current> · next: <next>`. **Dynamic expansion** — inline when there's a single short next; when `next` has **≥2 options** (or would wrap), break `now`/`next` onto their **own lines** with options stacked (labelled + aligned, recommended first):
   ```
-  [the-flow] ◆─◆─◇─◇─◇  research · spec · [plan] · build · merge
-   now  · spec written — CS-4, Full
-   next · ▸ {{render-edge: awaiting-1b → architect}}     write the plan       (recommended)
-          ▸ {{render-edge: awaiting-1b → workshop}}      another workshop
+  [the-flow] ◆─◆─◇─◇─◇─◇  research · plan · [tasks] · build · review · merge
+   now  · plan written (both halves) — CS-4, Full, READY
+   next · ▸ {{render-edge: awaiting-1b → tasks}}         Phase 1 tasks               (recommended)
+          ▸ {{render-edge: awaiting-1b → workshop}}      workshop a topic, then re-plan
           ▸ /deepresearch            dig into the API
   ```
-- Frame the rail **once, early**, as *an approximate map, not a contract* (totals shift once stage 30 reveals phase count). Glyphs are tunable. Apply to **every** narration block below.
+- Frame the rail **once, early**, as *an approximate map, not a contract* (totals shift once the `plan` pass reveals phase count). Glyphs are tunable. Apply to **every** narration block below.
 
 **Stage → rail map** (Full mode; settled states — render the active stage as `◐` while it runs):
 
 | Stage reached | done/total | Rail |
 |---|---|---|
-| `start` | 0/7 | `[the-flow] ◇─◇─◇─◇─◇─◇─◇` |
-| `awaiting-1a` | 1/7 | `[the-flow] ◆─◇─◇─◇─◇─◇─◇` |
-| `awaiting-1b` | 2/7 | `[the-flow] ◆─◆─◇─◇─◇─◇─◇` |
-| `awaiting-2c` / `awaiting-backpressure` | 2/7 (sub-steps) | unchanged |
-| `awaiting-3` | 3/7 | `[the-flow] ◆─◆─◆─◇─◇─◇─◇` |
-| `awaiting-5` | 4/7 | `[the-flow] ◆─◆─◆─◆─◇─◇─◇` |
-| `awaiting-6` | 5/7 | `[the-flow] ◆─◆─◆─◆─◆─◇─◇` |
-| `awaiting-7` | 6/7 | `[the-flow] ◆─◆─◆─◆─◆─◆─◇` |
-| `awaiting-8` / `complete` | 7/7 | `[the-flow] ◆─◆─◆─◆─◆─◆─◆` |
+| `start` | 0/6 | `[the-flow] ◇─◇─◇─◇─◇─◇` |
+| `awaiting-1a` | 1/6 | `[the-flow] ◆─◇─◇─◇─◇─◇` |
+| `awaiting-1b` (plan done — both halves) | 2/6 | `[the-flow] ◆─◆─◇─◇─◇─◇` |
+| `awaiting-2c` / `awaiting-backpressure` | 2/6 (post-plan refinements) | unchanged |
+| `awaiting-5` | 3/6 | `[the-flow] ◆─◆─◆─◇─◇─◇` |
+| `awaiting-6` | 4/6 | `[the-flow] ◆─◆─◆─◆─◇─◇` |
+| `awaiting-7` | 5/6 | `[the-flow] ◆─◆─◆─◆─◆─◇` |
+| `awaiting-8` / `complete` | 6/6 | `[the-flow] ◆─◆─◆─◆─◆─◆` |
 
-(Simple mode collapses the per-phase group to one node — recompute from `milestones_total` after stages 20/30. Rails in this table omit the same-line legend for brevity — every rendered rail carries it.)
+(Simple mode collapses the per-phase group to one node — recompute from `milestones_total` set during the `plan` pass. Rails in this table omit the same-line legend for brevity — every rendered rail carries it.)
 
 **Harness companion rail (unified block)**: when the harness loop is live this session — the `/eng-harness-flow` router fired this turn or earlier — never show two disconnected rails. Anchor the harness loop **beneath the active milestone**, each flow with its own voice, harness lines prefixed `⚙` (text glyph, never the `⚙️` emoji — double-width wrecks alignment):
 
 ```
-[the-flow]  ◆─◆─◐─◇─◇─◇─◇  research · spec · [plan] · tasks · build · review · merge
-                └─ ⚙ ◆─◐─◇─◇─◇ ↺  boot · [backpressure] · observe · retro · improve  (post-spec)
+[the-flow]  ◆─◐─◇─◇─◇─◇  research · [plan] · tasks · build · review · merge
+              └─ ⚙ ◆─◐─◇─◇─◇ ↺  boot · [backpressure] · observe · retro · improve  (post-spec)
 
  the-flow
-  now  · spec READY + validated (Simple) — AC-11 branch-canary folded in
-  next · ▸ {{render-edge: awaiting-backpressure → architect}} — consumes backpressure-coverage.md
+  now  · plan written (both halves) — Simple, READY; running an optional post-plan refinement
+  next · ▸ {{render-edge: awaiting-backpressure → plan}} — re-run plan to fold backpressure-coverage.md into both halves
 
  ⚙ engineering harness
   now  · post-spec seam — running the backpressure survey
-  next · writes backpressure-coverage.md → hands control back to stage 30
+  next · writes backpressure-coverage.md → hands control back to the `plan` pass
 ```
 
 - Harness loop pips = Boot · Backpressure · Observe · Retro · Improve (**per-pass**; `↺` = it cycles, never "completes"). The anchored line's shape is **fixed**: `└─ ⚙ <all five pips> ↺  <legend with [current]>  (<seam>)` — **never compress the pips** and never swap the legend for prose; narrative belongs in the ` ⚙ engineering harness` `now`/`next` group. Source the harness line from the router's envelope (its `rail`/`now`/`next` fields) — **never invent its position**; if the router hasn't reported this session, omit the harness line entirely (no empty scaffolding).
@@ -129,7 +128,7 @@ Then the print-then-offer command block + the offer line follow exactly as befor
 
 You are usually running inside a coding agent. On every turn, **instruct that agent** to:
 
-1. **Mirror the flow in its own todo list** — one todo per upcoming stage (or, once stage 30 reveals them, one per phase), kept in sync with the rail. This makes the journey legible in the agent's native task tracker, not just in the narration.
+1. **Mirror the flow in its own todo list** — one todo per upcoming stage (or, once the `plan` pass reveals them, one per phase), kept in sync with the rail. This makes the journey legible in the agent's native task tracker, not just in the narration.
 2. **Re-invoke `/the-flow` after every `/compact`** and at the **start of any fresh session** — that's how you reload durable state and resume. The `/compact` suggestion copy and the resume handshake both end with: *"after compacting, run `/the-flow` again."*
 
 ---
@@ -138,7 +137,7 @@ You are usually running inside a coding agent. On every turn, **instruct that ag
 
 All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decision per turn, a recommended default + 2–4 concrete typeable answers + an "if unsure" path. `<bracketed>` = fill from the discovered artifact (a **real** detail — never invented). **Every block is prefaced with the host rail** at that stage's fill, then rendered as the **Seam Digest** (§ The Seam Digest — the at-a-glance recap/preview): a block's "Where we are" prose is the *Just did* facet, its Flag beat is *Watch-outs*, its Suggest/Type options are *Next up*, and its branch mentions are *Optional*. The per-state scripts below are the **content source** for each seam's digest — wording to lift, rendered through the digest shape, not a second competing prose format.
 
-**Render slots — commands are never written here.** `{{render-edge: <state> → <verb> [flags]}}` is a **slot**: at narration time, expand it via the Graph row for `<state>` + the Registry row for `<verb>` + the dispatch's § Command grammar, and print the rendered command in a copyable block. Never print a slot raw, and never hand-write a literal command in a narration script — the Grammar is defined once and rendered everywhere (flow-architecture R4/D5). Teaching prose may name verbs ("next is the architect") — verbs are Registry-stable.
+**Render slots — commands are never written here.** `{{render-edge: <state> → <verb> [flags]}}` is a **slot**: at narration time, expand it via the Graph row for `<state>` + the Registry row for `<verb>` + the dispatch's § Command grammar, and print the rendered command in a copyable block. Never print a slot raw, and never hand-write a literal command in a narration script — the Grammar is defined once and rendered everywhere (flow-architecture R4/D5). Teaching prose may name verbs ("next is the `plan` step") — verbs are Registry-stable.
 
 **The Flag beat (don't assume the human read everything).** Between Orient and Insight, scan the just-produced artifact's **structured alarm fields** (00-routing.md § Must-see fields) and surface any hits verbatim, confirming — not nagging: *"⚠️ Before we move on — the work flagged `<X>`, `<Y>` — just making sure you saw those."* Distinct from the single Insight: Insight is one *interesting* detail (curiosity); Flag is the *decision-relevant must-sees* (safety). Rules:
 > - **Lift, never derive.** Callouts are quoted from the artifact's flag fields. Never invented.
@@ -147,56 +146,48 @@ All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decis
 > - **Never a gate.** The human acts on it or waves past. It never blocks the next step.
 
 ### `start` — fresh entry (no active state, no artifacts)
-> [the-flow] ◇─◇─◇─◇─◇─◇─◇
+> [the-flow] ◇─◇─◇─◇─◇─◇
 >
 > Welcome — I'm your guide through the SDD flow. Tell me in a sentence what you want to build or change, and I'll turn it into the right first step, explain why each stage matters, point out the one thing worth noticing in what each stage produces, and tell you exactly what to type next. You stay in control — nothing merges without your say-so.
 >
-> **What do you want to work on?** *(Just describe it. If it touches code you don't fully understand yet, I'll start us with research (the **explore** verb); if the ask is clear, we'll go straight to the spec (the **specify** verb). Unsure → just describe it and I'll choose.)*
+> **What do you want to work on?** *(Just describe it. If it touches code you don't fully understand yet, I'll start us with research (the **explore** verb); if the ask is clear, we'll go straight to planning (the **plan** verb — it writes the business spec and the implementation plan into one document). Unsure → just describe it and I'll choose.)*
 
 *After the answer*: allocate ordinal, create the folder, log the verbatim ask to `original-ask.md`, write state + `the-flow.json`, then:
 > Got it: **`<intent>`** — logged that to `original-ask.md` so we always have the original wording. `<This is worth a research pass first | This is clear enough to spec directly>`. Here's the next command:
 >
-> {{render-edge: start → explore "<intent>"}}  *or*  {{render-edge: start → specify "<intent>"}}
+> {{render-edge: start → explore "<intent>"}}  *or*  {{render-edge: start → plan "<intent>"}}
 >
 > **Want me to run it?** Reply `yes` and I'll kick it off and narrate what comes back — or copy that command and run it yourself. *(Tip: if you `/compact` along the way, just re-run `/the-flow` afterward — my state's on disk.)*
 
 ### `awaiting-1a` → after research
 > **Where we are**: research is done (`research-dossier.md`) — that's evidence, not code yet.
-> Did you notice `<one Critical/High finding>`? That matters because `<why it shapes the spec>`.
+> Did you notice `<one Critical/High finding>`? That matters because `<why it shapes the plan>`.
 > **Optional — go deeper?** If anything's still fuzzy, deep-research it with your **tool of choice**: an online-connected agent (`/deepresearch`, Perplexity) or your own coding harness. Skip it if the dossier already answers enough.
-> **Then a seam**: a natural spot for `/compact` — clears the research chatter, keeps the spec sharp; I'll resume right here afterwards. Then we write the spec.
+> **Then a seam**: a natural spot for `/compact` — clears the research chatter, keeps the planning sharp; I'll resume right here afterwards. Then we write the plan (both halves in one pass).
 >
-> Your move: `deep-research` (your tool), `compact` then `/the-flow` *(recommended)*, or straight to {{render-edge: awaiting-1a → specify}}. Either way, the spec is the next real step.
+> Your move: `deep-research` (your tool), `compact` then `/the-flow` *(recommended)*, or straight to {{render-edge: awaiting-1a → plan}}. Either way, the plan is the next real step.
 
-### `awaiting-1b` → after spec  *(the busiest seam)*
-> **Where we are**: the spec is written (`<slug>-spec.md`) — **CS-`<n>` → `<Simple|Full>` Mode**. The spec is the contract the plan builds to.
-> Did you notice `<the spec flagged N Workshop Opportunities | this feature touches real behaviour>`? That matters because `<why>`.
-> Before we architect, up to three optional moves — all skippable, none gate anything:
-> 1. **{{render-edge: awaiting-1b → workshop}}** — workshop a tricky topic first (the spec flagged `<N>`). Worth it when a design choice is still fuzzy.
-> 2. **`/eng-harness-flow --event post-spec --spec <path>`** — backpressure survey: can we *prove* this work deterministically before building? Advisory; surfaces an optional Phase 0. *(Only offered when the router is installed.)*
-> 3. **`/compact`** — context hygiene before the architect (recommended at this seam).
+### `awaiting-1b` → after the plan  *(both halves written in one atomic pass — the busiest seam)*
+> **Where we are**: the planning document is written (`<slug>-plan.md`) — **CS-`<n>` → `<Simple|Full>` Mode**, **Status: `<READY|DRAFT>`** (gates: `<matrix summary>`). It carries the **business spec** on top and the **implementation plan** below; validate-v2 already auto-ran.
+> `<⚠️ Before we move on — the work flagged: <DRAFT + the FAILed gate(s)> / <N unresolved gaps: "…"> / <remaining [NEEDS CLARIFICATION]> / <a Deviation Ledger entry>. Just making sure you saw those.>` *(omit entirely if READY with no gaps)*
+> Did you notice `<a phase boundary | the plan flagged N Workshop Opportunities | a gate that's N/A | the DRAFT gap>`? That matters because `<why>`.
 >
-> Recommended path: `compact` then {{render-edge: awaiting-1b → architect}} *(or `workshop` / `prove it` first)*. Type one of: `compact`, `workshop`, `prove it`, `architect`. Unsure → `compact` then `architect`.
+> *If DRAFT*: `<the gap>` needs a fix first — `<the suggested remedy>`, then re-run {{render-edge: awaiting-1b → plan}} (it regenerates **both** halves). Type: `fix` (I'll walk you through it) or `show gaps`.
+> *If READY — optional refinements before building* (all skippable, none gate): workshop a still-fuzzy topic ({{render-edge: awaiting-1b → workshop}}), the backpressure survey (`/eng-harness-flow --event post-spec --spec <path>`, router-installed only), or `/compact`. Taking one means running it, then re-running {{render-edge: awaiting-1b → plan}} to fold it into both halves.
+>   ⚠️ **If the plan flagged `<N>` Workshop Opportunit(ies) you haven't workshopped yet, I'll say so plainly** — the phases were designed *without* those decisions; a quick workshop + re-plan before you build is usually worth it (this is the one spot where the atomic verb's "design first, refine after" can bite). Your call — never a gate.
+> *If READY (Simple)*: next is code — `/compact` keeps the implementer sharp, then {{render-edge: awaiting-1b → implement}}. Type: `compact` then `/the-flow`, or `implement`.
+> *If READY (Full)*: next is {{render-edge: awaiting-1b → tasks}} for Phase 1's tasks (compact first if you like). Type: `compact` or `tasks`.
 
 ### `awaiting-2c` → after a workshop
-> **Where we are**: workshop saved (`workshops/<file>`). Its decisions are now **authoritative** — stage 30 won't contradict them.
+> **Where we are**: workshop saved (`workshops/<file>`). Its decisions are now **authoritative** — the next `plan` pass won't contradict them.
 > Did you notice it settled `<the Selected option>`? That removes `<the ambiguity>` from the plan.
-> Next: another workshop, the backpressure survey (`/eng-harness-flow --event post-spec`, router-installed only), or straight to the architect. Recommended: {{render-edge: awaiting-2c → architect}}. Type: `another`, `prove it`, or `architect`.
+> Next: re-run **plan** to fold the decision into both halves (a workshop after a plan is a refinement — re-planning regenerates the phases with it). Another workshop or the backpressure survey (`/eng-harness-flow --event post-spec`, router-installed only) are also options. Recommended: {{render-edge: awaiting-2c → plan}}. Type: `another`, `prove it`, or `plan`.
 
 ### `awaiting-backpressure` → after backpressure survey
 > **Where we are**: backpressure coverage written — **Certainty: `<Strong|Partial|Weak>`**`<; recommended Phase 0: …>`.
 > `<⚠️ Before we move on — the survey flagged <N ABSENT sensors> where you'd otherwise be eyeballing: <one-line each>. Just making sure you saw those — they're the Phase-0 candidates.>` *(omit if coverage is Strong with no ABSENT sensors)*
-> What this means: `<criteria with EXISTS sensors are provable now; BUILDABLE/ABSENT ones are where you'd otherwise be eyeballing>`. It's **advisory** — stage 30 will *consider* any Phase 0, never be forced into one.
-> Next: {{render-edge: awaiting-backpressure → architect}}. (Compact first if the survey was long.) Type: `architect` or `compact`.
-
-### `awaiting-3` → after the plan
-> **Where we are**: the plan is written — **Status: `<READY|DRAFT>`** (gates: `<matrix summary>`). validate-v2 already auto-ran.
-> `<⚠️ Before we move on — the work flagged: <DRAFT + the FAILed gate(s)> / <N unresolved gaps: "…"> / <a Deviation Ledger entry>. Just making sure you saw those.>` *(omit entirely if READY with no gaps)*
-> Did you notice `<a phase boundary | a gate that's N/A | the DRAFT gap>`? That matters because `<why>`.
->
-> *If DRAFT*: `<the gap>` needs a fix first — `<the suggested remedy>`, then re-run {{render-edge: awaiting-3 → architect}}. Type: `fix` (I'll walk you through it) or `show gaps`.
-> *If READY (Simple)*: one seam before code — `/compact` keeps the implementer sharp. Then {{render-edge: awaiting-3 → implement}}. Type: `compact` then `/the-flow`, or `implement`.
-> *If READY (Full)*: next is {{render-edge: awaiting-3 → tasks}} for Phase 1's tasks (compact first if you like). Type: `compact` or `tasks`.
+> What this means: `<criteria with EXISTS sensors are provable now; BUILDABLE/ABSENT ones are where you'd otherwise be eyeballing>`. It's **advisory** — the re-`plan` pass will *consider* any Phase 0, never be forced into one.
+> Next: re-run **plan** to fold the coverage into both halves — {{render-edge: awaiting-backpressure → plan}}. (Compact first if the survey was long.) Type: `plan` or `compact`.
 
 ### `awaiting-5` → after phase tasks
 > **Where we are**: Phase `<N>` tasks are tabled (`tasks/<phase>/tasks.md`) with success criteria.
@@ -234,7 +225,7 @@ All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decis
 ### Optional branch mentions (one-liners, surfaced at their seam — never new stages)
 
 - `awaiting-1a`: **deep-research** with your tool of choice (online agent **or** coding harness) before the spec.
-- `awaiting-1b`/`awaiting-3`: **the adr verb** ({{render-edge: → adr}}) — capture an ADR if a big architectural decision is being made.
+- `awaiting-1b`: **the adr verb** ({{render-edge: → adr}}) — capture an ADR if a big architectural decision is being made.
 - `awaiting-1b`: a **prework / decision gate** if the team needs sign-off before building.
 - `awaiting-7`: the **fix loop** — review findings route back to the implement verb, then re-run the review ({{render-edge: awaiting-7 → review}}).
 - any stage with a `docs/domains/` registry: **domains** — `/plan-v2-extract-domain` to formalise a concept.
@@ -273,14 +264,15 @@ When invoked with **no active state** but the resolved plan folder **already hol
 
 | Artifacts present | Inferred stage | pending verb (render at write time) | `milestones_done` |
 |---|---|---|---|
-| `research-dossier.md` only | `awaiting-1b` | `specify` | Research |
-| `*-spec.md` (no plan) | `awaiting-3` (workshops optional) | `workshop` (opt) → `architect` | Research, Spec |
-| `workshops/*.md` + spec | `awaiting-3` | `architect` | (workshops are excursions, no milestone) |
-| `*-plan.md` present | read `**Mode**` + phase count → recompute rail; `awaiting-6` | `implement --phase "Phase 1…"` (or `tasks` Full) | + Plan |
+| `research-dossier.md` only | `awaiting-1a` | `plan` | Research |
+| `*-plan.md` with `## Business Specification` + `## Implementation Plan` (unified) | read `**Mode**` + phase count → recompute rail; `awaiting-1b` | `implement --phase "Phase 1…"` (Simple) / `tasks` (Full) | Research, Plan |
+| `*-plan.md` with `## Business Specification`, **no** `## Implementation Plan` (interrupted run) | `awaiting-1b` | `plan` — re-run to complete (atomic, regenerates both) | Research |
+| legacy `*-spec.md` only (no plan) | `awaiting-1b` | `plan` — reads the legacy spec as the business source | Research |
+| legacy `*-spec.md` + `*-plan.md` (plan has no `## Business Specification`) | `awaiting-1b` | `implement` / `tasks` — completed split plan; **do not migrate** | Research, Plan |
 | `tasks/phase-N/` present, **no** `reviews/review.phase-N*` | `awaiting-6` (mid-build) | `review` (review phase N) | + per-phase to N-1 |
 | `reviews/review.phase-N*` present | phase N reviewed | `implement --phase "Phase N+1…"` (or `merge` if last) | + per-phase to N |
 
-**Mode / rail**: read `**Mode**` from the plan header. No plan yet → `mode: "unknown"`, `milestones_total` stays the 7-milestone estimate until stage 30 recomputes it.
+**Mode / rail**: read `**Mode**` from the plan's top-metadata block. No plan yet → `mode: "unknown"`, `milestones_total` stays the 6-milestone estimate until the `plan` pass recomputes it.
 
 **Back-fill `the-flow.json`**: completed nodes → `status: done`, `ran_at` from artifact **mtime** (best-effort), `user_input` omitted or flagged `"reconstructed": true`; remaining nodes → `known`/`assumed` per the taxonomy. Regenerate `the-flow.md`.
 

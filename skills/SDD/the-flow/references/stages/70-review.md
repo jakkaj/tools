@@ -41,7 +41,7 @@ $ARGUMENTS
 **Full Mode** artifact resolution:
 - PLAN = provided --plan
 - PLAN_DIR = dirname(PLAN)
-- SPEC = `${PLAN_DIR}/<slug>-spec.md`
+- SPEC = `${PLAN_DIR}/<slug>-plan.md` § `## Business Specification` (unified plan), else a legacy `${PLAN_DIR}/<slug>-spec.md`
 - PHASE_SLUG = slugified phase title
 - PHASE_DIR = `${PLAN_DIR}/tasks/${PHASE_SLUG}`
 - PHASE_DOC = `${PHASE_DIR}/tasks.md`
@@ -52,7 +52,7 @@ $ARGUMENTS
 **Simple Mode** artifact resolution:
 - PLAN = provided --plan
 - PLAN_DIR = dirname(PLAN)
-- SPEC = `${PLAN_DIR}/<slug>-spec.md`
+- SPEC = `${PLAN_DIR}/<slug>-plan.md` § `## Business Specification` (unified plan), else a legacy `${PLAN_DIR}/<slug>-spec.md`
 - PHASE_DOC = PLAN itself (inline tasks from § Implementation)
 - EXEC_LOG = `${PLAN_DIR}/execution.log.md`
 - REVIEW_FILE = `${PLAN_DIR}/reviews/review.md`

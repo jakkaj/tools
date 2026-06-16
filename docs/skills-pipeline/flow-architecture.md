@@ -13,7 +13,7 @@
 ## The two concepts
 
 1. **Sub-skill** — the reusable unit. A sub-skill is **named by a verb** (explore, diagnose, implement…), declares a contract (what it consumes, what it produces, what flags it takes), does its work, and **knows nothing about any flow**: no stage ids, no successor names, no flow commands, no sibling paths. It could be lifted into a different flow unchanged.
-2. **Flow** — the composition. A flow assigns **ids** to sub-skills (ids are a *flow* property; verbs are a *sub-skill* property), wires them with a **Graph**, and owns every piece of "what's next". "Stage" survives only as the flow-position concept — "stage 3 of this flow *is* the architect sub-skill".
+2. **Flow** — the composition. A flow assigns **ids** to sub-skills (ids are a *flow* property; verbs are a *sub-skill* property), wires them with a **Graph**, and owns every piece of "what's next". "Stage" survives only as the flow-position concept — "stage 6 of this flow *is* the implement sub-skill".
 
 Sub-skills talk to each other **only through artifacts on disk**. The flow routes on artifact existence, never on conversation memory.
 
@@ -55,11 +55,11 @@ Every sub-skill is stamped from this. The contract block is at the top, machine-
 > no stage ids, no successor/predecessor names, no flow commands.
 > Composition is the bundling flow's job.
 
-**Verb**: architect
+**Verb**: plan
 **Purpose**: <one sentence — what this sub-skill does to the world>
 **Consumes**: <artifact patterns, marked required/optional>
-            e.g. `<slug>-spec.md` (required) · `workshops/*.md` (optional)
-**Flags**: `--spec <path>` <the verb's own flags — stable regardless of which flow calls it>
+            e.g. intent (required) · `workshops/*.md` (optional)
+**Flags**: `--simple` `--skip-clarify` <the verb's own flags — stable regardless of which flow calls it>
 **Produces**: `<slug>-plan.md` <the artifacts this sub-skill writes — the ONLY way downstream sub-skills see its work>
 **Side effects**: <in-procedure seam calls, if any — see § Seam placement>
 **Delegates**: <optional — see § Declared delegation> e.g. `progress — per-task protocol; resolved via the Registry`
@@ -217,7 +217,7 @@ A flow with a guided/coached mode keeps its **voice** in narration templates who
 
 Rules:
 
-- Narration may name **verbs** in teaching prose ("next is the architect") — verbs are Registry-stable. It may never hardcode a command string.
+- Narration may name **verbs** in teaching prose ("next is the `plan` step") — verbs are Registry-stable. It may never hardcode a command string.
 - Worked examples inside the voice spec (rail mock-ups, handshake diagrams) are slot-converted too, or moved into a banner-marked view.
 - **Render-at-write-time**: slots cannot be stored in durable state. When a flow writes a runnable command into a state file (`pending_command` etc.), it renders the command through the Grammar at write time. Tables that *feed* state files name verbs/ids and carry an explicit render-at-write-time note.
 

@@ -6,7 +6,7 @@
 
 **Verb**: workshop
 **Purpose**: Create a detailed design document — a working reference — that explores a complex concept in depth before architecture, from the spec's Workshop Opportunities or any topic needing deep exploration. Optional — can run any time during planning.
-**Consumes**: an existing plan folder (`docs/plans/<ordinal>-<slug>/`) · `${PLAN_DIR}/<slug>-spec.md` (required for `--from-spec`, otherwise context) · `research-dossier.md` (optional) · existing `workshops/*.md` (optional) · domain registry (optional)
+**Consumes**: an existing plan folder (`docs/plans/<ordinal>-<slug>/`) · business source — the `## Business Specification` of `${PLAN_DIR}/<slug>-plan.md` (unified), else a legacy `${PLAN_DIR}/<slug>-spec.md` (required for `--from-spec`, otherwise context) · `research-dossier.md` (optional) · existing `workshops/*.md` (optional) · domain registry (optional)
 **Flags**: `<plan>` (ordinal, slug, or path) + `"<topic>"` · `--from-spec` (pick from the spec's Workshop Opportunities) · `--list` (list existing workshops)
 **Produces**: `${PLAN_DIR}/workshops/<NNN>-<topic-slug>.md` (typed design doc with value frame, proof levels, evidence ledger) + terminal success block (type, proof level, value axes, key questions, related workshops)
 **Side effects**: none
@@ -190,7 +190,7 @@ Select topic number (or 'all' to create all): _
 
 ### 4) Gather Context
 
-1. **Read the spec** (`${PLAN_DIR}/<slug>-spec.md`)
+1. **Read the business source** — the `## Business Specification` section of `${PLAN_DIR}/<slug>-plan.md` (unified) when present, else a legacy `${PLAN_DIR}/<slug>-spec.md`
    - Extract Workshop Opportunity details if topic matches
    - Note key questions to answer
    - Understand feature context

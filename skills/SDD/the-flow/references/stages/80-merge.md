@@ -7,7 +7,7 @@
 **Verb**: merge
 **Purpose**: Analyze upstream changes from the target branch (default `main`) and generate a comprehensive merge plan document — diagrams, conflict tables, regression risks, ordered steps — before any merge execution. Analysis only by default; merge execution runs ONLY after the user explicitly types `PROCEED`. On ABORT the merge plan is saved for later; re-enter with this verb and the same `--plan`.
 
-**Consumes**: all phases implemented and reviewed; clean working tree (no uncommitted changes); on a branch (not detached HEAD); plan folder resolvable (contains `*-spec.md`); target branch exists and is reachable. Input artifacts — git history (ancestor/HEAD/target), your spec/plan/execution logs, upstream plan folders under `docs/plans/`, `docs/domains/**` (optional).
+**Consumes**: all phases implemented and reviewed; clean working tree (no uncommitted changes); on a branch (not detached HEAD); plan folder resolvable (contains `*-plan.md`, or a legacy `*-spec.md`); target branch exists and is reachable. Input artifacts — git history (ancestor/HEAD/target), your spec/plan/execution logs, upstream plan folders under `docs/plans/`, `docs/domains/**` (optional).
 
 **Flags**: `--plan "<abs path to docs/plans/<ordinal>-<slug>/>"` (optional; auto-detect from current directory), `--target "main"` (optional; branch to merge from, default `main`).
 
@@ -46,7 +46,7 @@ $ARGUMENTS
 1) Input Resolution and Validation
 
    **Parse arguments:**
-   - PLAN_DIR = provided --plan OR auto-detect from current directory (look for *-spec.md)
+   - PLAN_DIR = provided --plan OR auto-detect from current directory (look for *-plan.md, or a legacy *-spec.md)
    - TARGET = provided --target OR "main"
 
    **Validate git state:**
@@ -66,7 +66,7 @@ $ARGUMENTS
    ```
 
    **Detect plan folder:**
-   - If PLAN_DIR provided, validate it exists and contains *-spec.md
+   - If PLAN_DIR provided, validate it exists and contains *-plan.md (or a legacy *-spec.md)
    - If not provided, search current directory and parents for plan folder
    - Set PLAN_SLUG from folder name (e.g., "003-my-feature" -> "my-feature")
 
@@ -132,8 +132,8 @@ $ARGUMENTS
 4) Cross-Mode Detection Gate
 
    **Detect plan modes:**
-   - Read your plan's spec.md and check for `**Mode**: Simple` or `**Mode**: Full`
-   - For each upstream plan, check their mode
+   - Read mode from your unified `<slug>-plan.md` top metadata (`**Mode**: Simple` or `**Mode**: Full`); fall back to a legacy `<slug>-spec.md` only if the folder still has a standalone one
+   - For each upstream plan, check their mode (same unified-plan-then-legacy-spec fallback)
 
    **Cross-mode warning:**
    If your plan is Simple Mode and upstream plans are Full Mode (or vice versa):
@@ -243,8 +243,8 @@ If no upstream plans found, output:
 - TARGET = ${TARGET}
 
 **Read (via git show ${TARGET}:path):**
-- ${PLAN_FOLDER}/${SLUG}-spec.md (summary, goals, acceptance criteria)
-- ${PLAN_FOLDER}/${SLUG}-plan.md (phases, tasks, critical findings)
+- ${PLAN_FOLDER}/${SLUG}-plan.md § `## Business Specification` (summary, goals, acceptance criteria); legacy ${PLAN_FOLDER}/${SLUG}-spec.md if present
+- ${PLAN_FOLDER}/${SLUG}-plan.md § `## Implementation Plan` (phases, tasks, critical findings)
 - ${PLAN_FOLDER}/tasks/*/execution.log.md (implementation decisions)
 
 **Output** - Plan Summary Card:
@@ -296,8 +296,8 @@ git log ${ANCESTOR}..HEAD --oneline
 ```
 
 **Read:**
-- Your spec.md (what you're building)
-- Your plan.md (what you've done)
+- Your `<slug>-plan.md` § `## Business Specification` (what you're building) — fall back to a legacy `<slug>-spec.md` only if the folder still has a standalone one
+- Your `<slug>-plan.md` § `## Implementation Plan` (what you've done)
 - Your execution logs (decisions made)
 
 **Output:**

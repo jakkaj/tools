@@ -1,7 +1,7 @@
 <!-- 🔄 RENDERED from SKILL.md § Registry + references/00-routing.md § Graph — regenerate against those masters, never hand-edit as the primary. -->
 # The SDD Pipeline (`/the-flow`) + the Engineering Harness — Getting Started
 
-A visual guide to the **spec-driven-development** pipeline — shipped as one progressive-disclosure skill, **`the-flow`** — and the **engineering harness** that runs side by side with it. The entry point is almost always bare `/the-flow` (guided mode), or a direct jump like `/the-flow 1a explore` (research) / `/the-flow 1b specify` (spec). Everything else chains from there.
+A visual guide to the **spec-driven-development** pipeline — shipped as one progressive-disclosure skill, **`the-flow`** — and the **engineering harness** that runs side by side with it. The entry point is almost always bare `/the-flow` (guided mode), or a direct jump like `/the-flow 1a explore` (research) / `/the-flow 1b plan` (the planning document — business spec + implementation plan). Everything else chains from there.
 
 > Repo reference: the SDD pipeline lives at `skills/SDD/the-flow/` in `jakkaj/tools` — one public skill built to the flow-architecture pattern (`docs/skills-pipeline/flow-architecture.md`), with per-stage **sub-skills** under `references/stages/`. The harness skills live in the **external** `AI-Substrate/harness-engineering` repository and are reached through exactly one door: the **`/eng-harness-flow`** router. Full command reference: `docs/skills-pipeline/README.md`. Switchover history: `docs/plans/029-eng-harness-switchover/`.
 
@@ -23,9 +23,8 @@ The pipeline used to be a family of standalone per-stage skills; it is now **one
 | Stage | Id | Verb | Sub-skill loaded |
 |---|---|---|---|
 | Explore (research) | `1a` | `explore` | `references/stages/10-explore.md` |
-| Specify + clarify | `1b` | `specify` | `references/stages/20-specify.md` — mid-plan clarify re-entry lives inside, as a Re-entry section |
+| Plan (spec + impl) | `1b` | `plan` | `references/stages/20-plan.md` — writes the business spec **and** the implementation plan into one document, always both; mid-plan clarify re-entry lives inside, as a Re-entry section |
 | Workshop | `2c` | `workshop` | `references/stages/25-workshop.md` |
-| Architect | `3` | `architect` | `references/stages/30-architect.md` |
 | ADR | `3a` | `adr` | `references/stages/35-adr.md` |
 | Phase tasks | `5` | `tasks` | `references/stages/50-phase-tasks.md` |
 | Implement | `6` | `implement` | `references/stages/60-implement.md` — `--companion` mode adds a live minih reviewer |
@@ -33,7 +32,7 @@ The pipeline used to be a family of standalone per-stage skills; it is now **one
 | Review | `7` | `review` | `references/stages/70-review.md` |
 | Merge | `8` | `merge` | `references/stages/80-merge.md` |
 
-> **What changed (formerly)**: each stage was its own public skill — `/plan-1a`, `/plan-1b`, `/plan-2` (clarify — now the Re-entry section of stage 1b), `/plan-2c`, `/plan-3`, `/plan-3a`, `/plan-5`, `/plan-6` (+ its companion variant, now the implement verb's `--companion` mode), `/plan-6a`, `/plan-7`, `/plan-8`. Those skills are deleted; `/the-flow <id|verb> [flags]` is the only public surface for the main flow (typed `6c` or `companion` still resolves, via the alias table, to implement with `--companion`). The utility skills (`validate-v2`, `flowspace-research-v2`, `deepresearch-v2`, `didyouknow-v2`, `htmlify-v2`, `plan-0-v2-constitution`, `plan-2b-v2-prep-issue`, `plan-v2-extract-domain`, `util-0-v2-handover`, `install-hve-core-rpiv`) are unchanged and still called by their own names.
+> **What changed (formerly)**: each stage was its own public skill — `/plan-1a`; `/plan-1b` (specify) **and** `/plan-3` (architect), now folded into the single `1b plan` step that writes the business spec and implementation plan into one document in one atomic pass; `/plan-2` (clarify — now the Re-entry section of stage 1b); `/plan-2c`, `/plan-3a`, `/plan-5`, `/plan-6` (+ its companion variant, now the implement verb's `--companion` mode), `/plan-6a`, `/plan-7`, `/plan-8`. Those skills are deleted; `/the-flow <id|verb> [flags]` is the only public surface for the main flow (typed `6c` or `companion` still resolves, via the alias table, to implement with `--companion`; typed `specify` or `architect` resolve to `1b plan`). The utility skills (`validate-v2`, `flowspace-research-v2`, `deepresearch-v2`, `didyouknow-v2`, `htmlify-v2`, `plan-0-v2-constitution`, `plan-2b-v2-prep-issue`, `plan-v2-extract-domain`, `util-0-v2-handover`, `install-hve-core-rpiv`) are unchanged and still called by their own names.
 
 ---
 
@@ -41,13 +40,13 @@ The pipeline used to be a family of standalone per-stage skills; it is now **one
 
 Two loops run side by side in the same context — that is all. Neither owns the other:
 
-- **SDD pipeline** (you drive it) — `/the-flow 1a explore → 1b → [2c] → 3 → 5 → 6 → 7 → 8`, one stage per call (by id or by name). A linear journey: spec → plan → tasks → code → review → merge, with the optional post-spec backpressure seam between 1b and 3.
+- **SDD pipeline** (you drive it) — `/the-flow 1a explore → 1b → [2c] → 5 → 6 → 7 → 8`, one stage per call (by id or by name). A linear journey: plan (spec + impl, one document) → tasks → code → review → merge, with the optional post-spec backpressure check as a post-plan refinement off 1b.
 - **Engineering harness** (the external eng-harness family drives it) — a *cycle*: Boot → Backpressure → Observe → Retro → Improve. The flow's stages never run harness stages themselves; at five **seams** they tell the router *where the work is* and the router decides what (if anything) the harness should do:
 
 | Seam | Fired by | Router call |
 |---|---|---|
 | session start | `/the-flow` at flow entry / the explore verb | `/eng-harness-flow --event session-start` |
-| post-spec | the flow, between spec and architect (a Graph edge decoration) | `/eng-harness-flow --event post-spec --spec <path>` |
+| post-spec | the flow, as a post-plan refinement off 1b (a Graph edge decoration) | `/eng-harness-flow --event post-spec --spec <path>` |
 | pre-implement | the implement verb, before any task | `/eng-harness-flow --event pre-implement --phase <id> --plan-dir <p>` |
 | phase end | the implement verb, after the last task | `/eng-harness-flow --event phase-end --plan-dir <p>` |
 | plan complete | the merge verb, after the merge | `/eng-harness-flow --event plan-complete` |
@@ -63,11 +62,10 @@ flowchart TB
     classDef optional fill:#fff3e0,stroke:#f57c00,color:#000
     classDef harness fill:#f3e5f5,stroke:#7b1fa2,color:#000
 
-    subgraph specify["SPECIFY · once per feature"]
+    subgraph planning["PLAN · once per feature"]
         P1A["/the-flow 1a explore"]:::optional
-        P1B["/the-flow 1b specify<br/>+ clarify"]:::manual
+        P1B["/the-flow 1b plan<br/>spec + impl, one doc"]:::manual
         P2C["/the-flow 2c workshop"]:::optional
-        P3["/the-flow 3 architect"]:::manual
     end
 
     subgraph implement["IMPLEMENT · per phase"]
@@ -85,11 +83,10 @@ flowchart TB
     P1A -.->|"--event session-start"| R
     P1A -.-> P1B
     P1B -.-> P2C
-    P2C -.-> P3
-    P1B -.->|"--event post-spec (recommended)"| R
-    R -.->|backpressure-coverage.md| P3
-    P1B --> P3
-    P3 --> P5
+    P2C -.->|re-plan| P1B
+    P1B -.->|"--event post-spec (optional refinement)"| R
+    R -.->|"backpressure-coverage.md → re-plan"| P1B
+    P1B --> P5
     P5 --> P6
     P6 -->|auto| P6A
     P6 --> P7
@@ -129,12 +126,12 @@ flowchart LR
 
     subgraph simple["SIMPLE · CS 1-2"]
         direction TB
-        S1["/the-flow 1b specify"] --> S2["/the-flow 3 architect"] --> S3["/the-flow 6 implement"]
+        S1["/the-flow 1b plan"] --> S3["/the-flow 6 implement"]
     end
 
     subgraph full["FULL · CS 3-5"]
         direction TB
-        F1["/the-flow 1b specify"] --> F2["/the-flow 3 architect"] --> F3["/the-flow 5 tasks"] --> F4["/the-flow 6 implement"] --> F5["/the-flow 7 review"]
+        F1["/the-flow 1b plan"] --> F3["/the-flow 5 tasks"] --> F4["/the-flow 6 implement"] --> F5["/the-flow 7 review"]
         F5 -->|next phase| F3
         F5 --> F6["/the-flow 8 merge"]
     end
@@ -143,11 +140,11 @@ flowchart LR
     class full f
 ```
 
-**Simple Mode** — single-phase, inline tasks. `/the-flow 1b specify` (front-loads clarifications) → `/the-flow 3 architect` (one inline plan) → `/the-flow 6 implement`. No `/the-flow 5 tasks` expansion needed.
+**Simple Mode** — single-phase, inline tasks. `/the-flow 1b plan` (front-loads clarifications, writes spec + plan in one document) → `/the-flow 6 implement`. No `/the-flow 5 tasks` expansion needed.
 
-**Full Mode** — multi-phase. Per-phase loop of `/the-flow 5 tasks → /the-flow 6 implement → /the-flow 7 review`, then `/the-flow 8 merge` to merge.
+**Full Mode** — multi-phase. `/the-flow 1b plan`, then a per-phase loop of `/the-flow 5 tasks → /the-flow 6 implement → /the-flow 7 review`, then `/the-flow 8 merge` to merge.
 
-> **Merged stages**: stage `1b` produces the spec **and** front-loads clarifications in one pass — later mid-plan clarifications re-enter through the Re-entry section inside `references/stages/20-specify.md`. Stage `3` runs the validate gates inline as it writes the plan. There is no separate clarify or complete-the-plan stage in the flow.
+> **Merged stages**: stage `1b plan` produces the **business spec and the implementation plan in one document**, in one atomic pass — front-loaded clarifications up front, the validate gates (G1–G7) run inline, and `/validate-v2` auto-runs at the end. Later mid-plan clarifications re-enter through the Re-entry section inside `references/stages/20-plan.md`. There is no separate specify, clarify, architect, or complete-the-plan stage in the flow.
 
 ---
 
@@ -161,19 +158,18 @@ flowchart LR
       harness is alive; one calm line either way).
     → 8 parallel subagents → docs/plans/005-api-widgets/research-dossier.md
 
-2.  /the-flow 1b specify "POST endpoint to create widgets (name, color)"
-    → Asks testing/mock/docs/mode questions up front → api-widgets-spec.md (CS-3, Full)
-    → Recommended next: /eng-harness-flow --event post-spec --spec ...
-      → produces backpressure-coverage.md (what's provable vs eyeballed).
+2.  /the-flow 1b plan "POST endpoint to create widgets (name, color)"
+    → Asks testing/mock/docs/mode questions up front, then writes ONE document:
+      api-widgets-plan.md (CS-3, Full) — `## Business Specification` on top,
+      `## Implementation Plan` below (inline gates G1–G7 + 2 research subagents;
+      2 phases, with N.0/N.z harness-seam rows). /validate-v2 auto-runs.
+    → Optional post-plan refinement: /eng-harness-flow --event post-spec --spec ...
+      → backpressure-coverage.md (what's provable vs eyeballed); re-run plan to fold in.
 
-3.  /the-flow 3 architect
-    → Reads backpressure-coverage.md; inline gates + 2 research subagents
-      → api-widgets-plan.md (2 phases, with N.0/N.z harness-seam rows).
-
-4.  /the-flow 5 tasks --phase "Phase 1: Route & Validation" --plan ".../api-widgets-plan.md"
+3.  /the-flow 5 tasks --phase "Phase 1: Route & Validation" --plan ".../api-widgets-plan.md"
     → tasks.md (T000/T0xx seam rows emitted).
 
-5.  /the-flow 6 implement --companion --phase "Phase 1: ..." --plan "..."
+4.  /the-flow 6 implement --companion --phase "Phase 1: ..." --plan "..."
     → SEAM FIRST: /eng-harness-flow --event pre-implement ... — the router
       proves the system runs before a line of code; verdict narrated
       verbatim (healthy → build).
@@ -182,9 +178,9 @@ flowchart LR
     → End of phase: /eng-harness-flow --event phase-end ... — the router
       decides what reflection happens (you might see a [s/t/p/e/d/a] prompt).
 
-6.  /the-flow 5 tasks + /the-flow 6 implement --companion for Phase 2 ...
+5.  /the-flow 5 tasks + /the-flow 6 implement --companion for Phase 2 ...
 
-7.  /the-flow 8 merge --plan "..."
+6.  /the-flow 8 merge --plan "..."
     → Merge analysis; on PROCEED the merge executes, then
       /eng-harness-flow --event plan-complete fires the long-horizon
       reflection. Feature complete 🎉
@@ -200,10 +196,9 @@ You never named a harness skill — the flow told the router *where the work was
 |---|---|---|---|
 | `/the-flow` | **Guided mode** — drives this whole pipeline conversationally (loads coach + routing + the current stage module only) | `.the-flow-state.json` + `the-flow.{json,md}` + `original-ask.md` | probes for the router; narrates the seams; fires them only via `/eng-harness-flow` |
 | `/the-flow 1a explore` · `explore` | Deep-dive codebase research *(optional)* | `research-dossier.md` | fires `--event session-start` |
-| `/the-flow 1b specify` · `specify` | Spec + front-loaded clarifications | `<slug>-spec.md` | recommends `--event post-spec` next |
+| `/the-flow 1b plan` · `plan` | Business spec + implementation plan in one document (front-loaded clarifications; inline gates G1–G7; validate-v2 auto-runs) | `<slug>-plan.md` | emits N.0/N.z seam rows when the router is installed; offers post-spec backpressure as a post-plan refinement |
 | `/the-flow 2c workshop` · `workshop` | Design workshop for complex topics *(optional)* | `workshops/<topic>.md` | — |
-| `/eng-harness-flow --event post-spec` | Backpressure survey *(recommended, after spec, before architect)* | `backpressure-coverage.md` | advisory; feeds stage 3; never blocks |
-| `/the-flow 3 architect` · `architect` | Phased implementation plan (inline gates) | `<slug>-plan.md` | emits N.0/N.z seam rows when the router is installed |
+| `/eng-harness-flow --event post-spec` | Backpressure survey *(optional post-plan refinement)* | `backpressure-coverage.md` | advisory; re-run plan to fold in; never blocks |
 | `/the-flow 3a adr` · `adr` | Architectural Decision Record *(optional)* | `docs/adr/*.md` | — |
 | `/the-flow 5 tasks` · `tasks` | Task table + brief for one phase | `tasks.md` | emits T000/T0xx seam rows |
 | `/the-flow 6 implement` · `implement` | Implement one phase — add `--companion` for live companion review (typed `6c`/`companion` alias here) | code + `execution.log.md` (+ reviews in companion mode) | fires `--event pre-implement` + `--event phase-end` |
@@ -221,9 +216,8 @@ docs/
 └── plans/
     └── 005-api-widgets/
         ├── research-dossier.md        ← /the-flow 1a explore (optional)
-        ├── api-widgets-spec.md        ← /the-flow 1b specify
-        ├── backpressure-coverage.md   ← post-spec seam (router-produced)
-        ├── api-widgets-plan.md        ← /the-flow 3 architect
+        ├── api-widgets-plan.md        ← /the-flow 1b plan (business spec + implementation plan)
+        ├── backpressure-coverage.md   ← post-spec seam (optional post-plan refinement)
         ├── execution.log.md           ← /the-flow 6 implement
         ├── workshops/                 ← /the-flow 2c workshop (optional)
         └── tasks/
@@ -240,7 +234,7 @@ The harness's own substrate (governance doc, observe scratch, retro records) liv
 
 ### Complexity Scoring (CS 1–5)
 
-Assigned by stage 1b (`/the-flow 1b specify`). Drives Simple vs Full and how much planning ceremony applies.
+Assigned by stage 1b (`/the-flow 1b plan`). Drives Simple vs Full and how much planning ceremony applies.
 
 | CS | Scope | Typical Phases | Path |
 |----|-------|---------------|------|

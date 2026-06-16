@@ -4,7 +4,7 @@
 > **Worked-example template** — copy this shape. It is **generated from [`flight-plan.template.json`](./flight-plan.template.json)** (the source of truth); never hand-edit the rendered `the-flow.md` as the primary. Snapshot: a 6-phase Full plan, Phases 1–2 done, **Phase 3 in progress**. Every workshop is its **own node**; each stage where the user typed shows a **verbatim 🗣 speech bubble**; the `code-review-companion` **wraps** the build phases (subgraph); a `docs-writer` **worker** is a side-node; the **harness seams** appear as first-class violet nodes whose commands are router invocations (`/eng-harness-flow --event …`) — they vanish entirely when the router isn't installed.
 
 **Plan**: project-setup · **Mode**: Full · **Phases**: 6
-**Rail**: `[the-flow] ◆─◆─◆─[◆─◆─◇─◇─◇─◇]─◇`   ·   **now**: Phase 3 (Next.js) · **next**: Phase 4 (CLI) · **phase 3/6**
+**Rail**: `[the-flow] ◆─◆─[◆─◆─◇─◇─◇─◇]─◇`   ·   **now**: Phase 3 (Next.js) · **next**: Phase 4 (CLI) · **phase 3/6**
 > _The `now · next` segment after the diamonds renders in a distinct accent colour in the live terminal._
 
 ```mermaid
@@ -19,8 +19,8 @@ flowchart TD
     classDef worker  fill:#E8EAF6,stroke:#3F51B5,color:#000
     classDef harness fill:#EDE7F6,stroke:#673AB7,color:#000
 
-    %% ── spine (vertical); the post-spec seam (Backpressure Check) sits between Spec and Plan; companion WRAPS the build phases ──
-    R[Research]:::done --> S[Spec]:::done --> BP["Backpressure Check · /eng-harness-flow --event post-spec"]:::harness --> PL[Plan]:::done
+    %% ── spine (vertical); the unified Plan node writes spec + impl in one pass; companion WRAPS the build phases ──
+    R[Research]:::done --> PL["Plan · spec + impl · /the-flow 1b plan"]:::done
 
     subgraph CRC["⊞ code-review-companion · 🟢 live · reviews every commit (minih)"]
         direction TB
@@ -35,10 +35,11 @@ flowchart TD
 
     %% ── excursions: deep-research + each workshop as its own node ──
     R -.->|dig deeper| DR[["deep research ×3"]]:::done
-    DR -.-> S
-    S -.->|design| W1[Workshop 1 · clean-arch boundaries]:::done
+    DR -.-> PL
+    PL -.->|refine| W1[Workshop 1 · clean-arch boundaries]:::done
     W1 --> W2[Workshop 2 · fake/adapter strategy]:::done
-    W2 -.-> BP
+    W2 -.-> BP["Backpressure Check · /eng-harness-flow --event post-spec"]:::harness
+    BP -.->|re-plan| PL
 
     %% ── harness seam nodes (first-class; shown because the router IS installed — omit all when the Layer-1 probe misses) ──
     PL -.->|pre-flight| HB[["pre-implement seam · /eng-harness-flow --event pre-implement"]]:::harness
@@ -56,7 +57,7 @@ flowchart TD
     UDR>"🗣 double-check the cli name + parser online"]:::said
     UDR -.- DR
     US>"🗣 clean-arch with fakes for every adapter; full TDD"]:::said
-    US -.- S
+    US -.- PL
     U1>"🗣 where exactly do the layer boundaries sit?"]:::said
     U1 -.- W1
     U2>"🗣 one fake per adapter, or shared fakes?"]:::said
@@ -69,4 +70,4 @@ flowchart TD
 
 **Legend**: 🟩 done · 🟧 in progress · 🟥 blocked · 🟦 known future (designed) · ⬜╴assumed future (dashed) · 🟨 🗣 verbatim user input · companion (teal, wraps) · worker (indigo, side) · 🟪 harness seams (violet — routed via `/eng-harness-flow`)
 
-_Generated from `the-flow.json`. Each spine/excursion node links its artifacts and carries a note (what & why); nodes the user spoke at hang a yellow bubble with their **exact words**. Workshops are shown individually (W1, W2) — never collapsed. The **harness seams are first-class**, and every one routes through the single external entry point `/eng-harness-flow` (child skills are private and never named): the post-spec seam (Backpressure Check) sits on the spine between Spec and Plan; pre-implement pre-flights each phase; phase-end fires at seams; plan-complete fires at merge. **All harness nodes are omitted entirely when the router isn't installed** (probe `~/.agents/skills/eng-harness-flow/SKILL.md`, fallback `~/.claude/skills/`) — a repo without a harness simply shows the spine + workshops. Before `/the-flow 3 architect`, P4–P6 + Merge were `assumed`; locking the plan flipped them `known`. If Phase 3's review fails, `fix loop?` flips `assumed → in_progress`._
+_Generated from `the-flow.json`. Each spine/excursion node links its artifacts and carries a note (what & why); nodes the user spoke at hang a yellow bubble with their **exact words**. Workshops are shown individually (W1, W2) — never collapsed. The **harness seams are first-class**, and every one routes through the single external entry point `/eng-harness-flow` (child skills are private and never named): the post-spec seam (Backpressure Check) is an optional post-plan refinement off the Plan node; pre-implement pre-flights each phase; phase-end fires at seams; plan-complete fires at merge. **All harness nodes are omitted entirely when the router isn't installed** (probe `~/.agents/skills/eng-harness-flow/SKILL.md`, fallback `~/.claude/skills/`) — a repo without a harness simply shows the spine + workshops. Before `/the-flow 1b plan` revealed the phases, P4–P6 + Merge were `assumed`; locking the plan flipped them `known`. If Phase 3's review fails, `fix loop?` flips `assumed → in_progress`._

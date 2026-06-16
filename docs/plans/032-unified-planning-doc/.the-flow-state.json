@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "slug": "unified-planning-doc",
+  "plan_dir": "docs/plans/032-unified-planning-doc",
+  "mode": "Simple",
+  "current_stage": "complete",
+  "pending_command": null,
+  "intent": "Consolidate the-flow's specify (1b) and architect (3) stages into one planning step that produces a single canonical <slug>-plan.md (business spec on top, implementation plan below). Keep sub-skills flow-blind, routing deterministic, lint green; seam only when live; no over-built migration. Mode Simple, full flow.",
+  "milestones_total": 5,
+  "milestones_done": 5,
+  "last_checkpoint_at": "2026-06-16T08:30:00Z",
+  "complete_note": "2026-06-16: flow marked COMPLETE by user — formal merge stage skipped (work committed directly to main). Review verdict was APPROVE; all 7 review follow-ups (F001-F007) cleared in a post-review fix pass; lint + slug clean, redeployed. Final step: commit + push to main (user-authorized git write).",
+  "implement_note": "2026-06-16: implement complete (Simple, 1 phase, T001-T009). Merged specify(1b)+architect(3) into one atomic `plan` verb (20-plan.md) producing one <slug>-plan.md (business spec + impl plan); Registry/Graph/coach/getting-started + flight-plan template regenerated; downstream merge/adr abort gates relaxed; just check-flow + slug check both green; deployed to canonical store. Review next.",
+  "review_note": "2026-06-16: review complete — verdict APPROVE (Simple, Manual). No HIGH/CRITICAL; 6 MEDIUM + 1 LOW follow-ups recorded, no fix-tasks.md. Coverage confidence 82%; AC-06 (lints green) 100%. Medium follow-ups (deferrable, non-blocking): F001 legacy split-flow folder (*-spec.md + architect-era *-plan.md without `## Business Specification`) not recognized as completed planning by the new `## Implementation Plan` marker; F002 80-merge.md still has spec-centric reads after its folder gate was unified; F003 20-plan.md Planning Seam duplicates Graph/coach-owned routing offers; F004 flight-plan no-harness fallback/backpressure placement inconsistent post-unification; F005 plan Domain Manifest omits flight-plan.* + deleted 20-specify.md; F006 T009 evidence is prose not an input/expected/observed table + T006 row out of order. F007 LOW: coach.md fresh-start rail still 7 pips not 6. Review written to reviews/review.md; computed diff at reviews/_computed.diff. Merge next.",
+  "compacted_seams": [],
+  "harness": "router installed (~/.agents/skills/eng-harness-flow) but this repo is unprovisioned (no .harness/, no governance doc) — every seam noops calmly; flight plan carries no harness nodes",
+  "status": "complete"
+}

@@ -1,7 +1,7 @@
 ---
 name: the-flow
 description: |
-  The single front door to the SDD pipeline (docs/plans/): research → spec → workshop → architect → ADR → phase tasks → implement → progress → review → merge. Use when the user wants to plan, research, explore, specify, clarify, workshop, architect, write an ADR, break a phase into tasks, implement or build a phase (optionally with a live review companion), update progress, code-review, or merge a plan — or types /the-flow (or a legacy /plan-N command), or asks to start, resume, or adopt a plan flow. Guided mode (no args) coaches stage-by-stage from durable on-disk state; direct jump runs exactly one stage: /the-flow <id> <verb> [flags] — 1a explore, 1b specify (incl. clarify re-entry), 2c workshop, 3 architect, 3a adr, 5 tasks, 6 implement (--companion for live review), 6a progress, 7 review, 8 merge. Ids and verbs each resolve alone; printed commands always carry both. Sub-skill logic lives in references/stages/*.md, loaded lazily — one module per step.
+  The single front door to the SDD pipeline (docs/plans/): research → plan → workshop → ADR → phase tasks → implement → progress → review → merge. Use when the user wants to plan, research, explore, specify or architect (now one atomic 'plan' step → one document: business spec + implementation plan), clarify, workshop, write an ADR, break a phase into tasks, implement or build a phase (optionally with a live review companion), update progress, code-review, or merge a plan — or types /the-flow (or a legacy /plan-N command), or asks to start, resume, or adopt a plan flow. Guided mode (no args) coaches from durable on-disk state; direct jump runs one stage: /the-flow <id> <verb> [flags] — 1a explore, 1b plan (spec + plan in one doc; incl. clarify), 2c workshop, 3a adr, 5 tasks, 6 implement (--companion for live review), 6a progress, 7 review, 8 merge. Ids and verbs resolve alone; printed commands carry both.
 ---
 
 # /the-flow — SDD pipeline dispatch
@@ -33,9 +33,8 @@ A sub-skill may lazily pull `references/00-routing.md` § Shared conventions whe
 | id | verb | module | consumes → produces | flags |
 |---|---|---|---|---|
 | 1a | explore | `references/stages/10-explore.md` | intent → `research-dossier.md` | `"<intent>"` |
-| 1b | specify | `references/stages/20-specify.md` | intent, dossier? → `<slug>-spec.md` (spec + clarify in one pass; § Re-entry for mid-plan clarifications) | `"<intent>"` `[--simple]` |
-| 2c | workshop | `references/stages/25-workshop.md` | spec?, topic → `workshops/*.md` (authoritative decisions) | `"<topic>"` |
-| 3 | architect | `references/stages/30-architect.md` | spec, workshops?, coverage? → `<slug>-plan.md` (gates G1–G7; auto-runs `/validate-v2`) | `[--skip-clarify]` |
+| 1b | plan | `references/stages/20-plan.md` | intent, dossier?, workshops?, coverage? → `<slug>-plan.md` (one doc: business spec + impl plan, **always both** in one atomic pass; gates G1–G7; auto-runs `/validate-v2`; § Re-entry for mid-plan clarifications) | `"<intent>"` `[--simple]` `[--skip-clarify]` |
+| 2c | workshop | `references/stages/25-workshop.md` | plan/spec?, topic → `workshops/*.md` (authoritative decisions) | `"<topic>"` |
 | 3a | adr | `references/stages/35-adr.md` | plan/spec context → `docs/adr/*.md` | `"<decision>"` |
 | 5 | tasks | `references/stages/50-phase-tasks.md` | plan → `tasks/<phase>/tasks.md` + context brief | `--phase "<Phase N: Title>" --plan "<path>"` |
 | 6 | implement | `references/stages/60-implement.md` | plan, tasks? → code + `execution.log.md` (exactly one phase) | `--plan "<path>"` `[--phase "<Phase N: Title>"]` `[--subtask "<ORD-slug>"]` `[--companion]` `[--companion-slug "<slug>"]` |
@@ -57,10 +56,14 @@ State files and docs written before the consolidation may carry commands naming 
 | retired slug / typed alias | → target (id + flags) |
 |---|---|
 | `plan-1a-v2-explore` | `1a explore` |
-| `plan-1b-v3-specify-and-clarify` | `1b specify` |
-| `plan-2-v2-clarify` | `1b specify` (module § Re-entry) |
+| `plan-1b-v3-specify-and-clarify` | `1b plan` |
+| `plan-1b-v2-specify` | `1b plan` |
+| `plan-2-v2-clarify` | `1b plan` (module § Re-entry) |
 | `plan-2c-v2-workshop` | `2c workshop` |
-| `plan-3-v3-architect` | `3 architect` |
+| `plan-3-v3-architect` | `1b plan` |
+| `plan-3-v2-architect` | `1b plan` |
+| typed `specify` | `1b plan` |
+| typed `architect` or id `3` | `1b plan` |
 | `plan-3a-v2-adr` | `3a adr` |
 | `plan-5-v2-phase-tasks-and-brief` | `5 tasks` |
 | `plan-6-v2-implement-phase` | `6 implement` |
