@@ -354,9 +354,9 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
 
 ### Phase Design Principles
 
-- Each phase should primarily target **ONE domain**. Multi-domain phases are permitted but each domain-touch is a separate task group.
-- Domain creation phases come BEFORE domain extension phases.
-- Composition/wiring phases come LAST.
+- **Fewest phases that hold — decide this first, before applying any rule below.** A phase must *earn its existence*: it needs either a real dependency boundary (later work genuinely cannot start until it lands) or a checkpoint worth reviewing on its own. Default to the smallest number of phases that keeps dependencies clean. **Prefer folding unrelated or small work into an existing phase over spinning up a new phase for it** — bundle incidental bits in as their own task group; do not give each a phase block of its own. Two unrelated changes that share no dependency belong in one phase, not two. Rough anchor: **2–4 phases for Full; reserve 5+ for genuinely epic (CS-5) work.** More phases is not more rigour — each one multiplies downstream ceremony (a tasks expansion, an execution log, a review pass), so every extra phase costs real tokens and review cycles. If you're at 6+ phases, look hard for two you can merge.
+- **One-domain-per-phase is a ceiling on coupling, not a quota.** Prefer a phase to centre on one domain, but do **not** split a single cohesive change across phases just because it spans two domains, and do **not** stand up a separate composition/wiring phase when the wiring is a handful of tasks — fold it into the phase that produces the thing being wired.
+- Domain creation comes before domain extension, and composition/wiring comes last — treat these as *ordering* (within and across phases), **not** as a mandate to mint a fresh phase for each step.
 - **No "build the dev tooling" phase**: if research surfaced that no working dev substrate exists (no build, no test runner), surface it as a Critical Key Finding — don't invent a phase to stand tooling up; the plan uses the standard testing approach throughout.
 - For each NEW domain, the first phase includes a domain setup task:
   - Create `docs/domains/<slug>/domain.md` (use the format from `/extract-domain`)
