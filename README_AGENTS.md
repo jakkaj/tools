@@ -129,7 +129,7 @@ Categories are organizational only. They do **not** affect install commands — 
 
 ## Skill catalog
 
-### `SDD/` — Spec-Driven Development (11 skills: 1 main flow + 10 utilities)
+### `SDD/` — Spec-Driven Development (10 skills: 1 main flow + 9 utilities)
 
 The active workflow for non-trivial feature work. Use these for any change large enough to benefit from explicit specification, clarification, architecture, and phase-based implementation. Each stage produces an artifact that the next stage consumes.
 
@@ -145,7 +145,6 @@ The active workflow for non-trivial feature work. Use these for any change large
 | `install-hve-core-rpiv` | Install or update local skill-shaped HVE Core RPI/RPIV task skills from the current authoritative HVE Core source. |
 | `deepresearch-v2` | Craft structured research prompts for deep-research agents. |
 | `didyouknow-v2` | Surface critical insights conversationally to build shared understanding. |
-| `flowspace-research-v2` | FlowSpace-first codebase research with parallel subagent exploration. |
 | `htmlify-v2` | Convert markdown, specs, plans, or findings into polished static HTML documents. |
 | `util-0-v2-handover` | Generate a domain-aware handover document for LLM agent continuity. |
 
