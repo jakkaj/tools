@@ -253,6 +253,8 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
 
 **Runtime dependency (honesty).** `--hook` emission assumes the **021 hook-aware router** is installed (≥478-line SKILL.md). As of 2026-06-17 the 021 PR is up but unmerged/uninstalled — the installed router is still the Jun-11 `--event`-only copy (343 lines). To make `--hook` live: merge 021→main + push in the harness repo, then reinstall (`npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y`). Because `--event` is a permanent alias, the mirror's alias row records the `--event` equivalent of every hook for **back-compat understanding** — mapping/reading an older router's envelope. It is **not** an automatic fallback: the flow never down-emits `--event`; an older router is the runtime-dependency gap surfaced as the reinstall prompt above.
 
+> **Update 2026-06-17 (post-closeout):** done — the **021 hook-aware router** (478-line SKILL.md, `--hooks --json` manifest at §§ discovery manifest) is now installed at `~/.agents/skills/eng-harness-flow/` (reinstalled today). `--hook` emission is **live at runtime**; the gap above is closed. This `tools` repo itself remains unprovisioned (no `.harness/` governance), so per-phase harness nodes still calm-noop here — the intended contract, not a defect.
+
 ---
 
 ### Validation Record — informal pre-pass (2026-06-16)
