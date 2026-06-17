@@ -5,8 +5,8 @@
 > Composition is the bundling flow's job.
 
 **Verb**: plan
-**Purpose**: Produce **one** canonical planning document in a single atomic pass — always both halves: a `## Business Specification` (WHAT/WHY, front-loaded clarifications resolved) on top, and a `## Implementation Plan` (HOW — phases, task tables, acceptance criteria, self-validating gates G1–G7) below. The questions are asked up front; the whole document is written from the answers in one run. Idempotent — re-run after a refinement (workshop/backpressure) or a clarification and it regenerates **both** halves together. Also hosts the mid-plan clarification re-entry (§ Re-entry, end of this module).
-**Consumes**: feature description (argument; plan folder auto-created, or reused if a research pass already made one) · `${PLAN_DIR}/research-dossier.md` (optional) · `${PLAN_DIR}/workshops/*.md` (optional, authoritative) · `${PLAN_DIR}/backpressure-coverage.md` (optional — the post-spec harness seam's output) · repo doctrine `docs/project-rules/*`, `docs/adr/*.md`, `docs/domains/*` (optional). § Re-entry instead consumes the existing planning document (path or plan slug).
+**Purpose**: Produce **one** canonical planning document in a single atomic pass — always both halves: a `## Business Specification` (WHAT/WHY, front-loaded clarifications resolved) on top, and a `## Implementation Plan` (HOW — phases, task tables, acceptance criteria, self-validating gates G1–G7) below. The questions are asked up front; the whole document is written from the answers in one run. Idempotent — re-run after a refinement (e.g. a workshop) or a clarification and it regenerates **both** halves together. Also hosts the mid-plan clarification re-entry (§ Re-entry, end of this module).
+**Consumes**: feature description (argument; plan folder auto-created, or reused if a research pass already made one) · `${PLAN_DIR}/research-dossier.md` (optional) · `${PLAN_DIR}/workshops/*.md` (optional, authoritative) · repo doctrine `docs/project-rules/*`, `docs/adr/*.md`, `docs/domains/*` (optional). § Re-entry instead consumes the existing planning document (path or plan slug).
 **Flags**: `"<intent>"` · `--simple` (pre-set Mode: Simple, skip the Workflow Mode question) · `--skip-clarify` (G1 override)
 **Produces**: `${PLAN_DIR}/<slug>-plan.md` — one document with the frozen top-metadata block, `## Business Specification`, `## Planning Seam`, and `## Implementation Plan` (Gate Matrix G1–G7 + single `**Status**` header; inline `⚠️ GAP:` markers + a final `## Unresolved Gaps` table on any gate FAIL). Terminal report: plan path · Status · phase/task/domain counts · gate tally. § Re-entry: new `### Session YYYY-MM-DD` block under `## Clarifications` + a re-run that regenerates both halves.
 **Side effects**: **always** auto-runs `/validate-v2 --artifact "${PLAN_PATH}"` (utility skill, not a flow stage), at the end of the one pass, READY or DRAFT.
@@ -63,13 +63,10 @@ Default to batched. Fall back without ceremony — do not announce capability de
    - Load domain context per `references/00-routing.md` § Domain context loading
    - If no domain registry exists → note that domains will be identified as part of this document
 
-4. Check for workshop documents and backpressure coverage:
+4. Check for workshop documents:
    - If `${PLAN_DIR}/workshops/*.md` exist → read all; they are **authoritative design decisions** and must not be contradicted (by either half)
-   - If `${PLAN_DIR}/backpressure-coverage.md` exists → read it; note its Certainty and any Recommended Phase 0 (Part B § Phase Design Principles uses it)
 
 5. Legacy business source (AC-07 fallback): if a sibling `${PLAN_DIR}/<slug>-spec.md` exists (a legacy split folder) and no unified document yet, read it as the business source and fold its content into the `## Business Specification` half of the new document — do not require a standalone spec file going forward.
-
-6. Harness context: owned entirely by the external eng-harness family via the **`/eng-harness-flow`** router (children never called directly) — no governance file checks or readiness questions in this module. Whether a post-spec backpressure refinement is offered is the bundling flow's call (the § Planning Seam records it as an option).
 
 ---
 
@@ -178,19 +175,17 @@ The business half is now complete. **Do not stop here** — the same pass contin
 
 ## A4 — Write the `## Planning Seam` record
 
-Between the two halves, write a `## Planning Seam` section — a **record** (not an instruction set) of what informed this document and which refinement opportunities remain open before a heavier re-plan. It records evidence and openings; it does **not** tell the reader what to run — surfacing and offering the actionable seam (workshop, backpressure, compaction) is the bundling flow's job, not this artifact's, so write no commands here. It is a record, not a divider between passes (the pass is atomic):
+Between the two halves, write a `## Planning Seam` section — a **record** (not an instruction set) of what informed this document and which refinement opportunities remain open before a heavier re-plan. It records evidence and openings; it does **not** tell the reader what to run — surfacing and offering the actionable refinements (workshops, compaction) is the bundling flow's job, not this artifact's, so write no commands here. It is a record, not a divider between passes (the pass is atomic):
 
 ```markdown
 ## Planning Seam
 _Refinement opportunities still open — recorded as evidence; the flow surfaces and offers these, none gate:_
 - Open Workshop Opportunities: <names from § Workshop Opportunities, or "none — all resolved">
-- Backpressure coverage: <captured in backpressure-coverage.md | not captured>
 
 | Artifact | Present? | Effect on the plan |
 |----------|----------|--------------------|
 | research-dossier.md | y/n | informs Key Findings |
 | workshops/*.md | y/n | authoritative design decisions |
-| backpressure-coverage.md | y/n | optional Phase 0 sensors |
 ```
 
 Fill the table and the open-opportunities line from the artifacts consumed in A0. This is a passive record: it names what could still refine the plan, but the flow (Graph + coach) owns offering those steps and this verb owns regenerating **both** halves when one is folded in.
@@ -210,7 +205,6 @@ The document is always written. The user is never blocked from seeing it. The st
 
 - **Mode** is already decided (Round 1 / `--simple`) and written to the top-metadata block: Simple → single-phase plan with inline tasks; Full → multi-phase plan.
 - **Domains**: `### Target Domains` from the business half is `SPEC_DOMAINS` (the set every gate compares against). Domain context was loaded in A0.
-- **Harness** (router-only): probe `test -f ~/.agents/skills/eng-harness-flow/SKILL.md` (fallback `~/.claude/skills/eng-harness-flow/SKILL.md`) — reached exclusively through the `/eng-harness-flow` router; never read governance docs or maturity levels yourself. Harness provisioning is never a plan phase — when no harness exists the router's setup track owns standing one up; this document just uses standard testing.
 - **ADRs**: if `docs/adr/` exists → read all `docs/adr/*.md`; filter to `Status: Accepted` → `ACCEPTED_ADRS`; note each constraint (what it requires / forbids).
 
 ## B1: Pre-Generation Gates
@@ -244,10 +238,6 @@ Each gate produces a PASS / FAIL / N/A verdict. FAILs do **not** block emission 
 If `${PLAN_DIR}/research-dossier.md` exists → read fully; extract critical findings; reduce to 1 implementation-focused research subagent; reference findings throughout.
 
 If `${PLAN_DIR}/workshops/*.md` exist → read all; they are **authoritative design decisions**; do NOT contradict them; skip research for workshopped topics.
-
-If `${PLAN_DIR}/backpressure-coverage.md` exists (produced via the post-spec harness seam — `/eng-harness-flow --event post-spec --spec <path>`):
-- This is the **expected** input when the recommended refinement was taken, so the plan can be shaped by what's *provable by deterministic sensors* rather than inference. Read it. Note its qualitative Certainty and its **Recommended Phase 0: Establish Backpressure** table (if present).
-- Treat a Recommended Phase 0 as an **optional, user-decided** input to phase design (§ Phase Design Principles) — NOT a gate. Absence changes nothing (no error, no Status change).
 
 ### Research Subagents (2 parallel)
 
@@ -296,8 +286,7 @@ The document **MUST** contain these sections, in this order. The top-metadata bl
 6. `### Phases` containing `#### Phase Index` table followed by per-phase blocks — **or**, in Simple Mode, `### Implementation` with one inline task table
 7. `### Acceptance Coverage Map` (tasks → AC ids from the business half)
 8. `### Risks` table
-9. `### Harness Seams` (if the `/eng-harness-flow` router is installed — else omit cleanly)
-10. `### Unresolved Gaps` (only if Status is `DRAFT — UNRESOLVED GAPS`; else omit)
+9. `### Unresolved Gaps` (only if Status is `DRAFT — UNRESOLVED GAPS`; else omit)
 
 > `### Target Domains` lives in the business half (it is `SPEC_DOMAINS`) — Part B does not restate it; gate G7 reads it there.
 
@@ -343,7 +332,6 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
 
 | Phase | Title | Primary Domain | Objective (1 line) | Depends On |
 |-------|-------|---------------|-------------------|------------|
-| 0 | Establish Backpressure | — | [if applicable — see § Phase Design Principles] | None |
 | 1 | ... | ... | ... | ... |
 | N | ... | ... | ... | Phase N-1 |
 
@@ -360,9 +348,6 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
 | Risk | Likelihood | Impact | Mitigation |
 |------|------------|--------|------------|
 
-### Harness Seams
-[if the `/eng-harness-flow` router is installed — see below; else omit]
-
 ### Unresolved Gaps
 [only if Status is DRAFT — UNRESOLVED GAPS — see B4]
 ```
@@ -372,9 +357,7 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
 - Each phase should primarily target **ONE domain**. Multi-domain phases are permitted but each domain-touch is a separate task group.
 - Domain creation phases come BEFORE domain extension phases.
 - Composition/wiring phases come LAST.
-- **Harness provisioning is never a phase**: when no harness exists, the external router's setup track owns standing one up (`/eng-harness-flow` routes it) — never plan a "Build Agent Harness" phase. If research surfaced that no working dev substrate exists (no boot command, no test runner), surface it as a Critical Key Finding; the plan still uses standard testing.
-- **If `${PLAN_DIR}/backpressure-coverage.md` recommends a Phase 0**: include an **optional** "Phase 0: Establish Backpressure" whose tasks build the sensors named in that artifact's Recommended Phase 0 table (data-check scripts, dependency/architecture rules, smoke routes, CodeQL/Roslyn queries, schema checks). **Advisory** — include it when the survey recommends it and the user wants the deterministic provability; **never gate on it and never flip Status to DRAFT for its absence**.
-- **Surface the harness seams in every phase (router-only, best-effort)**: when the `/eng-harness-flow` router is installed, each phase's task table should make the two seams the implement verb fires visible: a **pre-flight** task at phase start (`/eng-harness-flow --event pre-implement --phase <id> --plan-dir <p>`) and a **phase-end** task at phase end (`/eng-harness-flow --event phase-end --plan-dir <p>`). The router decides what (if anything) the harness does — never name its child skills. **Advisory scaffolding, never gates**: no Status flip, no blocking, no thresholds. **If the router isn't installed, omit them entirely** and fall back to the standard testing approach.
+- **No "build the dev tooling" phase**: if research surfaced that no working dev substrate exists (no build, no test runner), surface it as a Critical Key Finding — don't invent a phase to stand tooling up; the plan uses the standard testing approach throughout.
 - For each NEW domain, the first phase includes a domain setup task:
   - Create `docs/domains/<slug>/domain.md` (use the format from `/extract-domain`)
   - Create the source directory
@@ -393,27 +376,8 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
 
 | # | Task | Domain | Success Criteria | Notes |
 |---|------|--------|-----------------|-------|
-| N.0 | **Harness pre-flight** — `/eng-harness-flow --event pre-implement --phase "<Phase N>" --plan-dir <plan dir>` | — | Router envelope handled; verdict narrated verbatim before any code | _Harness seam — omit if router not installed_ |
 | N.1 | [What to build] | [domain] | [How you know it works] | |
 | N.2 | [What to build] | [domain] | [How you know it works] | Per finding 01 |
-| N.z | **Harness phase-end** — `/eng-harness-flow --event phase-end --plan-dir <plan dir>` | — | Router envelope handled at phase end | _Harness seam — omit if router not installed_ |
-
-> The `N.0` and `N.z` rows make the harness seams **visible** — advisory scaffolding the implement verb already auto-fires, surfaced for legibility. The router owns what happens behind each seam; never name its child skills. **Include them only when the `/eng-harness-flow` router is installed; otherwise drop both rows entirely.** Never a gate.
-
-### Harness Seams (if the `/eng-harness-flow` router is installed — else omit)
-
-Make the harness touchpoints legible:
-
-```markdown
-### Harness Seams
-- **Entry point**: `/eng-harness-flow --event <seam> [--phase <id>] [--plan-dir <p>] --json` — the single door to the engineering harness; child skills are private and never named in this plan.
-- **Backpressure** (post-spec seam): an optional refinement off this plan — see `backpressure-coverage.md` (Certainty: [Strong/Partial/Weak]) when present. [Recommended Phase 0 folded in? yes/no]
-- **Pre-implement** (`--event pre-implement`): fired by the implement verb at the start of each phase (the N.0 rows); verdicts narrated verbatim from the router's envelope (`healthy / SLOW / UNHEALTHY / UNAVAILABLE`). `UNAVAILABLE` is not an error — falls back to standard testing.
-- **Phase end** (`--event phase-end`): fired by the implement verb at each phase seam (the N.z rows); `--event plan-complete` fires at merge (the merge verb).
-- **Best-effort**: every item above is advisory and never blocks; the router decides what the harness does at each seam.
-```
-
-**Omit this section entirely** when the router isn't installed — a repo with no harness is fully supported and should see no harness scaffolding.
 
 ### Simple Mode
 
@@ -623,7 +587,7 @@ Draw from these categories based on `[NEEDS CLARIFICATION]` markers in the sketc
 
 ## Output
 
-`PLAN_PATH` written as one document — top-metadata + `## Business Specification` (clarifications applied) + `## Planning Seam` + `## Implementation Plan` (Gate Matrix + single Status) — with `/validate-v2` already auto-run. What comes after — workshops, the recommended post-spec backpressure refinement, the tasks/implement work — is the bundling flow's call.
+`PLAN_PATH` written as one document — top-metadata + `## Business Specification` (clarifications applied) + `## Planning Seam` + `## Implementation Plan` (Gate Matrix + single Status) — with `/validate-v2` already auto-run. What comes after — workshops, the tasks/implement work — is the bundling flow's call.
 
 ---
 

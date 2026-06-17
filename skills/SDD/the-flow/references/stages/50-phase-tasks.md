@@ -99,7 +99,6 @@ Otherwise → **Phase Mode** (continue).
    - Is it in the correct domain's source tree?
    - For major new concepts, check for duplication: scan `docs/domains/*/domain.md` § Concepts tables first, then search the source
    - Flag contract changes (higher risk)
-   - **Harness availability** (router-only — never run health checks yourself): probe `test -f ~/.agents/skills/eng-harness-flow/SKILL.md` (fallback `~/.claude/skills/eng-harness-flow/SKILL.md`). Router present → note in Context Brief: "Harness routing available via `/eng-harness-flow` — the implement verb fires the pre-implement seam before any code". Router absent → note: "No engineering harness — implementation uses standard testing only" (the one-time warning is the flow entry's job, not this skill's — don't re-warn).
 
 5) **Write tasks.md** containing:
 
@@ -152,15 +151,6 @@ Otherwise → **Phase Mode** (continue).
    - `Done When`: Plain language success criteria
    - `Notes`: Finding references, domain constraints, etc.
 
-   **Harness-seam tasks (router-only, best-effort)** — when the `/eng-harness-flow` router is installed (probe above), bookend the phase's tasks with the two seams the implement verb fires, so they're visible to the implementor:
-
-   | Status | ID | Task | Domain | Path(s) | Done When | Notes |
-   |--------|-----|------|--------|---------|-----------|-------|
-   | [ ] | T000 | **Harness pre-flight** — `/eng-harness-flow --event pre-implement --phase "<Phase N>" --plan-dir <plan dir>` | — | — | Router envelope handled; verdict narrated verbatim before any code | Harness seam; omit if router not installed |
-   | [ ] | T0xx | **Harness phase-end** — `/eng-harness-flow --event phase-end --plan-dir <plan dir>` | — | — | Router envelope handled at phase end | Harness seam; omit if router not installed |
-
-   These rows are **advisory scaffolding, never gates** — the router decides what (if anything) the harness does at each seam; the skill never names the router's child skills. **Omit them entirely** when the router isn't installed; the phase then uses the plan's standard testing approach.
-
    ### Context Brief
 
    **Key findings from plan**:
@@ -174,14 +164,6 @@ Otherwise → **Phase Mode** (continue).
 
    **Domain constraints**:
    - [Import rules, dependency direction, contract boundaries]
-
-   **Harness context** (router-only — include when the `/eng-harness-flow` router is installed):
-   - **Entry point**: `/eng-harness-flow --event <seam> [--phase <id>] [--plan-dir <p>] --json` — the single door to the harness; child skills are private and never named here
-   - **Pre-implement seam**: fired by the implement verb at phase start (the T000 row above) — the router's envelope (`decision: route|redirect|noop|ambiguous`) decides what happens; verdicts narrated verbatim from the envelope
-   - **Phase-end seam**: fired by the implement verb at phase end (the T0xx row above)
-   - **Backpressure**: if `backpressure-coverage.md` exists in the plan dir (produced via the post-spec seam), cite its sensor coverage for this phase's criteria
-
-   If the router isn't installed: "No engineering harness configured. Agent will use standard testing approach from plan." — and omit the harness-seam task rows entirely.
 
    **Reusable from prior phases**:
    - [Test fixtures, helpers, patterns available]
@@ -389,8 +371,6 @@ The fix dossier travels by artifact: the **implement** verb consumes it via its 
 ```
 
 ---
-
-> Harness note: this verb carries no harness seam of its own — it *emits* the seam rows (T000/T0xx above) that the implement verb fires via `/eng-harness-flow`. Friction capture and retros are the harness family's own concern; SDD never drives them directly.
 
 ## Exit
 

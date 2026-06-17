@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "kind": "flight-plan",
+  "slug": "flow-owned-harness-seams",
+  "plan_dir": "docs/plans/033-flow-owned-harness-seams",
+  "mode": "Simple",
+  "cursor": "review",
+  "recommended_next": "review",
+  "now": "Review #1 REQUEST_CHANGES → 5 fixes applied (F001 Option A); re-review pending",
+  "next": "Re-review — /the-flow 7 review",
+  "_comment": "Invert harness integration in the-flow so seams are flow-owned, engine-offered, per-phase first-class beats. Simple, 1 phase, 8 tasks. validate-v2 auto-ran -> APPROVE-WITH-FIXES, all applied. NOTE: this flow's OWN flight plan carries no harness nodes — the router is installed but the tools repo is unprovisioned, so the session-start seam noops. That omission is exactly the behaviour the plan re-examines for the produced contract.",
+  "nodes": [
+    { "id": "plan", "type": "plan", "label": "Plan · flow-owned harness seams (spec + impl) ✓", "status": "done",
+      "command": "/the-flow 1b plan --simple",
+      "ran_at": "2026-06-16T10:43:29Z",
+      "user_input": "move them up to the flow only, not inside the other commands ... give it another file for where/when to run the eng flow ... document the resync process in the plan ... yep plan",
+      "note": "One atomic pass -> flow-owned-harness-seams-plan.md: ## Business Specification (CS-3 -> Simple) + ## Implementation Plan (8 tasks T001-T008) + ## Maintenance & resync (upstream source-of-truth named). Status READY (G1 PASS / G2,G3 N/A / G4 PASS / G5-G7 PASS). validate pre-pass (3 agents): APPROVE-WITH-FIXES. FORMAL validate-v2 skill (4 agents, 2026-06-17): VALIDATED WITH FIXES — 0 CRITICAL/HIGH, 2 MEDIUM + 6 LOW applied. Load-bearing fix: the harness command is a LITERAL print-then-offer (coach.md precedent), NOT § Command grammar (invariants #1/#9); + grep gates, branch_of pinning, docs/how dir. Validation Record persisted to the plan. 2026-06-17 REVISED events->hooks (021 lifecycle hooks): emits --hook (pre-flight/pre-coding/post-coding/post-flight; --event permanent alias; skips silent coding hook); resync re-anchored on --hooks --json manifest; mechanical alias-swap, Status READY, plan v1.1.0.",
+      "artifacts": ["flow-owned-harness-seams-plan.md", "original-ask.md"], "next": ["impl"] },
+    { "id": "impl", "type": "phase", "phase": 1, "label": "Implement · 8 tasks (harness-seams.md + strip 8 sub-skills + Graph/render + schema/template + docs) ✓", "status": "done",
+      "command": "/the-flow 6 implement --plan \"docs/plans/033-flow-owned-harness-seams/flow-owned-harness-seams-plan.md\"",
+      "ran_at": "2026-06-17T00:00:00Z",
+      "user_input": "implement please",
+      "note": "All 8 tasks [x]. Authored flow-owned references/harness-seams.md (seam map + two-layer detection + node emission + per-phase retro lifecycle + honored-not-forced + v1 upstream contract); rewired 00-routing Graph rows + render rules to engine-owned --hook seams; stripped ALL 8 sub-skills fully harness-blind (firing + concept greps EMPTY); aligned schema/template + corrected stale 'spine between spec and plan'; light-touch coach.md/SKILL.md (direct-jump harness-less); CLAUDE.md pointers + docs/how/the-flow-harness-seams.md (Appendix-A tree) + getting-started regenerated. check-flow L1-L6 clean, 13 slugs no collisions, JSON valid, redeployed (canonical store updated).",
+      "artifacts": ["skills/SDD/the-flow/references/harness-seams.md", "docs/how/the-flow-harness-seams.md", "execution.log.md"],
+      "next": ["review"] },
+    { "id": "review", "type": "review", "label": "Review (fix loop)", "status": "in_progress", "command": "/the-flow 7 review",
+      "note": "Review #1 = REQUEST_CHANGES: F001 (HIGH, backpressure fold-in vs harness-blind plan verb) + F002-F005. All 5 fixed; F001 resolved Option A (backpressure = advisory output). Re-review pending to confirm zero HIGH/CRITICAL.",
+      "artifacts": ["reviews/review.md", "reviews/fix-tasks.md"], "next": ["merge"] },
+    { "id": "merge", "type": "merge", "label": "Merge", "status": "known", "command": "/the-flow 8 merge", "next": [] }
+  ]
+}

@@ -41,17 +41,17 @@ The pipeline used to be a family of standalone per-stage skills; it is now **one
 Two loops run side by side in the same context — that is all. Neither owns the other:
 
 - **SDD pipeline** (you drive it) — `/the-flow 1a explore → 1b → [2c] → 5 → 6 → 7 → 8`, one stage per call (by id or by name). A linear journey: plan (spec + impl, one document) → tasks → code → review → merge, with the optional post-spec backpressure check as a post-plan refinement off 1b.
-- **Engineering harness** (the external eng-harness family drives it) — a *cycle*: Boot → Backpressure → Observe → Retro → Improve. The flow's stages never run harness stages themselves; at five **seams** they tell the router *where the work is* and the router decides what (if anything) the harness should do:
+- **Engineering harness** (the external eng-harness family drives it) — a *cycle*: Boot → Backpressure → Observe → Retro → Improve. The flow's stages never run harness stages themselves; the guided **engine** offers each seam at the Graph edge (seams are **flow-owned** — `references/harness-seams.md`; the stage sub-skills are harness-blind) and tells the router *where the work is* via a lifecycle **hook**:
 
-| Seam | Fired by | Router call |
+| Seam (Graph edge) | Offered by | Router call (`--event` alias) |
 |---|---|---|
-| session start | `/the-flow` at flow entry / the explore verb | `/eng-harness-flow --event session-start` |
-| post-spec | the flow, as a post-plan refinement off 1b (a Graph edge decoration) | `/eng-harness-flow --event post-spec --spec <path>` |
-| pre-implement | the implement verb, before any task | `/eng-harness-flow --event pre-implement --phase <id> --plan-dir <p>` |
-| phase end | the implement verb, after the last task | `/eng-harness-flow --event phase-end --plan-dir <p>` |
-| plan complete | the merge verb, after the merge | `/eng-harness-flow --event plan-complete` |
+| flow entry | the engine, at flow entry | `/eng-harness-flow --hook pre-flight` (`session-start`) |
+| post-plan refinement off 1b | the engine, as a Graph-edge beat | `/eng-harness-flow --hook pre-coding --spec <path>` (`post-spec`) |
+| before each phase | the engine, before the phase | `/eng-harness-flow --hook pre-flight --phase <id> --plan-dir <p>` (`pre-implement`) |
+| each phase end | the engine, at the phase-end edge | `/eng-harness-flow --hook post-coding --plan-dir <p>` (`phase-end`) |
+| at merge | the engine, after the merge executes | `/eng-harness-flow --hook post-flight --plan-dir <p>` (`plan-complete`) |
 
-The router's child skills are **private** — they may move or rename, and no SDD stage (or user doc) ever names them. One name is stable: `/eng-harness-flow` + its `--event` vocabulary.
+The flow wires **four fire-hooks** (`pre-flight` at the two edges, `pre-coding`, `post-coding`, `post-flight`) and skips the silent `coding` capture. The router's child skills are **private** — they may move or rename, and no SDD stage (or user doc) ever names them. One name is stable: `/eng-harness-flow` + its `--hook` vocabulary (permanent `--event` alias). Full seam map: `docs/how/the-flow-harness-seams.md`.
 
 > **New to this, or want a guide?** Run bare **`/the-flow`** — guided mode walks you through this whole pipeline: it asks what you want to build, narrates each stage, points out one insight per artifact, surfaces the optional branches + `/compact` seams + the harness seams, prints every command first, and offers to run it for you. Re-entrant — it survives `/compact` and can adopt a plan you started by hand. Already know where you're going? Jump straight in: `/the-flow 6 implement --phase … --plan …`.
 
@@ -76,15 +76,15 @@ flowchart TB
         P8["/the-flow 8 merge"]:::optional
     end
 
-    subgraph harness["ENGINEERING HARNESS · one door, five seams"]
-        R["/eng-harness-flow<br/>━━━━━━<br/>stateless router — SDD says WHERE<br/>(--event seam), the router decides WHAT"]:::harness
+    subgraph harness["ENGINEERING HARNESS · one door, lifecycle hooks"]
+        R["/eng-harness-flow<br/>━━━━━━<br/>stateless router — the flow says WHERE<br/>(--hook seam), the router decides WHAT"]:::harness
     end
 
-    P1A -.->|"--event session-start"| R
+    P1A -.->|"--hook pre-flight"| R
     P1A -.-> P1B
     P1B -.-> P2C
     P2C -.->|re-plan| P1B
-    P1B -.->|"--event post-spec (optional refinement)"| R
+    P1B -.->|"--hook pre-coding (optional refinement)"| R
     R -.->|"backpressure-coverage.md → re-plan"| P1B
     P1B --> P5
     P5 --> P6
@@ -93,8 +93,8 @@ flowchart TB
     P7 -->|next phase| P5
     P7 -.->|fixes| P6
     P7 -.-> P8
-    P6 -.->|"--event pre-implement / phase-end"| R
-    P8 -.->|"--event plan-complete"| R
+    P6 -.->|"--hook pre-flight / post-coding (engine-offered)"| R
+    P8 -.->|"--hook post-flight"| R
 ```
 
 **Legend**: 🔵 blue = you call it · 🟢 green = auto-called · 🟠 orange = optional · 🟣 purple = the harness router. Solid = main flow, dashed = optional/automatic.
@@ -111,7 +111,7 @@ Two layers, one calm warning, never a gate:
 
 …then every harness touchpoint is silently omitted for the rest of the flow. No sentinel files, no re-warnings — opting out is conversational ("don't use the harness" and the agent stops calling it).
 
-**Layer 2 — is the repo provisioned?** Router installed → each seam call returns a `--json` envelope (`decision: route | redirect | noop | ambiguous`). A repo with no harness substrate gets one calm line (*"No engineering harness in this repo — proceeding without one; say 'set up a harness' anytime."*), and later seam calls pass `--prompt-optional=false` so you're never nagged. Boot verdicts are narrated **verbatim from the envelope**: `healthy / SLOW / UNHEALTHY / UNAVAILABLE` — only `UNHEALTHY` ever pauses to ask you; `UNAVAILABLE` just means standard testing.
+**Layer 2 — is the repo provisioned?** Router installed → each seam call returns a `--json` envelope (`decision: route | redirect | noop | ambiguous`). A repo with no harness substrate gets one calm line (*"No engineering harness in this repo — proceeding without one; say 'set up a harness' anytime."*), and later seam calls pass `--prompt-optional=false` so you're never nagged. An installed-but-unprovisioned repo shows that calm line but **no per-phase harness nodes** — per-phase boot/retro nodes light up only once the repo is provisioned. Boot verdicts are narrated **verbatim from the envelope**: `healthy / SLOW / UNHEALTHY / UNAVAILABLE` — only `UNHEALTHY` ever pauses to ask you; `UNAVAILABLE` just means standard testing.
 
 ---
 
@@ -154,39 +154,39 @@ flowchart LR
 
 ```
 1.  /the-flow 1a explore "how are API endpoints structured here?"
-    → Fires /eng-harness-flow --event session-start (the router checks the
-      harness is alive; one calm line either way).
+    → The engine offers /eng-harness-flow --hook pre-flight (the router checks
+      the harness is alive; one calm line either way).
     → 8 parallel subagents → docs/plans/005-api-widgets/research-dossier.md
 
 2.  /the-flow 1b plan "POST endpoint to create widgets (name, color)"
     → Asks testing/mock/docs/mode questions up front, then writes ONE document:
       api-widgets-plan.md (CS-3, Full) — `## Business Specification` on top,
       `## Implementation Plan` below (inline gates G1–G7 + 2 research subagents;
-      2 phases, with N.0/N.z harness-seam rows). /validate-v2 auto-runs.
-    → Optional post-plan refinement: /eng-harness-flow --event post-spec --spec ...
-      → backpressure-coverage.md (what's provable vs eyeballed); re-run plan to fold in.
+      2 phases). /validate-v2 auto-runs.
+    → Optional post-plan refinement (engine-offered): /eng-harness-flow --hook pre-coding --spec ...
+      → backpressure-coverage.md (advisory: what's provable vs eyeballed); re-run plan informed by it.
 
 3.  /the-flow 5 tasks --phase "Phase 1: Route & Validation" --plan ".../api-widgets-plan.md"
-    → tasks.md (T000/T0xx seam rows emitted).
+    → tasks.md (harness seams are engine-owned — offered at the phase edge, not task rows).
 
 4.  /the-flow 6 implement --companion --phase "Phase 1: ..." --plan "..."
-    → SEAM FIRST: /eng-harness-flow --event pre-implement ... — the router
-      proves the system runs before a line of code; verdict narrated
+    → SEAM FIRST (engine-offered at the phase edge): /eng-harness-flow --hook pre-flight ... —
+      the router proves the system runs before a line of code; verdict narrated
       verbatim (healthy → build).
     → Implements; the progress verb (6a) auto-tracks per task.
     → Companion mode reviews each commit live (supersedes /the-flow 7 review here).
-    → End of phase: /eng-harness-flow --event phase-end ... — the router
+    → End of phase (engine-offered): /eng-harness-flow --hook post-coding ... — the router
       decides what reflection happens (you might see a [s/t/p/e/d/a] prompt).
 
 5.  /the-flow 5 tasks + /the-flow 6 implement --companion for Phase 2 ...
 
 6.  /the-flow 8 merge --plan "..."
-    → Merge analysis; on PROCEED the merge executes, then
-      /eng-harness-flow --event plan-complete fires the long-horizon
+    → Merge analysis; on PROCEED the merge executes, then the engine offers
+      /eng-harness-flow --hook post-flight for the long-horizon
       reflection. Feature complete 🎉
 ```
 
-You never named a harness skill — the flow told the router *where the work was* five times, and the router did the rest. No router installed? Same walkthrough, minus the seam lines, plus one calm warning at step 1. And every step loaded exactly one stage module — the rest of the pipeline stayed out of context.
+You never named a harness skill — the flow told the router *where the work was* at each seam, and the router did the rest. No router installed? Same walkthrough, minus the seam lines, plus one calm warning at step 1. And every step loaded exactly one stage module — the rest of the pipeline stayed out of context.
 
 ---
 
@@ -194,17 +194,17 @@ You never named a harness skill — the flow told the router *where the work was
 
 | Command | What it does | Produces | Harness behaviour |
 |---|---|---|---|
-| `/the-flow` | **Guided mode** — drives this whole pipeline conversationally (loads coach + routing + the current stage module only) | `.the-flow-state.json` + `the-flow.{json,md}` + `original-ask.md` | probes for the router; narrates the seams; fires them only via `/eng-harness-flow` |
-| `/the-flow 1a explore` · `explore` | Deep-dive codebase research *(optional)* | `research-dossier.md` | fires `--event session-start` |
-| `/the-flow 1b plan` · `plan` | Business spec + implementation plan in one document (front-loaded clarifications; inline gates G1–G7; validate-v2 auto-runs) | `<slug>-plan.md` | emits N.0/N.z seam rows when the router is installed; offers post-spec backpressure as a post-plan refinement |
+| `/the-flow` | **Guided mode** — drives this whole pipeline conversationally (loads coach + routing + the current stage module only) | `.the-flow-state.json` + `the-flow.{json,md}` + `original-ask.md` | probes for the router; the engine offers the seams at the Graph edges, only via `/eng-harness-flow` |
+| `/the-flow 1a explore` · `explore` | Deep-dive codebase research *(optional)* | `research-dossier.md` | engine offers `--hook pre-flight` at flow entry |
+| `/the-flow 1b plan` · `plan` | Business spec + implementation plan in one document (front-loaded clarifications; inline gates G1–G7; validate-v2 auto-runs) | `<slug>-plan.md` | engine offers `--hook pre-coding` backpressure as a post-plan refinement (seams engine-owned, not plan rows) |
 | `/the-flow 2c workshop` · `workshop` | Design workshop for complex topics *(optional)* | `workshops/<topic>.md` | — |
-| `/eng-harness-flow --event post-spec` | Backpressure survey *(optional post-plan refinement)* | `backpressure-coverage.md` | advisory; re-run plan to fold in; never blocks |
+| `/eng-harness-flow --hook pre-coding` | Backpressure survey *(optional post-plan refinement)* | `backpressure-coverage.md` | advisory output; informs your re-plan; never blocks |
 | `/the-flow 3a adr` · `adr` | Architectural Decision Record *(optional)* | `docs/adr/*.md` | — |
-| `/the-flow 5 tasks` · `tasks` | Task table + brief for one phase | `tasks.md` | emits T000/T0xx seam rows |
-| `/the-flow 6 implement` · `implement` | Implement one phase — add `--companion` for live companion review (typed `6c`/`companion` alias here) | code + `execution.log.md` (+ reviews in companion mode) | fires `--event pre-implement` + `--event phase-end` |
+| `/the-flow 5 tasks` · `tasks` | Task table + brief for one phase | `tasks.md` | — (harness seams engine-owned, offered at the phase edge) |
+| `/the-flow 6 implement` · `implement` | Implement one phase — add `--companion` for live companion review (typed `6c`/`companion` alias here) | code + `execution.log.md` (+ reviews in companion mode) | engine offers `--hook pre-flight` (before) + `--hook post-coding` (after) |
 | `/the-flow 6a progress` · `progress` | Progress tracking *(auto-run by the implement verb)* | updated task tables + execution log | none (progress only) |
 | `/the-flow 7 review` · `review` | Code review *(rare in companion flow)* | `reviews/review.md` | none (read-only review) |
-| `/the-flow 8 merge` · `merge` | Upstream merge analysis | merge plan | fires `--event plan-complete` after the merge |
+| `/the-flow 8 merge` · `merge` | Upstream merge analysis | merge plan | engine offers `--hook post-flight` after the merge |
 | `/eng-harness-flow` | **The harness front door** — stateless router; detects where the loop is and routes one step | routing envelope (`--json`) | the only harness skill the flow ever calls |
 
 ---
@@ -246,6 +246,6 @@ Assigned by stage 1b (`/the-flow 1b plan`). Drives Simple vs Full and how much p
 
 ### The harness relationship in one sentence
 
-> SDD builds the feature; the harness proves the environment and compounds the friction — they run side by side in the same context, touching only at five seams, all through one stable name: `/eng-harness-flow`.
+> SDD builds the feature; the harness proves the environment and compounds the friction — they run side by side in the same context, touching only at flow-owned seams (four lifecycle hooks, engine-offered at the Graph edges), all through one stable name: `/eng-harness-flow`.
 
 The harness family's own getting-started guide ships with the router (`~/.claude/skills/eng-harness-flow/references/getting-started.md` once installed). The switchover that externalised it is recorded in `docs/plans/029-eng-harness-switchover/` and `CLAUDE.md` (vocabulary-freeze note, override #2).

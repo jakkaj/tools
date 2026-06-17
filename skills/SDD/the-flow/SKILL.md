@@ -22,7 +22,7 @@ One public skill for the whole SDD pipeline, built to the flow-architecture patt
 
 1. Resolve the stage via the Registry below. Id and verb each resolve alone (typing `6` ≡ typing `implement`); when both are given they must name the same stage — if they disagree, show the Registry and ask which was meant (never guess).
 2. Read **only** that sub-skill and follow it with the given flags (same flags the verb has always taken).
-3. No coach, no rail, no state writes — artifacts land where they always did; the next guided run discovers them by existence and catches state up.
+3. No coach, no rail, no state writes — and **no harness seams** (harness orchestration is the guided engine's job — direct-jump runs the bare verb, harness-less by design). Artifacts land where they always did; the next guided run discovers them by existence and catches state up.
 
 A sub-skill may lazily pull `references/00-routing.md` § Shared conventions when it cites it — that is still progressive disclosure (the pattern's sanctioned exception 1). Reading sub-skills for stages you are not executing is not.
 
@@ -85,9 +85,9 @@ State files and docs written before the consolidation may carry commands naming 
 6. **Never hand-edit `the-flow.md`** as the primary — it is always regenerated from `the-flow.json` (the source of truth).
 7. **You don't run `minih`.** The implement verb's companion mode (`--companion`) owns the companion protocol; you narrate the affordance and record agents in `the-flow.json`.
 8. **No time estimates anywhere** — Complexity Score (CS 1–5) only (`references/00-routing.md` § Shared conventions).
-9. **Harness = one door.** Every harness touchpoint is `/eng-harness-flow --event …` — never name or invoke its child skills.
+9. **Harness = one door.** Every harness touchpoint is `/eng-harness-flow --hook …` (permanent `--event` alias) — never name or invoke its child skills. Harness-seam orchestration is **flow-owned** (`references/harness-seams.md`); sub-skills are harness-blind.
 10. **Every stage is a deep-think task** — reason as thoroughly as the stage warrants.
 
 ## State
 
-Durable state lives at `docs/plans/<ord>-<slug>/.the-flow-state.json`, plus the flight plan (`the-flow.json` → rendered `the-flow.md`). Contract, write ownership, the Graph, and harness-seam detection: `references/00-routing.md`. Sub-skills own their *stage* artifacts (spec / plan / tasks / execution log / reviews) and never write the-flow state.
+Durable state lives at `docs/plans/<ord>-<slug>/.the-flow-state.json`, plus the flight plan (`the-flow.json` → rendered `the-flow.md`). Contract, write ownership, and the Graph: `references/00-routing.md`; harness-seam orchestration (detection, seam map, node emission, upstream contract): `references/harness-seams.md`. Sub-skills own their *stage* artifacts (spec / plan / tasks / execution log / reviews), never write the-flow state, and carry no harness knowledge.

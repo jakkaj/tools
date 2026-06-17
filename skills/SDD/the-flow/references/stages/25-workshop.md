@@ -626,8 +626,6 @@ Shows list of Workshop Opportunities from spec, user selects which to create.
 Shows all workshops in the plan folder with their types and status.
 ---
 
-> Harness note: this verb carries no harness seam of its own — harness routing (via `/eng-harness-flow`) happens at the flow's seams. Friction capture and retros are the harness family's own concern; SDD never drives them directly.
-
 ## Exit
 
 Print the output-contract summary (✅ block: what was produced, where, key fields). Then STOP. Do not name a next stage. If invoked standalone, end with exactly: "Routing is the flow's job — run the parent flow bare to continue."

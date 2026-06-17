@@ -2,7 +2,7 @@
 
 Loaded by the dispatch ([`../SKILL.md`](../SKILL.md)) in **guided mode**, together with [`coach.md`](./coach.md) and the **current stage module only**. Direct jumps (`/the-flow <id|name> [flags]`) do not load this file up front — a stage module may cite a `§ Shared conventions` block below and pull it lazily when needed; that is still progressive disclosure.
 
-This file owns: entry paths, the state contract, **state-write ownership**, the **Graph** (the single owner of "what's next" — flow-architecture pattern, `docs/skills-pipeline/flow-architecture.md`), the must-see flag fields, harness-seam detection, flight-plan bookkeeping, and the shared conventions the sub-skills cite.
+This file owns: entry paths, the state contract, **state-write ownership**, the **Graph** (the single owner of "what's next" — flow-architecture pattern, `docs/skills-pipeline/flow-architecture.md`), the must-see flag fields, flight-plan bookkeeping, and the shared conventions the sub-skills cite. **Harness-seam orchestration is owned by [`harness-seams.md`](./harness-seams.md)** — the Graph rows below carry only terse `seam:` decorations that the engine surfaces at the edge; detection, the seam map, node emission, and the upstream contract all live there.
 
 ---
 
@@ -104,16 +104,16 @@ The deterministic core — **the single owner of "what's next"** (flow-architect
 
 | state | evidence (artifact) | edges (on evidence → offer) | decorations | insight (pick 1) |
 |---|---|---|---|---|
-| `start` | — (ask intent) | research-worthy → **explore** · clear → **plan** | seam: session-start — probe for the router (§ Harness seams); if installed, `--event session-start` | — |
+| `start` | — (ask intent) | research-worthy → **explore** · clear → **plan** | seam: **pre-flight** @ entry — detect the router (§ Harness seams → `harness-seams.md`), usually no node; literal `/eng-harness-flow --hook pre-flight` (alias `--event session-start`) | — |
 | `awaiting-1a` | `research-dossier.md` | → **plan** | compact ✓ (dossier is large) | one Critical/High finding |
-| `awaiting-1b` | `<slug>-plan.md` with `## Implementation Plan` (the atomic `plan` verb writes **both** halves) | DRAFT → fix + re-run **plan** (stay) · Simple+READY → **implement** · Full+READY → **tasks** · opt-when-live → **workshop** | compact ✓ (before implement) · validate-v2 already auto-ran · seam-live (offer a post-plan refinement when ≥1 Workshop Opportunity is unworkshopped OR the harness is provisioned): post-spec backpressure `/eng-harness-flow --event post-spec --spec <path>` *(router-installed only)* → `awaiting-backpressure`, then re-run plan to fold in. No auto-advance — the refinement is an offer, never a forced second pass | `**Status**` (READY/DRAFT) + Gate Matrix + CS/Simple-Full + #Workshop Opportunities |
-| `awaiting-2c` | newest `workshops/*.md` | another → **workshop** · → **plan** (re-run, folds the decision into both halves) | post-plan refinement hanging off `awaiting-1b`; post-spec backpressure still offered *(router-installed only)* | the headline decision (Selected option) |
-| `awaiting-backpressure` | `backpressure-coverage.md` | → **plan** (re-run, folds the coverage in) | post-plan refinement hanging off `awaiting-1b`; backpressure payoff (artifact produced via the router) | Certainty (Strong/Partial/Weak) + Phase 0? |
-| `awaiting-5` | `tasks/<phase>/tasks.md` | → **implement** (± its `--companion` mode — offer it here) | the implement verb fires the pre-implement seam itself before task 1 (in-procedure side effect) | first task's Done-When |
-| `awaiting-6` | `execution.log.md` / phase status | clean → **review** · more phases (Full) → **tasks** | compact ✓ (between phases) · seams fired in-verb: `--event pre-implement` (set expectation *before*), `--event phase-end` (explain *after*) · review **skippable if a companion reviewed every commit** | what landed + AC met |
+| `awaiting-1b` | `<slug>-plan.md` with `## Implementation Plan` (the atomic `plan` verb writes **both** halves) | DRAFT → fix + re-run **plan** (stay) · Simple+READY → **implement** · Full+READY → **tasks** · opt-when-live → **workshop** | compact ✓ (before implement) · validate-v2 already auto-ran · seam-live (offer a post-plan refinement when ≥1 Workshop Opportunity is unworkshopped OR the harness is provisioned): the engine print-then-offers the **pre-coding** backpressure seam — literal `/eng-harness-flow --hook pre-coding --spec <path>` (alias `--event post-spec`) *(router-installed only)* → `awaiting-backpressure`. The survey is **advisory output** (what's provable by sensors vs eyeballed); re-run plan **informed by** it — the plan verb does not auto-read the coverage. No auto-advance — the refinement is an offer, never a forced second pass (`harness-seams.md`) | `**Status**` (READY/DRAFT) + Gate Matrix + CS/Simple-Full + #Workshop Opportunities |
+| `awaiting-2c` | newest `workshops/*.md` | another → **workshop** · → **plan** (re-run, folds the decision into both halves) | post-plan refinement hanging off `awaiting-1b`; the **pre-coding** backpressure seam still offered *(router-installed only)* | the headline decision (Selected option) |
+| `awaiting-backpressure` | `backpressure-coverage.md` | → **plan** (re-run, **informed by** the coverage — advisory, not auto-read) | post-plan refinement hanging off `awaiting-1b`; backpressure payoff (artifact produced via the router) | Certainty (Strong/Partial/Weak) + Phase 0? |
+| `awaiting-5` | `tasks/<phase>/tasks.md` | → **implement** (± its `--companion` mode — offer it here) | the engine print-then-offers the **pre-flight** boot seam at the phase edge — a `harness-boot` node before task 1 (`harness-seams.md`); literal `/eng-harness-flow --hook pre-flight` | first task's Done-When |
+| `awaiting-6` | `execution.log.md` / phase status | clean → **review** · more phases (Full) → **tasks** | compact ✓ (between phases) · engine-owned seams at the phase edges (`harness-seams.md`): **pre-flight** boot *before* (`--hook pre-flight`), **post-coding** retro *after* (`--hook post-coding`) · review **skippable if a companion reviewed every commit** | what landed + AC met |
 | `awaiting-7` | newest `reviews/*.md` | findings → fix + re-run **review** (stay) · clean → **merge** | tier contrast: computational (post-spec backpressure) vs inferential (review) | verdict + one finding |
-| `awaiting-8` | merge plan | typed `PROCEED` → `complete` | gate: typed PROCEED/ABORT — never a generic "yes" · seam: plan-complete fires inside the merge verb after execution | merge readiness |
-| `complete` | — | recap + stop; set `status:"complete"` | (plan-complete already fired in-verb) | — |
+| `awaiting-8` | merge plan | typed `PROCEED` → `complete` | gate: typed PROCEED/ABORT — never a generic "yes" · seam: after the merge executes, the engine offers the **post-flight** retro (`--hook post-flight`) — a `harness-retro` node (`harness-seams.md`) | merge readiness |
+| `complete` | — | recap + stop; set `status:"complete"` | (the post-flight retro was already offered at merge) | — |
 
 ## Routing markers & read-time state translation
 
@@ -148,29 +148,11 @@ Where each artifact hides its **structured alarms** — lift any present, verbat
 
 ---
 
-## Harness seams — routed via `/eng-harness-flow` (detection + envelope)
+## Harness seams — owned by `harness-seams.md`
 
-The engineering harness is a **separate loop that runs side by side with the SDD pipeline in the same context — that is all**. It is owned by the external eng-harness family and reached through exactly one door: the **`/eng-harness-flow`** router, with an `--event` hint (`session-start | post-spec | pre-implement | phase-end | plan-complete`) plus context flags (`--spec`, `--plan-dir`, `--phase`, `--prompt-optional`, `--json`). **Never name or invoke the router's child skills** — they are private and may move or rename. Seam touchpoints are visible nodes in `the-flow.json`/`the-flow.md` (types `backpressure`, `harness-boot`, `harness-retro`).
+Harness-seam orchestration is **flow-owned** and lives in one file: [`harness-seams.md`](./harness-seams.md). Guided mode loads it **lazily** when the flow reaches a harness edge (progressive disclosure — the same way a stage's sub-skill is loaded only when its step is accepted). It owns: the **two-layer detection**, the **seam map** (every Graph edge → `--hook` + context flags → emitted node + the literal `/eng-harness-flow --hook …` command the engine print-then-offers), **node emission** (decoupled from provisioning), the **per-phase retro lifecycle**, the **honored-not-forced** posture, the **not-installed / unprovisioned silent paths**, and the **versioned upstream seam contract** (the `--hooks --json` mirror + resync procedure).
 
-**Two-layer detection (load-bearing):**
-
-**Layer 1 — is the router installed?** Probe once per flow: `test -f ~/.agents/skills/eng-harness-flow/SKILL.md` (fallback `~/.claude/skills/eng-harness-flow/SKILL.md`). On a miss, print exactly once, verbatim:
-
-> ⚠️ No engineering harness detected — the eng-harness skills aren't installed. Continuing without one: standard testing applies, nothing else changes. (To add the harness loop: `npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y`.)
-
-…then **silently omit every harness node and mention for the rest of the flow** (record the outcome once in state; never re-warn). A repo without a harness is fully supported; never nag about a missing one.
-
-**Layer 2 — route the seam.** Router installed → call the seam with `--json` and act on the envelope (`decision: route|redirect|noop|ambiguous`): `route` → print-then-offer the returned command; setup-routing/`noop` → one calm line the first time (*"No engineering harness in this repo — proceeding without one; say 'set up a harness' anytime."*), then pass `--prompt-optional=false` on later seam calls. Verdicts and flags are narrated **verbatim from the envelope** (boot vocabulary: `healthy / SLOW / UNHEALTHY / UNAVAILABLE`) — never reimplement the router's checks.
-
-**The five seams** (each a node *and* a narration beat when the router is installed):
-
-- **Post-spec** (`--event post-spec --spec <path>`) — a `backpressure` node, offered as an **optional post-plan refinement** off `awaiting-1b`; run it, then re-run `plan` to fold the coverage in; produces `backpressure-coverage.md`. Advisory; never blocks.
-- **Pre-implement** (`--event pre-implement --phase <id> --plan-dir <p>`) — a `harness-boot` node before each phase; fired inside the implement verb. `UNAVAILABLE` is not an error — falls back to standard testing.
-- **Phase end** (`--event phase-end --plan-dir <p>`) — a `harness-retro` node at each phase seam (fired inside the implement verb); the router owns drain-vs-harvest.
-- **Plan complete** (`--event plan-complete`) — a `harness-retro` node at stage 80 / `complete`; fired inside stage 80 after the merge.
-- **Session start** (`--event session-start`) — fired at flow entry; usually no node, just detection + one calm line.
-
-Every harness node is **advisory** — surfaced for legibility, never a gate, never blocks, no scores.
+The four fire-hooks the flow wires — and which Graph edge each rides — are the terse `seam:` decorations in the Graph above (`pre-flight` at flow entry **and** before each phase, `pre-coding` post-plan, `post-coding` each phase end, `post-flight` at merge); the silent `coding` capture is deliberately **not** wired. **Never name or invoke the router's child skills** — the only stable surface is `/eng-harness-flow` + its `--hook` vocabulary (permanent `--event` alias). Seam nodes in `the-flow.json` use types `backpressure`, `harness-boot`, `harness-retro`; every one is **advisory** — never a gate, never blocks, no scores.
 
 ---
 
@@ -194,8 +176,8 @@ Every run maintains a **flight plan**: `docs/plans/<ord>-<slug>/the-flow.json` (
 
 1. `flowchart TD` (vertical); emit the `classDef`s (done/wip/blocked/known/assumed + said/companion/worker + **harness**). The `harness` class is violet (`fill:#EDE7F6,stroke:#673AB7`) so the loop reads distinctly from the spine.
 2. **Spine** = `type ∈ {research, spec, plan, phase, merge}` linked solid `-->` in `next` order (a unified `plan` node replaces the old separate `spec`+`plan` pair; legacy flows that still carry both render both). The unified `plan` node connects **directly** to its next spine node (the first `phase`); a post-plan `backpressure` refinement does **not** interrupt the spine — it renders as a dotted excursion off `plan` (rule 3).
-3. **Excursions** (`branch_of` set: deep-research, **each** workshop, a post-plan **backpressure** refinement, fix-loop) = dotted `-.->` from their `branch_of`, rejoining at the spine. A `backpressure` node (type `backpressure`, `branch_of: "plan"`) is one such excursion — run it, then re-run plan to fold the coverage in; style it `:::harness` (the router produces it) and omit it with the other harness nodes when the Layer-1 probe misses (rule 4). **Every workshop is its own node** — never collapse a loop into one blob.
-4. **Harness seam nodes** (`type ∈ {harness-boot, harness-retro}`) = dotted `-.->` from their `branch_of`, all `:::harness`; their `command` fields are router invocations (`/eng-harness-flow --event …`), never child-skill names. Emit them ONLY when the Layer-1 probe passes — otherwise omit every harness node (including any `backpressure` excursion). Omitting them leaves the spine intact: the unified `plan` node still connects directly to the first `phase` (there is no separate `spec` node to fall back to).
+3. **Excursions** (`branch_of` set: deep-research, **each** workshop, a post-plan **backpressure** refinement, fix-loop) = dotted `-.->` from their `branch_of`, rejoining at the spine. A `backpressure` node (type `backpressure`, `branch_of: "plan"`) is one such excursion — run it; the coverage is **advisory output** that informs a re-plan (the plan verb does not auto-read it); style it `:::harness` (the router produces it) and omit it with the other harness nodes when the Layer-1 probe misses (rule 4). **Every workshop is its own node** — never collapse a loop into one blob.
+4. **Harness seam nodes** (`type ∈ {harness-boot, harness-retro}`) = dotted `-.->` from their `branch_of`, all `:::harness`; their `command` fields are router invocations (`/eng-harness-flow --hook … --json`), never child-skill names. **Per-phase harness nodes are emitted only when the router is *installed* AND the repo is *provisioned*** (`harness-seams.md` § Node emission); installed-but-unprovisioned ⇒ **no per-phase harness nodes**, one calm session line only. Layer-1 miss ⇒ omit every harness node (including any `backpressure` excursion); the spine stays intact (the unified `plan` node connects directly to the first `phase`). The phase-end (`post-coding`) retro is **one node per phase** (`branch_of` that phase); "drain owed" is re-derived from a phase `done` whose `harness-retro` sibling is still `assumed`/absent — no new state file.
 5. Each node `:::<class>` from its `status` (harness nodes keep `:::harness` regardless of status; convey status via the note).
 6. **User bubbles**: for every node with `user_input`, emit a `said`-class flag node (`>"🗣 …"]`) dotted (`-.-`) to it — verbatim, nothing hidden.
 7. **Agents**: `kind:companion` (`render:wrap`) → a **subgraph wrapping** its `covers[]` phases, companion colour; `kind:worker` (`render:side`) → a `worker`-class side-node linked `-. builds .->` to its `covers[]`.
@@ -224,4 +206,4 @@ Every stage module is a deep-think task — reason as thoroughly as the stage wa
 
 ### Harness router posture
 
-All harness touchpoints go through `/eng-harness-flow` only (children private, never named); best-effort, advisory, never gates or blocks, no scores; one-time warning when not installed (§ Harness seams above); envelope verdicts narrated verbatim. Stage modules keep their **concrete seam invocations inline and byte-identical** — only this posture paragraph is deduped.
+Harness seams are **flow-owned** — the where/when lives in [`harness-seams.md`](./harness-seams.md), the edges in the Graph above, the *what* in the external `/eng-harness-flow` router. **Sub-skills carry no harness invocations or concepts** (they are harness-blind verbs); the engine owns every seam as a print-then-offer beat at the edge. Best-effort, advisory, never gates/blocks/scores; one calm warning when not installed; envelope verdicts narrated verbatim (`healthy / SLOW / UNHEALTHY / UNAVAILABLE`); children private and never named. Full detail: `harness-seams.md`.

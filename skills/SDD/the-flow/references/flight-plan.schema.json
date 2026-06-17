@@ -43,7 +43,7 @@
         "type": {
           "type": "string",
           "enum": ["research", "deep-research", "spec", "workshop", "backpressure", "plan", "adr", "phase", "fix-loop", "review", "merge", "harness-boot", "harness-retro"],
-          "description": "each workshop is its OWN workshop node (never collapsed). Harness seam touchpoints are first-class nodes whose `command` fields are ALWAYS router invocations (/eng-harness-flow --event …, never a child-skill name): `backpressure` (the post-spec seam — sits on the spine between spec and plan; produces backpressure-coverage.md), `harness-boot` (the pre-implement seam before a phase), `harness-retro` (the phase-end seam at phase seams; plan-complete at merge). Observe is the harness's own concern — no observe node type exists. Emit harness nodes only when the /eng-harness-flow router is installed (probe ~/.agents/skills/eng-harness-flow/SKILL.md, fallback ~/.claude/skills/) — otherwise omit them entirely."
+          "description": "each workshop is its OWN workshop node (never collapsed). Harness seam touchpoints are first-class, ENGINE-OWNED nodes (the flow offers them at the Graph edge — see references/harness-seams.md; they are NOT fired by stage sub-skills) whose `command` fields are ALWAYS router invocations (/eng-harness-flow --hook …, never a child-skill name): `backpressure` (the pre-coding seam, alias --event post-spec — a post-PLAN excursion off the unified plan node, branch_of plan; produces backpressure-coverage.md), `harness-boot` (the pre-flight seam before a phase), `harness-retro` (the post-coding seam at each phase end; post-flight at merge). Observe (the silent `coding` hook) is the harness's own concern and is not wired — no observe node type exists. Emit per-phase harness nodes only when the /eng-harness-flow router is installed (probe ~/.agents/skills/eng-harness-flow/SKILL.md, fallback ~/.claude/skills/) AND the repo is provisioned; installed-but-unprovisioned ⇒ one calm session line and NO per-phase harness nodes; not installed ⇒ omit them entirely."
         },
         "label": { "type": "string" },
         "status": { "$ref": "#/$defs/status" },
@@ -52,7 +52,7 @@
           "items": { "type": "string" },
           "description": "downstream node ids (DAG edges); [] for terminal"
         },
-        "command": { "type": "string", "description": "the /the-flow stage command (e.g. /the-flow 1b plan, /the-flow 6 implement --phase …) or tool command this node runs; for harness nodes, always a router invocation (/eng-harness-flow --event …)" },
+        "command": { "type": "string", "description": "the /the-flow stage command (e.g. /the-flow 1b plan, /the-flow 6 implement --phase …) or tool command this node runs; for harness nodes, always a router invocation (/eng-harness-flow --hook …)" },
         "ran_at": { "type": "string", "description": "ISO timestamp when executed (adoption: artifact mtime, best-effort)" },
         "user_input": { "type": "string", "description": "VERBATIM user words that drove this step (audit → 🗣 bubble)" },
         "reconstructed": { "type": "boolean", "description": "true when user_input/ran_at were back-filled by adoption rather than captured live" },

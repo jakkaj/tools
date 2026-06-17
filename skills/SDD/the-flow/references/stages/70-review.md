@@ -13,7 +13,7 @@
 
 **Produces**: Review file `${REVIEW_FILE}` with sections A–H (verdict, summary, checklist, findings table, detailed findings, coverage map, commands, Handover Brief); computed diff saved to `reviews/_computed.diff`; fix-tasks file `${FIX_FILE}` only if verdict is REQUEST_CHANGES. Terminal report: verdict + key failure areas.
 
-**Side effects**: none (read-only; no harness seams)
+**Side effects**: none (read-only — does NOT modify code)
 
 ---
 
@@ -205,7 +205,7 @@ Only flag genuine duplication, not incidental similarity."
 
 **Wait for all subagents to complete.** (5 subagents)
 
-> Live-runtime validation is no longer a review subagent — running software is the harness family's concern, reached through `/eng-harness-flow` at the implement verb's seams. The review consumes the execution-log evidence those seams produced; it never boots anything itself.
+> Live-runtime validation is **not** a review subagent — this verb is read-only and never boots or runs anything. It reviews the execution-log evidence already captured; verifying a running system is out of scope for this verb.
 
 ## Step 4: Synthesize Results
 
@@ -421,8 +421,6 @@ Acceptance criteria for this command:
 On REQUEST_CHANGES: fixes travel back through the implement verb (same flags), then this review re-runs.
 
 ---
-
-> Harness note: this verb carries no harness seam of its own — it's a read-only review. The phase-end seam already fired inside the implement verb (`/eng-harness-flow --event phase-end`), and plan-complete fires inside the merge verb. Friction capture and retros are the harness family's own concern; SDD never drives them directly.
 
 ## Exit
 

@@ -9,7 +9,7 @@
 **Consumes**: a research query. No prior artifacts required — auto-detects plan context (ordinal branch / cwd / conversation) or creates a new plan folder; `--console` creates no files at all. Optional context: existing `docs/plans/<ordinal>-<slug>/`, `docs/domains/registry.md`, FlowSpace MCP when available.
 **Flags**: `"research query"` · `--plan <name>` (explicit plan folder) · `--console` (console-only output)
 **Produces**: `docs/plans/<ordinal>-<slug>/research-dossier.md` (or console-only report with `--console`) + terminal success block (plan-folder status, components analyzed, critical findings, prior learnings surfaced, external research opportunities, FlowSpace mode). Read-only — STOPs and waits after output.
-**Side effects**: fires the session-start harness seam at flow entry when invoked as the flow's first stage (router-only, best-effort)
+**Side effects**: none (read-only research; STOPs and waits after output)
 
 ---
 
@@ -216,20 +216,6 @@ Load domain context per `references/00-routing.md` § Domain context loading. St
 
 - Pass domain context to subagents so they can reference known domains in findings
 - If no domain registry exists: note "No domain registry found — subagents will discover domain-like boundaries organically" — the Domain & Boundary Scout subagent (below) will identify potential domains even without a registry
-
-### 2c) Harness seam — session start (router-only)
-
-The engineering harness is owned by the external **eng-harness family** (`AI-Substrate/harness-engineering`) and is reached through exactly one door: the **`/eng-harness-flow`** router. Never call its child skills directly — children are private and may move or rename. This skill fires the **session-start** seam (it is typically the first skill in a flow), in two layers:
-
-**Layer 1 — is the router installed?** Probe: `test -f ~/.agents/skills/eng-harness-flow/SKILL.md` (fallback `~/.claude/skills/eng-harness-flow/SKILL.md`). On a miss, print exactly once, verbatim:
-
-> ⚠️ No engineering harness detected — the eng-harness skills aren't installed. Continuing without one: standard testing applies, nothing else changes. (To add the harness loop: `npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y`.)
-
-…then silently omit every harness touchpoint for the rest of the flow (record the outcome once in the research dossier; never re-warn).
-
-**Layer 2 — route the seam.** Router installed → call `/eng-harness-flow --event session-start --json` and act on the envelope (`decision: route|redirect|noop|ambiguous`): `route` → print-then-offer the returned command; setup-routing/`noop` → one calm line the first time (*"No engineering harness in this repo — proceeding without one; say 'set up a harness' anytime."*), then pass `--prompt-optional=false` on later seam calls. The router owns all harness state, signals, and verdicts — narrate verbatim from the envelope; never reimplement its checks in this skill.
-
-Either way, note the harness outcome in the dossier (one line) and pass it to subagents as context. A repo without a harness is fully supported — standard testing applies.
 
 ### 3) Launch Parallel Research Subagents
 
@@ -1033,7 +1019,7 @@ Saves to `docs/plans/003-payment-refactor/research-dossier.md`
 
 This verb provides deep, actionable research into existing codebase functionality, filling the critical gap between needing to change something and understanding how it currently works. It adapts to available tools (FlowSpace or standard) and integrates seamlessly with the planning workflow when desired.
 
-> Harness note: the session-start seam (§ 2c) is this verb's only harness touchpoint. Friction capture, retros, and harvest are the harness family's own concern, reached through `/eng-harness-flow` — SDD never drives them directly. Subagent 7 (Prior Learnings Scout) still mines `docs/harness/agents/**/*.retro.md` + legacy `docs/retros/*.md` as read-only history.
+> Note: Subagent 7 (Prior Learnings Scout) mines `docs/harness/agents/**/*.retro.md` + legacy `docs/retros/*.md` as **read-only history** — frozen prior-learnings records, never a live loop this verb drives or writes to.
 
 ## Exit
 

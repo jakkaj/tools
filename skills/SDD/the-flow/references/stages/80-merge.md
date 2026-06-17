@@ -13,7 +13,7 @@
 
 **Produces**: Merge plan document written to `${PLAN_DIR}/merge/${DATE}/merge-plan.md`; terminal success message with upstream-plan/conflict/risk counts and the explicit "type PROCEED / ABORT" prompt. On PROCEED only: phased merge execution with checkpoints and rollback, post-merge validation checklist.
 
-**Side effects**: on PROCEED only, after merge execution: fires the `/eng-harness-flow --event plan-complete --json` harness seam (router-only, best-effort).
+**Side effects**: on PROCEED only — phased merge execution against the target branch, with per-phase checkpoints and a rollback path.
 
 ---
 
@@ -986,7 +986,6 @@ If user says "PROCEED":
 2. Stop after each phase for verification
 3. Update checklist items as completed
 4. If any phase fails, offer rollback
-5. **After the merge completes**, fire the **plan-complete harness seam** (router-only): run `/eng-harness-flow --event plan-complete --json` and act on the envelope — the router owns the long-horizon reflection (harvest-vs-drain is its decision, never this skill's). Skip silently if the router isn't installed. Best-effort, never blocks.
 
 If user says "ABORT":
 1. Save merge plan for later reference
@@ -1033,8 +1032,6 @@ Summary:
 - Recommended approach: ${APPROACH}
 
 Decision gate: Review merge plan and type "PROCEED" to execute, or "ABORT" to cancel.
-
-(After the merge completes, the plan-complete harness reflection runs automatically when a harness is installed — nothing to do here.)
 ```
 
 If no upstream changes:
@@ -1048,10 +1045,6 @@ Your branch is up to date. No merge needed.
 ```
 
 ---
-
-## Harness seam (router-only)
-
-This skill fires one harness seam — **plan complete**, after the merge executes — through the single entry point `/eng-harness-flow --event plan-complete --json` (children never called directly; they are private and may move). The router owns the long-horizon reflection at plan completion. Router not installed → skip silently (the one-time warning already fired at flow entry). Best-effort, never blocks.
 
 ## Exit
 

@@ -1,7 +1,7 @@
 <!-- 🔄 RENDERED from flight-plan.template.json — regenerate, never hand-edit this file as the primary. -->
 # `the-flow.md` template (flight view)
 
-> **Worked-example template** — copy this shape. It is **generated from [`flight-plan.template.json`](./flight-plan.template.json)** (the source of truth); never hand-edit the rendered `the-flow.md` as the primary. Snapshot: a 6-phase Full plan, Phases 1–2 done, **Phase 3 in progress**. Every workshop is its **own node**; each stage where the user typed shows a **verbatim 🗣 speech bubble**; the `code-review-companion` **wraps** the build phases (subgraph); a `docs-writer` **worker** is a side-node; the **harness seams** appear as first-class violet nodes whose commands are router invocations (`/eng-harness-flow --event …`) — they vanish entirely when the router isn't installed.
+> **Worked-example template** — copy this shape. It is **generated from [`flight-plan.template.json`](./flight-plan.template.json)** (the source of truth); never hand-edit the rendered `the-flow.md` as the primary. Snapshot: a 6-phase Full plan, Phases 1–2 done, **Phase 3 in progress**. Every workshop is its **own node**; each stage where the user typed shows a **verbatim 🗣 speech bubble**; the `code-review-companion` **wraps** the build phases (subgraph); a `docs-writer` **worker** is a side-node; the **harness seams** appear as first-class violet nodes whose commands are router invocations (`/eng-harness-flow --hook …`) — engine-owned (offered at the Graph edge, not fired by sub-skills); they vanish entirely when the router isn't installed.
 
 **Plan**: project-setup · **Mode**: Full · **Phases**: 6
 **Rail**: `[the-flow] ◆─◆─[◆─◆─◇─◇─◇─◇]─◇`   ·   **now**: Phase 3 (Next.js) · **next**: Phase 4 (CLI) · **phase 3/6**
@@ -38,14 +38,14 @@ flowchart TD
     DR -.-> PL
     PL -.->|refine| W1[Workshop 1 · clean-arch boundaries]:::done
     W1 --> W2[Workshop 2 · fake/adapter strategy]:::done
-    W2 -.-> BP["Backpressure Check · /eng-harness-flow --event post-spec"]:::harness
+    W2 -.-> BP["Backpressure Check · /eng-harness-flow --hook pre-coding --json"]:::harness
     BP -.->|re-plan| PL
 
     %% ── harness seam nodes (first-class; shown because the router IS installed — omit all when the Layer-1 probe misses) ──
-    PL -.->|pre-flight| HB[["pre-implement seam · /eng-harness-flow --event pre-implement"]]:::harness
+    PL -.->|pre-flight| HB[["pre-flight seam · /eng-harness-flow --hook pre-flight --json"]]:::harness
     HB -.-> P1
-    P2 -.->|at seam| HR[["phase-end seam · /eng-harness-flow --event phase-end"]]:::harness
-    M -.->|reflection| HH[["plan-complete seam · /eng-harness-flow --event plan-complete"]]:::harness
+    P2 -.->|at seam| HR[["post-coding seam · /eng-harness-flow --hook post-coding --json"]]:::harness
+    M -.->|reflection| HH[["post-flight seam · /eng-harness-flow --hook post-flight --json"]]:::harness
 
     %% ── assumed conditional ──
     P3 -.->|if review fails| FX[["fix loop?"]]:::assumed
@@ -70,4 +70,4 @@ flowchart TD
 
 **Legend**: 🟩 done · 🟧 in progress · 🟥 blocked · 🟦 known future (designed) · ⬜╴assumed future (dashed) · 🟨 🗣 verbatim user input · companion (teal, wraps) · worker (indigo, side) · 🟪 harness seams (violet — routed via `/eng-harness-flow`)
 
-_Generated from `the-flow.json`. Each spine/excursion node links its artifacts and carries a note (what & why); nodes the user spoke at hang a yellow bubble with their **exact words**. Workshops are shown individually (W1, W2) — never collapsed. The **harness seams are first-class**, and every one routes through the single external entry point `/eng-harness-flow` (child skills are private and never named): the post-spec seam (Backpressure Check) is an optional post-plan refinement off the Plan node; pre-implement pre-flights each phase; phase-end fires at seams; plan-complete fires at merge. **All harness nodes are omitted entirely when the router isn't installed** (probe `~/.agents/skills/eng-harness-flow/SKILL.md`, fallback `~/.claude/skills/`) — a repo without a harness simply shows the spine + workshops. Before `/the-flow 1b plan` revealed the phases, P4–P6 + Merge were `assumed`; locking the plan flipped them `known`. If Phase 3's review fails, `fix loop?` flips `assumed → in_progress`._
+_Generated from `the-flow.json`. Each spine/excursion node links its artifacts and carries a note (what & why); nodes the user spoke at hang a yellow bubble with their **exact words**. Workshops are shown individually (W1, W2) — never collapsed. The **harness seams are first-class** and **engine-owned** (the flow offers each at the Graph edge — `references/harness-seams.md` — never fired by a sub-skill), and every one routes through the single external entry point `/eng-harness-flow` (child skills are private and never named): the pre-coding seam (Backpressure Check) is an optional post-plan refinement off the Plan node; pre-flight boots each phase; post-coding retros at each phase end; post-flight retros at merge. (This worked example is **abbreviated** — one representative boot + one retro; a real plan emits one of each *per phase* per `references/harness-seams.md`, and per-phase harness nodes appear only when the router is installed **and** the repo is provisioned.) **All harness nodes are omitted entirely when the router isn't installed** (probe `~/.agents/skills/eng-harness-flow/SKILL.md`, fallback `~/.claude/skills/`) — a repo without a harness simply shows the spine + workshops. Before `/the-flow 1b plan` revealed the phases, P4–P6 + Merge were `assumed`; locking the plan flipped them `known`. If Phase 3's review fails, `fix loop?` flips `assumed → in_progress`._

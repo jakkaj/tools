@@ -9,7 +9,7 @@
 **Consumes**: a plan (and, in Full Mode, a phase dossier); a task that has just changed status. Companion debrief additionally requires `--status completed` on the last task in the phase + `--companion-run-id`.
 **Flags**: `--plan`, `--task`, `--status completed|in_progress|blocked`, `--changes "<files>"`, optional `--domain`, `--phase`, `--subtask`, `--inline`, `--companion-run-id "<run id>"`, `--companion-slug "<slug>"` (default `code-review-companion`)
 **Produces**: Task table Status column + Architecture Map nodes updated; plan progress section updated; domain-context change record (incl. domain-map / Concepts update flags); when the debrief fires: drain ping + control:stop + farewell envelope read, findings reconciliation in the execution log, magicWand surfaced as follow-up candidate. Terminal report = files touched, whether the companion debrief fired (yes — runId / no — flag absent), follow-up candidates surfaced.
-**Side effects**: none (no harness seams — the calling verb owns those)
+**Side effects**: none (progress tracking + optional companion debrief only)
 
 ---
 
@@ -78,12 +78,9 @@ $ARGUMENTS
    "Step 9" references stay stable.)
 
 8) (Retired) Orchestrator retrospective — this duty left SDD entirely.
-   Retros, friction capture, and harvest belong to the harness family,
-   reached only through the `/eng-harness-flow` router (the implement
-   verb fires the phase-end seam; the merge verb fires plan-complete).
-   This skill writes no retro artifacts
-   and prompts no retrospective questions. (Step number kept so callers'
-   "Step 9" references stay stable.)
+   This skill writes no retro artifacts and prompts no retrospective
+   questions. (Step number kept so callers' "Step 9" references stay
+   stable.)
 
 9) Companion debrief (phase-end conditional — fires ONLY when ALL of:
    `--status completed`, last-task-in-phase, AND `--companion-run-id`
@@ -166,7 +163,7 @@ This sub-skill is the **single source of truth** for progress updates AND the co
 - Companion-mode run: `--task <T> --status completed --plan <P> --companion-run-id <RUN>` — Step 9 fires.
 ---
 
-> Harness note: this sub-skill writes no retro artifacts and fires no harness seams — progress tracking and (optionally) the minih companion debrief only. Harness reflection routes through `/eng-harness-flow` at the implement verb's seams. `docs/harness/agents/**` is frozen read-only history (mined by the explore verb's Prior Learnings Scout); nothing writes there anymore.
+> Note: this sub-skill writes no retro artifacts — progress tracking and (optionally) the minih companion debrief only. `docs/harness/agents/**` is frozen read-only history (nothing writes there anymore).
 
 ## Exit
 

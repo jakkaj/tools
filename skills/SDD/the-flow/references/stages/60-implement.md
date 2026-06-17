@@ -9,7 +9,7 @@
 **Consumes**: plan (`**Status**: READY`); Full Mode needs the phase's tasks dossier (`tasks/<phase-slug>/tasks.md`) with human GO given; Simple Mode uses inline plan tasks. Reads the plan's Testing Strategy, the task table, Context Brief / Key Findings, and domain context.
 **Flags**: `--plan "<abs path to plan.md>"` · `--phase "<Phase N: Title>"` (Full Mode) or omitted (Simple Mode) · `[--subtask "<ORD-subtask-slug>"]` · `[--companion]` (+ `[--companion-slug "<slug>"]`, default `code-review-companion`) — run with a live minih review companion (§ Companion mode)
 **Produces**: Code changes + tests per the plan's testing approach; `execution.log.md` with per-task entries; task table + Architecture Map kept current per task; domain.md/registry/domain-map updates; terminal report = unified diffs, evidence, domain files updated, final status vs acceptance criteria, suggested commit message.
-**Side effects**: fires the pre-implement harness seam before any task (§ 2a) and the phase-end seam after all tasks (step 7) — router-only, best-effort.
+**Side effects**: updates `domain.md` / `registry.md` / `domain-map.md` after implementation (§4); keeps the task table + execution log live per task.
 **Delegates**: progress — per-task protocol after each completed task, and the final-task companion debrief; resolved via the Registry.
 
 ---
@@ -99,27 +99,6 @@ $ARGUMENTS
    - Read task table from PHASE_DOC
    - Read Context Brief / Key Findings for hazards to watch for
    - **Load domain context** per `references/00-routing.md` § Domain context loading
-   - **Harness availability** (router-only): probe `test -f ~/.agents/skills/eng-harness-flow/SKILL.md` (fallback `~/.claude/skills/eng-harness-flow/SKILL.md`) — the harness is reached exclusively through the `/eng-harness-flow` router; never read governance docs or run health checks yourself
-
-2a) **Pre-Phase Harness Seam — `--event pre-implement`** (router-only):
-
-   **Router not installed** (probe above misses) → if the flow already warned, proceed silently with standard testing; otherwise print exactly once, verbatim:
-
-   > ⚠️ No engineering harness detected — the eng-harness skills aren't installed. Continuing without one: standard testing applies, nothing else changes. (To add the harness loop: `npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y`.)
-
-   …then silently omit every harness touchpoint for the rest of the phase (record the outcome once in EXEC_LOG; never re-warn).
-
-   **Router installed** → before starting ANY task, fire the seam:
-
-   `/eng-harness-flow --event pre-implement --phase "<Phase N: Title>" --plan-dir "<PLAN_DIR>" --json`
-
-   Act on the envelope (`decision: route|redirect|noop|ambiguous`): `route` → print-then-offer the returned command (typically the boot validation the router owns); setup-routing/`noop` → one calm line the first time (*"No engineering harness in this repo — proceeding without one; say 'set up a harness' anytime."*), then pass `--prompt-optional=false` on later seam calls. Boot verdicts are narrated **verbatim from the envelope** — vocabulary: `healthy / SLOW / UNHEALTHY / UNAVAILABLE`:
-   - `healthy` → proceed to tasks
-   - `SLOW` → proceed with note
-   - `UNHEALTHY` → **stop and ask human**: "Retry" / "Continue without harness" / "Abort"
-   - `UNAVAILABLE` → note and proceed with standard testing
-
-   Log the seam outcome (envelope decision + verdict) to EXEC_LOG. If the human overrides an unhealthy harness, log the override reason. **Never copy the router's internal signals into this skill — delegate, don't reimplement.** Never call the router's child skills directly — children are private and may move.
 
 3) Execute tasks:
    Follow task order. Apply testing approach from plan:
@@ -220,15 +199,6 @@ $ARGUMENTS
    --status completed
    ```
    (Companion-mode runs add the debrief flags to this final-task call — § Companion mode.)
-
-7) **Phase-end harness seam** (router-only; skip silently if the router
-   isn't installed — the one-time warning already fired at § 2a):
-
-   `/eng-harness-flow --event phase-end --plan-dir "<PLAN_DIR>" --json`
-
-   Act on the envelope; the router owns what happens at the seam
-   (drain-vs-harvest is its decision, never this skill's). Best-effort,
-   never blocks.
 
 STOP: Report phase complete. Routing is the flow's job.
 ```
@@ -375,11 +345,8 @@ The progress sub-skill's Step 9 then handles the entire debrief automatically: d
 - **Companion findings reconciliation table** — prepared in EXEC_LOG during the phase; surfaced in the final summary by the progress sub-skill's Step 9
 - **Companion farewell summary** + **magicWand** (if present) — surfaced by Step 9; consider filing the magicWand as a fix dossier or backlog item before the next phase
 
-A companion-mode phase ends the same way as a standard one (step 7's phase-end seam still fires) — the report just carries the extra companion artifacts above, and a separate post-hoc review pass is redundant (the flow's Graph knows).
+A companion-mode phase ends the same way as a standard one — the report just carries the extra companion artifacts above, and a separate post-hoc review pass is redundant (the flow's Graph knows).
 
 ## Exit
 
 Print the output-contract summary (✅ block: what was produced, where, key fields). Then STOP. Do not name a next stage. If invoked standalone, end with exactly: "Routing is the flow's job — run the parent flow bare to continue."
----
-
-> Harness posture: `references/00-routing.md` § Harness router posture. The concrete seam invocations above are normative.
