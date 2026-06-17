@@ -4,10 +4,10 @@
   "slug": "flow-owned-harness-seams",
   "plan_dir": "docs/plans/033-flow-owned-harness-seams",
   "mode": "Simple",
-  "cursor": "review",
-  "recommended_next": "review",
-  "now": "Review #1 REQUEST_CHANGES → 5 fixes applied (F001 Option A); re-review pending",
-  "next": "Re-review — /the-flow 7 review",
+  "cursor": "merge",
+  "recommended_next": null,
+  "now": "FLOW COMPLETE — Review #2 APPROVE; residual LOW polished; closed out at user request (no formal merge stage, main-only repo, work already on main)",
+  "next": "—",
   "_comment": "Invert harness integration in the-flow so seams are flow-owned, engine-offered, per-phase first-class beats. Simple, 1 phase, 8 tasks. validate-v2 auto-ran -> APPROVE-WITH-FIXES, all applied. NOTE: this flow's OWN flight plan carries no harness nodes — the router is installed but the tools repo is unprovisioned, so the session-start seam noops. That omission is exactly the behaviour the plan re-examines for the produced contract.",
   "nodes": [
     { "id": "plan", "type": "plan", "label": "Plan · flow-owned harness seams (spec + impl) ✓", "status": "done",
@@ -23,9 +23,14 @@
       "note": "All 8 tasks [x]. Authored flow-owned references/harness-seams.md (seam map + two-layer detection + node emission + per-phase retro lifecycle + honored-not-forced + v1 upstream contract); rewired 00-routing Graph rows + render rules to engine-owned --hook seams; stripped ALL 8 sub-skills fully harness-blind (firing + concept greps EMPTY); aligned schema/template + corrected stale 'spine between spec and plan'; light-touch coach.md/SKILL.md (direct-jump harness-less); CLAUDE.md pointers + docs/how/the-flow-harness-seams.md (Appendix-A tree) + getting-started regenerated. check-flow L1-L6 clean, 13 slugs no collisions, JSON valid, redeployed (canonical store updated).",
       "artifacts": ["skills/SDD/the-flow/references/harness-seams.md", "docs/how/the-flow-harness-seams.md", "execution.log.md"],
       "next": ["review"] },
-    { "id": "review", "type": "review", "label": "Review (fix loop)", "status": "in_progress", "command": "/the-flow 7 review",
-      "note": "Review #1 = REQUEST_CHANGES: F001 (HIGH, backpressure fold-in vs harness-blind plan verb) + F002-F005. All 5 fixed; F001 resolved Option A (backpressure = advisory output). Re-review pending to confirm zero HIGH/CRITICAL.",
-      "artifacts": ["reviews/review.md", "reviews/fix-tasks.md"], "next": ["merge"] },
-    { "id": "merge", "type": "merge", "label": "Merge", "status": "known", "command": "/the-flow 8 merge", "next": [] }
+    { "id": "review", "type": "review", "label": "Review — APPROVE (after fix loop)", "status": "done", "command": "/the-flow 7 review",
+      "ran_at": "2026-06-17T06:33:14Z",
+      "note": "Two rounds. Review #1 = REQUEST_CHANGES: F001 (HIGH, backpressure fold-in vs harness-blind plan verb) + F002-F005; all 5 fixed (F001 Option A: backpressure = advisory output, fold-in promise removed everywhere). Committed+pushed dc05dcf. Review #2 = APPROVE, 0 HIGH/CRITICAL, coverage confidence 95%. One residual LOW (new F001): '--event fallback' wording drift (harness-seams.md:113-134 + plan:254,337) — reword to 'back-compat understanding', keep reinstall/runtime-dependency as the only old-router rule. Reviewer: opportunistic polish, no re-review loop needed.",
+      "artifacts": ["reviews/review.md", "reviews/fix-tasks.md", "reviews/_computed.diff"], "next": ["merge"] },
+    { "id": "merge", "type": "merge", "label": "Closeout — no formal merge (main-only; work integrated on main @ dc05dcf + LOW polish) ✓", "status": "done",
+      "ran_at": "2026-06-17T06:38:03Z",
+      "user_input": "close it, no merge needed / do polish the stuff though as well",
+      "note": "Closed at user request without the formal stage-8 merge: this repo is main-only and the work was already committed + pushed to main (dc05dcf). Residual LOW (review #2 F001) polished first: '--event fallback' wording reworded to 'back-compat understanding' in harness-seams.md alias row + plan:254,337, keeping reinstall/runtime-dependency as the single old-router rule; redeployed; committed + pushed. Flow status -> complete.",
+      "next": [] }
   ]
 }

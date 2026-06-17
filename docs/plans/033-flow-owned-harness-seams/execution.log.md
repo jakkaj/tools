@@ -185,3 +185,29 @@ in canonical store). **Re-review pending.**
 > the plan's resolved UX (Open Questions "calm omit" + Risks "no per-phase nodes when unprovisioned"): per-phase nodes
 > require installed **and** provisioned. The implementation now states this consistently; AC-04's spec text is left
 > as the validated record with this clarification logged here.
+
+---
+
+## Review #2 + Closeout — 2026-06-17
+
+**Review #2 = APPROVE** (0 HIGH/CRITICAL, coverage confidence 95%). The re-review confirmed all of review #1's
+findings resolved against the committed diff (`dc05dcf`): backpressure fold-in is gone (the harness-blind `plan`
+verb treats `backpressure-coverage.md` as advisory output that informs a re-plan); the installed-AND-provisioned
+node-emission rule is consistent across `harness-seams.md` / `00-routing.md` render rule 4 / schema / getting-started;
+sub-skills are harness-blind (both greps empty); static checks clean. Review file: `reviews/review.md`.
+
+**Residual LOW (review #2 F001) — POLISHED at closeout.** The `--event` alias prose still called `--event` a
+"back-compat **fallback**", conflicting with the (correct) runtime note that older `--event`-only routers are a
+*runtime-dependency gap → reinstall, not an automatic fallback*. Reworded three spots to "back-compat understanding
+(reading an older router's envelope)", keeping reinstall/runtime-dependency as the single old-router rule:
+- `skills/SDD/the-flow/references/harness-seams.md` — the `--event` alias mirror-table row.
+- `flow-owned-harness-seams-plan.md:254` — Runtime-dependency maintenance note.
+- `flow-owned-harness-seams-plan.md:337` — events→hooks revision-scope bullet.
+
+Redeployed (`just install-skills-from-source`); `just check-flow` L1–L6 clean; 13 slugs no collisions; both
+flight-plan JSON parse.
+
+**Closeout.** Closed at user request with **no formal stage-8 merge** — this repo is main-only and the work was
+already committed + pushed to `main` (`dc05dcf`); the LOW polish was committed on top. Flow status → **complete**
+(`.the-flow-state.json` `status: complete`, `the-flow.json` all nodes `done`). 8/8 tasks delivered, both reviews
+cleared, doctrine wording consistent on `main`.

@@ -251,7 +251,7 @@ Classification: `contract` (public interface), `internal` (domain-internal), `cr
 
 **Why no script.** A drift-check script was considered and **declined** (user: "document our process… no need to do any more physical tracking"). The `--hooks --json` manifest + this procedure are the contract; `harness-seams.md` is the one file to edit.
 
-**Runtime dependency (honesty).** `--hook` emission assumes the **021 hook-aware router** is installed (≥478-line SKILL.md). As of 2026-06-17 the 021 PR is up but unmerged/uninstalled — the installed router is still the Jun-11 `--event`-only copy (343 lines). To make `--hook` live: merge 021→main + push in the harness repo, then reinstall (`npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y`). Because `--event` is a permanent alias, the mirror's alias row records the `--event` equivalent of every hook as the fallback for any older router.
+**Runtime dependency (honesty).** `--hook` emission assumes the **021 hook-aware router** is installed (≥478-line SKILL.md). As of 2026-06-17 the 021 PR is up but unmerged/uninstalled — the installed router is still the Jun-11 `--event`-only copy (343 lines). To make `--hook` live: merge 021→main + push in the harness repo, then reinstall (`npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y`). Because `--event` is a permanent alias, the mirror's alias row records the `--event` equivalent of every hook for **back-compat understanding** — mapping/reading an older router's envelope. It is **not** an automatic fallback: the flow never down-emits `--event`; an older router is the runtime-dependency gap surfaced as the reinstall prompt above.
 
 ---
 
@@ -334,7 +334,7 @@ After the validation records above, the upstream `eng-harness-flow` contract was
 **Scope of the revision (mechanical — design unchanged):**
 - event→hook token swap across Summary / Goals / Complexity / AC-01,02,03,08,10 / T001,T002,T004,T005 / KF-01.
 - grep gates broadened to `! grep -rnE '/eng-harness-flow --(hook|event)'` (catches both vocabularies during the sub-skill strip).
-- `## Maintenance & resync` mirror rewritten to the five-hook contract, re-anchored on the live `/eng-harness-flow --hooks --json` manifest; `coding` recorded as the unwired silent hook; the `--event` permanent-alias map captured as the fallback.
+- `## Maintenance & resync` mirror rewritten to the five-hook contract, re-anchored on the live `/eng-harness-flow --hooks --json` manifest; `coding` recorded as the unwired silent hook; the `--event` permanent-alias map captured for back-compat understanding (reading an older router's envelope), not as an automatic fallback.
 - new Clarifications block (Session 2026-06-17) records the decision + the runtime dependency.
 
 **Why no fresh validation block:** this is a 1:1 vocabulary alias-swap proven by the upstream § Lifecycle hooks mapping table — the thesis, the node model (`harness-boot` / `harness-retro` / `backpressure` types are unchanged), the task structure (T001–T008), and all four Forward-Compatibility consumers are unchanged. The FC row-4 fix (the harness command is a **literal**, not § Command grammar) holds identically for `--hook`. The lone behavioural delta — `session-start` + `pre-implement` now name the **same** `pre-flight` hook — is reflected in AC-01/T001 (pre-flight listed at two edges) and *simplifies* the seam map rather than complicating it. **Status remains READY.** A fresh `/validate-v2` pass is available on request but not required for a mechanical contract-vocabulary migration.

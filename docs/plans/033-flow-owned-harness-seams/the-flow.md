@@ -11,8 +11,8 @@ flowchart TD
 
   plan["Plan · flow-owned harness seams (spec + impl) ✓"]:::done
   impl["Implement · 8 tasks — harness-seams.md + strip 8 sub-skills + Graph/render + schema/template + docs ✓"]:::done
-  review["Review · fix loop (REQUEST_CHANGES → 5 fixes applied)"]:::wip
-  merge["Merge"]:::known
+  review["Review · APPROVE — 0 HIGH/CRITICAL (after fix loop) ✓"]:::done
+  merge["Closeout · no formal merge (main-only; work on main @ dc05dcf + LOW polish) ✓"]:::done
 
   plan --> impl --> review --> merge
 
@@ -22,8 +22,10 @@ flowchart TD
   u_impl -.- impl
   u_review>"🗣 (F001) drop fold-in → backpressure = advisory output"]:::said
   u_review -.- review
+  u_merge>"🗣 close it, no merge needed / do polish the stuff though as well"]:::said
+  u_merge -.- merge
 ```
 
 **Legend**: 🟩 done · 🟧 in progress · 🟥 blocked · 🟦 known (designed) · ⬜ assumed (speculative, dashed) · 🗣 verbatim user input
 
-_Mode: Simple · 2/4 · Plan + Implement done; **Review in fix loop**. Review #1 = **REQUEST_CHANGES** (F001 HIGH: backpressure fold-in vs harness-blind `plan` verb; + F002–F005). All 5 fixed — **F001 resolved Option A** (the backpressure survey is now **advisory output**; the `plan` verb stays 100% harness-blind and the "fold the coverage in" promise was removed from every surface). F002 node-emission → installed-**and**-provisioned gate; F003 template `--json` + abbreviated note; F004 old-router = runtime-dependency gap (not auto-fallback); F005 coach intro. Re-verified (no fold-in language · concept-grep EMPTY · JSON ok · `just check-flow` L1–L6 clean) + redeployed. **Next: re-run review to confirm zero HIGH/CRITICAL.**_
+_Mode: Simple · 4/4 · **FLOW COMPLETE**. Plan → Implement → Review → Closeout all done. Review took two rounds: #1 **REQUEST_CHANGES** (F001 HIGH backpressure fold-in + F002–F005) → all 5 fixed (**F001 Option A**: backpressure = **advisory output**, `plan` verb stays harness-blind) → #2 **APPROVE** (0 HIGH/CRITICAL, coverage 95%). Residual **LOW** (`--event` "fallback" wording) **polished** at closeout — reworded to "back-compat understanding" in `harness-seams.md` + plan, reinstall/runtime-dependency kept as the only old-router rule. Closed at user request with **no formal stage-8 merge**: main-only repo, work already committed + pushed to `main` (**dc05dcf**) + the polish commit._
