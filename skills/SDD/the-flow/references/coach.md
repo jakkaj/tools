@@ -16,7 +16,7 @@ Every time you surface a next step:
 
 1. **Print it first**, in its own copyable code block, exactly as it would be typed — rendered via the dispatch's § Command grammar + Registry (id and verb, never a bare number). The user can copy it elsewhere, tweak it, or run it themselves.
 2. **Offer to run it**: one short line — *"Want me to run it? (`yes` / I'll wait while you copy or run it yourself)"*. Recommend the default but never force it.
-3. **On a clear go-ahead** (`yes`, `run it`, `go`) → load **only** that stage's module from [`stages/`](./stages/) and follow it, let it complete, then continue the flow in the same turn: discover the artifact it produced, narrate the insight, hand-crank the flight plan, and print-and-offer the *next* step. One accepted step per turn.
+3. **On a clear go-ahead** (`yes`, `run it`, `go`) → load **only** that stage's module from [`stages/`](./stages/) and follow it, let it complete, then continue the flow in the same turn: discover the artifact it produced, narrate the insight, update the flight plan via `harness flow` calls (00-routing.md § Flight plan — the CLI is the generator; never hand-edit the JSON/`.md`), and print-and-offer the *next* step. One accepted step per turn.
 4. **If the user runs it themselves** → wait; re-running `/the-flow` resumes from durable state exactly as before.
 
 **Exceptions (print, never silently run):**
@@ -321,7 +321,7 @@ When invoked with **no active state** but the resolved plan folder **already hol
 
 **Mode / rail**: read `**Mode**` from the plan's top-metadata block. No plan yet → `mode: "unknown"`, `milestones_total` stays the 6-milestone estimate until the `plan` pass recomputes it.
 
-**Back-fill `the-flow.json`**: completed nodes → `status: done`, `ran_at` from artifact **mtime** (best-effort), `user_input` omitted or flagged `"reconstructed": true`; remaining nodes → `known`/`assumed` per the taxonomy. Regenerate `the-flow.md`.
+**Back-fill the flight plan via the CLI** (never hand-write `the-flow.json`): `harness flow create flight-plan --slug <slug> --path docs/plans/<ord>-<slug>/the-flow.json --schema "<skill base>/references/flight-plan.schema.json" --bare`, then `add-node` each inferred node and `status`/`set-node` it to its back-filled state — completed → `status --to done` (the CLI stamps `ran_at`; for adoption that's the back-fill time, best-effort), `user_input` omitted or `set-node --note "reconstructed"`; remaining nodes → `known`/`assumed` per the taxonomy. Then `harness flow render --path … --output the-flow.md`. (`<skill base>` = this skill's base dir.)
 
 **Safety — never clobber**:
 - Never re-run a stage or touch `*-spec.md` / `*-plan.md` / `tasks/` / `reviews/`. Adoption writes **only** the-flow bookkeeping files.

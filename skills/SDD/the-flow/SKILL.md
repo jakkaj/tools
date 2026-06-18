@@ -16,7 +16,7 @@ One public skill for the whole SDD pipeline, built to the flow-architecture patt
 
 1. Read `references/00-routing.md` (entry paths, state contract, the Graph) **and** `references/coach.md` (rail, narration, print-then-offer).
 2. Resolve fresh / resume / adopt per 00-routing.md; load **only** the current stage's sub-skill when a step is accepted, and coach the seam.
-3. Guided mode owns all the-flow state writes (`.the-flow-state.json`, `the-flow.json`, `the-flow.md`).
+3. Guided mode owns all the-flow state writes: it writes `.the-flow-state.json` directly, and drives the flight plan (`the-flow.json` → `the-flow.md`) **only** through `harness flow` calls (plan 024 — the CLI is the generator; run the capability precheck first, § Prerequisite).
 
 **Direct jump** — `/the-flow <id> <verb> [flags]`:
 
@@ -82,7 +82,7 @@ State files and docs written before the consolidation may carry commands naming 
 3. **Never run `/compact`** — it is a user-typed CLI built-in. Recommend: "type `/compact` yourself, then re-run `/the-flow`".
 4. **Never gate, score, or block.** Workshops, backpressure, compaction, companions — all skippable; best-effort, no thresholds, no compliance floors.
 5. **Never fabricate an insight.** Ground every narrated detail in a real artifact; if you can't read it, say so and fall back to file existence / git status.
-6. **Never hand-edit `the-flow.md`** as the primary — it is always regenerated from `the-flow.json` (the source of truth).
+6. **Never hand-edit the flight plan.** `the-flow.md` is always regenerated from `the-flow.json` by `harness flow render`; `the-flow.json` itself is mutated **only** through `harness flow` calls (plan 024 — the CLI is the generator). Guided mode requires a capable CLI (§ Prerequisite).
 7. **You don't run `minih`.** The implement verb's companion mode (`--companion`) owns the companion protocol; you narrate the affordance and record agents in `the-flow.json`.
 8. **No time estimates anywhere** — Complexity Score (CS 1–5) only (`references/00-routing.md` § Shared conventions).
 9. **Harness = one door.** Every harness touchpoint is `/eng-harness-flow --hook …` (permanent `--event` alias) — never name or invoke its child skills. Harness-seam orchestration is **flow-owned** (`references/harness-seams.md`); sub-skills are harness-blind.
@@ -91,3 +91,15 @@ State files and docs written before the consolidation may carry commands naming 
 ## State
 
 Durable state lives at `docs/plans/<ord>-<slug>/.the-flow-state.json`, plus the flight plan (`the-flow.json` → rendered `the-flow.md`). Contract, write ownership, and the Graph: `references/00-routing.md`; harness-seam orchestration (detection, seam map, node emission, upstream contract): `references/harness-seams.md`. Sub-skills own their *stage* artifacts (spec / plan / tasks / execution log / reviews), never write the-flow state, and carry no harness knowledge.
+
+## Prerequisite — a capable `harness flow` CLI (capability + version floor)
+
+Guided mode drives the flight plan (`the-flow.json` → `the-flow.md`) **exclusively** through the `harness flow` verb family (plan 024). It is a hard runtime dependency:
+
+- **Capability precheck — run once per guided session, before the first flight-plan mutation.** Probe `harness flow --help` (and, for a version floor, `harness --version`). If `harness` is missing, or the `flow` verb family is absent (an older CLI), or its surface is too old to carry `create`/`insert-node`/`render` → **error-and-stop** with the honest hedge: *"the-flow needs a capable `harness flow` CLI (plan 024). Run `harness update` (or `npm i -g @ai-substrate/engineering-harness`), then re-run `/the-flow`."* Do **not** fall back to hand-cranking the JSON — the CLI is the only writer.
+- **No adoption required.** This is *not* the engineering-harness loop. the-flow's flight plans live in `docs/plans/<ord>-<slug>/the-flow.json` and need **no** `.harness/` setup, no governance doc, no harness adoption — only the global CLI on `$PATH` (`harness` is an ambient tool like `git`). The flight-plan schema ships **with this skill** (`references/flight-plan.schema.json`) and is supplied via `--schema`; nothing is bundled or installed into the consuming repo.
+- **Clean break (`E308`).** Pre-024 hand-cranked flows (a `the-flow.json` with no `provenance` block) are **not** migrated — the CLI returns `E308` (legacy-format) on read. That is an honest stop, not a bug: re-create with `harness flow create flight-plan --schema <skill base>/references/flight-plan.schema.json` (any prior `.md` stays as a static record).
+- **Version skew is a runtime-dependency gap, not an auto-fallback.**
+  - *Forward skew* (skill needs a newer CLI than installed) → the capability precheck above stops with "run `harness update`".
+  - *Reverse skew* (an **old** the-flow that still hand-cranks the JSON, run against a **new** CLI) → the old hand-crank's write produces a `the-flow.json` the new CLI then reads as `E308` (no `provenance`) — a clean stop, **not** silent divergence. The fix is to update the skill, never to special-case it.
+- **Deploy order — CLI first, then skill.** Always land a capable `harness flow` (publish / `harness update`) **before** deploying this migrated skill, so the precheck passes the moment the skill goes live. Rollback is additive/reversible: revert the skill + `harness update --pin <prev>` (the CLI is a global npm package).

@@ -1,101 +1,22 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://jakkaj/tools/skills/the-flow/flight-plan.schema.json",
-  "title": "the-flow flight plan",
-  "$comment": "REFERENCE-ONLY / standardisation doc. the-flow hand-cranks the JSON by inference and self-checks against this shape; there is NO runtime validator (first-class flight-plan tooling is out of scope this plan — workshop 002 Q1 deferred only the validator, not this schema file). Mirrors references/flight-plan.template.json and the field tables in workshops/002-flight-plan-dag.md § JSON contract. references/sample-the-flow.json must validate against this.",
-  "type": "object",
-  "required": ["schema_version", "kind", "slug", "plan_dir", "mode", "cursor", "nodes"],
-  "additionalProperties": false,
-  "properties": {
-    "schema_version": { "type": "integer", "const": 1 },
-    "kind": { "type": "string", "const": "flight-plan" },
-    "slug": { "type": "string" },
-    "plan_dir": { "type": "string", "description": "docs/plans/<ord>-<slug>" },
-    "mode": { "type": "string", "enum": ["Simple", "Full", "unknown"] },
-    "cursor": { "type": "string", "description": "id of the current node (exactly one)" },
-    "recommended_next": { "type": "string", "description": "id the-flow will suggest next" },
-    "now": { "type": "string", "description": "current node label (rail status line)" },
-    "next": { "type": "string", "description": "next label; omit when multiple options (narration lists them)" },
-    "_comment": { "type": "string", "description": "free-form authoring note (ignored)" },
-    "agents": {
-      "type": "array",
-      "description": "parallel minih agents running alongside the flow (companions + workers). the-flow records them; it does not run minih.",
-      "items": { "$ref": "#/$defs/agent" }
-    },
-    "nodes": {
-      "type": "array",
-      "minItems": 1,
-      "items": { "$ref": "#/$defs/node" }
-    }
-  },
-  "$defs": {
-    "status": {
-      "type": "string",
-      "enum": ["done", "in_progress", "blocked", "known", "assumed"],
-      "description": "done=ran/accepted (green) · in_progress=running now (orange) · blocked=hit a wall (red) · known=designed future (blue-grey) · assumed=speculative future (dashed grey)"
-    },
-    "node": {
-      "type": "object",
-      "required": ["id", "type", "label", "status", "next"],
-      "additionalProperties": false,
-      "properties": {
-        "id": { "type": "string", "description": "stable short id (spec, p3, dr, fx3)" },
-        "type": {
-          "type": "string",
-          "enum": ["research", "deep-research", "spec", "workshop", "backpressure", "plan", "adr", "phase", "fix-loop", "review", "merge", "harness-boot", "harness-retro"],
-          "description": "each workshop is its OWN workshop node (never collapsed). Harness seam touchpoints are first-class, ENGINE-OWNED nodes (the flow offers them at the Graph edge — see references/harness-seams.md; they are NOT fired by stage sub-skills) whose `command` fields are ALWAYS router invocations (/eng-harness-flow --hook …, never a child-skill name): `backpressure` (the pre-coding seam, alias --event post-spec — a post-PLAN excursion off the unified plan node, branch_of plan; produces backpressure-coverage.md), `harness-boot` (the pre-flight seam before a phase), `harness-retro` (the post-coding seam at each phase end; post-flight at merge). Observe (the silent `coding` hook) is the harness's own concern and is not wired — no observe node type exists. Emit per-phase harness nodes only when the /eng-harness-flow router is installed (probe ~/.agents/skills/eng-harness-flow/SKILL.md, fallback ~/.claude/skills/) AND the repo is provisioned; installed-but-unprovisioned ⇒ one calm session line and NO per-phase harness nodes; not installed ⇒ omit them entirely."
-        },
-        "label": { "type": "string" },
-        "status": { "$ref": "#/$defs/status" },
-        "next": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "downstream node ids (DAG edges); [] for terminal"
-        },
-        "command": { "type": "string", "description": "the /the-flow stage command (e.g. /the-flow 1b plan, /the-flow 6 implement --phase …) or tool command this node runs; for harness nodes, always a router invocation (/eng-harness-flow --hook …)" },
-        "ran_at": { "type": "string", "description": "ISO timestamp when executed (adoption: artifact mtime, best-effort)" },
-        "user_input": { "type": "string", "description": "VERBATIM user words that drove this step (audit → 🗣 bubble)" },
-        "reconstructed": { "type": "boolean", "description": "true when user_input/ran_at were back-filled by adoption rather than captured live" },
-        "note": { "type": "string", "description": "what was done & why (1-2 lines)" },
-        "artifacts": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "repo-relative paths this node produced/links (*-spec.md, tasks/.../execution.log.md, reviews/*.md, plan folder)"
-        },
-        "branch_of": { "type": "string", "description": "for excursions: the spine node id it hangs off" },
-        "phase": { "type": "integer", "description": "for type:phase — the phase number" },
-        "iterations": { "type": "integer", "description": "for type:fix-loop — rounds taken" },
-        "tool": { "type": "string", "description": "for type:deep-research — perplexity | harness | … (tool of choice)" }
-      }
-    },
-    "agent": {
-      "type": "object",
-      "required": ["id", "kind", "slug", "status", "covers"],
-      "additionalProperties": false,
-      "properties": {
-        "id": { "type": "string", "description": "stable short id" },
-        "kind": {
-          "type": "string",
-          "enum": ["companion", "worker"],
-          "description": "companion=watches/advisory (wraps its phases) · worker=does a slice in parallel (side-node)"
-        },
-        "slug": { "type": "string", "description": "minih agent slug (code-review-companion, docs-writer)" },
-        "runtime": { "type": "string", "description": "minih (today the only one)" },
-        "run_id": { "type": "string", "description": "minih run id once booted" },
-        "status": { "type": "string", "enum": ["live", "queued", "done", "dead"] },
-        "covers": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "node ids the agent spans (companion wraps these; worker builds into them)"
-        },
-        "render": {
-          "type": "string",
-          "enum": ["wrap", "side"],
-          "description": "wrap=companion subgraph around covers[] · side=worker side-node into covers[] (defaults from kind)"
-        },
-        "driver": { "type": "string", "description": "the command that runs it (e.g. the implement verb with its --companion flag, rendered via the dispatch's Command grammar); blank if user minih-ran it ad-hoc" },
-        "note": { "type": "string", "description": "role / what it watches or builds" }
-      }
-    }
-  }
+  "kind": "flight-plan",
+  "extends": "flow-core",
+  "schema_version": 1,
+  "description": "the-flow's flight-plan overlay in the `harness flow` CLI descriptor format (plan 024 Phase 3; AC-11). the-flow OWNS + ships this schema and supplies it to the CLI via `harness flow create flight-plan --schema <this file>` — there is NO second copy bundled in the CLI (grill 6/7). It extends the bundled shared-core (`flow-core`) field shape (the node id/type/label/status/next required fields + the node/comment/authority/root optionals) and declares ONLY the flight-plan vocabulary below; the CLI's hand-rolled validator (flow-schema.ts) merges the two. This descriptor REPLACES the former JSON-Schema-draft flight-plan.schema.json, which was reference-only (no runtime validator) and could not drive `create`. Node-type meanings: research; deep-research (excursion, branch_of research/plan); spec + plan (the atomic `1b plan` writes ONE unified plan node — `spec` is retained only for legacy split flows that still carry both); workshop (each its OWN node, branch_of plan); adr; backpressure (the pre-coding seam — an optional post-plan excursion off plan, branch_of plan); phase; fix-loop (branch_of a phase); review; merge; harness-boot (the pre-flight seam before a phase); harness-retro (the post-coding seam at each phase end / post-flight at merge). The backpressure/harness-boot/harness-retro nodes are first-class but ENGINE-OWNED — the flow offers them at the Graph edge (see references/harness-seams.md); their `command` fields are ALWAYS router invocations (`/eng-harness-flow --hook …`), never a child-skill name, and per-phase harness nodes are emitted only when the /eng-harness-flow router is installed AND the repo is provisioned. Mutation + render are owned by the CLI: mutate via `harness flow cursor/status/add-node/set-node/insert-node/comment`; render via `harness flow render`. the-flow.md is GENERATED from the-flow.json by the CLI renderer and is never hand-edited.",
+  "statuses": ["done", "in_progress", "blocked", "known", "assumed"],
+  "nodeTypes": [
+    "research",
+    "deep-research",
+    "spec",
+    "workshop",
+    "adr",
+    "backpressure",
+    "plan",
+    "phase",
+    "fix-loop",
+    "review",
+    "merge",
+    "harness-boot",
+    "harness-retro"
+  ]
 }

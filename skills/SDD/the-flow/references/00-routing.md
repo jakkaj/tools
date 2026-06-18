@@ -28,7 +28,7 @@ Ask the intent (coach.md `start` narration). After the user answers:
 3. `mkdir -p docs/plans/<ord>-<slug>/`.
 4. **Write the verbatim ask** to `original-ask.md` (shape below) and mirror it into `state.intent`.
 5. Write `.the-flow-state.json` (temp file + atomic rename).
-6. Initialise `the-flow.json` (a `start`/`research` node + `assumed` future) and render `the-flow.md`.
+6. Initialise the flight plan **via the CLI** (never hand-write it): `harness flow create flight-plan --slug <slug> --path docs/plans/<ord>-<slug>/the-flow.json --schema "<skill base>/references/flight-plan.schema.json" --bare`, then seed the spine with `harness flow add-node` — a `research` node (status `in_progress`) plus `assumed` `plan`/`merge` nodes for the initial shape — and render with `harness flow render --path docs/plans/<ord>-<slug>/the-flow.json --output docs/plans/<ord>-<slug>/the-flow.md`. (`<skill base>` = this skill's base dir, e.g. `~/.claude/skills/the-flow`; the flight-plan schema ships in `references/` and is supplied via `--schema`, per § Flight plan.)
 7. Print-and-offer the **explore** edge (research-worthy intent) or the **plan** edge (clear ask) — the command is rendered from the dispatch's Command grammar + Registry, with the intent as the verb's argument.
 
 Stages 10/20 both **reuse** an existing `docs/plans/*-<slug>/` folder by slug — creating it first is safe.
@@ -44,7 +44,7 @@ Stages 10/20 both **reuse** an existing `docs/plans/*-<slug>/` folder by slug �
 
 ### Resume (exactly one active state)
 
-Read the state. Discover the artifact for `current_stage` (Graph below). Apply the **idempotency rule**, narrate (coach.md), then hand-crank `the-flow.json`/`.md` (§ Flight plan).
+Read the state. Discover the artifact for `current_stage` (Graph below). Apply the **idempotency rule**, narrate (coach.md), then drive `the-flow.json`/`.md` via `harness flow` calls (§ Flight plan — the CLI is the generator; never hand-edit).
 
 **Idempotency rule (every resume)**: discover the artifact for `current_stage` by existence at its expected path (newest if several, scoped by `last_checkpoint_at` mtime).
 - **Found** → narrate the stage's insight, persist the next stage + `pending_command`, print-and-offer the next command.
@@ -158,32 +158,35 @@ The four fire-hooks the flow wires — and which Graph edge each rides — are t
 
 ## Flight plan — `the-flow.json` (source of truth) + `the-flow.md` (rendered)
 
-Every run maintains a **flight plan**: `docs/plans/<ord>-<slug>/the-flow.json` (canonical DAG) and `the-flow.md` (the vertical mermaid, **generated from** the JSON). The one-line rail (coach.md) is the JSON's glanceable twin.
+Every run maintains a **flight plan**: `docs/plans/<ord>-<slug>/the-flow.json` (canonical DAG) and `the-flow.md` (the vertical mermaid, **generated from** the JSON by `harness flow render`). The one-line rail (coach.md) is the JSON's glanceable twin.
 
-- **Schema**: [`flight-plan.schema.json`](./flight-plan.schema.json) (the full node + `agents[]` contract).
+> **Prerequisite**: guided mode drives this flight plan **only** through `harness flow` (plan 024). Probe a capable CLI before the first mutation; absent/too-old → stop with "run `harness update`" (SKILL.md § Prerequisite). No harness *adoption* is needed — the flight-plan schema ships with this skill and is supplied via `--schema`.
+
+- **Schema**: [`flight-plan.schema.json`](./flight-plan.schema.json) — the CLI **descriptor** (`kind` + `statuses[]` + `nodeTypes[]`) the-flow ships and supplies to `harness flow` via `--schema`; the shared-core node/comment/root field shape is bundled in the CLI (no second copy here).
 - **Worked example to copy**: [`flight-plan.template.json`](./flight-plan.template.json) + [`flight-plan.template.md`](./flight-plan.template.md).
 
-**Hand-crank cadence (you are the generator). Every guided turn, after deciding the narration:**
+**CLI-driven cadence (the `harness flow` CLI is the generator — you NEVER hand-edit `the-flow.json`/`.md`).** The CLI built in plan 024 owns mutation, the edge-algebra, the embedded event log, and deterministic render; guided mode is a **consumer** of it. Let `FLOW = docs/plans/<ord>-<slug>/the-flow.json`. Every guided turn, after deciding the narration, drive the flow with `harness flow` calls, threading each ok Envelope's `data.path` back into the next `--path`:
 
-1. **Mutate the JSON** for what just happened: completed node → `status: done`, stamp `ran_at`, capture the user's **verbatim** `user_input`, write the `note`, append produced `artifacts[]`; advance `cursor`/`recommended_next`.
-2. **Reveal/refine the future**: during the `plan` pass (when the implementation half reveals the phases), replace the `assumed` phase placeholder with real `known` phase nodes (one per phase) + recompute `milestones_total`. Add conditional `assumed` nodes (fix-loops) as `branch_of` the relevant phase.
-3. **Regenerate** `the-flow.md` from the JSON, then the rail.
-4. **Self-check** (no validator): required fields present, every `next` id exists, exactly one `cursor`, no backwards status moves.
+1. **Mutate for what just happened** (one call per change, `--path FLOW`):
+   - a step finished → `harness flow status --node <id> --to done` (fires `status-changed`, stamps `ran_at`); `→ blocked` / `→ in_progress` likewise;
+   - the user's **verbatim** words → `harness flow set-node --node <id> --user-input "<verbatim>"`;
+   - what was done / produced → `harness flow set-node --node <id> --note "<1–2 lines>"` (+ `--label` if it changed);
+   - a narrative / decision note → `harness flow comment --node <id> --text "<…>" --source agent --kind <note|decision|warning|validation> [--refs <paths>]`;
+   - advance → `harness flow cursor --to <id>` (move) or `--recommend <id>` (advisory, no event).
+2. **Reveal/refine the future** — `harness flow insert-node` owns every edge splice (no hand edge-recomputation):
+   - at the `plan` pass, reveal each phase → `insert-node --id <pN> --type phase --label "<…>" --status known --after <prev>` (N inherits the predecessor's out-edges), then recompute `milestones_total`;
+   - a conditional fix-loop / workshop / backpressure excursion → `insert-node --id <id> --type <fix-loop|workshop|backpressure> --branch-of <node> [--rejoin <node>]` (the branch point's `next` is unchanged);
+   - a plain new node needing no splice → `harness flow add-node`.
+3. **Render** → `harness flow render --path FLOW --output docs/plans/<ord>-<slug>/the-flow.md`, then print the rail (coach.md owns the rail; the CLI owns the `.md`).
+4. **Integrity is the CLI's, not yours** — `insert-node` DAG-re-checks before writing (`E309`, nothing written on a cycle/orphan); `create` validated the flight-plan overlay (statuses + nodeTypes) against the shipped `--schema`. The mutation verbs enforce only node existence (`E305`) + edge integrity — they do **not** re-check the overlay vocabulary (the flight-plan schema is supplied via `--schema`, not bundled), so the engine is responsible for using the correct node types/statuses (it owns the Graph); the renderer's unknown-type fallback never crashes. No hand self-check; no hand JSON edits.
 
-**Status taxonomy → colour**: `done` 🟩 · `in_progress` 🟧 · `blocked` 🟥 · `known` 🟦 (*designed* future, e.g. phases locked at the `plan` pass) · `assumed` ⬜ dashed (*speculative* future, e.g. a conditional fix loop). Transitions: `assumed → known` (at the `plan` pass) → `in_progress` → `done`; any active node → `blocked` → back to `in_progress`.
+**Status vocabulary** (the values you pass to `harness flow status --to` / `--status`): `assumed` (*speculative* future, e.g. a conditional fix loop) · `known` (*designed* future, e.g. phases locked at the `plan` pass) · `in_progress` · `done` · `blocked`. Transitions: `assumed → known` (at the `plan` pass) → `in_progress` → `done`; any active node → `blocked` → back to `in_progress`. The status→colour mapping is the **renderer's** (CLI), not the-flow's.
 
-**Render rules for `the-flow.md`** (see schema + template for the worked form):
+**Render is the CLI's — not the-flow's.** `the-flow.md` is generated from `the-flow.json` by `harness flow render --path docs/plans/<ord>-<slug>/the-flow.json --output docs/plans/<ord>-<slug>/the-flow.md`. The renderer (plan 024 Phase 2) owns **every** visual rule — `flowchart TD` + classDefs/colours, the solid spine vs dotted `branch_of` excursions, violet `:::harness` seam nodes (emitted only when the router is installed + provisioned), status→colour, the one genesis `🗣 user_input` bubble per node, the `💬N` comment badge + per-node body-log, the `decision` rhombus, the companion subgraph / worker side-node, the legend, the rail pips, and the unknown-type fallback (never crashes). Do not re-document or hand-apply any of them here — the full verb + render reference is [`docs/how/harness-flow.md`](https://github.com/AI-Substrate/harness-engineering/blob/main/docs/how/harness-flow.md).
 
-1. `flowchart TD` (vertical); emit the `classDef`s (done/wip/blocked/known/assumed + said/companion/worker + **harness**). The `harness` class is violet (`fill:#EDE7F6,stroke:#673AB7`) so the loop reads distinctly from the spine.
-2. **Spine** = `type ∈ {research, spec, plan, phase, merge}` linked solid `-->` in `next` order (a unified `plan` node replaces the old separate `spec`+`plan` pair; legacy flows that still carry both render both). The unified `plan` node connects **directly** to its next spine node (the first `phase`); a post-plan `backpressure` refinement does **not** interrupt the spine — it renders as a dotted excursion off `plan` (rule 3).
-3. **Excursions** (`branch_of` set: deep-research, **each** workshop, a post-plan **backpressure** refinement, fix-loop) = dotted `-.->` from their `branch_of`, rejoining at the spine. A `backpressure` node (type `backpressure`, `branch_of: "plan"`) is one such excursion — run it; the coverage is **advisory output** that informs a re-plan (the plan verb does not auto-read it); style it `:::harness` (the router produces it) and omit it with the other harness nodes when the Layer-1 probe misses (rule 4). **Every workshop is its own node** — never collapse a loop into one blob.
-4. **Harness seam nodes** (`type ∈ {harness-boot, harness-retro}`) = dotted `-.->` from their `branch_of`, all `:::harness`; their `command` fields are router invocations (`/eng-harness-flow --hook … --json`), never child-skill names. **Per-phase harness nodes are emitted only when the router is *installed* AND the repo is *provisioned*** (`harness-seams.md` § Node emission); installed-but-unprovisioned ⇒ **no per-phase harness nodes**, one calm session line only. Layer-1 miss ⇒ omit every harness node (including any `backpressure` excursion); the spine stays intact (the unified `plan` node connects directly to the first `phase`). The phase-end (`post-coding`) retro is **one node per phase** (`branch_of` that phase); "drain owed" is re-derived from a phase `done` whose `harness-retro` sibling is still `assumed`/absent — no new state file.
-5. Each node `:::<class>` from its `status` (harness nodes keep `:::harness` regardless of status; convey status via the note).
-6. **User bubbles**: for every node with `user_input`, emit a `said`-class flag node (`>"🗣 …"]`) dotted (`-.-`) to it — verbatim, nothing hidden.
-7. **Agents**: `kind:companion` (`render:wrap`) → a **subgraph wrapping** its `covers[]` phases, companion colour; `kind:worker` (`render:side`) → a `worker`-class side-node linked `-. builds .->` to its `covers[]`.
-8. Legend line beneath (done/wip/blocked/known/assumed + 🗣 user input + companion + worker + 🟪 harness loop).
+> **Invariant**: never hand-edit `the-flow.md` — it is **always** regenerated from `the-flow.json` by `harness flow render`. And never hand-edit `the-flow.json` either — mutate it only through `harness flow` calls (§ CLI-driven cadence above).
 
-> **Invariant**: never hand-edit `the-flow.md` as the primary — it is always a function of `the-flow.json`.
+**Legacy note (clean break).** Pre-migration flows — hand-cranked `the-flow.json` with no `provenance` block — are **not** migrated: the CLI returns `E308` (legacy-format) on read. That is an honest stop, not a bug; re-create with `harness flow create` (see SKILL.md § capability precheck).
 
 ---
 
