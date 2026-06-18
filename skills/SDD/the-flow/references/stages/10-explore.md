@@ -17,6 +17,8 @@
 
 **Research and understand** how existing functionality works in the codebase. Perfect for arbitrary research questions or pre-planning exploration.
 
+> Elegance: the dossier is **output** — a curated decision aid, not a warehouse of everything explored. Research broadly *internally*; the canonical artifact carries only decision-relevant findings, risks, and patterns, as tables with evidence links — link to sources, don't restate them. Doctrine + the seven-function line test: `references/00-routing.md` § Shared conventions.
+
 User input:
 ```
 $ARGUMENTS
@@ -554,7 +556,7 @@ After all subagents complete:
 
 ### 5) Generate Research Report
 
-Create comprehensive research document with this structure:
+Create the curated research dossier with this structure — decision-relevant findings, risks, and patterns, not a transcript of everything explored:
 
 ```markdown
 # Research Report: [RESEARCH_TOPIC]
@@ -960,7 +962,7 @@ The research is complete. The user will decide what to do next:
 ## Success Criteria
 
 ✅ **Answers the question**: "How does [X] currently work?"
-✅ **Comprehensive**: Covers implementation, dependencies, patterns, quality
+✅ **Decision-relevant**: covers the implementation, dependencies, patterns, and quality findings that affect the plan
 ✅ **Actionable**: Identifies safe vs dangerous modifications
 ✅ **Well-referenced**: All findings have code locations
 ✅ **Tool-adaptive**: Uses FlowSpace when available, standard tools when not

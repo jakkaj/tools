@@ -18,6 +18,8 @@
 
 Implement **exactly one** approved phase or subtask using the **testing approach from the plan**. Apply domain placement rules. Update domain.md files after implementation.
 
+> Elegance: code + the execution log are **output**. Log facts and evidence — what changed, why, the proof (diffs, test results, the task table carry the detail) — not a play-by-play monologue; prose only where it changes a decision or records a discovery. Doctrine + the seven-function line test: `references/00-routing.md` § Shared conventions.
+
 
 ## 📝 LOG DISCOVERIES AS YOU GO
 

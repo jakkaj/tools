@@ -5,7 +5,7 @@
 > Composition is the bundling flow's job.
 
 **Verb**: workshop
-**Purpose**: Create a detailed design document — a working reference — that explores a complex concept in depth before architecture, from the spec's Workshop Opportunities or any topic needing deep exploration. Optional — can run any time during planning.
+**Purpose**: Create a decision-focused design note — a working reference — that resolves a complex concept before architecture, from the spec's Workshop Opportunities or any topic needing deep exploration. Optional — can run any time during planning.
 **Consumes**: an existing plan folder (`docs/plans/<ordinal>-<slug>/`) · business source — the `## Business Specification` of `${PLAN_DIR}/<slug>-plan.md` (unified), else a legacy `${PLAN_DIR}/<slug>-spec.md` (required for `--from-spec`, otherwise context) · `research-dossier.md` (optional) · existing `workshops/*.md` (optional) · domain registry (optional)
 **Flags**: `<plan>` (ordinal, slug, or path) + `"<topic>"` · `--from-spec` (pick from the spec's Workshop Opportunities) · `--list` (list existing workshops)
 **Produces**: `${PLAN_DIR}/workshops/<NNN>-<topic-slug>.md` (typed design doc with value frame, proof levels, evidence ledger) + terminal success block (type, proof level, value axes, key questions, related workshops)
@@ -15,7 +15,9 @@
 
 ## Procedure
 
-Create a **detailed design document** that explores a complex concept in depth. Workshops are working reference documents - practical, concrete, and useful during implementation.
+Create a **decision-focused design note** that resolves a complex concept. Workshops are working reference documents - practical, concrete, and useful during implementation.
+
+> Elegance: a workshop is **output** — a working reference, not an essay. Diagrams, tables, schemas, and real examples over prose; reach the target proof level and stop. Doctrine + the seven-function line test: `references/00-routing.md` § Shared conventions.
 
 ```md
 User input:
@@ -34,7 +36,7 @@ $ARGUMENTS
 
 ## Purpose
 
-Create detailed design explorations for concepts that benefit from thorough specification before architecture. These are **working reference documents** - something a developer, reviewer, stakeholder, or agent would actually keep open during implementation.
+Create focused design notes for concepts that benefit from resolution before architecture. These are **working reference documents** - something a developer, reviewer, stakeholder, or agent would actually keep open during implementation.
 
 A workshop should improve value delivery by reducing the time, ambiguity, risk, or human attention required to move from intent to implementation-ready evidence.
 

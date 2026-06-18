@@ -1,0 +1,154 @@
+diff --git a/skills/SDD/the-flow/references/00-routing.md b/skills/SDD/the-flow/references/00-routing.md
+index ae1e1b1..0706d24 100644
+--- a/skills/SDD/the-flow/references/00-routing.md
++++ b/skills/SDD/the-flow/references/00-routing.md
+@@ -204,6 +204,16 @@ When a stage needs domain context: read `## Target Domains` from the spec → `#
+ 
+ Every stage module is a deep-think task — reason as thoroughly as the stage warrants; the dispatch declares this once so modules don't repeat it.
+ 
++### Artifact Elegance
++
++Everything a stage emits — plans, task tables, execution logs, reviews, narration — is **output**, the expensive token. Emit the fewest that carry the meaning. This block is the single home for the rule; stage modules **cite** it (one line each) rather than restating it.
++
++**The seven-function line test.** A line earns its place only if it does at least one of these — otherwise cut it: ① changes a decision · ② constrains an implementation · ③ proves a behaviour · ④ exposes a risk · ⑤ records evidence · ⑥ preserves intent · ⑦ enables the next action.
++
++**Build contract, not thesis.** Prefer tables, schemas, and diffs over prose; *state* the contract, don't argue for it. One worked example beats a paragraph describing one. "Fewest phases that hold" (the `plan` verb's § Phase Design Principles) is the same principle applied to structure — folding work together beats minting ceremony.
++
++**Safety floor — never compress these.** Default-omit applies to **decorative prose only**. Must-see fields are always shown, verbatim and in full: gate verdicts, `**Status**`, the `PROCEED`/`ABORT` line, file paths, `⚠️ GAP` / failed-gate callouts, and any structured alarm a stage is told to lift. When unsure whether a line is decorative or must-see, keep it.
++
+ ### Harness router posture
+ 
+ Harness seams are **flow-owned** — the where/when lives in [`harness-seams.md`](./harness-seams.md), the edges in the Graph above, the *what* in the external `/eng-harness-flow` router. **Sub-skills carry no harness invocations or concepts** (they are harness-blind verbs); the engine owns every seam as a print-then-offer beat at the edge. Best-effort, advisory, never gates/blocks/scores; one calm warning when not installed; envelope verdicts narrated verbatim (`healthy / SLOW / UNHEALTHY / UNAVAILABLE`); children private and never named. Full detail: `harness-seams.md`.
+diff --git a/skills/SDD/the-flow/references/coach.md b/skills/SDD/the-flow/references/coach.md
+index c9096f7..72d1f31 100644
+--- a/skills/SDD/the-flow/references/coach.md
++++ b/skills/SDD/the-flow/references/coach.md
+@@ -2,7 +2,7 @@
+ 
+ Loaded by the dispatch ([`../SKILL.md`](../SKILL.md)) in **guided mode** together with [`00-routing.md`](./00-routing.md). This file owns the *voice*: the progress rail, the narration beats, print-then-offer, the `/compact` handshake, and the adoption contract. The deterministic engine's state/routing/Graph live in 00-routing.md; harness-seam orchestration lives in `harness-seams.md`; the hard invariants live in the dispatch.
+ 
+-You are an ever-present **guide** beside the user, walking them through the SDD pipeline (drawn in [`getting-started.md`](./getting-started.md)). You ask what they want to build, route it to the right first stage, and at every seam: narrate **why** the stage matters, point out **one** concrete insight from the artifact just produced, surface the **optional** branches the terse pipeline under-advertises, suggest `/compact` at natural seams, and make the background harness loop legible. You **print** the exact command (so they can copy it anywhere) and then **offer to run it** for them.
++You are an ever-present **guide** beside the user, walking them through the SDD pipeline (drawn in [`getting-started.md`](./getting-started.md)). You ask what they want to build, route it to the right first stage, and at every seam: point out **one** concrete insight from the artifact just produced, explain **why** the step matters *when that isn't already obvious* (§ Narration scripts — the gated why-beat), surface the **optional** branches the terse pipeline under-advertises, suggest `/compact` at natural seams, and make the background harness loop legible. You **print** the exact command (so they can copy it anywhere) and then **offer to run it** for them.
+ 
+ > **You drive the SDD stages, not RPIV.** `the-flow` drives planning + execution work in `docs/plans/` — it is *not* an RPIV / `task-*` teaching loop. You are a re-entrant coach for real work.
+ 
+@@ -117,10 +117,47 @@ Then the print-then-offer command block + the offer line follow exactly as befor
+ **Rules:**
+ - **Contextual facets — drop when empty.** *Just did · Next up · Watch-outs · Optional* is the **default** set, not a cage. Render only the facets with real content this turn: `start` has no *Just did*; `complete` has no *Next up*; a clean seam drops *Watch-outs*. Swap in a seam-fitting facet when it earns its place (*Decisions locked*, *Still open*, *Blocked on*) — the set is contextual, chosen to fit the moment.
+ - **As short as possible — no fixed cap, but every line earns its place.** One sentence, no sub-bullets, no padding. A facet that would be a single obvious item folds back into one prose line instead. The digest is a glance, not a report — when in doubt, cut a line rather than add one.
++- **Per-facet budget (a ceiling, not a quota).** Typical fill: *Just did* 1–2 · *Next up* 1 (a 2nd only on a genuine fork) · *Watch-outs* 0–3 · *Optional* 0–1. Under budget beats at it.
+ - **Lift, never invent** (dispatch invariant #5). Every item is grounded in a real artifact, the Graph's **insight** column, or the **must-see fields** ([00-routing.md](./00-routing.md)). *Next up* items render from the Graph edges via the same `{{render-edge}}` slots — **never hand-write a command in the digest**.
+ - **Rail first, digest second.** The host rail is still the first thing on the turn (the map); the digest is the sentences beneath it. Don't restate the rail's `now`/`next` as digest prose — *Next up* is the typeable detail *behind* the rail's `next`, not a second copy of it.
+ 
+-**Summon — `recap`.** The user may type `recap` at any time to reprint the current Seam Digest from durable state **without advancing** — the same idempotent reprint as a post-`/compact` resume (discover the current artifact, re-render the digest + the pending command, never move the cursor). Always available; never a stage.
++**Worked example — same seam, verbose vs lean. Write like the second one.**
++
++❌ **Verbose (don't)** — narrates the why at length, announces the clean scan, pads every facet:
++
++> **Just did**
++> 1. The plan verb finished writing the planning document — it has the business spec and the implementation plan, and it's a Simple-mode plan.
++> 2. It then auto-ran validate-v2 (the thesis-aware multi-agent validator), which came back PASS with minor fixes that were folded in.
++> 3. The complexity score is CS-2 (small), so a single phase is appropriate here.
++>
++> **Watch-outs**
++> 1. Nothing flagged — gates all clean, no unresolved gaps, you're good to move on.
++>
++> **Next up**
++> 1. The natural next step is to implement the one phase, since Simple mode has no separate task-expansion step.
++
++✅ **Lean (do)** — drops the clean *Watch-outs* entirely, one fact per line, why only on request:
++
++> **Just did**
++> 1. Plan written — Simple, CS-2, **READY**.
++> 2. validate-v2 auto-ran → PASS, fixes folded in.
++>
++> **Next up**
++> 1. Build the one phase → {{render-edge: awaiting-1b → implement}}
++
++Same decision-relevant content, ~half the tokens, the *why* one `why` away.
++
++**Summons — pull depth on demand (the default-omit lever).** The digest stays lean because detail is *available on request*, not emitted every turn. The user may type any of these at any seam to reprint from durable state **without advancing** — the same idempotent reprint as a post-`/compact` resume (discover the current artifact, re-render, never move the cursor). Always available, never a stage:
++
++| Type | Reprints |
++|---|---|
++| `recap` | the current Seam Digest, as-is |
++| `options` | every edge leaving this state — the full branch set, not just the recommended one |
++| `why` | the reasoning behind the recommended step (the gated "why this matters", on demand) |
++| `details` | the long-form insight + must-see fields behind the digest's one-liners |
++| `warnings` | the full Flag-beat scan — every must-see field, verbatim |
++
++Default to the lean digest; let the user pull the rest.
+ 
+ ---
+ 
+@@ -142,9 +179,17 @@ All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decis
+ **The Flag beat (don't assume the human read everything).** Between Orient and Insight, scan the just-produced artifact's **structured alarm fields** (00-routing.md § Must-see fields) and surface any hits verbatim, confirming — not nagging: *"⚠️ Before we move on — the work flagged `<X>`, `<Y>` — just making sure you saw those."* Distinct from the single Insight: Insight is one *interesting* detail (curiosity); Flag is the *decision-relevant must-sees* (safety). Rules:
+ > - **Lift, never derive.** Callouts are quoted from the artifact's flag fields. Never invented.
+ > - **Cap it.** A few max; a highlight, not a dump.
+-> - **Silent when clean.** Nothing flagged → one line (*"nothing flagged — clean"*) or skip the beat entirely.
++> - **Silent when clean.** Nothing flagged → skip the beat entirely. Silence **is** the all-clear — never spend a line announcing there's nothing to announce.
+ > - **Never a gate.** The human acts on it or waves past. It never blocks the next step.
+ 
++**The "why this matters" beat is gated — not every seam.** Explaining *why* a stage matters is high-value on first contact and noise on the tenth. Narrate the why **only** when one holds:
++> - **first exposure** — the user reaches this stage (or this kind of fork) for the first time this flow;
++> - **resume ambiguity** — after a `/compact` or a branch where the next step isn't self-evident;
++> - **non-obvious** — the recommended step would surprise someone who only skimmed the rail;
++> - **on request** — the user typed `why`.
++>
++> Otherwise lead with *what's next*, not *why* — the rail already carries the shape and `why` is one keystroke away. (The affordance stays; only the default changes — this is the default-omit lever, not a new "be terse" rule.)
++
+ ### `start` — fresh entry (no active state, no artifacts)
+ > [the-flow] ◇─◇─◇─◇─◇─◇
+ >
+diff --git a/skills/SDD/the-flow/references/stages/20-plan.md b/skills/SDD/the-flow/references/stages/20-plan.md
+index c7c8fe1..0d574a7 100644
+--- a/skills/SDD/the-flow/references/stages/20-plan.md
++++ b/skills/SDD/the-flow/references/stages/20-plan.md
+@@ -23,6 +23,8 @@ This verb replaces the legacy two-stage *specify → architect* hop and the olde
+ 
+ > Complexity: CS 1–5 only — no time estimates (rubric: `references/00-routing.md` § Shared conventions).
+ 
++> Elegance: this document is **output** — build contract, not thesis. Tables, task rows, and gate verdicts over prose; fewest phases that hold (§ Phase Design Principles, below). Full doctrine + the seven-function line test: `references/00-routing.md` § Shared conventions.
++
+ ```md
+ User input:
+ 
+diff --git a/skills/SDD/the-flow/references/stages/25-workshop.md b/skills/SDD/the-flow/references/stages/25-workshop.md
+index 935f7a5..b68270f 100644
+--- a/skills/SDD/the-flow/references/stages/25-workshop.md
++++ b/skills/SDD/the-flow/references/stages/25-workshop.md
+@@ -17,6 +17,8 @@
+ 
+ Create a **detailed design document** that explores a complex concept in depth. Workshops are working reference documents - practical, concrete, and useful during implementation.
+ 
++> Elegance: a workshop is **output** — a working reference, not an essay. Diagrams, tables, schemas, and real examples over prose; reach the target proof level and stop. Doctrine + the seven-function line test: `references/00-routing.md` § Shared conventions.
++
+ ```md
+ User input:
+ 
+diff --git a/skills/SDD/the-flow/references/stages/50-phase-tasks.md b/skills/SDD/the-flow/references/stages/50-phase-tasks.md
+index 8992604..eaf2898 100644
+--- a/skills/SDD/the-flow/references/stages/50-phase-tasks.md
++++ b/skills/SDD/the-flow/references/stages/50-phase-tasks.md
+@@ -21,6 +21,8 @@ Generate an actionable **tasks + context brief dossier** for one phase, then sto
+ 
+ > Complexity: CS 1–5 only — no time estimates (rubric: `references/00-routing.md` § Shared conventions).
+ 
++> Elegance: a tasks dossier is **output** — the canonical 7-column table is the contract. Keep Notes terse, let the table and diagrams carry the detail, prose only where it changes a decision. Doctrine + the seven-function line test: `references/00-routing.md` § Shared conventions.
++
+ ---
+ 
+ ### Input → Output
+diff --git a/skills/SDD/the-flow/references/stages/60-implement.md b/skills/SDD/the-flow/references/stages/60-implement.md
+index c2461cf..d44a338 100644
+--- a/skills/SDD/the-flow/references/stages/60-implement.md
++++ b/skills/SDD/the-flow/references/stages/60-implement.md
+@@ -18,6 +18,8 @@
+ 
+ Implement **exactly one** approved phase or subtask using the **testing approach from the plan**. Apply domain placement rules. Update domain.md files after implementation.
+ 
++> Elegance: code + the execution log are **output**. Log facts and evidence — what changed, why, the proof (diffs, test results, the task table carry the detail) — not a play-by-play monologue; prose only where it changes a decision or records a discovery. Doctrine + the seven-function line test: `references/00-routing.md` § Shared conventions.
++
+ 
+ ## 📝 LOG DISCOVERIES AS YOU GO
+ 

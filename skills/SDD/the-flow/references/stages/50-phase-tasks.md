@@ -21,6 +21,8 @@ Generate an actionable **tasks + context brief dossier** for one phase, then sto
 
 > Complexity: CS 1–5 only — no time estimates (rubric: `references/00-routing.md` § Shared conventions).
 
+> Elegance: a tasks dossier is **output** — the canonical 7-column table is the contract. Keep Notes terse, let the table and diagrams carry the detail, prose only where it changes a decision. Doctrine + the seven-function line test: `references/00-routing.md` § Shared conventions.
+
 ---
 
 ### Input → Output

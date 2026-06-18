@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "kind": "flight-plan",
+  "slug": "flow-elegance-layer",
+  "plan_dir": "docs/plans/034-flow-elegance-layer",
+  "mode": "Simple",
+  "cursor": "complete",
+  "recommended_next": "complete",
+  "now": "Flow complete — implemented, validate-v2 clean, review APPROVE, F001/F003 closed, redeployed from source (live). Merge N/A (on main, no branch).",
+  "next": "Outstanding: commit/push to main — user's call (git read-only until asked).",
+  "_comment": "Fresh start at 034. Clear ask (design dossier already exists at research-dossier.md, promoted from scratch/elegance.md) -> skip explore, go straight to the atomic 1b plan. Harness: router INSTALLED but this repo UNPROVISIONED (no .harness/) -> no per-phase harness nodes emitted, one calm session line only (references/harness-seams.md node-emission rule). Phases are an assumed placeholder until the plan pass reveals the real count; mode unknown until Round 1. the-flow.md is generated FROM this file.",
+  "agents": [],
+  "nodes": [
+    { "id": "research", "type": "research", "label": "Research (dossier promoted)", "status": "done",
+      "user_input": "get a new flow up, this is a detiled task! we should also dogfood our new changes as we write the flow itself, even if the flow prompts aer still old.",
+      "note": "No explore pass run — the design dossier already existed (scratch/elegance.md, the Ponytail->elegance-layer translation). Promoted into the plan folder as research-dossier.md so the plan stage consumes it.",
+      "artifacts": ["research-dossier.md", "original-ask.md"], "next": ["plan"] },
+
+    { "id": "dr", "type": "deep-research", "label": "Deep research · verbosity levers", "status": "done",
+      "branch_of": "research", "tool": "perplexity",
+      "user_input": "we could do some research using perplexity if it helps us figure this out",
+      "note": "Perplexity Sonar deep-research on what reliably cuts LLM OUTPUT verbosity. Ranked: (1) default-omit + pull-based, (2) few-shot lean exemplars, (3) coarse human-unit budgets, (4) imperative 'be terse' = WEAKEST (RLHF verbosity bias + instruction-overload). Confirms the lever hypothesis; appended as an Evidence addendum to research-dossier.md.",
+      "artifacts": ["research-dossier.md"], "next": ["plan"] },
+
+    { "id": "plan", "type": "plan", "label": "Plan (spec + impl)", "status": "done",
+      "command": "/the-flow 1b plan", "ran_at": "2026-06-17T22:35:31Z",
+      "user_input": "move on to plan please then validate",
+      "note": "Atomic pass -> flow-elegance-layer-plan.md: Simple, CS-2, Status READY, 1 phase, 7 tasks, gates 4 PASS/3 N/A. validate-v2 auto-ran (3 thesis-aware agents): PASS-WITH-FIXES, thesis verdict 'Yes'; fixes folded in (T002 anchor, exec-log in T006, artifact-exemplar deferred, precise edit anchors). DOGFOOD held: 1 phase, tables over prose.",
+      "artifacts": ["flow-elegance-layer-plan.md"], "next": ["p1"] },
+
+    { "id": "p1", "type": "phase", "phase": 1, "label": "Elegance edits (one Simple phase)", "status": "done",
+      "command": "/the-flow 6 implement --plan docs/plans/034-flow-elegance-layer/flow-elegance-layer-plan.md", "ran_at": "2026-06-17T23:07:09Z",
+      "user_input": "compact, then /the-flow implement",
+      "note": "7 inline tasks T001-T007 done. ONE referenced doctrine (00-routing § Artifact Elegance) + coach.md output-cutting narration (per-facet budget, pull-based summons recap/options/why/details/warnings, gated why-beat, silence-is-clean, one few-shot lean digest) + 4 stage build-contract citations (60-implement also exec-log lean rule). check-flow CLEAN (L1 0 leaks, L3 no command literals); per-file diff confirmed no must-see removed, no new tier-4 imperative, coach.md:119 unchanged. Manual/best-effort testing per plan. DOGFOOD held: tables over prose, lean log.",
+      "artifacts": ["execution.log.md", "skills/SDD/the-flow/references/00-routing.md", "skills/SDD/the-flow/references/coach.md"], "next": ["review"] },
+
+    { "id": "review", "type": "review", "label": "Review (one phase) — APPROVE", "status": "done",
+      "command": "/the-flow 7 review --plan docs/plans/034-flow-elegance-layer/flow-elegance-layer-plan.md", "ran_at": "2026-06-18T20:30:00Z",
+      "verdict": "APPROVE",
+      "note": "Stage-7 review: APPROVE, 0 HIGH/CRITICAL, no fix-tasks file. 3 non-blocking notes — F001 (MED) AC-04 per-state scripts still model why-by-default (corroborated by validate-v2's Effectiveness agent; recommend a one-line bridging-rule fix pre-redeploy), F002 (MED) redeploy/seam-eyeball merge-gated, F003 (LOW) check-flow transcript — F003 closed in execution.log.md. A parallel validate-v2 pass (4 agents) also returned VALIDATED, 0 defects after adjudication.",
+      "artifacts": ["reviews/review.md", "reviews/_computed.diff"], "next": ["merge"] },
+
+    { "id": "merge", "type": "merge", "label": "Merge — N/A (on main)", "status": "done",
+      "note": "No branch to merge — work lands directly on main. Flow complete. Commit/push remains the user's outstanding call (git read-only until asked).",
+      "next": [] }
+  ]
+}

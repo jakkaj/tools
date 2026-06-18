@@ -204,6 +204,18 @@ When a stage needs domain context: read `## Target Domains` from the spec → `#
 
 Every stage module is a deep-think task — reason as thoroughly as the stage warrants; the dispatch declares this once so modules don't repeat it.
 
+### Artifact Elegance
+
+Everything a stage emits — plans, task tables, execution logs, reviews, narration — is **output**, the expensive token. Emit the fewest that carry the meaning. This block is the single home for the rule; stage modules **cite** it (one line each) rather than restating it.
+
+**The seven-function line test.** A line earns its place only if it does at least one of these — otherwise cut it: ① changes a decision · ② constrains an implementation · ③ proves a behaviour · ④ exposes a risk · ⑤ records evidence · ⑥ preserves intent · ⑦ enables the next action.
+
+**Build contract, not thesis.** Prefer tables, schemas, and diffs over prose; *state* the contract, don't argue for it. One worked example beats a paragraph describing one. "Fewest phases that hold" (the `plan` verb's § Phase Design Principles) is the same principle applied to structure — folding work together beats minting ceremony.
+
+**Link, don't copy.** When an upstream artifact already holds the detail, reference it (path / finding-id / AC-id) rather than restating it — a downstream artifact carries decisions and the links that prove them, not a re-summary of its sources.
+
+**Safety floor — never compress these.** Default-omit applies to **decorative prose only**. Must-see fields are always shown, verbatim and in full: gate verdicts, `**Status**`, the `PROCEED`/`ABORT` line, file paths, `⚠️ GAP` / failed-gate callouts, and any structured alarm a stage is told to lift. When unsure whether a line is decorative or must-see, keep it.
+
 ### Harness router posture
 
 Harness seams are **flow-owned** — the where/when lives in [`harness-seams.md`](./harness-seams.md), the edges in the Graph above, the *what* in the external `/eng-harness-flow` router. **Sub-skills carry no harness invocations or concepts** (they are harness-blind verbs); the engine owns every seam as a print-then-offer beat at the edge. Best-effort, advisory, never gates/blocks/scores; one calm warning when not installed; envelope verdicts narrated verbatim (`healthy / SLOW / UNHEALTHY / UNAVAILABLE`); children private and never named. Full detail: `harness-seams.md`.

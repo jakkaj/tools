@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "slug": "flow-elegance-layer",
+  "plan_dir": "docs/plans/034-flow-elegance-layer",
+  "mode": "Simple",
+  "current_stage": "complete",
+  "pending_command": "",
+  "intent": "Add the lean elegance layer to the-flow — artifact build-contract framing + tight narration/Seam Digest + summon commands — per the lean subset of research-dossier.md (not the maximalist doc).",
+  "milestones_total": 5,
+  "milestones_done": 5,
+  "last_checkpoint_at": "2026-06-18T21:00:00Z",
+  "compacted_seams": [],
+  "status": "complete",
+  "completion_note": "Merge N/A — work committed directly to main (no branch). Implemented, validated (validate-v2 clean), reviewed (APPROVE), F001/F003 closed, redeployed from source twice (live). Outstanding: commit/push — user's call, git read-only until asked."
+}

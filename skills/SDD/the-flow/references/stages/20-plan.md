@@ -23,6 +23,8 @@ This verb replaces the legacy two-stage *specify → architect* hop and the olde
 
 > Complexity: CS 1–5 only — no time estimates (rubric: `references/00-routing.md` § Shared conventions).
 
+> Elegance: this document is **output** — build contract, not thesis. Tables, task rows, and gate verdicts over prose; fewest phases that hold (§ Phase Design Principles, below). Full doctrine + the seven-function line test: `references/00-routing.md` § Shared conventions.
+
 ```md
 User input:
 
