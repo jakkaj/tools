@@ -28,7 +28,7 @@ Ask the intent (coach.md `start` narration). After the user answers:
 3. `mkdir -p docs/plans/<ord>-<slug>/`.
 4. **Write the verbatim ask** to `original-ask.md` (shape below) and mirror it into `state.intent`.
 5. Write `.the-flow-state.json` (temp file + atomic rename).
-6. Initialise the flight plan **via the CLI** (never hand-write it): `harness flow create flight-plan --slug <slug> --path docs/plans/<ord>-<slug>/the-flow.json --schema "<skill base>/references/flight-plan.schema.json" --bare`, then seed the spine with `harness flow add-node` — a `research` node (status `in_progress`) plus `assumed` `plan`/`merge` nodes for the initial shape — and render with `harness flow render --path docs/plans/<ord>-<slug>/the-flow.json --output docs/plans/<ord>-<slug>/the-flow.md`. (`<skill base>` = this skill's base dir, e.g. `~/.claude/skills/the-flow`; the flight-plan schema ships in `references/` and is supplied via `--schema`, per § Flight plan.)
+6. Initialise the flight plan **via the CLI** (never hand-write it): `harness flow create flight-plan --slug <slug> --path docs/plans/<ord>-<slug>/the-flow.json --schema "<skill base>/references/flight-plan.schema.json" --bare --agent the-flow` (the `--agent the-flow` is what titles the rail `[the-flow]`; without it the rail shows the slug), then seed the spine with `harness flow add-node` — a `research` node (status `in_progress`) plus `assumed` `plan`/`merge` nodes for the initial shape — set the initial position with `harness flow nav set --path docs/plans/<ord>-<slug>/the-flow.json --now research`, and render with `harness flow render --path docs/plans/<ord>-<slug>/the-flow.json --output docs/plans/<ord>-<slug>/the-flow.md`. (`<skill base>` = this skill's base dir, e.g. `~/.claude/skills/the-flow`; the flight-plan schema ships in `references/` and is supplied via `--schema`, per § Flight plan.)
 7. Print-and-offer the **explore** edge (research-worthy intent) or the **plan** edge (clear ask) — the command is rendered from the dispatch's Command grammar + Registry, with the intent as the verb's argument.
 
 Stages 10/20 both **reuse** an existing `docs/plans/*-<slug>/` folder by slug — creating it first is safe.
@@ -160,23 +160,23 @@ The four fire-hooks the flow wires — and which Graph edge each rides — are t
 
 Every run maintains a **flight plan**: `docs/plans/<ord>-<slug>/the-flow.json` (canonical DAG) and `the-flow.md` (the vertical mermaid, **generated from** the JSON by `harness flow render`). The one-line rail (coach.md) is the JSON's glanceable twin.
 
-> **Prerequisite**: guided mode drives this flight plan **only** through `harness flow` (plan 024). Probe a capable CLI before the first mutation; absent/too-old → stop with "run `harness update`" (SKILL.md § Prerequisite). No harness *adoption* is needed — the flight-plan schema ships with this skill and is supplied via `--schema`.
+> **Prerequisite**: guided mode drives this flight plan **only** through `harness flow` (plan 024). Probe a capable CLI before the first mutation; absent/too-old → stop with "run `harness update`" (SKILL.md § Prerequisite). No harness *adoption* is needed — the flight-plan schema ships with this skill and is supplied via `--schema`. **Load [`flight-plan-ops.md`](./flight-plan-ops.md) before the first flight-plan mutation of a session** — it carries the nav model, the spine-vs-excursion rule, the verb flags, and the gotchas. The cadence below is the routing-level *when*; that file is the *how*.
 
 - **Schema**: [`flight-plan.schema.json`](./flight-plan.schema.json) — the CLI **descriptor** (`kind` + `statuses[]` + `nodeTypes[]`) the-flow ships and supplies to `harness flow` via `--schema`; the shared-core node/comment/root field shape is bundled in the CLI (no second copy here).
 - **Worked example to copy**: [`flight-plan.template.json`](./flight-plan.template.json) + [`flight-plan.template.md`](./flight-plan.template.md).
 
 **CLI-driven cadence (the `harness flow` CLI is the generator — you NEVER hand-edit `the-flow.json`/`.md`).** The CLI built in plan 024 owns mutation, the edge-algebra, the embedded event log, and deterministic render; guided mode is a **consumer** of it. Let `FLOW = docs/plans/<ord>-<slug>/the-flow.json`. Every guided turn, after deciding the narration, drive the flow with `harness flow` calls, threading each ok Envelope's `data.path` back into the next `--path`:
 
-1. **Mutate for what just happened** (one call per change, `--path FLOW`):
-   - a step finished → `harness flow status --node <id> --to done` (fires `status-changed`, stamps `ran_at`); `→ blocked` / `→ in_progress` likewise;
-   - the user's **verbatim** words → `harness flow set-node --node <id> --user-input "<verbatim>"`;
-   - what was done / produced → `harness flow set-node --node <id> --note "<1–2 lines>"` (+ `--label` if it changed);
-   - a narrative / decision note → `harness flow comment --node <id> --text "<…>" --source agent --kind <note|decision|warning|validation> [--refs <paths>]`;
-   - advance → `harness flow cursor --to <id>` (move) or `--recommend <id>` (advisory, no event).
-2. **Reveal/refine the future** — `harness flow insert-node` owns every edge splice (no hand edge-recomputation):
-   - at the `plan` pass, reveal each phase → `insert-node --id <pN> --type phase --label "<…>" --status known --after <prev>` (N inherits the predecessor's out-edges), then recompute `milestones_total`;
-   - a conditional fix-loop / workshop / backpressure excursion → `insert-node --id <id> --type <fix-loop|workshop|backpressure> --branch-of <node> [--rejoin <node>]` (the branch point's `next` is unchanged);
-   - a plain new node needing no splice → `harness flow add-node`.
+1. **Mutate for what just happened** (one call per change, `--path FLOW`) — exact flags: [`flight-plan-ops.md`](./flight-plan-ops.md) § 3:
+   - a step finished → `status --to done` (fires `status-changed`, stamps `ran_at`); `→ blocked` / `→ in_progress` likewise;
+   - the user's **verbatim** words → `set-node --user-input "<verbatim>"`;
+   - what was done / produced → `set-node --note "<1–2 lines>"` (+ `--label` if it changed);
+   - a narrative / decision note → `comment --kind <note|decision|warning|validation>`;
+   - advance → `nav set --now <id>` (move; fires cursor-moved) / `--next <id>` (advisory) / `--clear-next`. (§ 2)
+2. **Reveal/refine the future** — `insert-node` owns every edge splice, no hand edge-recomputation ([`flight-plan-ops.md`](./flight-plan-ops.md) § 4 spine-vs-excursion, § 6 build-order):
+   - at the `plan` pass, reveal each phase → `insert-node --type phase --after <prev>` (inherits the predecessor's out-edges), then recompute `milestones_total`;
+   - a conditional fix-loop / workshop / backpressure excursion → `insert-node --branch-of <node> [--rejoin <node>]` (the branch point's `next` is unchanged) — **workshops ALWAYS `--branch-of`, never on the spine**;
+   - a plain new node needing no splice → `add-node`.
 3. **Render** → `harness flow render --path FLOW --output docs/plans/<ord>-<slug>/the-flow.md`, then print the rail (coach.md owns the rail; the CLI owns the `.md`).
 4. **Integrity is the CLI's, not yours** — `insert-node` DAG-re-checks before writing (`E309`, nothing written on a cycle/orphan); `create` validated the flight-plan overlay (statuses + nodeTypes) against the shipped `--schema`. The mutation verbs enforce only node existence (`E305`) + edge integrity — they do **not** re-check the overlay vocabulary (the flight-plan schema is supplied via `--schema`, not bundled), so the engine is responsible for using the correct node types/statuses (it owns the Graph); the renderer's unknown-type fallback never crashes. No hand self-check; no hand JSON edits.
 
@@ -186,7 +186,7 @@ Every run maintains a **flight plan**: `docs/plans/<ord>-<slug>/the-flow.json` (
 
 > **Invariant**: never hand-edit `the-flow.md` — it is **always** regenerated from `the-flow.json` by `harness flow render`. And never hand-edit `the-flow.json` either — mutate it only through `harness flow` calls (§ CLI-driven cadence above).
 
-**Legacy note (clean break).** Pre-migration flows — hand-cranked `the-flow.json` with no `provenance` block — are **not** migrated: the CLI returns `E308` (legacy-format) on read. That is an honest stop, not a bug; re-create with `harness flow create` (see SKILL.md § capability precheck).
+**Legacy note (clean break).** Pre-migration flows — hand-cranked `the-flow.json` with no `provenance` block — are **not** migrated: the CLI returns `E308` (legacy-format) on read. That is an honest stop, not a bug; re-create with `harness flow create … --agent the-flow` (see SKILL.md § capability precheck).
 
 ---
 

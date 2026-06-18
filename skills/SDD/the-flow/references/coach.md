@@ -321,7 +321,7 @@ When invoked with **no active state** but the resolved plan folder **already hol
 
 **Mode / rail**: read `**Mode**` from the plan's top-metadata block. No plan yet → `mode: "unknown"`, `milestones_total` stays the 6-milestone estimate until the `plan` pass recomputes it.
 
-**Back-fill the flight plan via the CLI** (never hand-write `the-flow.json`): `harness flow create flight-plan --slug <slug> --path docs/plans/<ord>-<slug>/the-flow.json --schema "<skill base>/references/flight-plan.schema.json" --bare`, then `add-node` each inferred node and `status`/`set-node` it to its back-filled state — completed → `status --to done` (the CLI stamps `ran_at`; for adoption that's the back-fill time, best-effort), `user_input` omitted or `set-node --note "reconstructed"`; remaining nodes → `known`/`assumed` per the taxonomy. Then `harness flow render --path … --output the-flow.md`. (`<skill base>` = this skill's base dir.)
+**Back-fill the flight plan via the CLI** (never hand-write `the-flow.json`): `harness flow create flight-plan --slug <slug> --path docs/plans/<ord>-<slug>/the-flow.json --schema "<skill base>/references/flight-plan.schema.json" --bare --agent the-flow`, then `add-node` each inferred node and `status`/`set-node` it to its back-filled state — completed → `status --to done` (the CLI stamps `ran_at`; for adoption that's the back-fill time, best-effort), `user_input` omitted or `set-node --note "reconstructed"`; remaining nodes → `known`/`assumed` per the taxonomy. Then `harness flow render --path … --output the-flow.md`. (`<skill base>` = this skill's base dir.)
 
 **Safety — never clobber**:
 - Never re-run a stage or touch `*-spec.md` / `*-plan.md` / `tasks/` / `reviews/`. Adoption writes **only** the-flow bookkeeping files.
