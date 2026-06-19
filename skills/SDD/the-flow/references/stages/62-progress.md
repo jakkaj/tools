@@ -70,6 +70,7 @@ $ARGUMENTS
    - Flag if `docs/domains/domain-map.md` needs updating (new contracts, new edges, new domains)
    - If contract changes recorded → flag "domain.md § Concepts update needed for <domain>"
    - If new domain created → flag "domain.md § Concepts creation needed for <domain>"
+   - If the task was **skipped/blocked**, or left a `Deferred`/`Noteworthy` Discoveries row (a punted task, unmet AC, a `TODO`/`FIXME`/`HACK`, or an autonomous call a human might have made differently) → preserve that tag in the execution-log entry so the phase-end and ship rollups can read it. Recording, never gating.
 
 7) (Retired) Plan-level flight-plan update — this duty left SDD entirely.
    Progress lives in the task table and the execution log (Steps 4–5); the

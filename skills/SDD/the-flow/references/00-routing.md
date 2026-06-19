@@ -10,7 +10,7 @@ This file owns: entry paths, the state contract, **state-write ownership**, the 
 
 On guided invocation (`/the-flow` with no args, or `/the-flow <slug>` / `/the-flow <ord>-<slug>`):
 
-1. **Glob** `docs/plans/*/the-flow.json`; for each, read `nav.bag.status == "active"` (via `harness flow nav show`). A flow with only a legacy `.the-flow-state.json` and no `the-flow.json` → treat as active and **backfill on resume** (§ Resume).
+1. **Glob** `docs/plans/*/the-flow.json`; for each, read `nav` via `harness flow nav show` and treat the flow as **active** when `nav.bag.status == "active"` **OR** — for live flows that predate the bag — `bag.status` is absent **AND** `nav.now` is a real non-seed node **AND** its terminal node isn't done. (This is the **same active signal §6 uses**; keying on `bag.status` alone would miss every pre-bag flow — e.g. a post-027 flow whose position is canonical in `nav` but never carried a `bag`.) A flow with only a legacy `.the-flow-state.json` and no `the-flow.json` → treat as active and **backfill on resume** (§ Resume).
    - An explicit `<slug>` / `<ord>-<slug>` arg → resume that one (skip the scan).
 2. **Branch on the result**:
    - **Exactly 1 active** → **RESUME** (below).
@@ -151,9 +151,9 @@ Where each artifact hides its **structured alarms** — lift any present, verbat
 | `awaiting-1b` | `**Status**: DRAFT`; Gate Matrix **FAIL** rows; inline `⚠️ GAP:` markers; `## Unresolved Gaps` table; Deviation Ledger entries; remaining `[NEEDS CLARIFICATION]` markers; low CS **Confidence**; unanswered Open Questions |
 | `awaiting-backpressure` | **ABSENT** / **BUILDABLE** sensors (the eyeball-gaps); a recommended **Phase 0: Establish Backpressure** |
 | `awaiting-5` | tasks with no/weak Done-When; a phase carrying a flagged Key Finding |
-| `awaiting-6` | acceptance criteria **not met**; blocked tasks; debt/gotchas in the Discoveries table |
+| `awaiting-6` | acceptance criteria **not met**; skipped/blocked tasks; `Deferred`/`Noteworthy` Discoveries rows; new `TODO`/`FIXME`/`HACK` in the phase diff; deferred companion findings — the **Deferred & Noteworthy** digest the implement verb emits at phase end |
 | `awaiting-7` | **CRITICAL/HIGH** findings; any verdict short of clean |
-| `awaiting-8` | failing CI checks; push/PR-open blockers; base-divergence (reconcile) warnings |
+| `awaiting-8` | failing CI checks; push/PR-open blockers; base-divergence (reconcile) warnings; the whole-plan **Deferred & Noteworthy** rollup the ship verb computes — everything punted across all phases that's about to go out |
 
 ---
 

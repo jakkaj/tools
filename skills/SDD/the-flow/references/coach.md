@@ -156,6 +156,7 @@ Same decision-relevant content, ~half the tokens, the *why* one `why` away.
 | `why` | the reasoning behind the recommended step (the gated "why this matters", on demand) |
 | `details` | the long-form insight + must-see fields behind the digest's one-liners |
 | `warnings` | the full Flag-beat scan — every must-see field, verbatim |
+| `deferred` | the full **Deferred & Noteworthy** rollup at a build seam — every punted task, unmet AC, open `TODO`/`FIXME`, and autonomous call, verbatim |
 
 Default to the lean digest; let the user pull the rest.
 
@@ -289,7 +290,8 @@ USER types:  /compact       ← CLI built-in; wipes conversation context. the-fl
         ▼
 USER types:  /the-flow      ← no args; conversation memory is gone.
         ▼
-the-flow:  glob docs/plans/*/the-flow.json → harness flow nav show (bag.status:active)
+the-flow:  glob docs/plans/*/the-flow.json → harness flow nav show
+           (active = bag.status:active OR — pre-bag flows — bag.status absent & nav.now real & terminal not-done; the §6 signal)
            → finds the flow @ nav.now
            → discover the stage artifact (exists, unchanged since checkpoint)
            → NOT a new artifact ⇒ idempotent: re-print the pending guidance, do not advance

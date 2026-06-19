@@ -11,7 +11,7 @@
 
 **Flags**: `--plan "<abs path to docs/plans/<ordinal>-<slug>/>"` (optional; auto-detect from cwd) · `--base "<branch>"` (optional; PR base, default = repo default branch) · `[--no-watch]` (optional; open the PR but skip the CI-check watch) · `[--draft]` (optional; open the PR as a draft) · `[--watch-cap "<minutes>"]` (optional; bound the check-watch, default 20).
 
-**Produces**: a pushed branch; an opened (or reused) PR behind an explicit confirm; a ship report at `${PLAN_DIR}/ship/${DATE}/ship-report.md` (PR URL, base, check results, any failing checks + their details link, resume note); terminal summary = PR URL + check status + (on red) the fix-loop offer. An actual merge is produced **only** on a separate typed `PROCEED`.
+**Produces**: a pushed branch; an opened (or reused) PR behind an explicit confirm; a ship report at `${PLAN_DIR}/ship/${DATE}/ship-report.md` (PR URL, base, check results, any failing checks + their details link, a whole-plan **Deferred & Noteworthy** rollup, resume note); terminal summary = PR URL + check status + (on red) the fix-loop offer + (when non-empty) the deferred-items count. An actual merge is produced **only** on a separate typed `PROCEED`.
 
 **Side effects**: outward-facing — `git push` (confirm #1), `gh pr create` (confirm #2), and an **optional** `gh pr merge` / `git merge` **only** on typed `PROCEED`. Each is public; **never** fired on a generic "yes". No source files are modified.
 
@@ -56,7 +56,7 @@ $ARGUMENTS
    a) **Nothing to ship as a PR** — detect and degrade to a printed instruction (AC-10):
       - `BRANCH` is empty (detached HEAD), OR
       - `BRANCH == BASE` (on the default branch — the common "main-only" case), OR
-      - no commits ahead of base: `git rev-list --count ${BASE}..HEAD` is `0` (prefer `origin/${BASE}` after `git fetch origin ${BASE}` so a stale local base doesn't mask un-pushed commits — keep this consistent with the divergence probe in step 7)
+      - no commits ahead of base: `git rev-list --count ${BASE}..HEAD` is `0` (prefer `origin/${BASE}` after `git fetch origin ${BASE}` so a stale local base doesn't mask un-pushed commits — keep this consistent with the divergence probe in step 8)
       → print, then stop the PR path:
       ```
       ⚠️ Nothing to open a PR from: you're on "${BRANCH:-detached HEAD}" with no commits ahead of ${BASE}.
@@ -94,15 +94,31 @@ $ARGUMENTS
    body = the plan's `## Business Specification` § Summary (or the plan summary) + a trailing
    "🤖 Generated with the SDD flow" line. Quote the plan, don't invent scope.
 
-4) Confirm gate #1 — PUSH (its own gate; AC-04). Print the exact command, then ask to proceed:
+4) Build the **Deferred & Noteworthy** rollup (read-time, whole-plan; informs the outbound gates; never a gate):
+
+   Aggregate what's about to ship that no human explicitly signed off — across every phase of the plan:
+   - `Deferred` / `Noteworthy` rows from each phase's `## Discoveries & Learnings` table (execution logs / tasks.md / plan)
+   - skipped / blocked tasks still open in the task table(s)
+   - acceptance criteria not yet met (plan `## Acceptance Criteria`)
+   - `TODO` / `FIXME` / `HACK` / `XXX` introduced in the shipped diff:
+     `git grep -nE 'TODO|FIXME|HACK|XXX' -- $(git diff --name-only origin/${BASE}..HEAD)` (best-effort; skip cleanly on error)
+   - deferred review / companion findings recorded in the execution log
+
+   This is a **read-time view** — no `DEFERRALS.md`, nothing persisted beyond the ship report. Empty across all
+   sources → record "none" (silence is the all-clear). It surfaces at the open-PR gate (step 6) and in the report;
+   it **never blocks** — the human ships with eyes open, not with a green light withheld.
+
+5) Confirm gate #1 — PUSH (its own gate; AC-04). Print the exact command, then ask to proceed:
    ```
    git push -u origin ${BRANCH}
    ```
    On a clear go-ahead → run it. (This confirm covers ONLY the push.)
 
-5) Confirm gate #2 — OPEN PR (separate, outward-facing; NEVER inherits the push "yes"; AC-04, AC-06):
+6) Confirm gate #2 — OPEN PR (separate, outward-facing; NEVER inherits the push "yes"; AC-04, AC-06):
+   - **Print the Deferred & Noteworthy rollup (step 4) first** when non-empty — so the reviewer sees what's in the
+     box *before* the PR opens. Informational; the confirm still only opens the PR.
    - **PR already exists** for the branch? `gh pr view --json url,state,number 2>/dev/null` returns one →
-     skip create, reuse it (capture URL + number), jump to step 6.
+     skip create, reuse it (capture URL + number), jump to step 7.
    - Else print the exact command, then ask to proceed:
      ```
      gh pr create --base ${BASE} --head ${BRANCH} \
@@ -110,7 +126,7 @@ $ARGUMENTS
      ```
      On a clear go-ahead → run it. Capture PR_URL + PR_NUMBER from the output.
 
-6) Watch CI checks (skip entirely if `--no-watch`) — BOUNDED (AC-05):
+7) Watch CI checks (skip entirely if `--no-watch`) — BOUNDED (AC-05):
    - Enumerate once: `gh pr checks ${PR_NUMBER}`.
      - **No checks reported** ("no checks reported on the … branch") → report "no CI configured for
        this PR", write the report, STOP (this is success, not failure).
@@ -125,7 +141,7 @@ $ARGUMENTS
      - **still pending at the cap** → report "checks still running after ${cap}m — not blocking;
        re-check with `gh pr checks ${PR_NUMBER}`", STOP.
 
-7) Optional merge — NEVER automatic; present two gated paths (AC-04):
+8) Optional merge — NEVER automatic; present two gated paths (AC-04):
    - **Platform auto-merge** (preferred — lets the platform merge when checks pass + approvals land),
      behind a confirm:
      ```
@@ -141,7 +157,7 @@ $ARGUMENTS
      do NOT attempt a local merge here. Report the divergence and hand off to the upstream-reconcile
      excursion (the bundling flow offers it). All handoff context is git-derived.
 
-8) Write the ship report + terminal summary (templates below).
+9) Write the ship report + terminal summary (templates below).
 
 ## Ship Report Template
 
@@ -173,6 +189,16 @@ Write to `${PLAN_DIR}/ship/${DATE}/ship-report.md`:
 - Base: ${BASE} (${default branch|--base override})
 - Reviewers: ${CODEOWNERS auto-requested|none}
 
+## Deferred & Noteworthy
+
+_Everything punted across the build that's about to ship — surfaced so the go-decision is informed. Never a blocker._
+
+| Kind | Item | Where | Reason / note |
+|------|------|-------|---------------|
+| Deferred / Noteworthy | ${item} | ${phase / file:line} | ${why} |
+
+(none → "Nothing deferred — all acceptance criteria met, no open markers.")
+
 ## Resume
 
 - Merge not yet done → ${platform auto-merge armed | awaiting typed PROCEED | base diverged → reconcile}
@@ -186,6 +212,7 @@ Write to `${PLAN_DIR}/ship/${DATE}/ship-report.md`:
    Branch ${BRANCH} → ${BASE}
    Checks: ${all green | N failing | no CI | still running}
    Report: ${PLAN_DIR}/ship/${DATE}/ship-report.md
+   ${deferred: "⚠️ ${N} deferred/noteworthy items rolled up in the report — review before merge." }
    ${on red: "Red check — fixes go back through implement, then re-run ship." }
    ${merge: "Merge is optional — auto-merge armed / type PROCEED to merge now / base diverged → reconcile." }
 ```

@@ -29,6 +29,8 @@ Throughout implementation, capture discoveries in:
 
 Log when you encounter: something unexpected, needed research, hit a trouble spot, found a gotcha, made a decision, introduced debt, or gained an insight.
 
+**Tag what a human must see before it ships.** Mark a Discoveries row `Deferred` when something was *consciously punted* — a skipped/blocked task, an unmet acceptance criterion, scope cut to a follow-up, a `TODO`/`FIXME`/`HACK` left in the code — and `Noteworthy` when you made a call a human might have made differently — an autonomous decision, a workaround, a new dependency, or a file touched outside the plan's Domain Manifest. The tag is the only new thing (no new file); the phase-end summary (step 5) and the downstream ship rollup both read these rows. It **never blocks** — it surfaces, so the go-decision is informed.
+
 
 ## 🛑 MANDATORY: UPDATE PROGRESS AFTER EVERY TASK — NO EXCEPTIONS
 
@@ -185,6 +187,7 @@ $ARGUMENTS
    - Evidence (test output, verification results)
    - Domain files updated (domain.md changes listed)
    - Final status mapped to acceptance criteria
+   - **Deferred & Noteworthy (this phase)** — a short, scannable digest of the `Deferred`/`Noteworthy` Discoveries rows + any skipped/blocked tasks, unmet ACs, and new `TODO`/`FIXME`/`HACK` markers in this phase's diff. Empty → omit it (silence is the all-clear). Emit it as a structured block so a reviewer can lift it verbatim; never a gate.
    - Suggested commit message
 
 6) For each completed task, follow the **progress** sub-skill's protocol (the
