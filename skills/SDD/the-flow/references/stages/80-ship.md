@@ -56,7 +56,7 @@ $ARGUMENTS
    a) **Nothing to ship as a PR** — detect and degrade to a printed instruction (AC-10):
       - `BRANCH` is empty (detached HEAD), OR
       - `BRANCH == BASE` (on the default branch — the common "main-only" case), OR
-      - no commits ahead of base: `git rev-list --count ${BASE}..HEAD` is `0`
+      - no commits ahead of base: `git rev-list --count ${BASE}..HEAD` is `0` (prefer `origin/${BASE}` after `git fetch origin ${BASE}` so a stale local base doesn't mask un-pushed commits — keep this consistent with the divergence probe in step 7)
       → print, then stop the PR path:
       ```
       ⚠️ Nothing to open a PR from: you're on "${BRANCH:-detached HEAD}" with no commits ahead of ${BASE}.
