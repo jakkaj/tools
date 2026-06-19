@@ -3,7 +3,7 @@
 
 **Kind**: flight-plan · **Now**: p3 · **Next**: p4 · **Nodes**: 17 · **Events**: 0
 
-**Rail**: ◆─◆─[ ◆─◆─◐─◇─◇─◇ ]─◇  Research · Plan (spec + impl) ─ [ Monorepo Foundation · Shared Package · Next.js + Clean Arch · CLI Package · MCP Server · Docs & Polish ] ─ Merge
+**Rail**: ◆─◆─[ ◆─◆─◐─◇─◇─◇─◇ ]  ◆ Research · ◆ Plan (spec + impl) · [ ◆ Monorepo Foundation · ◆ Shared Package · ◐ Next.js + Clean Arch · ◇ CLI Package · ◇ MCP Server · ◇ Docs & Polish · ◇ Ship ]
 
 ```mermaid
 flowchart TD
@@ -15,7 +15,7 @@ flowchart TD
     p4["CLI Package"]:::known
     p5["MCP Server"]:::known
     p6["Docs & Polish"]:::known
-    merge["Merge"]:::known
+    ship["Ship"]:::known
 
     research --> plan
     plan --> hb
@@ -25,8 +25,8 @@ flowchart TD
     p3 --> p4
     p4 --> p5
     p5 --> p6
-    p6 --> merge
-    merge --> hh
+    p6 --> ship
+    ship --> hh
 
     dr["Deep research x3 📄2"]:::done
     ws1["Workshop 1 · clean-arch boundaries 📄1"]:::done
@@ -78,10 +78,11 @@ flowchart TD
     classDef decision fill:#FFF3E0,stroke:#FB8C00,stroke-dasharray:2 2;
     classDef companion fill:#D1C4E9,stroke:#5E35B1;
     classDef worker fill:#B2DFDB,stroke:#00897B;
+    classDef chore fill:#E0F2F1,stroke:#00897B,stroke-dasharray:3 2;
     classDef unknown fill:#FAFAFA,stroke:#BDBDBD,stroke-dasharray:1 4;
 ```
 
-**Legend**: 🟩 done · 🟧 in-progress · 🟥 blocked · 🟦 known (designed) · ⬜ assumed (speculative) · 🔶 decision · 🗣 user input · 🟪 harness loop · 🤖 companion · 🛠 worker.
+**Legend**: 🟩 done · 🟧 in-progress · 🟥 blocked · 🟦 known (designed) · ⬜ assumed (speculative) · 🔶 decision · 🗣 user input · 🟪 harness loop · 🤖 companion · 🛠 worker · 🧰 chore (upkeep).
 
 ## Node log
 

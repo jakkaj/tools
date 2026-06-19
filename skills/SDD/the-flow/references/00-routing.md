@@ -10,11 +10,11 @@ This file owns: entry paths, the state contract, **state-write ownership**, the 
 
 On guided invocation (`/the-flow` with no args, or `/the-flow <slug>` / `/the-flow <ord>-<slug>`):
 
-1. **Glob** `docs/plans/*/.the-flow-state.json` where `status == "active"`.
+1. **Glob** `docs/plans/*/the-flow.json`; for each, read `nav.bag.status == "active"` (via `harness flow nav show`). A flow with only a legacy `.the-flow-state.json` and no `the-flow.json` → treat as active and **backfill on resume** (§ Resume).
    - An explicit `<slug>` / `<ord>-<slug>` arg → resume that one (skip the scan).
 2. **Branch on the result**:
    - **Exactly 1 active** → **RESUME** (below).
-   - **>1 active** → list them (slug + `current_stage`) and ask which to resume; offer "start a new one".
+   - **>1 active** → list them (slug + `nav.now`) and ask which to resume; offer "start a new one".
    - **0 active**:
      - Target plan folder **already holds artifacts** (`*-plan.md`, legacy `*-spec.md`, `tasks/phase-*/`, `reviews/`) → **ADOPT** (see [`coach.md`](./coach.md) § Adoption contract).
      - Else → **FRESH START**.
@@ -26,9 +26,9 @@ Ask the intent (coach.md `start` narration). After the user answers:
 1. Allocate the ordinal via `plan-ordinal` (alias `jk-po`); fall back to a local `docs/plans/` scan if unavailable.
 2. **Derive the slug** = kebab-case of the intent's first ~3–5 significant words (drop filler).
 3. `mkdir -p docs/plans/<ord>-<slug>/`.
-4. **Write the verbatim ask** to `original-ask.md` (shape below) and mirror it into `state.intent`.
-5. Write `.the-flow-state.json` (temp file + atomic rename).
-6. Initialise the flight plan **via the CLI** (never hand-write it): `harness flow create flight-plan --slug <slug> --path docs/plans/<ord>-<slug>/the-flow.json --schema "<skill base>/references/flight-plan.schema.json" --bare --agent the-flow` (the `--agent the-flow` is what titles the rail `[the-flow]`; without it the rail shows the slug), then seed the spine with `harness flow add-node` — a `research` node (status `in_progress`) plus `assumed` `plan`/`merge` nodes for the initial shape — set the initial position with `harness flow nav set --path docs/plans/<ord>-<slug>/the-flow.json --now research`, and render with `harness flow render --path docs/plans/<ord>-<slug>/the-flow.json --output docs/plans/<ord>-<slug>/the-flow.md`. (`<skill base>` = this skill's base dir, e.g. `~/.claude/skills/the-flow`; the flight-plan schema ships in `references/` and is supplied via `--schema`, per § Flight plan.)
+4. **Write the verbatim ask** to `original-ask.md` (shape below) and mirror it into `nav.intent` (set in step 6).
+5. Initialise the flight plan **via the CLI** (never hand-write it): `harness flow create flight-plan --slug <slug> --path docs/plans/<ord>-<slug>/the-flow.json --schema "<skill base>/references/flight-plan.schema.json" --bare --agent the-flow` (the `--agent the-flow` is what titles the rail `[the-flow]`; without it the rail shows the slug), then seed the spine with `harness flow add-node` — a `research` node (status `in_progress`) plus `assumed` `plan`/`ship` nodes for the initial shape (add the `ship` node with `--zone postflight` so it bands after the flight zone — `flight-plan-ops.md` § Zone bands) — and set the initial position with `harness flow nav set --path docs/plans/<ord>-<slug>/the-flow.json --now research`.
+6. Seed the **session state into the flight plan** (there is no separate state file): `harness flow nav set --path docs/plans/<ord>-<slug>/the-flow.json --intent "<the verbatim ask>"`, then `harness flow nav meta set --path docs/plans/<ord>-<slug>/the-flow.json mode <Simple|Full|unknown>` and `harness flow nav meta set --path docs/plans/<ord>-<slug>/the-flow.json status active` (the free-form `bag`). Then render: `harness flow render --path docs/plans/<ord>-<slug>/the-flow.json --output docs/plans/<ord>-<slug>/the-flow.md`. (`<skill base>` = this skill's base dir, e.g. `~/.claude/skills/the-flow`; the flight-plan schema ships in `references/` and is supplied via `--schema`, per § Flight plan.)
 7. Print-and-offer the **explore** edge (research-worthy intent) or the **plan** edge (clear ask) — the command is rendered from the dispatch's Command grammar + Registry, with the intent as the verb's argument.
 
 Stages 10/20 both **reuse** an existing `docs/plans/*-<slug>/` folder by slug — creating it first is safe.
@@ -44,47 +44,56 @@ Stages 10/20 both **reuse** an existing `docs/plans/*-<slug>/` folder by slug �
 
 ### Resume (exactly one active state)
 
-Read the state. Discover the artifact for `current_stage` (Graph below). Apply the **idempotency rule**, narrate (coach.md), then drive `the-flow.json`/`.md` via `harness flow` calls (§ Flight plan — the CLI is the generator; never hand-edit).
+Read position via `harness flow nav show` (+ node statuses) — **not** a state file. Discover the artifact for the current node (Graph below). Apply the **idempotency rule**, narrate (coach.md), then drive `the-flow.json`/`.md` via `harness flow` calls (§ Flight plan — the CLI is the generator; never hand-edit). On the **first** resume of a flow that still carries a legacy `.the-flow-state.json`, run the one-shot backfill below first.
 
-**Idempotency rule (every resume)**: discover the artifact for `current_stage` by existence at its expected path (newest if several, scoped by `last_checkpoint_at` mtime).
-- **Found** → narrate the stage's insight, persist the next stage + `pending_command`, print-and-offer the next command.
-- **Not found** → re-print `pending_command` **verbatim** and stop. **Do not advance.**
+**Idempotency rule (every resume)**: discover the artifact for the current node (`nav.now`) by existence at its expected path (newest if several, by mtime — the CLI stamps `ran_at`/`modified_at` on nodes).
+- **Found** → narrate the stage's insight, advance `nav` (`harness flow nav set --now`/`--next`), print-and-offer the next command (derived from `nav.next` + Registry).
+- **Not found** → re-print the pending command (derived from `nav.next` + Registry) **verbatim** and stop. **Do not advance.**
 
 (This artifact-discovery-by-existence pattern is what makes `/compact` a no-op for state.)
 
 **Legacy slugs**: a resumed `pending_command` may name a retired `plan-*` skill slug — translate it at read time via the dispatch's old-slug translation table (`../SKILL.md`). Never execute a retired slug; never guess an unmapped one.
 
----
+### One-shot resume backfill — legacy `.the-flow-state.json` → `nav`/`bag`
 
-## State contract — `.the-flow-state.json`
+**`nav` is authoritative; never clobber it.** Plan 027 already migrated in-flight flows' **position** into `nav`, so a live flow today carries a populated, canonical `nav` *and* (if old) a stale, disagreeing `.the-flow-state.json`. `nav` always wins; the legacy file is only ever *read* to recover session qualifiers `nav` doesn't yet have, then deleted. On the **first** resume of a flow:
 
-Lives at `docs/plans/<ord>-<slug>/.the-flow-state.json`. Self-cleans with the plan folder; one per flow.
-
-```json
-{
-  "schema_version": 1,
-  "slug": "the-flow",
-  "plan_dir": "docs/plans/026-the-flow",
-  "mode": "unknown",
-  "current_stage": "awaiting-1b",
-  "pending_command": "<the next runnable command — rendered via the dispatch's Command grammar + Registry at write time>",
-  "intent": "<the user's one-line answer to 'what do you want to build?'>",
-  "milestones_total": 6,
-  "milestones_done": 2,
-  "last_checkpoint_at": "2026-05-29T00:00:00Z",
-  "compacted_seams": [],
-  "status": "active"
-}
+```
+read nav via `harness flow nav show` (+ node statuses) and the-flow.json
+# nav is the source of truth for POSITION — never overwritten below.
+if nav.now is a real (non-seed) node:          # post-027 flows — the normal case
+      # position already canonical → backfill ONLY absent session bag:
+      if nav.bag.status absent → nav meta set status active   # ("complete" if the terminal node is done)
+      if nav.bag.mode   absent → nav meta set mode <from plan **Mode**>
+      if nav.intent     absent → nav set --intent "<from original-ask.md>"
+      delete the legacy .the-flow-state.json    # it is now superseded
+elif nav.now is empty / at the seed node:      # genuinely pre-nav flow
+      # do NOT lift current_stage→node from the file:
+      #   awaiting-<id> are Graph position markers, not node ids — there is no resolver.
+      derive position from ARTIFACTS via § Adoption (coach.md), then set nav.now from THAT.
+else:                                          # nothing yet → fresh / adopt per the entry paths above
 ```
 
-- `mode`: `"Simple" | "Full" | "unknown"` — read from the plan's top-metadata block, set during the atomic `plan` pass (Round-1 Workflow Mode / `--simple`).
-- `current_stage`: keyed on the step just issued (`awaiting-<id>`) — the Graph keys on it. Old `awaiting-1b`/`awaiting-3` both translate to the single `awaiting-1b` (§ Routing markers & read-time state translation).
-- `pending_command`: the next runnable command in **public grammar**, rendered via the dispatch's Command grammar + Registry **at write time** (slots are never stored in state); legacy values naming retired `plan-*` slugs are translated at read time (dispatch table) and rewritten in current grammar on the next state write.
-- `milestones_total`: macro-milestones for this run's mode (Full=6, Simple≈4); set during the `plan` pass — which recomputes the rail from the real phase count revealed in the implementation half — then stable.
-- `milestones_done`: completed macro-milestones → drives the rail fill.
-- `last_checkpoint_at`: captured via `date -u +%FT%TZ`; used for artifact-discovery-by-mtime.
+- **Idempotency signal = `nav.now` being a real non-seed node** (true for every live flow today), **not** `nav.bag.status` (some live flows lack a bag). A second resume is a no-op.
+- **The `current_stage`→node lift is dropped** — no sound resolver, and unnecessary because position already lives in `nav`.
+- **Deletion is the default, not optional**: a left-behind `.the-flow-state.json` with `status:active` is a resurrection hazard for any reader not yet repointed to `nav`.
 
-**Write method**: temp file + atomic rename (`.the-flow-state.json.tmp` → `.the-flow-state.json`). **Minimal by design** (KISS / no derived rollup state) — just enough to resume.
+---
+
+## State contract — the flight plan (`nav` + `bag`), no separate file
+
+All durable the-flow state lives in `docs/plans/<ord>-<slug>/the-flow.json`, written **only** by `harness flow`. There is **no `.the-flow-state.json`**. Position and session qualifiers live in `nav` (read via `harness flow nav show`):
+
+- `nav.now` — the current node id (the position truth). Replaces the old `current_stage`; `awaiting-<id>` is just a render of where `now` sits, never a stored field.
+- `nav.next` — advisory next node id. The **pending command is *derived*** from it (`nav.next` → Graph → Registry + Command grammar) at read time — never stored. The `--plan`/`--phase` flags derive from `plan_dir`/`slug` + the next-incomplete phase node.
+- `nav.intent` — the user's one-line answer to "what do you want to build?" (mirrors `original-ask.md`); set with `nav set --intent`.
+- `nav.bag` — the free-form, schema-free, shallow-merge qualifier bag (`harness flow nav meta set <k> <v>`):
+  - `bag.mode` — `"Simple" | "Full" | "unknown"`, read from the plan's top-metadata block at the `plan` pass.
+  - `bag.status` — `"active" | "complete"`; flips to `complete` at ship/merge. It is the active flag **and** the resume idempotency signal; when absent, the terminal node's status is a read-time fallback.
+  - `bag.compacted_seams` (and any other session qualifier) — as needed; the bag has no schema.
+- **Rail fill is *derived*, never stored** — `harness flow rail` computes the pips from live node status + zones (no `milestones_total`/`milestones_done` counters). Node `ran_at`/`modified_at` stamps replace `last_checkpoint_at` for artifact-discovery-by-mtime.
+
+**Write method**: `harness flow nav set` / `nav meta set` (the CLI owns the atomic write). **Minimal by design** (KISS / no derived rollup state) — position + a free-form bag, just enough to resume; everything else is derived at read time.
 
 **Single terminal**: one conversation alternates stage runs and `/the-flow` check-ins; `/compact` is the hygiene valve.
 
@@ -92,7 +101,7 @@ Lives at `docs/plans/<ord>-<slug>/.the-flow-state.json`. Self-cleans with the pl
 <!-- lint:allow-flow-commands -->
 ## State-write ownership
 
-- **Guided mode (the dispatch + this engine) is the ONLY writer** of `.the-flow-state.json`, `the-flow.json`, and `the-flow.md`.
+- **The `harness flow` CLI is the ONLY state writer.** Guided mode (the dispatch + this engine) drives **one** substrate — `the-flow.json` (`nav` + `bag` + node statuses, rendered to `the-flow.md`) — exclusively through `harness flow` calls. There is **no hand-authored `.the-flow-state.json`**.
 - **Direct-jump stage modules NEVER write the-flow state.** A direct `/the-flow 6 implement …` behaves exactly like a direct `/plan-6` run did: it produces its stage artifacts and nothing else. The next guided invocation discovers those artifacts by existence (idempotency rule) and catches the state up — resume stays correct without dual writers.
 - Stage modules own **their** artifacts (spec, plan, tasks, execution log, reviews); the engine never edits those.
 
@@ -111,13 +120,13 @@ The deterministic core — **the single owner of "what's next"** (flow-architect
 | `awaiting-backpressure` | `backpressure-coverage.md` | → **plan** (re-run, **informed by** the coverage — advisory, not auto-read) | post-plan refinement hanging off `awaiting-1b`; backpressure payoff (artifact produced via the router) | Certainty (Strong/Partial/Weak) + Phase 0? |
 | `awaiting-5` | `tasks/<phase>/tasks.md` | → **implement** (± its `--companion` mode — offer it here) | the engine print-then-offers the **pre-flight** boot seam at the phase edge — a `harness-boot` node before task 1 (`harness-seams.md`); literal `/eng-harness-flow --hook pre-flight` | first task's Done-When |
 | `awaiting-6` | `execution.log.md` / phase status | clean → **review** · more phases (Full) → **tasks** | compact ✓ (between phases) · engine-owned seams at the phase edges (`harness-seams.md`): **pre-flight** boot *before* (`--hook pre-flight`), **post-coding** retro *after* (`--hook post-coding`) · review **skippable if a companion reviewed every commit** | what landed + AC met |
-| `awaiting-7` | newest `reviews/*.md` | findings → fix + re-run **review** (stay) · clean → **merge** | tier contrast: computational (post-spec backpressure) vs inferential (review) | verdict + one finding |
-| `awaiting-8` | merge plan | typed `PROCEED` → `complete` | gate: typed PROCEED/ABORT — never a generic "yes" · seam: after the merge executes, the engine offers the **post-flight** retro (`--hook post-flight`) — a `harness-retro` node (`harness-seams.md`) | merge readiness |
-| `complete` | — | recap + stop; set `status:"complete"` | (the post-flight retro was already offered at merge) | — |
+| `awaiting-7` | newest `reviews/*.md` | findings → fix + re-run **review** (stay) · clean → **ship** | tier contrast: computational (post-spec backpressure) vs inferential (review) | verdict + one finding |
+| `awaiting-8` | ship report / PR opened (`ship/<date>/ship-report.md`) | checks green or reported → `complete` · base diverged → **reconcile** (excursion, `branch_of: "ship"`) · red check → fix + re-run **ship** (stay) | push & PR-open **each behind a confirm**; the reconcile/immediate merge is typed-`PROCEED`-gated — never a generic "yes" · seam: after ship, the engine offers the **post-flight** retro (`--hook post-flight`) — a `harness-retro` node (`branch_of: "ship"`, `harness-seams.md`) | PR URL + check status |
+| `complete` | — | recap + stop; set `nav.bag.status:"complete"` | (the post-flight retro was already offered at ship) | — |
 
 ## Routing markers & read-time state translation
 
-The `plan` verb is **atomic** — it always writes both halves in one pass — so there is no "spec written, plan pending" intermediate state and no STALE status. The only conditions are "no plan yet", "plan present (READY)", and "plan present but a gate FAILed (DRAFT)". Routing keys on durable state first (`.the-flow-state.json` `current_stage` + `pending_command`); the exact-string checks below are the **disk fallback** for idempotent resume / adoption / post-`/compact` — case-sensitive `grep`, never a fuzzy prose scan.
+The `plan` verb is **atomic** — it always writes both halves in one pass — so there is no "spec written, plan pending" intermediate state and no STALE status. The only conditions are "no plan yet", "plan present (READY)", and "plan present but a gate FAILed (DRAFT)". Routing keys on `nav` first (`nav.now` / `nav.next`, read via `harness flow nav show`); the exact-string checks below are the **disk fallback** for idempotent resume / adoption / post-`/compact` (and for a flow that has only artifacts + a legacy state file) — case-sensitive `grep`, never a fuzzy prose scan.
 
 | Predicate | Exact disk check (case-sensitive) |
 |-----------|-----------------------------------|
@@ -130,7 +139,7 @@ The `plan` verb is **atomic** — it always writes both halves in one pass — s
 
 - `current_stage: awaiting-1b` (old meaning: spec done) **and** `current_stage: awaiting-3` (old meaning: plan done) both translate to the single **`awaiting-1b`**. The pending verb is then re-derived from artifacts (idempotency / adoption): a unified `<slug>-plan.md` with `## Implementation Plan` → `implement` (Simple) / `tasks` (Full); a legacy `<slug>-spec.md` only → `plan` (it reads the legacy spec as the business source and writes the unified document).
 - **Legacy split-flow folder, already fully planned (don't re-plan it).** A folder carrying **both** a legacy `<slug>-spec.md` and a legacy architect-era `<slug>-plan.md` (h1 title + `## Gate Matrix`, **no** `## Business Specification`) is complete under the old split contract — matching the **Legacy split planning complete** predicate above. Treat it as `awaiting-1b` done and route by the legacy spec's `**Mode**`: Simple → **implement**, Full → **tasks**. Only a `<slug>-spec.md` with *no* plan beside it routes to **plan**.
-- A `pending_command` naming `specify` or the architect verb (old id `3`) is rewritten via the dispatch's alias table to the `plan` command on the next state write.
+- A `pending_command` naming `specify` or the architect verb (old id `3`) is translated via the dispatch's alias table to the `plan` command at read time (and when rendered into the flight plan).
 
 ## Must-see fields to scan (the Flag beat, per stage)
 
@@ -144,7 +153,7 @@ Where each artifact hides its **structured alarms** — lift any present, verbat
 | `awaiting-5` | tasks with no/weak Done-When; a phase carrying a flagged Key Finding |
 | `awaiting-6` | acceptance criteria **not met**; blocked tasks; debt/gotchas in the Discoveries table |
 | `awaiting-7` | **CRITICAL/HIGH** findings; any verdict short of clean |
-| `awaiting-8` | unmerged-blocker notes; merge-readiness warnings |
+| `awaiting-8` | failing CI checks; push/PR-open blockers; base-divergence (reconcile) warnings |
 
 ---
 
@@ -152,7 +161,7 @@ Where each artifact hides its **structured alarms** — lift any present, verbat
 
 Harness-seam orchestration is **flow-owned** and lives in one file: [`harness-seams.md`](./harness-seams.md). Guided mode loads it **lazily** when the flow reaches a harness edge (progressive disclosure — the same way a stage's sub-skill is loaded only when its step is accepted). It owns: the **two-layer detection**, the **seam map** (every Graph edge → `--hook` + context flags → emitted node + the literal `/eng-harness-flow --hook …` command the engine print-then-offers), **node emission** (decoupled from provisioning), the **per-phase retro lifecycle**, the **honored-not-forced** posture, the **not-installed / unprovisioned silent paths**, and the **versioned upstream seam contract** (the `--hooks --json` mirror + resync procedure).
 
-The four fire-hooks the flow wires — and which Graph edge each rides — are the terse `seam:` decorations in the Graph above (`pre-flight` at flow entry **and** before each phase, `pre-coding` post-plan, `post-coding` each phase end, `post-flight` at merge); the silent `coding` capture is deliberately **not** wired. **Never name or invoke the router's child skills** — the only stable surface is `/eng-harness-flow` + its `--hook` vocabulary (permanent `--event` alias). Seam nodes in `the-flow.json` use types `backpressure`, `harness-boot`, `harness-retro`; every one is **advisory** — never a gate, never blocks, no scores.
+The four fire-hooks the flow wires — and which Graph edge each rides — are the terse `seam:` decorations in the Graph above (`pre-flight` at flow entry **and** before each phase, `pre-coding` post-plan, `post-coding` each phase end, `post-flight` at ship); the silent `coding` capture is deliberately **not** wired. **Never name or invoke the router's child skills** — the only stable surface is `/eng-harness-flow` + its `--hook` vocabulary (permanent `--event` alias). Seam nodes in `the-flow.json` use types `backpressure`, `harness-boot`, `harness-retro`; every one is **advisory** — never a gate, never blocks, no scores.
 
 ---
 
@@ -174,8 +183,8 @@ Every run maintains a **flight plan**: `docs/plans/<ord>-<slug>/the-flow.json` (
    - a narrative / decision note → `comment --kind <note|decision|warning|validation>`;
    - advance → `nav set --now <id>` (move; fires cursor-moved) / `--next <id>` (advisory) / `--clear-next`. (§ 2)
 2. **Reveal/refine the future** — `insert-node` owns every edge splice, no hand edge-recomputation ([`flight-plan-ops.md`](./flight-plan-ops.md) § 4 spine-vs-excursion, § 6 build-order):
-   - at the `plan` pass, reveal each phase → `insert-node --type phase --after <prev>` (inherits the predecessor's out-edges), then recompute `milestones_total`;
-   - a conditional fix-loop / workshop / backpressure excursion → `insert-node --branch-of <node> [--rejoin <node>]` (the branch point's `next` is unchanged) — **workshops ALWAYS `--branch-of`, never on the spine**;
+   - at the `plan` pass, reveal each phase → `insert-node --type phase --after <prev>` (inherits the predecessor's out-edges); the rail then re-derives its total from the new phase nodes (no stored counter);
+   - a conditional fix-loop / workshop / backpressure / reconcile excursion → `insert-node --branch-of <node> [--rejoin <node>]` (the branch point's `next` is unchanged) — **workshops ALWAYS `--branch-of`, never on the spine**; the **reconcile** excursion branches off `ship` (or a phase) only when the base has diverged;
    - a plain new node needing no splice → `add-node`.
 3. **Render** → `harness flow render --path FLOW --output docs/plans/<ord>-<slug>/the-flow.md`, then print the rail (coach.md owns the rail; the CLI owns the `.md`).
 4. **Integrity is the CLI's, not yours** — `insert-node` DAG-re-checks before writing (`E309`, nothing written on a cycle/orphan); `create` validated the flight-plan overlay (statuses + nodeTypes) against the shipped `--schema`. The mutation verbs enforce only node existence (`E305`) + edge integrity — they do **not** re-check the overlay vocabulary (the flight-plan schema is supplied via `--schema`, not bundled), so the engine is responsible for using the correct node types/statuses (it owns the Graph); the renderer's unknown-type fallback never crashes. No hand self-check; no hand JSON edits.

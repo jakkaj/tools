@@ -1,11 +1,11 @@
-# merge
+# reconcile
 
 > Sub-skill — part of a verb library. Knows nothing about any flow:
 > no stage ids, no successor/predecessor names, no flow commands.
 > Composition is the bundling flow's job.
 
-**Verb**: merge
-**Purpose**: Analyze upstream changes from the target branch (default `main`) and generate a comprehensive merge plan document — diagrams, conflict tables, regression risks, ordered steps — before any merge execution. Analysis only by default; merge execution runs ONLY after the user explicitly types `PROCEED`. On ABORT the merge plan is saved for later; re-enter with this verb and the same `--plan`.
+**Verb**: reconcile
+**Purpose**: A **conditional upstream-reconcile excursion** — fired when the target branch (default `main`) has **meaningfully diverged** since the branch point, not as a routine terminal step. Analyze what landed upstream and generate a comprehensive reconcile/merge plan document — diagrams, conflict tables, regression risks, ordered steps — before any merge execution. Analysis only by default; merge execution runs ONLY after the user explicitly types `PROCEED`. On ABORT the plan is saved for later; re-enter with this verb and the same `--plan`. (Getting work *out* — push, PR, watch checks — is the **ship** verb's job; this verb only handles pulling a diverged base back *in*.)
 
 **Consumes**: all phases implemented and reviewed; clean working tree (no uncommitted changes); on a branch (not detached HEAD); plan folder resolvable (contains `*-plan.md`, or a legacy `*-spec.md`); target branch exists and is reachable. Input artifacts — git history (ancestor/HEAD/target), your spec/plan/execution logs, upstream plan folders under `docs/plans/`, `docs/domains/**` (optional).
 

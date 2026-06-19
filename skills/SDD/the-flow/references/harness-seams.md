@@ -45,7 +45,7 @@ The flow wires **four fire-hooks** and deliberately **skips one** (the silent `c
 | **post-plan refinement** off `awaiting-1b` | `pre-coding` `--spec <plan path>` | `post-spec` | `backpressure` (`branch_of: "plan"`) | `/eng-harness-flow --hook pre-coding --spec "<plan path>" --json` |
 | **before each phase** (into a `phase`) | `pre-flight` `--phase "<Phase N>" --plan-dir <p>` | `pre-implement` | `harness-boot` (`branch_of: "<phase-id>"`) | `/eng-harness-flow --hook pre-flight --phase "<Phase N: Title>" --plan-dir "<plan dir>" --json` |
 | **each phase end** (out of a `phase`) | `post-coding` `--plan-dir <p>` | `phase-end` | `harness-retro` (`branch_of: "<phase-id>"`) | `/eng-harness-flow --hook post-coding --plan-dir "<plan dir>" --json` |
-| **at merge** (after typed `PROCEED`) | `post-flight` `--plan-dir <p>` | `plan-complete` | `harness-retro` (`branch_of: "merge"`) | `/eng-harness-flow --hook post-flight --plan-dir "<plan dir>" --json` |
+| **at ship** (after checks reported / PR opened) | `post-flight` `--plan-dir <p>` | `plan-complete` | `harness-retro` (`branch_of: "ship"`) | `/eng-harness-flow --hook post-flight --plan-dir "<plan dir>" --json` |
 | **mid-build** (we do **not** wire this) | `coding` | `task-pause` | *(none — silent CLI capture, the harness's own concern)* | *(unwired — see § Seam contract)* |
 
 **What each beat is *for* (narration source):**
@@ -53,7 +53,7 @@ The flow wires **four fire-hooks** and deliberately **skips one** (the silent `c
 - **`pre-coding` @ post-plan** — the backpressure survey: *can the planned work be proven by deterministic sensors, or only eyeballed?* Produces `backpressure-coverage.md` — **advisory output**: re-run the **plan** verb *informed by* it (the harness-blind plan verb does **not** auto-read the file; you fold what you learned into the re-plan intent). Offered as an optional post-plan refinement, never forced.
 - **`pre-flight` @ phase** — the router proves the system **boots** before a line of code; verdict narrated verbatim (`healthy → build` · `SLOW → build with a note` · `UNHEALTHY → stop and ask the human: Retry / Continue without harness / Abort` · `UNAVAILABLE → standard testing`).
 - **`post-coding` @ phase end** — drain **this phase's** friction notes → `.retro.md` (the router owns drain-vs-harvest; the user may see a `[s/t/p/e/d/a]` prompt).
-- **`post-flight` @ merge** — the long-horizon reflection: harvest + present improvements + encode.
+- **`post-flight` @ ship** — the long-horizon reflection: harvest + present improvements + encode (offered after ship reports checks / opens the PR).
 
 ---
 
@@ -77,7 +77,7 @@ This makes the **three emission surfaces** agree:
 The `post-coding` (phase-end) seam is a **first-class beat per phase**, not a buried side-effect: one `harness-retro` node per `phase`, `branch_of` that phase, on an `assumed → done` lifecycle.
 
 - **"Drain owed" is re-derived, not stored** — no new state file. A phase whose node is `done` while its `harness-retro` sibling is still `assumed`/absent ⇒ that phase's drain is owed. The flight-plan node **is** the durable record (existing `status` + `branch_of` fields suffice — KISS, no rollup).
-- **Drain before harvest.** At phase/session end the router drains the non-empty buffer first; harvest (the `post-flight` beat at merge) reads `.retro.md`. The router owns that ordering — the flow just offers the beat at the edge.
+- **Drain before harvest.** At phase/session end the router drains the non-empty buffer first; harvest (the `post-flight` beat at ship) reads `.retro.md`. The router owns that ordering — the flow just offers the beat at the edge.
 
 ---
 
@@ -107,8 +107,8 @@ Every seam is a **print-then-offer beat the engine presents at the edge** (invar
 
 | Facet | Value (v1, 2026-06-17) |
 |---|---|
-| `harness_seam_contract` | `v1` — the 021 five-hook contract; **bump** when any mirrored fact below changes meaning (a hook renamed, an alias remapped, a verdict added) |
-| Hooks we **wire** (emit `--hook`) | `pre-flight` (flow entry **and** before each phase) · `pre-coding` (post-plan) · `post-coding` (each phase end) · `post-flight` (at merge) |
+| `harness_seam_contract` | `v1` — the 021 five-hook contract; **bump** when any mirrored fact below changes meaning (a hook renamed, an alias remapped, a verdict added). *No bump for the 2026-06-19 ship remap:* moving the `post-flight` retro from the `merge` edge to the `ship` edge (`branch_of: "ship"`) changed only **which the-flow Graph edge** the hook rides — an internal-flow fact, not a mirrored upstream fact (the hook, its `plan-complete` alias, its verdict set, and its `harness-retro` node type are all unchanged). v1 stands. |
+| Hooks we **wire** (emit `--hook`) | `pre-flight` (flow entry **and** before each phase) · `pre-coding` (post-plan) · `post-coding` (each phase end) · `post-flight` (at **ship** — the terminal stage; remapped from `merge` 2026-06-19) |
 | Hook upstream has, we **don't** wire | `coding` — the silent `harness observe "<what>" --kind <kind>` capture (one buffer entry per call); mirrors the deliberate prior `task-pause` skip. The harness owns in-flight capture once alive in-context; the flow never drives it |
 | `--event` alias (permanent) | `session-start`→`pre-flight` · `pre-implement`→`pre-flight` · `post-spec`→`pre-coding` · `phase-end`→`post-coding` · `plan-complete`→`post-flight` · `task-pause`→`coding`. The flow **emits `--hook`**; `--event` is retained only for **back-compat understanding** — mapping/reading an older router's envelope, never a command the flow emits or down-emits (an older router is a runtime-dependency gap → reinstall, not an automatic fallback) |
 | Envelope `decision` | `route` · `redirect` · `noop` · `ambiguous` (+ an additive `hook` field on every routing envelope) |

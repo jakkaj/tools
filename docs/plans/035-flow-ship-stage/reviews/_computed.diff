@@ -1,0 +1,714 @@
+diff --git a/skills/SDD/the-flow/SKILL.md b/skills/SDD/the-flow/SKILL.md
+index a7f2360..aa132db 100644
+--- a/skills/SDD/the-flow/SKILL.md
++++ b/skills/SDD/the-flow/SKILL.md
+@@ -1,7 +1,7 @@
+ ---
+ name: the-flow
+ description: |
+-  The single front door to the SDD pipeline (docs/plans/): research → plan → workshop → ADR → phase tasks → implement → progress → review → merge. Use when the user wants to plan, research, explore, specify or architect (now one atomic 'plan' step → one document: business spec + implementation plan), clarify, workshop, write an ADR, break a phase into tasks, implement or build a phase (optionally with a live review companion), update progress, code-review, or merge a plan — or types /the-flow (or a legacy /plan-N command), or asks to start, resume, or adopt a plan flow. Guided mode (no args) coaches from durable on-disk state; direct jump runs one stage: /the-flow <id> <verb> [flags] — 1a explore, 1b plan (spec + plan in one doc; incl. clarify), 2c workshop, 3a adr, 5 tasks, 6 implement (--companion for live review), 6a progress, 7 review, 8 merge. Ids and verbs resolve alone; printed commands carry both.
++  The single front door to the SDD pipeline (docs/plans/): research → plan → workshop → ADR → phase tasks → implement → progress → review → ship. Use when the user wants to plan, research, explore, specify or architect (now one atomic 'plan' step → one document: business spec + implementation plan), clarify, workshop, write an ADR, break a phase into tasks, implement or build a phase (optionally with a live review companion), update progress, code-review, or ship a plan (push + PR + watch checks) — or types /the-flow (or a legacy /plan-N command), or asks to start, resume, or adopt a plan flow. Guided mode (no args) coaches from durable on-disk state; direct jump runs one stage: /the-flow <id> <verb> [flags] — 1a explore, 1b plan (spec + plan in one doc; incl. clarify), 2c workshop, 3a adr, 5 tasks, 6 implement (--companion for live review), 6a progress, 7 review, 8 ship, 8c reconcile. Ids and verbs resolve alone; printed commands carry both.
+ ---
+ 
+ # /the-flow — SDD pipeline dispatch
+@@ -16,7 +16,7 @@ One public skill for the whole SDD pipeline, built to the flow-architecture patt
+ 
+ 1. Read `references/00-routing.md` (entry paths, state contract, the Graph) **and** `references/coach.md` (rail, narration, print-then-offer).
+ 2. Resolve fresh / resume / adopt per 00-routing.md; load **only** the current stage's sub-skill when a step is accepted, and coach the seam.
+-3. Guided mode owns all the-flow state writes: it writes `.the-flow-state.json` directly, and drives the flight plan (`the-flow.json` → `the-flow.md`) **only** through `harness flow` calls (plan 024 — the CLI is the generator; run the capability precheck first, § Prerequisite). **Before the first flight-plan mutation of a session, also load [`references/flight-plan-ops.md`](./references/flight-plan-ops.md)** — the nav model, the spine-vs-excursion rule, and the verb flags + gotchas (loaded on demand, not up front; sub-skills never load it).
++3. Guided mode owns all the-flow state, and drives **all** of it — position *and* session bag — through `harness flow nav` calls: the flight plan (`the-flow.json` → `the-flow.md`) is the single state substrate (plan 024 — the CLI is the generator; **nothing is hand-written**; run the capability precheck first, § Prerequisite). **Before the first flight-plan mutation of a session, also load [`references/flight-plan-ops.md`](./references/flight-plan-ops.md)** — the nav model, the spine-vs-excursion rule, and the verb flags + gotchas (loaded on demand, not up front; sub-skills never load it).
+ 
+ **Direct jump** — `/the-flow <id> <verb> [flags]`:
+ 
+@@ -40,10 +40,13 @@ A sub-skill may lazily pull `references/00-routing.md` § Shared conventions whe
+ | 6 | implement | `references/stages/60-implement.md` | plan, tasks? → code + `execution.log.md` (exactly one phase) | `--plan "<path>"` `[--phase "<Phase N: Title>"]` `[--subtask "<ORD-slug>"]` `[--companion]` `[--companion-slug "<slug>"]` |
+ | 6a | progress | `references/stages/62-progress.md` | task outcome → updated task table + execution log (read by the implement verb after each task; owns the companion debrief) | `--plan --phase --task --status` `[--companion-run-id]` `[--companion-slug]` |
+ | 7 | review | `references/stages/70-review.md` | plan, code → `reviews/*.md` | `--plan "<path>"` `[--phase "<Phase N: Title>"]` |
+-| 8 | merge | `references/stages/80-merge.md` | plan, review → merge plan; **executes only on typed `PROCEED`** | `--plan "<path>"` |
++| 8 | ship | `references/stages/80-ship.md` | plan, review → pushed branch + PR (repo-guidance-aware) + watched CI checks; push & PR-open **each behind a confirm**, merge optional | `--plan "<path>"` `[--base "<branch>"]` `[--no-watch]` `[--draft]` |
++| 8c | reconcile | `references/stages/80-merge.md` | (conditional excursion — divergent base) → reconcile/merge plan; **merge executes only on typed `PROCEED`** | `--plan "<path>"` `[--target "<branch>"]` |
+ 
+ Module missing at its path → say so and stop. Never improvise a stage from memory.
+ 
++> **`8 ship` is the terminal spine stage; `8c reconcile` is a conditional excursion** (fired only when the base has meaningfully diverged), never on the spine. Typed `merge` and the legacy `plan-8-v2-merge` resolve to `8c reconcile` (alias table below).
++
+ ## Command grammar
+ 
+ Printed commands are always `/the-flow <id> <verb> [flags]`, e.g. `/the-flow 6 implement --plan "<path>"`.
+@@ -51,7 +54,7 @@ Id or verb each resolve alone; printed form always carries both, never a bare nu
+ 
+ ## Old-slug translation & aliases (read-time)
+ 
+-State files and docs written before the consolidation may carry commands naming retired skill slugs (e.g. a `pending_command` in `.the-flow-state.json`). Translate at read time — never execute a retired slug; rewrite via § Command grammar on the next state write. Flags carry over unchanged. **Targets are stored in id+flag form** (never as full command strings) and rendered through the Command grammar + Registry when printed or written into state.
++Docs and **legacy** state files written before the consolidation may carry commands naming retired skill slugs (e.g. a `pending_command` in a leftover `.the-flow-state.json`, read only during the one-shot resume backfill — § State). Translate at read time — never execute a retired slug; the live source of a pending command is now `nav.next` + the Command grammar, rendered at read time (never stored). Flags carry over unchanged. **Targets are stored in id+flag form** (never as full command strings) and rendered through the Command grammar + Registry when printed or written into state.
+ 
+ | retired slug / typed alias | → target (id + flags) |
+ |---|---|
+@@ -70,7 +73,8 @@ State files and docs written before the consolidation may carry commands naming
+ | `plan-6-v2-implement-phase-companion` | `6 implement --companion` |
+ | `plan-6a-v2-update-progress` | `6a progress` |
+ | `plan-7-v2-code-review` | `7 review` |
+-| `plan-8-v2-merge` | `8 merge` |
++| `plan-8-v2-merge` | `8c reconcile` |
++| typed `merge` | `8c reconcile` |
+ | typed `6c` or `companion` | `6 implement --companion` |
+ 
+ **Unmapped slug → print the bare stage alias and ask — never guess.** (An unrecognised `/plan-*` command: show the Registry's ids/verbs and ask which stage was meant.)
+@@ -78,11 +82,11 @@ State files and docs written before the consolidation may carry commands naming
+ ## Hard invariants (every stage, both load paths)
+ 
+ 1. **Print first, then offer to run.** Print the exact command in a copyable block — rendered via § Command grammar (id **and** verb, never a bare number), so the reader sees what it will do without knowing the ids — then offer to run it; one accepted step per turn (guided).
+-2. **Nothing irreversible without explicit confirmation.** The merge (stage 8) executes **only** after the user types `PROCEED` — never on a generic "yes".
++2. **Nothing irreversible without explicit confirmation.** Outward-facing actions each gate: the **ship** verb's push and PR-open are **separate** confirms (a "yes" to push is not a "yes" to open a PR); the **reconcile** merge (8c) and any immediate merge execute **only** after the user types `PROCEED` — never on a generic "yes".
+ 3. **Never run `/compact`** — it is a user-typed CLI built-in. Recommend: "type `/compact` yourself, then re-run `/the-flow`".
+ 4. **Never gate, score, or block.** Workshops, backpressure, compaction, companions — all skippable; best-effort, no thresholds, no compliance floors.
+ 5. **Never fabricate an insight.** Ground every narrated detail in a real artifact; if you can't read it, say so and fall back to file existence / git status.
+-6. **Never hand-edit the flight plan.** `the-flow.md` is always regenerated from `the-flow.json` by `harness flow render`; `the-flow.json` itself is mutated **only** through `harness flow` calls (plan 024 — the CLI is the generator). Guided mode requires a capable CLI (§ Prerequisite).
++6. **Never hand-edit the flight plan, and never hand-author a state file.** `the-flow.md` is always regenerated from `the-flow.json` by `harness flow render`; `the-flow.json` itself is mutated **only** through `harness flow` calls (plan 024 — the CLI is the generator). There is **no `.the-flow-state.json`** — all the-flow state (position + session `bag`) lives in `the-flow.json`, and the CLI is its only writer. Guided mode requires a capable CLI (§ Prerequisite).
+ 7. **You don't run `minih`.** The implement verb's companion mode (`--companion`) owns the companion protocol; you narrate the affordance. Agent bookkeeping into the flight plan awaits the v2 `harness flow agent` verb — until it lands, `agents[]` stays unpopulated and is never hand-edited (per invariant #6).
+ 8. **No time estimates anywhere** — Complexity Score (CS 1–5) only (`references/00-routing.md` § Shared conventions).
+ 9. **Harness = one door.** Every harness touchpoint is `/eng-harness-flow --hook …` (permanent `--event` alias) — never name or invoke its child skills. Harness-seam orchestration is **flow-owned** (`references/harness-seams.md`); sub-skills are harness-blind.
+@@ -90,7 +94,7 @@ State files and docs written before the consolidation may carry commands naming
+ 
+ ## State
+ 
+-Durable state lives at `docs/plans/<ord>-<slug>/.the-flow-state.json`, plus the flight plan (`the-flow.json` → rendered `the-flow.md`). Contract, write ownership, and the Graph: `references/00-routing.md`; harness-seam orchestration (detection, seam map, node emission, upstream contract): `references/harness-seams.md`. Sub-skills own their *stage* artifacts (spec / plan / tasks / execution log / reviews), never write the-flow state, and carry no harness knowledge.
++Durable state **is** the flight plan — `nav` (position + the free-form `bag`) + node statuses in `docs/plans/<ord>-<slug>/the-flow.json` (rendered to `the-flow.md`). **No separate state file** — the CLI is the only state writer. Contract, write ownership, and the Graph: `references/00-routing.md`; harness-seam orchestration (detection, seam map, node emission, upstream contract): `references/harness-seams.md`. Sub-skills own their *stage* artifacts (spec / plan / tasks / execution log / reviews), never write the-flow state, and carry no harness knowledge.
+ 
+ ## Prerequisite — a capable `harness flow` CLI (capability + version floor)
+ 
+diff --git a/skills/SDD/the-flow/references/00-routing.md b/skills/SDD/the-flow/references/00-routing.md
+index bd3bab3..5309e8c 100644
+--- a/skills/SDD/the-flow/references/00-routing.md
++++ b/skills/SDD/the-flow/references/00-routing.md
+@@ -28,7 +28,7 @@ Ask the intent (coach.md `start` narration). After the user answers:
+ 3. `mkdir -p docs/plans/<ord>-<slug>/`.
+ 4. **Write the verbatim ask** to `original-ask.md` (shape below) and mirror it into `state.intent`.
+ 5. Write `.the-flow-state.json` (temp file + atomic rename).
+-6. Initialise the flight plan **via the CLI** (never hand-write it): `harness flow create flight-plan --slug <slug> --path docs/plans/<ord>-<slug>/the-flow.json --schema "<skill base>/references/flight-plan.schema.json" --bare --agent the-flow` (the `--agent the-flow` is what titles the rail `[the-flow]`; without it the rail shows the slug), then seed the spine with `harness flow add-node` — a `research` node (status `in_progress`) plus `assumed` `plan`/`merge` nodes for the initial shape — set the initial position with `harness flow nav set --path docs/plans/<ord>-<slug>/the-flow.json --now research`, and render with `harness flow render --path docs/plans/<ord>-<slug>/the-flow.json --output docs/plans/<ord>-<slug>/the-flow.md`. (`<skill base>` = this skill's base dir, e.g. `~/.claude/skills/the-flow`; the flight-plan schema ships in `references/` and is supplied via `--schema`, per § Flight plan.)
++6. Initialise the flight plan **via the CLI** (never hand-write it): `harness flow create flight-plan --slug <slug> --path docs/plans/<ord>-<slug>/the-flow.json --schema "<skill base>/references/flight-plan.schema.json" --bare --agent the-flow` (the `--agent the-flow` is what titles the rail `[the-flow]`; without it the rail shows the slug), then seed the spine with `harness flow add-node` — a `research` node (status `in_progress`) plus `assumed` `plan`/`ship` nodes for the initial shape (add the `ship` node with `--zone postflight` so it bands after the flight zone — `flight-plan-ops.md` § Zone bands) — set the initial position with `harness flow nav set --path docs/plans/<ord>-<slug>/the-flow.json --now research`, and render with `harness flow render --path docs/plans/<ord>-<slug>/the-flow.json --output docs/plans/<ord>-<slug>/the-flow.md`. (`<skill base>` = this skill's base dir, e.g. `~/.claude/skills/the-flow`; the flight-plan schema ships in `references/` and is supplied via `--schema`, per § Flight plan.)
+ 7. Print-and-offer the **explore** edge (research-worthy intent) or the **plan** edge (clear ask) — the command is rendered from the dispatch's Command grammar + Registry, with the intent as the verb's argument.
+ 
+ Stages 10/20 both **reuse** an existing `docs/plans/*-<slug>/` folder by slug — creating it first is safe.
+@@ -111,9 +111,9 @@ The deterministic core — **the single owner of "what's next"** (flow-architect
+ | `awaiting-backpressure` | `backpressure-coverage.md` | → **plan** (re-run, **informed by** the coverage — advisory, not auto-read) | post-plan refinement hanging off `awaiting-1b`; backpressure payoff (artifact produced via the router) | Certainty (Strong/Partial/Weak) + Phase 0? |
+ | `awaiting-5` | `tasks/<phase>/tasks.md` | → **implement** (± its `--companion` mode — offer it here) | the engine print-then-offers the **pre-flight** boot seam at the phase edge — a `harness-boot` node before task 1 (`harness-seams.md`); literal `/eng-harness-flow --hook pre-flight` | first task's Done-When |
+ | `awaiting-6` | `execution.log.md` / phase status | clean → **review** · more phases (Full) → **tasks** | compact ✓ (between phases) · engine-owned seams at the phase edges (`harness-seams.md`): **pre-flight** boot *before* (`--hook pre-flight`), **post-coding** retro *after* (`--hook post-coding`) · review **skippable if a companion reviewed every commit** | what landed + AC met |
+-| `awaiting-7` | newest `reviews/*.md` | findings → fix + re-run **review** (stay) · clean → **merge** | tier contrast: computational (post-spec backpressure) vs inferential (review) | verdict + one finding |
+-| `awaiting-8` | merge plan | typed `PROCEED` → `complete` | gate: typed PROCEED/ABORT — never a generic "yes" · seam: after the merge executes, the engine offers the **post-flight** retro (`--hook post-flight`) — a `harness-retro` node (`harness-seams.md`) | merge readiness |
+-| `complete` | — | recap + stop; set `status:"complete"` | (the post-flight retro was already offered at merge) | — |
++| `awaiting-7` | newest `reviews/*.md` | findings → fix + re-run **review** (stay) · clean → **ship** | tier contrast: computational (post-spec backpressure) vs inferential (review) | verdict + one finding |
++| `awaiting-8` | ship report / PR opened (`ship/<date>/ship-report.md`) | checks green or reported → `complete` · base diverged → **reconcile** (excursion, `branch_of: "ship"`) · red check → fix + re-run **ship** (stay) | push & PR-open **each behind a confirm**; the reconcile/immediate merge is typed-`PROCEED`-gated — never a generic "yes" · seam: after ship, the engine offers the **post-flight** retro (`--hook post-flight`) — a `harness-retro` node (`branch_of: "ship"`, `harness-seams.md`) | PR URL + check status |
++| `complete` | — | recap + stop; set `status:"complete"` | (the post-flight retro was already offered at ship) | — |
+ 
+ ## Routing markers & read-time state translation
+ 
+@@ -144,7 +144,7 @@ Where each artifact hides its **structured alarms** — lift any present, verbat
+ | `awaiting-5` | tasks with no/weak Done-When; a phase carrying a flagged Key Finding |
+ | `awaiting-6` | acceptance criteria **not met**; blocked tasks; debt/gotchas in the Discoveries table |
+ | `awaiting-7` | **CRITICAL/HIGH** findings; any verdict short of clean |
+-| `awaiting-8` | unmerged-blocker notes; merge-readiness warnings |
++| `awaiting-8` | failing CI checks; push/PR-open blockers; base-divergence (reconcile) warnings |
+ 
+ ---
+ 
+@@ -152,7 +152,7 @@ Where each artifact hides its **structured alarms** — lift any present, verbat
+ 
+ Harness-seam orchestration is **flow-owned** and lives in one file: [`harness-seams.md`](./harness-seams.md). Guided mode loads it **lazily** when the flow reaches a harness edge (progressive disclosure — the same way a stage's sub-skill is loaded only when its step is accepted). It owns: the **two-layer detection**, the **seam map** (every Graph edge → `--hook` + context flags → emitted node + the literal `/eng-harness-flow --hook …` command the engine print-then-offers), **node emission** (decoupled from provisioning), the **per-phase retro lifecycle**, the **honored-not-forced** posture, the **not-installed / unprovisioned silent paths**, and the **versioned upstream seam contract** (the `--hooks --json` mirror + resync procedure).
+ 
+-The four fire-hooks the flow wires — and which Graph edge each rides — are the terse `seam:` decorations in the Graph above (`pre-flight` at flow entry **and** before each phase, `pre-coding` post-plan, `post-coding` each phase end, `post-flight` at merge); the silent `coding` capture is deliberately **not** wired. **Never name or invoke the router's child skills** — the only stable surface is `/eng-harness-flow` + its `--hook` vocabulary (permanent `--event` alias). Seam nodes in `the-flow.json` use types `backpressure`, `harness-boot`, `harness-retro`; every one is **advisory** — never a gate, never blocks, no scores.
++The four fire-hooks the flow wires — and which Graph edge each rides — are the terse `seam:` decorations in the Graph above (`pre-flight` at flow entry **and** before each phase, `pre-coding` post-plan, `post-coding` each phase end, `post-flight` at ship); the silent `coding` capture is deliberately **not** wired. **Never name or invoke the router's child skills** — the only stable surface is `/eng-harness-flow` + its `--hook` vocabulary (permanent `--event` alias). Seam nodes in `the-flow.json` use types `backpressure`, `harness-boot`, `harness-retro`; every one is **advisory** — never a gate, never blocks, no scores.
+ 
+ ---
+ 
+@@ -175,7 +175,7 @@ Every run maintains a **flight plan**: `docs/plans/<ord>-<slug>/the-flow.json` (
+    - advance → `nav set --now <id>` (move; fires cursor-moved) / `--next <id>` (advisory) / `--clear-next`. (§ 2)
+ 2. **Reveal/refine the future** — `insert-node` owns every edge splice, no hand edge-recomputation ([`flight-plan-ops.md`](./flight-plan-ops.md) § 4 spine-vs-excursion, § 6 build-order):
+    - at the `plan` pass, reveal each phase → `insert-node --type phase --after <prev>` (inherits the predecessor's out-edges), then recompute `milestones_total`;
+-   - a conditional fix-loop / workshop / backpressure excursion → `insert-node --branch-of <node> [--rejoin <node>]` (the branch point's `next` is unchanged) — **workshops ALWAYS `--branch-of`, never on the spine**;
++   - a conditional fix-loop / workshop / backpressure / reconcile excursion → `insert-node --branch-of <node> [--rejoin <node>]` (the branch point's `next` is unchanged) — **workshops ALWAYS `--branch-of`, never on the spine**; the **reconcile** excursion branches off `ship` (or a phase) only when the base has diverged;
+    - a plain new node needing no splice → `add-node`.
+ 3. **Render** → `harness flow render --path FLOW --output docs/plans/<ord>-<slug>/the-flow.md`, then print the rail (coach.md owns the rail; the CLI owns the `.md`).
+ 4. **Integrity is the CLI's, not yours** — `insert-node` DAG-re-checks before writing (`E309`, nothing written on a cycle/orphan); `create` validated the flight-plan overlay (statuses + nodeTypes) against the shipped `--schema`. The mutation verbs enforce only node existence (`E305`) + edge integrity — they do **not** re-check the overlay vocabulary (the flight-plan schema is supplied via `--schema`, not bundled), so the engine is responsible for using the correct node types/statuses (it owns the Graph); the renderer's unknown-type fallback never crashes. No hand self-check; no hand JSON edits.
+diff --git a/skills/SDD/the-flow/references/coach.md b/skills/SDD/the-flow/references/coach.md
+index 096736a..7f85d4e 100644
+--- a/skills/SDD/the-flow/references/coach.md
++++ b/skills/SDD/the-flow/references/coach.md
+@@ -22,7 +22,7 @@ Every time you surface a next step:
+ **Exceptions (print, never silently run):**
+ 
+ - **`/compact`** — a CLI built-in that wipes context; you literally cannot invoke it. Print it, explain the re-run handshake (below).
+-- **The final merge** — print the merge verb's analysis and only execute on an explicit typed `PROCEED`.
++- **The final ship** — push and PR-open each pause for a confirm; an immediate merge (or the reconcile excursion's merge) executes only on an explicit typed `PROCEED`.
+ - **Implement (heavy build, plain or `--companion`)** — you *may* run it on request, but say it'll be a long turn and offer the cleaner alternative: `/compact` first, then run it in a fresh turn. Their call.
+ 
+ The per-block "Type: …" prompts below are **branch selectors** (which option the user wants) — once a branch is chosen, the same print-then-offer applies to its command.
+@@ -34,7 +34,7 @@ The per-block "Type: …" prompts below are **branch selectors** (which option t
+ **Every** guided turn begins with a fixed one-line **host rail**, on its own line, then a blank line, then the narration. It marks the guide's voice (never confusable with a stage's `✅`/`📁` output) **and** shows how far down the flow we are.
+ 
+ ```
+-[the-flow] ◆─◆─[◆─◐─◇]─◇  research · plan · [build 2/3] · merge
++[the-flow] ◆─◆─[◆─◐─◇]─◇  research · plan · [build 2/3] · ship
+ 
+ Where we are: …
+ ```
+@@ -43,11 +43,11 @@ Where we are: …
+ - **Same-line legend**: two spaces after the pips, the milestone names ride the same line — lowercase, in rail order, joined by ` · `, the **current** one wrapped in `[…]`. Brackets follow the `◐`; on a settled rail (no `◐`) bracket the first `◇` (the next milestone up). Once the `plan` pass reveals per-phase nodes, the phase group reads as one bracketed word with a counter (`[build 2/3]`); if naming every phase would overflow ~100 columns, shorten to `p1 … pN`.
+ - **Phase grouping**: per-phase nodes are wrapped in one `[ … ]` so they read distinctly from the fixed flow nodes → `◆─◆─◆─[◆─◐─◇]─◇`. During Build, the phase currently being implemented is the `◐` inside the group.
+ - **Render the whole rail block as a fenced code block — always.** The rail line(s), any anchored companion line, and the `now`/`next` groups are ONE ``` fence (no language tag). Outside a fence markdown collapses leading spaces — and **never** fake alignment with `&nbsp;` or any HTML entity (terminals print them literally). Real spaces inside the fence are the only alignment tool.
+-- **Macro-milestones (Full)**: Research · Plan · Tasks · Build · Review · Merge (6). The old separate Spec + Plan milestones collapse into **one `Plan` pip** — the atomic `plan` verb writes both halves (business spec + implementation plan) in one pass, so the pip fills once that document exists. Optional/sub-steps (deep-research, workshops, the post-spec backpressure check, ADRs, the fix loop) live *under* a milestone and get **no diamond** — opting in/out never changes the total.
+-- **Dynamic total**: `milestones_total` is an estimate early, **recomputed during the `plan` pass** from the real phase count revealed in the implementation half (Research · Plan · **one node per phase** · Merge). A 5-phase plan expands the rail (2 + 5 + 1 = 8); a 1-phase Simple plan collapses it. Re-scales **only at the `plan` pass**, then monotonic. `state.milestones_done` drives the fill.
++- **Macro-milestones (Full)**: Research · Plan · Tasks · Build · Review · Ship (6). The old separate Spec + Plan milestones collapse into **one `Plan` pip** — the atomic `plan` verb writes both halves (business spec + implementation plan) in one pass, so the pip fills once that document exists. Optional/sub-steps (deep-research, workshops, the post-spec backpressure check, ADRs, the fix loop) live *under* a milestone and get **no diamond** — opting in/out never changes the total.
++- **Dynamic total**: `milestones_total` is an estimate early, **recomputed during the `plan` pass** from the real phase count revealed in the implementation half (Research · Plan · **one node per phase** · Ship). A 5-phase plan expands the rail (2 + 5 + 1 = 8); a 1-phase Simple plan collapses it. Re-scales **only at the `plan` pass**, then monotonic. `state.milestones_done` drives the fill.
+ - **Status line** after the diamonds: `· now: <current> · next: <next>`. **Dynamic expansion** — inline when there's a single short next; when `next` has **≥2 options** (or would wrap), break `now`/`next` onto their **own lines** with options stacked (labelled + aligned, recommended first):
+   ```
+-  [the-flow] ◆─◆─◇─◇─◇─◇  research · plan · [tasks] · build · review · merge
++  [the-flow] ◆─◆─◇─◇─◇─◇  research · plan · [tasks] · build · review · ship
+    now  · plan written (both halves) — CS-4, Full, READY
+    next · ▸ {{render-edge: awaiting-1b → tasks}}         Phase 1 tasks               (recommended)
+           ▸ {{render-edge: awaiting-1b → workshop}}      workshop a topic, then re-plan
+@@ -73,7 +73,7 @@ Where we are: …
+ **Harness companion rail (unified block)**: when the harness loop is live this session — the `/eng-harness-flow` router fired this turn or earlier — never show two disconnected rails. Anchor the harness loop **beneath the active milestone**, each flow with its own voice, harness lines prefixed `⚙` (text glyph, never the `⚙️` emoji — double-width wrecks alignment):
+ 
+ ```
+-[the-flow]  ◆─◐─◇─◇─◇─◇  research · [plan] · tasks · build · review · merge
++[the-flow]  ◆─◐─◇─◇─◇─◇  research · [plan] · tasks · build · review · ship
+               └─ ⚙ ◆─◐─◇─◇─◇ ↺  boot · [backpressure] · observe · retro · improve  (pre-coding)
+ 
+  the-flow
+@@ -195,7 +195,7 @@ All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decis
+ ### `start` — fresh entry (no active state, no artifacts)
+ > [the-flow] ◇─◇─◇─◇─◇─◇
+ >
+-> Welcome — I'm your guide through the SDD flow. Tell me in a sentence what you want to build or change, and I'll turn it into the right first step, explain why each stage matters, point out the one thing worth noticing in what each stage produces, and tell you exactly what to type next. You stay in control — nothing merges without your say-so.
++> Welcome — I'm your guide through the SDD flow. Tell me in a sentence what you want to build or change, and I'll turn it into the right first step, explain why each stage matters, point out the one thing worth noticing in what each stage produces, and tell you exactly what to type next. You stay in control — nothing ships, pushes, or merges without your say-so.
+ >
+ > **What do you want to work on?** *(Just describe it. If it touches code you don't fully understand yet, I'll start us with research (the **explore** verb); if the ask is clear, we'll go straight to planning (the **plan** verb — it writes the business spec and the implementation plan into one document). Unsure → just describe it and I'll choose.)*
+ 
+@@ -260,14 +260,14 @@ All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decis
+ > Worth knowing: the review stage is the **inferential / eyeball** tier; the backpressure check earlier was the **computational** tier. Together they cover what each can't.
+ > Did you notice `<one finding>`? `<It routes back to implement | it's clean>`.
+ > *Findings*: fix, then re-run {{render-edge: awaiting-7 → review}}. Type: `fix`.
+-> *Clean*: next is the merge analysis — {{render-edge: awaiting-7 → merge}}. Type: `merge`.
++> *Clean*: next is **ship** — push, open the PR, watch checks — {{render-edge: awaiting-7 → ship}}. Type: `ship`.
+ 
+-### `awaiting-8` → at merge
+-> **Where we are**: stage 80 produced the merge analysis. After the merge executes, the flow offers the **post-flight retro seam** (`/eng-harness-flow --hook post-flight`) — the router owns the long-horizon reflection.
+-> Read the merge plan, then type **`PROCEED`** to execute or **`ABORT`** to hold. I'll mark the flow complete once it merges.
++### `awaiting-8` → at ship
++> **Where we are**: ship pushes the branch and opens the PR (**each behind its own confirm** — a "yes" to push isn't a "yes" to open a PR), then watches CI checks and reports. After ship reports, the flow offers the **post-flight retro seam** (`/eng-harness-flow --hook post-flight`) — the router owns the long-horizon reflection.
++> Checks green → the flow's done. A **red check** routes back to a fix, then re-ship (never blocks). A meaningfully **diverged base** hands off to the **reconcile** excursion — its merge (and any immediate merge) is typed-**`PROCEED`**-gated, never a generic "yes". I'll mark the flow complete once the PR is up and checks are reported.
+ 
+ ### `complete`
+-> 🎉 That's the full loop: spec → plan → tasks → code → review → merge. If a harness was installed, it captured friction along the way and reflected at the post-flight seam — `/eng-harness-flow` any time for a check-in. Re-run `/the-flow` any time to start a new one.
++> 🎉 That's the full loop: spec → plan → tasks → code → review → ship. If a harness was installed, it captured friction along the way and reflected at the post-flight seam — `/eng-harness-flow` any time for a check-in. Re-run `/the-flow` any time to start a new one.
+ 
+ ### Optional branch mentions (one-liners, surfaced at their seam — never new stages)
+ 
+@@ -317,7 +317,7 @@ When invoked with **no active state** but the resolved plan folder **already hol
+ | legacy `*-spec.md` only (no plan) | `awaiting-1b` | `plan` — reads the legacy spec as the business source | Research |
+ | legacy `*-spec.md` + `*-plan.md` (plan has no `## Business Specification`) | `awaiting-1b` | `implement` / `tasks` — completed split plan; **do not migrate** | Research, Plan |
+ | `tasks/phase-N/` present, **no** `reviews/review.phase-N*` | `awaiting-6` (mid-build) | `review` (review phase N) | + per-phase to N-1 |
+-| `reviews/review.phase-N*` present | phase N reviewed | `implement --phase "Phase N+1…"` (or `merge` if last) | + per-phase to N |
++| `reviews/review.phase-N*` present | phase N reviewed | `implement --phase "Phase N+1…"` (or `ship` if last) | + per-phase to N |
+ 
+ **Mode / rail**: read `**Mode**` from the plan's top-metadata block. No plan yet → `mode: "unknown"`, `milestones_total` stays the 6-milestone estimate until the `plan` pass recomputes it.
+ 
+diff --git a/skills/SDD/the-flow/references/flight-plan-ops.md b/skills/SDD/the-flow/references/flight-plan-ops.md
+index 3319788..6adbb33 100644
+--- a/skills/SDD/the-flow/references/flight-plan-ops.md
++++ b/skills/SDD/the-flow/references/flight-plan-ops.md
+@@ -46,9 +46,9 @@ harness flow rail        --path <f>            # the one-line spine rail
+ 
+ The rail walks the MAIN SPINE only and excludes any node with `branch_of`.
+ 
+-- **SPINE** = the SDD journey: research → plan → phase(s) → review → merge.
++- **SPINE** = the SDD journey: research → plan → phase(s) → review → ship.
+   - wire with `--next`; reveal phases at the plan pass via `insert-node --after <prev>`.
+-- **EXCURSIONS** = workshops, ADRs, backpressure, fix-loops, harness seams.
++- **EXCURSIONS** = workshops, ADRs, backpressure, fix-loops, harness seams, **reconcile** (the upstream-reconcile excursion off `ship`/a phase, only when the base has diverged).
+   - attach with `insert-node --branch-of <node> [--rejoin <node>]` — the branch point's `next` is UNCHANGED.
+   - excursions are EXCLUDED from the rail and render as dotted side-branches.
+ 
+@@ -60,13 +60,15 @@ The rail walks the MAIN SPINE only and excludes any node with `branch_of`.
+ |------|--------------------|
+ | preflight | research, plan, workshop, adr (the shared renderer also maps `tasks`→preflight, but `tasks` isn't in the-flow's vocabulary) |
+ | flight | phase (and any unknown type) |
+-| postflight | review, merge, retro |
++| postflight | review, ship, merge, retro |
+ 
+ Pass explicit `--zone` only to override a default. For the flight-plan vocabulary the defaults are already correct, so you do **not** need to add `--zone` to the calls above.
+ 
++> **`ship` banding caveat (cross-repo).** `ship` belongs in **postflight** (the terminal stage). That default takes effect once the external `harness flow` renderer adds `ship` to its postflight zone-set. Until then a renderer that doesn't know `ship` falls back to the **flight** band (the "any unknown type" rule above), so `ship` renders *inside* the flight `[ … ]` band rather than after it. Harmless — the rail still ends at **Ship**; best-effort, no hand-fix (never hand-edit `the-flow.md`). If you need the postflight band now, pass `--zone postflight` when adding the `ship` node.
++
+ ## §6 — Gotchas
+ 
+-- **Build order**: the validator rejects forward `--next` refs. Add the spine last-to-first (merge first), or add nodes then wire.
++- **Build order**: the validator rejects forward `--next` refs. Add the spine last-to-first (ship first), or add nodes then wire.
+ - **`set-node` can't re-parent**: it cannot set `--next` / `--branch-of`. You cannot turn an existing spine node into an excursion via the CLI — if a spine node should have been an excursion, re-create it with `insert-node --branch-of` (or rebuild the flow).
+ 
+ ## §7 — Pointer
+diff --git a/skills/SDD/the-flow/references/flight-plan.schema.json b/skills/SDD/the-flow/references/flight-plan.schema.json
+index 440bd80..5435be4 100644
+--- a/skills/SDD/the-flow/references/flight-plan.schema.json
++++ b/skills/SDD/the-flow/references/flight-plan.schema.json
+@@ -2,7 +2,7 @@
+   "kind": "flight-plan",
+   "extends": "flow-core",
+   "schema_version": 1,
+-  "description": "the-flow's flight-plan overlay in the `harness flow` CLI descriptor format (plan 024 Phase 3; AC-11). the-flow OWNS + ships this schema and supplies it to the CLI via `harness flow create flight-plan --schema <this file>` — there is NO second copy bundled in the CLI (grill 6/7). It extends the bundled shared-core (`flow-core`) field shape (the node id/type/label/status/next required fields + the node/comment/authority/root optionals) and declares ONLY the flight-plan vocabulary below; the CLI's hand-rolled validator (flow-schema.ts) merges the two. This descriptor REPLACES the former JSON-Schema-draft flight-plan.schema.json, which was reference-only (no runtime validator) and could not drive `create`. Node-type meanings: research; deep-research (excursion, branch_of research/plan); spec + plan (the atomic `1b plan` writes ONE unified plan node — `spec` is retained only for legacy split flows that still carry both); workshop (each its OWN node, branch_of plan); adr; backpressure (the pre-coding seam — an optional post-plan excursion off plan, branch_of plan); phase; fix-loop (branch_of a phase); review; merge; harness-boot (the pre-flight seam before a phase); harness-retro (the post-coding seam at each phase end / post-flight at merge). The backpressure/harness-boot/harness-retro nodes are first-class but ENGINE-OWNED — the flow offers them at the Graph edge (see references/harness-seams.md); their `command` fields are ALWAYS router invocations (`/eng-harness-flow --hook …`), never a child-skill name, and per-phase harness nodes are emitted only when the /eng-harness-flow router is installed AND the repo is provisioned. Mutation + render are owned by the CLI: mutate via `harness flow nav/status/add-node/set-node/insert-node/comment`; render via `harness flow render`. the-flow.md is GENERATED from the-flow.json by the CLI renderer and is never hand-edited. `todo`/`skipped` (Phase 4) are the chore lifecycle statuses — they let a flight plan carry chore nodes (cross-cutting upkeep, and the harness-loop seams ridden as chores) per ws-004; the chore `{kind, importance}` validation is shared-core, so it applies here automatically.",
++  "description": "the-flow's flight-plan overlay in the `harness flow` CLI descriptor format (plan 024 Phase 3; AC-11). the-flow OWNS + ships this schema and supplies it to the CLI via `harness flow create flight-plan --schema <this file>` — there is NO second copy bundled in the CLI (grill 6/7). It extends the bundled shared-core (`flow-core`) field shape (the node id/type/label/status/next required fields + the node/comment/authority/root optionals) and declares ONLY the flight-plan vocabulary below; the CLI's hand-rolled validator (flow-schema.ts) merges the two. This descriptor REPLACES the former JSON-Schema-draft flight-plan.schema.json, which was reference-only (no runtime validator) and could not drive `create`. Node-type meanings: research; deep-research (excursion, branch_of research/plan); spec + plan (the atomic `1b plan` writes ONE unified plan node — `spec` is retained only for legacy split flows that still carry both); workshop (each its OWN node, branch_of plan); adr; backpressure (the pre-coding seam — an optional post-plan excursion off plan, branch_of plan); phase; fix-loop (branch_of a phase); review; ship (the TERMINAL stage — push + open PR with repo guidance + watch CI checks; postflight zone); merge (the conditional upstream-reconcile excursion — branch_of ship/phase, fired only on real base divergence; the kept reconcile machinery, no longer the terminal step); harness-boot (the pre-flight seam before a phase); harness-retro (the post-coding seam at each phase end / post-flight at ship). The backpressure/harness-boot/harness-retro nodes are first-class but ENGINE-OWNED — the flow offers them at the Graph edge (see references/harness-seams.md); their `command` fields are ALWAYS router invocations (`/eng-harness-flow --hook …`), never a child-skill name, and per-phase harness nodes are emitted only when the /eng-harness-flow router is installed AND the repo is provisioned. Mutation + render are owned by the CLI: mutate via `harness flow nav/status/add-node/set-node/insert-node/comment`; render via `harness flow render`. the-flow.md is GENERATED from the-flow.json by the CLI renderer and is never hand-edited. `todo`/`skipped` (Phase 4) are the chore lifecycle statuses — they let a flight plan carry chore nodes (cross-cutting upkeep, and the harness-loop seams ridden as chores) per ws-004; the chore `{kind, importance}` validation is shared-core, so it applies here automatically.",
+   "statuses": ["done", "in_progress", "blocked", "known", "assumed", "todo", "skipped"],
+   "nodeTypes": [
+     "research",
+@@ -15,6 +15,7 @@
+     "phase",
+     "fix-loop",
+     "review",
++    "ship",
+     "merge",
+     "harness-boot",
+     "harness-retro"
+diff --git a/skills/SDD/the-flow/references/flight-plan.template.json b/skills/SDD/the-flow/references/flight-plan.template.json
+index ffe24e9..79303a2 100644
+--- a/skills/SDD/the-flow/references/flight-plan.template.json
++++ b/skills/SDD/the-flow/references/flight-plan.template.json
+@@ -15,7 +15,7 @@
+   },
+   "mode": "Full",
+   "nav": { "now": "p3", "next": "p4" },
+-  "_comment": "WORKED-EXAMPLE TEMPLATE — copy this shape for a new flight plan, then replace nodes/agents. Validates against flight-plan.schema.json. Snapshot: a 6-phase Full plan at Phase 3 in progress. Shows every status (done/in_progress/known/assumed), each workshop as its OWN node, verbatim user_input bubbles, a companion that WRAPS the build phases, a worker side-node, AND the harness seams as first-class, ENGINE-OWNED nodes (the flow offers them at the Graph edge — see references/harness-seams.md — NOT fired by stage sub-skills) whose commands are ALWAYS router invocations (/eng-harness-flow --hook …, never child-skill names): backpressure (--hook pre-coding, alias --event post-spec) as an optional post-plan refinement off the single atomic `1b plan` node (which writes the business spec + implementation plan in one document); harness-boot (--hook pre-flight) before a phase; harness-retro (--hook post-coding each phase end / --hook post-flight at merge). Harness nodes here are an ABBREVIATED example (one representative boot for p1, one representative retro for p2); a real flight plan emits one harness-boot + one harness-retro PER phase per references/harness-seams.md, and per-phase harness nodes appear only when the router is installed AND the repo is provisioned. They're shown because this example machine has the router installed + provisioned; omit them all when the Layer-1 probe misses (no ~/.agents/skills/eng-harness-flow/SKILL.md and no ~/.claude/skills fallback). the-flow.md is generated FROM this file.",
++  "_comment": "WORKED-EXAMPLE TEMPLATE — copy this shape for a new flight plan, then replace nodes/agents. Validates against flight-plan.schema.json. Snapshot: a 6-phase Full plan at Phase 3 in progress. Shows every status (done/in_progress/known/assumed), each workshop as its OWN node, verbatim user_input bubbles, a companion that WRAPS the build phases, a worker side-node, AND the harness seams as first-class, ENGINE-OWNED nodes (the flow offers them at the Graph edge — see references/harness-seams.md — NOT fired by stage sub-skills) whose commands are ALWAYS router invocations (/eng-harness-flow --hook …, never child-skill names): backpressure (--hook pre-coding, alias --event post-spec) as an optional post-plan refinement off the single atomic `1b plan` node (which writes the business spec + implementation plan in one document); harness-boot (--hook pre-flight) before a phase; harness-retro (--hook post-coding each phase end / --hook post-flight at ship). Harness nodes here are an ABBREVIATED example (one representative boot for p1, one representative retro for p2); a real flight plan emits one harness-boot + one harness-retro PER phase per references/harness-seams.md, and per-phase harness nodes appear only when the router is installed AND the repo is provisioned. They're shown because this example machine has the router installed + provisioned; omit them all when the Layer-1 probe misses (no ~/.agents/skills/eng-harness-flow/SKILL.md and no ~/.claude/skills fallback). the-flow.md is generated FROM this file.",
+   "agents": [
+     { "id": "crc", "kind": "companion", "slug": "code-review-companion", "runtime": "minih",
+       "run_id": "2026-01-19T08-22-01Z-a91f", "status": "live", "covers": ["p1", "p2", "p3", "p4", "p5", "p6"],
+@@ -95,11 +95,11 @@
+ 
+     { "id": "p4", "type": "phase", "phase": 4, "label": "CLI Package", "status": "known", "next": ["p5"] },
+     { "id": "p5", "type": "phase", "phase": 5, "label": "MCP Server", "status": "known", "next": ["p6"] },
+-    { "id": "p6", "type": "phase", "phase": 6, "label": "Docs & Polish", "status": "known", "next": ["merge"] },
+-    { "id": "merge", "type": "merge", "label": "Merge", "status": "known", "command": "/the-flow 8 merge", "next": ["hh"] },
++    { "id": "p6", "type": "phase", "phase": 6, "label": "Docs & Polish", "status": "known", "next": ["ship"] },
++    { "id": "ship", "type": "ship", "label": "Ship", "status": "known", "command": "/the-flow 8 ship", "next": ["hh"] },
+ 
+     { "id": "hh", "type": "harness-retro", "label": "Harness plan-complete (post-flight seam)", "status": "known",
+-      "command": "/eng-harness-flow --hook post-flight --plan-dir docs/plans/001-project-setup --json", "branch_of": "merge",
+-      "note": "Post-flight retro seam — the flow offers it after the merge executes (engine-owned, not fired by the merge verb); the router owns the long-horizon reflection (harvest + present + encode).", "next": [] }
++      "command": "/eng-harness-flow --hook post-flight --plan-dir docs/plans/001-project-setup --json", "branch_of": "ship",
++      "note": "Post-flight retro seam — the flow offers it after ship reports checks / opens the PR (engine-owned, not fired by the ship verb); the router owns the long-horizon reflection (harvest + present + encode).", "next": [] }
+   ]
+ }
+diff --git a/skills/SDD/the-flow/references/flight-plan.template.md b/skills/SDD/the-flow/references/flight-plan.template.md
+index 195dc5b..51e2306 100644
+--- a/skills/SDD/the-flow/references/flight-plan.template.md
++++ b/skills/SDD/the-flow/references/flight-plan.template.md
+@@ -3,7 +3,7 @@
+ 
+ **Kind**: flight-plan · **Now**: p3 · **Next**: p4 · **Nodes**: 17 · **Events**: 0
+ 
+-**Rail**: ◆─◆─[ ◆─◆─◐─◇─◇─◇ ]─◇  Research · Plan (spec + impl) ─ [ Monorepo Foundation · Shared Package · Next.js + Clean Arch · CLI Package · MCP Server · Docs & Polish ] ─ Merge
++**Rail**: ◆─◆─[ ◆─◆─◐─◇─◇─◇─◇ ]  ◆ Research · ◆ Plan (spec + impl) · [ ◆ Monorepo Foundation · ◆ Shared Package · ◐ Next.js + Clean Arch · ◇ CLI Package · ◇ MCP Server · ◇ Docs & Polish · ◇ Ship ]
+ 
+ ```mermaid
+ flowchart TD
+@@ -15,7 +15,7 @@ flowchart TD
+     p4["CLI Package"]:::known
+     p5["MCP Server"]:::known
+     p6["Docs & Polish"]:::known
+-    merge["Merge"]:::known
++    ship["Ship"]:::known
+ 
+     research --> plan
+     plan --> hb
+@@ -25,8 +25,8 @@ flowchart TD
+     p3 --> p4
+     p4 --> p5
+     p5 --> p6
+-    p6 --> merge
+-    merge --> hh
++    p6 --> ship
++    ship --> hh
+ 
+     dr["Deep research x3 📄2"]:::done
+     ws1["Workshop 1 · clean-arch boundaries 📄1"]:::done
+@@ -78,10 +78,11 @@ flowchart TD
+     classDef decision fill:#FFF3E0,stroke:#FB8C00,stroke-dasharray:2 2;
+     classDef companion fill:#D1C4E9,stroke:#5E35B1;
+     classDef worker fill:#B2DFDB,stroke:#00897B;
++    classDef chore fill:#E0F2F1,stroke:#00897B,stroke-dasharray:3 2;
+     classDef unknown fill:#FAFAFA,stroke:#BDBDBD,stroke-dasharray:1 4;
+ ```
+ 
+-**Legend**: 🟩 done · 🟧 in-progress · 🟥 blocked · 🟦 known (designed) · ⬜ assumed (speculative) · 🔶 decision · 🗣 user input · 🟪 harness loop · 🤖 companion · 🛠 worker.
++**Legend**: 🟩 done · 🟧 in-progress · 🟥 blocked · 🟦 known (designed) · ⬜ assumed (speculative) · 🔶 decision · 🗣 user input · 🟪 harness loop · 🤖 companion · 🛠 worker · 🧰 chore (upkeep).
+ 
+ ## Node log
+ 
+diff --git a/skills/SDD/the-flow/references/getting-started.md b/skills/SDD/the-flow/references/getting-started.md
+index 6518e84..15a5ee8 100644
+--- a/skills/SDD/the-flow/references/getting-started.md
++++ b/skills/SDD/the-flow/references/getting-started.md
+@@ -30,7 +30,8 @@ The pipeline used to be a family of standalone per-stage skills; it is now **one
+ | Implement | `6` | `implement` | `references/stages/60-implement.md` — `--companion` mode adds a live minih reviewer |
+ | Progress | `6a` | `progress` | `references/stages/62-progress.md` |
+ | Review | `7` | `review` | `references/stages/70-review.md` |
+-| Merge | `8` | `merge` | `references/stages/80-merge.md` |
++| Ship | `8` | `ship` | `references/stages/80-ship.md` — push + open PR (repo-guidance-aware) + watch CI checks; push & PR-open each behind a confirm |
++| Reconcile | `8c` | `reconcile` | `references/stages/80-merge.md` — conditional upstream-reconcile excursion (divergent base); merge on typed `PROCEED`. Typed `merge` / `plan-8-v2-merge` resolve here |
+ 
+ > **What changed (formerly)**: each stage was its own public skill — `/plan-1a`; `/plan-1b` (specify) **and** `/plan-3` (architect), now folded into the single `1b plan` step that writes the business spec and implementation plan into one document in one atomic pass; `/plan-2` (clarify — now the Re-entry section of stage 1b); `/plan-2c`, `/plan-3a`, `/plan-5`, `/plan-6` (+ its companion variant, now the implement verb's `--companion` mode), `/plan-6a`, `/plan-7`, `/plan-8`. Those skills are deleted; `/the-flow <id|verb> [flags]` is the only public surface for the main flow (typed `6c` or `companion` still resolves, via the alias table, to implement with `--companion`; typed `specify` or `architect` resolve to `1b plan`). The utility skills (`validate-v2`, `deepresearch-v2`, `didyouknow-v2`, `htmlify-v2`, `plan-0-v2-constitution`, `plan-2b-v2-prep-issue`, `plan-v2-extract-domain`, `util-0-v2-handover`, `install-hve-core-rpiv`) are unchanged and still called by their own names.
+ 
+@@ -40,7 +41,7 @@ The pipeline used to be a family of standalone per-stage skills; it is now **one
+ 
+ Two loops run side by side in the same context — that is all. Neither owns the other:
+ 
+-- **SDD pipeline** (you drive it) — `/the-flow 1a explore → 1b → [2c] → 5 → 6 → 7 → 8`, one stage per call (by id or by name). A linear journey: plan (spec + impl, one document) → tasks → code → review → merge, with the optional post-spec backpressure check as a post-plan refinement off 1b.
++- **SDD pipeline** (you drive it) — `/the-flow 1a explore → 1b → [2c] → 5 → 6 → 7 → 8`, one stage per call (by id or by name). A linear journey: plan (spec + impl, one document) → tasks → code → review → **ship** (push + PR + watch checks), with the optional post-spec backpressure check as a post-plan refinement off 1b, and the upstream **reconcile** (8c) as a conditional excursion when the base has diverged.
+ - **Engineering harness** (the external eng-harness family drives it) — a *cycle*: Boot → Backpressure → Observe → Retro → Improve. The flow's stages never run harness stages themselves; the guided **engine** offers each seam at the Graph edge (seams are **flow-owned** — `references/harness-seams.md`; the stage sub-skills are harness-blind) and tells the router *where the work is* via a lifecycle **hook**:
+ 
+ | Seam (Graph edge) | Offered by | Router call (`--event` alias) |
+@@ -49,7 +50,7 @@ Two loops run side by side in the same context — that is all. Neither owns the
+ | post-plan refinement off 1b | the engine, as a Graph-edge beat | `/eng-harness-flow --hook pre-coding --spec <path>` (`post-spec`) |
+ | before each phase | the engine, before the phase | `/eng-harness-flow --hook pre-flight --phase <id> --plan-dir <p>` (`pre-implement`) |
+ | each phase end | the engine, at the phase-end edge | `/eng-harness-flow --hook post-coding --plan-dir <p>` (`phase-end`) |
+-| at merge | the engine, after the merge executes | `/eng-harness-flow --hook post-flight --plan-dir <p>` (`plan-complete`) |
++| at ship | the engine, after ship reports checks / opens the PR | `/eng-harness-flow --hook post-flight --plan-dir <p>` (`plan-complete`) |
+ 
+ The flow wires **four fire-hooks** (`pre-flight` at the two edges, `pre-coding`, `post-coding`, `post-flight`) and skips the silent `coding` capture. The router's child skills are **private** — they may move or rename, and no SDD stage (or user doc) ever names them. One name is stable: `/eng-harness-flow` + its `--hook` vocabulary (permanent `--event` alias). Full seam map: `docs/how/the-flow-harness-seams.md`.
+ 
+@@ -73,7 +74,7 @@ flowchart TB
+         P6["/the-flow 6 implement<br/>(--companion = +live review)"]:::manual
+         P6A["/the-flow 6a progress"]:::auto
+         P7["/the-flow 7 review"]:::optional
+-        P8["/the-flow 8 merge"]:::optional
++        P8["/the-flow 8 ship"]:::optional
+     end
+ 
+     subgraph harness["ENGINEERING HARNESS · one door, lifecycle hooks"]
+@@ -133,7 +134,7 @@ flowchart LR
+         direction TB
+         F1["/the-flow 1b plan"] --> F3["/the-flow 5 tasks"] --> F4["/the-flow 6 implement"] --> F5["/the-flow 7 review"]
+         F5 -->|next phase| F3
+-        F5 --> F6["/the-flow 8 merge"]
++        F5 --> F6["/the-flow 8 ship"]
+     end
+ 
+     class simple s
+@@ -142,7 +143,7 @@ flowchart LR
+ 
+ **Simple Mode** — single-phase, inline tasks. `/the-flow 1b plan` (front-loads clarifications, writes spec + plan in one document) → `/the-flow 6 implement`. No `/the-flow 5 tasks` expansion needed.
+ 
+-**Full Mode** — multi-phase. `/the-flow 1b plan`, then a per-phase loop of `/the-flow 5 tasks → /the-flow 6 implement → /the-flow 7 review`, then `/the-flow 8 merge` to merge.
++**Full Mode** — multi-phase. `/the-flow 1b plan`, then a per-phase loop of `/the-flow 5 tasks → /the-flow 6 implement → /the-flow 7 review`, then `/the-flow 8 ship` to push, open the PR, and watch checks.
+ 
+ > **Merged stages**: stage `1b plan` produces the **business spec and the implementation plan in one document**, in one atomic pass — front-loaded clarifications up front, the validate gates (G1–G7) run inline, and `/validate-v2` auto-runs at the end. Later mid-plan clarifications re-enter through the Re-entry section inside `references/stages/20-plan.md`. There is no separate specify, clarify, architect, or complete-the-plan stage in the flow.
+ 
+@@ -180,10 +181,12 @@ flowchart LR
+ 
+ 5.  /the-flow 5 tasks + /the-flow 6 implement --companion for Phase 2 ...
+ 
+-6.  /the-flow 8 merge --plan "..."
+-    → Merge analysis; on PROCEED the merge executes, then the engine offers
+-      /eng-harness-flow --hook post-flight for the long-horizon
+-      reflection. Feature complete 🎉
++6.  /the-flow 8 ship --plan "..."
++    → Push (confirm) + open PR (separate confirm, repo-guidance-aware) + watch CI
++      checks; a red check routes back to a fix, then re-ship. The engine then offers
++      /eng-harness-flow --hook post-flight for the long-horizon reflection.
++      A diverged base hands off to /the-flow 8c reconcile (merge typed-PROCEED-gated).
++      Feature shipped 🎉
+ ```
+ 
+ You never named a harness skill — the flow told the router *where the work was* at each seam, and the router did the rest. No router installed? Same walkthrough, minus the seam lines, plus one calm warning at step 1. And every step loaded exactly one stage module — the rest of the pipeline stayed out of context.
+@@ -204,7 +207,8 @@ You never named a harness skill — the flow told the router *where the work was
+ | `/the-flow 6 implement` · `implement` | Implement one phase — add `--companion` for live companion review (typed `6c`/`companion` alias here) | code + `execution.log.md` (+ reviews in companion mode) | engine offers `--hook pre-flight` (before) + `--hook post-coding` (after) |
+ | `/the-flow 6a progress` · `progress` | Progress tracking *(auto-run by the implement verb)* | updated task tables + execution log | none (progress only) |
+ | `/the-flow 7 review` · `review` | Code review *(rare in companion flow)* | `reviews/review.md` | none (read-only review) |
+-| `/the-flow 8 merge` · `merge` | Upstream merge analysis | merge plan | engine offers `--hook post-flight` after the merge |
++| `/the-flow 8 ship` · `ship` | Get work out — push + open PR (repo-guidance-aware) + watch CI checks + report; push & PR-open each behind a confirm, merge optional | pushed branch + PR + `ship/<date>/ship-report.md` | engine offers `--hook post-flight` after ship reports |
++| `/the-flow 8c reconcile` · `reconcile` | Conditional upstream-reconcile excursion (divergent base) — kept merge-analysis machinery; typed `merge` resolves here | reconcile/merge plan | merge executes only on typed `PROCEED` |
+ | `/eng-harness-flow` | **The harness front door** — stateless router; detects where the loop is and routes one step | routing envelope (`--json`) | the only harness skill the flow ever calls |
+ 
+ ---
+diff --git a/skills/SDD/the-flow/references/harness-seams.md b/skills/SDD/the-flow/references/harness-seams.md
+index 6a2cc3a..3a566ef 100644
+--- a/skills/SDD/the-flow/references/harness-seams.md
++++ b/skills/SDD/the-flow/references/harness-seams.md
+@@ -45,7 +45,7 @@ The flow wires **four fire-hooks** and deliberately **skips one** (the silent `c
+ | **post-plan refinement** off `awaiting-1b` | `pre-coding` `--spec <plan path>` | `post-spec` | `backpressure` (`branch_of: "plan"`) | `/eng-harness-flow --hook pre-coding --spec "<plan path>" --json` |
+ | **before each phase** (into a `phase`) | `pre-flight` `--phase "<Phase N>" --plan-dir <p>` | `pre-implement` | `harness-boot` (`branch_of: "<phase-id>"`) | `/eng-harness-flow --hook pre-flight --phase "<Phase N: Title>" --plan-dir "<plan dir>" --json` |
+ | **each phase end** (out of a `phase`) | `post-coding` `--plan-dir <p>` | `phase-end` | `harness-retro` (`branch_of: "<phase-id>"`) | `/eng-harness-flow --hook post-coding --plan-dir "<plan dir>" --json` |
+-| **at merge** (after typed `PROCEED`) | `post-flight` `--plan-dir <p>` | `plan-complete` | `harness-retro` (`branch_of: "merge"`) | `/eng-harness-flow --hook post-flight --plan-dir "<plan dir>" --json` |
++| **at ship** (after checks reported / PR opened) | `post-flight` `--plan-dir <p>` | `plan-complete` | `harness-retro` (`branch_of: "ship"`) | `/eng-harness-flow --hook post-flight --plan-dir "<plan dir>" --json` |
+ | **mid-build** (we do **not** wire this) | `coding` | `task-pause` | *(none — silent CLI capture, the harness's own concern)* | *(unwired — see § Seam contract)* |
+ 
+ **What each beat is *for* (narration source):**
+@@ -53,7 +53,7 @@ The flow wires **four fire-hooks** and deliberately **skips one** (the silent `c
+ - **`pre-coding` @ post-plan** — the backpressure survey: *can the planned work be proven by deterministic sensors, or only eyeballed?* Produces `backpressure-coverage.md` — **advisory output**: re-run the **plan** verb *informed by* it (the harness-blind plan verb does **not** auto-read the file; you fold what you learned into the re-plan intent). Offered as an optional post-plan refinement, never forced.
+ - **`pre-flight` @ phase** — the router proves the system **boots** before a line of code; verdict narrated verbatim (`healthy → build` · `SLOW → build with a note` · `UNHEALTHY → stop and ask the human: Retry / Continue without harness / Abort` · `UNAVAILABLE → standard testing`).
+ - **`post-coding` @ phase end** — drain **this phase's** friction notes → `.retro.md` (the router owns drain-vs-harvest; the user may see a `[s/t/p/e/d/a]` prompt).
+-- **`post-flight` @ merge** — the long-horizon reflection: harvest + present improvements + encode.
++- **`post-flight` @ ship** — the long-horizon reflection: harvest + present improvements + encode (offered after ship reports checks / opens the PR).
+ 
+ ---
+ 
+@@ -77,7 +77,7 @@ This makes the **three emission surfaces** agree:
+ The `post-coding` (phase-end) seam is a **first-class beat per phase**, not a buried side-effect: one `harness-retro` node per `phase`, `branch_of` that phase, on an `assumed → done` lifecycle.
+ 
+ - **"Drain owed" is re-derived, not stored** — no new state file. A phase whose node is `done` while its `harness-retro` sibling is still `assumed`/absent ⇒ that phase's drain is owed. The flight-plan node **is** the durable record (existing `status` + `branch_of` fields suffice — KISS, no rollup).
+-- **Drain before harvest.** At phase/session end the router drains the non-empty buffer first; harvest (the `post-flight` beat at merge) reads `.retro.md`. The router owns that ordering — the flow just offers the beat at the edge.
++- **Drain before harvest.** At phase/session end the router drains the non-empty buffer first; harvest (the `post-flight` beat at ship) reads `.retro.md`. The router owns that ordering — the flow just offers the beat at the edge.
+ 
+ ---
+ 
+@@ -107,8 +107,8 @@ Every seam is a **print-then-offer beat the engine presents at the edge** (invar
+ 
+ | Facet | Value (v1, 2026-06-17) |
+ |---|---|
+-| `harness_seam_contract` | `v1` — the 021 five-hook contract; **bump** when any mirrored fact below changes meaning (a hook renamed, an alias remapped, a verdict added) |
+-| Hooks we **wire** (emit `--hook`) | `pre-flight` (flow entry **and** before each phase) · `pre-coding` (post-plan) · `post-coding` (each phase end) · `post-flight` (at merge) |
++| `harness_seam_contract` | `v1` — the 021 five-hook contract; **bump** when any mirrored fact below changes meaning (a hook renamed, an alias remapped, a verdict added). *No bump for the 2026-06-19 ship remap:* moving the `post-flight` retro from the `merge` edge to the `ship` edge (`branch_of: "ship"`) changed only **which the-flow Graph edge** the hook rides — an internal-flow fact, not a mirrored upstream fact (the hook, its `plan-complete` alias, its verdict set, and its `harness-retro` node type are all unchanged). v1 stands. |
++| Hooks we **wire** (emit `--hook`) | `pre-flight` (flow entry **and** before each phase) · `pre-coding` (post-plan) · `post-coding` (each phase end) · `post-flight` (at **ship** — the terminal stage; remapped from `merge` 2026-06-19) |
+ | Hook upstream has, we **don't** wire | `coding` — the silent `harness observe "<what>" --kind <kind>` capture (one buffer entry per call); mirrors the deliberate prior `task-pause` skip. The harness owns in-flight capture once alive in-context; the flow never drives it |
+ | `--event` alias (permanent) | `session-start`→`pre-flight` · `pre-implement`→`pre-flight` · `post-spec`→`pre-coding` · `phase-end`→`post-coding` · `plan-complete`→`post-flight` · `task-pause`→`coding`. The flow **emits `--hook`**; `--event` is retained only for **back-compat understanding** — mapping/reading an older router's envelope, never a command the flow emits or down-emits (an older router is a runtime-dependency gap → reinstall, not an automatic fallback) |
+ | Envelope `decision` | `route` · `redirect` · `noop` · `ambiguous` (+ an additive `hook` field on every routing envelope) |
+diff --git a/skills/SDD/the-flow/references/stages/80-merge.md b/skills/SDD/the-flow/references/stages/80-merge.md
+index 48080cb..cd2266a 100644
+--- a/skills/SDD/the-flow/references/stages/80-merge.md
++++ b/skills/SDD/the-flow/references/stages/80-merge.md
+@@ -1,11 +1,11 @@
+-# merge
++# reconcile
+ 
+ > Sub-skill — part of a verb library. Knows nothing about any flow:
+ > no stage ids, no successor/predecessor names, no flow commands.
+ > Composition is the bundling flow's job.
+ 
+-**Verb**: merge
+-**Purpose**: Analyze upstream changes from the target branch (default `main`) and generate a comprehensive merge plan document — diagrams, conflict tables, regression risks, ordered steps — before any merge execution. Analysis only by default; merge execution runs ONLY after the user explicitly types `PROCEED`. On ABORT the merge plan is saved for later; re-enter with this verb and the same `--plan`.
++**Verb**: reconcile
++**Purpose**: A **conditional upstream-reconcile excursion** — fired when the target branch (default `main`) has **meaningfully diverged** since the branch point, not as a routine terminal step. Analyze what landed upstream and generate a comprehensive reconcile/merge plan document — diagrams, conflict tables, regression risks, ordered steps — before any merge execution. Analysis only by default; merge execution runs ONLY after the user explicitly types `PROCEED`. On ABORT the plan is saved for later; re-enter with this verb and the same `--plan`. (Getting work *out* — push, PR, watch checks — is the **ship** verb's job; this verb only handles pulling a diverged base back *in*.)
+ 
+ **Consumes**: all phases implemented and reviewed; clean working tree (no uncommitted changes); on a branch (not detached HEAD); plan folder resolvable (contains `*-plan.md`, or a legacy `*-spec.md`); target branch exists and is reachable. Input artifacts — git history (ancestor/HEAD/target), your spec/plan/execution logs, upstream plan folders under `docs/plans/`, `docs/domains/**` (optional).
+ 
+
+=== NEW FILE (untracked): skills/SDD/the-flow/references/stages/80-ship.md ===
+diff --git a/skills/SDD/the-flow/references/stages/80-ship.md b/skills/SDD/the-flow/references/stages/80-ship.md
+new file mode 100644
+index 0000000..070ed42
+--- /dev/null
++++ b/skills/SDD/the-flow/references/stages/80-ship.md
+@@ -0,0 +1,213 @@
++# ship
++
++> Sub-skill — part of a verb library. Knows nothing about any flow:
++> no stage ids, no successor/predecessor names, no flow commands.
++> Composition is the bundling flow's job.
++
++**Verb**: ship
++**Purpose**: Get the work **out** — push the branch, open a pull request (using repo PR guidance when present), watch the PR's CI checks, and report problems. The actual merge is **optional** (platform auto-merge, or a separate confirm-gated step); a meaningfully diverged base is handed off to the upstream-**reconcile** excursion rather than merged locally here. Best-effort throughout: degrades to a printed instruction when `gh` is absent, the repo is on its default branch with nothing to push, or no CI is configured — it never crashes out of a `gh` call.
++
++**Consumes**: an implemented + reviewed plan (review verdict APPROVE / clean, or an explicit user override); plan folder resolvable (`*-plan.md`, or a legacy `*-spec.md`); a git repository. Optional inputs (all best-effort, each degrades): a working branch with commits ahead of the base; `gh` CLI present + authenticated; repo PR guidance — `.github/pull_request_template.md` (or `.github/PULL_REQUEST_TEMPLATE*`), `CONTRIBUTING*`, `CODEOWNERS`, the repo's default base branch.
++
++**Flags**: `--plan "<abs path to docs/plans/<ordinal>-<slug>/>"` (optional; auto-detect from cwd) · `--base "<branch>"` (optional; PR base, default = repo default branch) · `[--no-watch]` (optional; open the PR but skip the CI-check watch) · `[--draft]` (optional; open the PR as a draft) · `[--watch-cap "<minutes>"]` (optional; bound the check-watch, default 20).
++
++**Produces**: a pushed branch; an opened (or reused) PR behind an explicit confirm; a ship report at `${PLAN_DIR}/ship/${DATE}/ship-report.md` (PR URL, base, check results, any failing checks + their details link, resume note); terminal summary = PR URL + check status + (on red) the fix-loop offer. An actual merge is produced **only** on a separate typed `PROCEED`.
++
++**Side effects**: outward-facing — `git push` (confirm #1), `gh pr create` (confirm #2), and an **optional** `gh pr merge` / `git merge` **only** on typed `PROCEED`. Each is public; **never** fired on a generic "yes". No source files are modified.
++
++---
++
++## Procedure
++
++Get the work out: push → open PR (repo-guidance-aware) → watch checks → report problems → (optional) merge. Every outward-facing action is behind its own explicit confirmation; everything degrades to a printed instruction rather than an error.
++
++> Elegance: the ship report is **output**. Record the PR URL, the base, the check verdicts, and the resume note — the facts a human needs to act — not a play-by-play. Doctrine + the seven-function line test: `references/00-routing.md` § Shared conventions.
++
++> **Safety**: push, PR-open, and merge are outward-facing. They each pause for an explicit go-ahead, the merge for a typed `PROCEED` specifically. Reading state (`git status`, `gh pr view`, `gh pr checks`) is always safe and never gated.
++
++---
++
++```md
++User input:
++
++$ARGUMENTS
++# Optional flags:
++# --plan "<abs path to docs/plans/<ordinal>-<slug>/>"  # plan folder (auto-detect if in plan dir)
++# --base "<branch>"                                     # PR base (default: repo default branch)
++# --no-watch                                            # open the PR, skip the CI-check watch
++# --draft                                               # open the PR as a draft
++# --watch-cap "<minutes>"                               # bound the check-watch (default: 20)
++
++## Execution Flow
++
++1) Input Resolution
++
++   - PLAN_DIR = provided --plan OR auto-detect from cwd (look for *-plan.md, or a legacy *-spec.md)
++   - PLAN_SLUG = plan folder name minus ordinal (e.g. "035-flow-ship-stage" -> "flow-ship-stage")
++   - BASE = provided --base OR repo default branch:
++     `gh repo view --json defaultBranchRef -q .defaultBranchRef.name` (fallback:
++     `git symbolic-ref --short refs/remotes/origin/HEAD | sed 's@^origin/@@'`, then `main`)
++   - DATE = `date +%Y-%m-%d`
++   - BRANCH = `git symbolic-ref --short HEAD 2>/dev/null` (empty = detached HEAD)
++
++2) Preconditions & degradation (read-only probes; on any miss, PRINT an instruction and STOP
++   the affected outward action — never crash, never call `gh pr create` blindly):
++
++   a) **Nothing to ship as a PR** — detect and degrade to a printed instruction (AC-10):
++      - `BRANCH` is empty (detached HEAD), OR
++      - `BRANCH == BASE` (on the default branch — the common "main-only" case), OR
++      - no commits ahead of base: `git rev-list --count ${BASE}..HEAD` is `0`
++      → print, then stop the PR path:
++      ```
++      ⚠️ Nothing to open a PR from: you're on "${BRANCH:-detached HEAD}" with no commits ahead of ${BASE}.
++         Create a feature branch first, then re-run:
++           git switch -c ${PLAN_SLUG}
++           git push -u origin ${PLAN_SLUG}
++      ```
++      (Do NOT invoke `gh pr create` with head == base — it fails; this printed instruction replaces it.)
++
++   b) **No remote / no upstream** (AC-06): `git remote get-url origin` fails →
++      print `git remote add origin <url>` guidance and stop the push path.
++
++   c) **`gh` absent or unauthenticated** (AC-06): `gh auth status` fails (or `command -v gh` empty) →
++      the whole PR path degrades to push + a compare URL:
++      ```
++      gh not available — pushing the branch and printing a compare URL instead:
++        git push -u origin ${BRANCH}
++        <remote-web-url>/compare/${BASE}...${BRANCH}
++      ```
++      Run the push (still behind confirm #1), print the compare URL, write the report, stop.
++
++   d) **Dirty tree**: `git status --porcelain` non-empty → note the uncommitted files; only committed
++      work ships. Offer to proceed (push existing commits) or stop so the user can commit.
++
++3) Read repo PR guidance (best-effort; each optional — absence is normal, never an error) (AC-03):
++
++   | Source | Read | Use |
++   |---|---|---|
++   | `.github/pull_request_template.md` / `.github/PULL_REQUEST_TEMPLATE*` | template body | seed the PR body |
++   | `CONTRIBUTING*` (root or `.github/`) | PR conventions | honor any title/label/checklist convention |
++   | `CODEOWNERS` | owners | let `gh` auto-request reviewers; do not hand-assign |
++   | `gh repo view --json defaultBranchRef` | default base | confirm BASE when `--base` not given |
++
++   **Absent (default path)**: title = the plan's feature name (from `*-plan.md` h1 / Summary);
++   body = the plan's `## Business Specification` § Summary (or the plan summary) + a trailing
++   "🤖 Generated with the SDD flow" line. Quote the plan, don't invent scope.
++
++4) Confirm gate #1 — PUSH (its own gate; AC-04). Print the exact command, then ask to proceed:
++   ```
++   git push -u origin ${BRANCH}
++   ```
++   On a clear go-ahead → run it. (This confirm covers ONLY the push.)
++
++5) Confirm gate #2 — OPEN PR (separate, outward-facing; NEVER inherits the push "yes"; AC-04, AC-06):
++   - **PR already exists** for the branch? `gh pr view --json url,state,number 2>/dev/null` returns one →
++     skip create, reuse it (capture URL + number), jump to step 6.
++   - Else print the exact command, then ask to proceed:
++     ```
++     gh pr create --base ${BASE} --head ${BRANCH} \
++       --title "<title>" --body "<body>" [--draft]
++     ```
++     On a clear go-ahead → run it. Capture PR_URL + PR_NUMBER from the output.
++
++6) Watch CI checks (skip entirely if `--no-watch`) — BOUNDED (AC-05):
++   - Enumerate once: `gh pr checks ${PR_NUMBER}`.
++     - **No checks reported** ("no checks reported on the … branch") → report "no CI configured for
++       this PR", write the report, STOP (this is success, not failure).
++   - Else watch with a bound = `--watch-cap` minutes (default 20), interval 30s. Either
++     `timeout ${cap}m gh pr checks ${PR_NUMBER} --watch --interval 30`, or a polling loop that
++     re-reads `gh pr checks ${PR_NUMBER}` until all checks resolve or the cap elapses:
++     - **all pass** → report green.
++     - **any fail** → capture the failing check name(s) + details URL from `gh pr checks` output;
++       report fail; **offer a fix-loop** (the bundling flow renders the actual command — describe it in
++       verb terms: "a red check's fixes go back through the **implement** verb, then re-run **ship**").
++       Never block.
++     - **still pending at the cap** → report "checks still running after ${cap}m — not blocking;
++       re-check with `gh pr checks ${PR_NUMBER}`", STOP.
++
++7) Optional merge — NEVER automatic; present two gated paths (AC-04):
++   - **Platform auto-merge** (preferred — lets the platform merge when checks pass + approvals land),
++     behind a confirm:
++     ```
++     gh pr merge ${PR_NUMBER} --auto --squash
++     ```
++   - **Immediate merge** — ONLY on a typed `PROCEED` (outward + irreversible-ish):
++     ```
++     gh pr merge ${PR_NUMBER} --squash   # or --merge, per repo convention
++     ```
++     On `ABORT` (or anything but `PROCEED`) → leave the PR open; the ship report records where to resume.
++   - **Diverged base** — if the base has meaningfully advanced since the branch point
++     (`git rev-list --count HEAD..origin/${BASE}` is large, or a quick `git merge-tree` shows overlap),
++     do NOT attempt a local merge here. Report the divergence and hand off to the upstream-reconcile
++     excursion (the bundling flow offers it). All handoff context is git-derived.
++
++8) Write the ship report + terminal summary (templates below).
++
++## Ship Report Template
++
++Write to `${PLAN_DIR}/ship/${DATE}/ship-report.md`:
++
++```markdown
++# Ship Report — ${PLAN_SLUG}
++
++**Generated**: ${TIMESTAMP}
++**Branch**: ${BRANCH} → **Base**: ${BASE}
++**PR**: ${PR_URL} (#${PR_NUMBER})  ·  **State**: ${open|merged|reused|degraded-no-gh}
++
++## Checks
++
++| Check | Status | Details |
++|-------|--------|---------|
++| ${name} | ✅/❌/⏳ | ${url} |
++
++**Verdict**: all green | ${N} failing | no CI configured | still running at cap
++
++## Failing checks (if any)
++
++- **${check}** — ${details-url}
++  Recommended: fix via the implement verb, then re-run ship.
++
++## Repo guidance applied
++
++- PR template: ${found|none → default body}
++- Base: ${BASE} (${default branch|--base override})
++- Reviewers: ${CODEOWNERS auto-requested|none}
++
++## Resume
++
++- Merge not yet done → ${platform auto-merge armed | awaiting typed PROCEED | base diverged → reconcile}
++- Re-check checks: `gh pr checks ${PR_NUMBER}`
++```
++
++## Success Message
++
++```
++✅ Shipped: PR ${PR_URL} (#${PR_NUMBER})
++   Branch ${BRANCH} → ${BASE}
++   Checks: ${all green | N failing | no CI | still running}
++   Report: ${PLAN_DIR}/ship/${DATE}/ship-report.md
++   ${on red: "Red check — fixes go back through implement, then re-run ship." }
++   ${merge: "Merge is optional — auto-merge armed / type PROCEED to merge now / base diverged → reconcile." }
++```
++
++Degraded (no `gh`):
++```
++✅ Pushed ${BRANCH} → compare: <remote-web-url>/compare/${BASE}...${BRANCH}
++   (gh unavailable — open the PR in the web UI; re-run ship once gh is authed to watch checks.)
++```
++
++## Notes
++
++- **Read-only by default until a confirm.** Probes (`git status`, `gh pr view/checks`) never change state.
++- **Push / PR / merge are three separate gates.** A "yes" to push is not a "yes" to open a PR;
++  a merge needs a typed `PROCEED`.
++- **All context is git/`gh`-derived.** No external services beyond the repo's own remote + checks.
++- **Best-effort.** Missing `gh`, main-only repo, no CI, existing PR — each degrades to a printed
++  instruction or a reused artifact, never a hard failure.
++```
++
++---
++
++## Exit
++
++Print the output-contract summary (✅ block: PR URL, base, check status, report path; on red the fix-loop offer; merge left optional). Then STOP. Do not name a next stage. If invoked standalone, end with exactly: "Routing is the flow's job — run the parent flow bare to continue."

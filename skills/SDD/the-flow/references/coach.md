@@ -22,7 +22,7 @@ Every time you surface a next step:
 **Exceptions (print, never silently run):**
 
 - **`/compact`** — a CLI built-in that wipes context; you literally cannot invoke it. Print it, explain the re-run handshake (below).
-- **The final merge** — print the merge verb's analysis and only execute on an explicit typed `PROCEED`.
+- **The final ship** — push and PR-open each pause for a confirm; an immediate merge (or the reconcile excursion's merge) executes only on an explicit typed `PROCEED`.
 - **Implement (heavy build, plain or `--companion`)** — you *may* run it on request, but say it'll be a long turn and offer the cleaner alternative: `/compact` first, then run it in a fresh turn. Their call.
 
 The per-block "Type: …" prompts below are **branch selectors** (which option the user wants) — once a branch is chosen, the same print-then-offer applies to its command.
@@ -34,7 +34,7 @@ The per-block "Type: …" prompts below are **branch selectors** (which option t
 **Every** guided turn begins with a fixed one-line **host rail**, on its own line, then a blank line, then the narration. It marks the guide's voice (never confusable with a stage's `✅`/`📁` output) **and** shows how far down the flow we are.
 
 ```
-[the-flow] ◆─◆─[◆─◐─◇]─◇  research · plan · [build 2/3] · merge
+[the-flow] ◆─◆─[◆─◐─◇]─◇  research · plan · [build 2/3] · ship
 
 Where we are: …
 ```
@@ -43,11 +43,11 @@ Where we are: …
 - **Same-line legend**: two spaces after the pips, the milestone names ride the same line — lowercase, in rail order, joined by ` · `, the **current** one wrapped in `[…]`. Brackets follow the `◐`; on a settled rail (no `◐`) bracket the first `◇` (the next milestone up). Once the `plan` pass reveals per-phase nodes, the phase group reads as one bracketed word with a counter (`[build 2/3]`); if naming every phase would overflow ~100 columns, shorten to `p1 … pN`.
 - **Phase grouping**: per-phase nodes are wrapped in one `[ … ]` so they read distinctly from the fixed flow nodes → `◆─◆─◆─[◆─◐─◇]─◇`. During Build, the phase currently being implemented is the `◐` inside the group.
 - **Render the whole rail block as a fenced code block — always.** The rail line(s), any anchored companion line, and the `now`/`next` groups are ONE ``` fence (no language tag). Outside a fence markdown collapses leading spaces — and **never** fake alignment with `&nbsp;` or any HTML entity (terminals print them literally). Real spaces inside the fence are the only alignment tool.
-- **Macro-milestones (Full)**: Research · Plan · Tasks · Build · Review · Merge (6). The old separate Spec + Plan milestones collapse into **one `Plan` pip** — the atomic `plan` verb writes both halves (business spec + implementation plan) in one pass, so the pip fills once that document exists. Optional/sub-steps (deep-research, workshops, the post-spec backpressure check, ADRs, the fix loop) live *under* a milestone and get **no diamond** — opting in/out never changes the total.
-- **Dynamic total**: `milestones_total` is an estimate early, **recomputed during the `plan` pass** from the real phase count revealed in the implementation half (Research · Plan · **one node per phase** · Merge). A 5-phase plan expands the rail (2 + 5 + 1 = 8); a 1-phase Simple plan collapses it. Re-scales **only at the `plan` pass**, then monotonic. `state.milestones_done` drives the fill.
+- **Macro-milestones (Full)**: Research · Plan · Tasks · Build · Review · Ship (6). The old separate Spec + Plan milestones collapse into **one `Plan` pip** — the atomic `plan` verb writes both halves (business spec + implementation plan) in one pass, so the pip fills once that document exists. Optional/sub-steps (deep-research, workshops, the post-spec backpressure check, ADRs, the fix loop) live *under* a milestone and get **no diamond** — opting in/out never changes the total.
+- **Dynamic total**: the rail total is an estimate early, then reflects the real phase count once the **`plan` pass** reveals it (Research · Plan · **one node per phase** · Ship). A 5-phase plan expands the rail (2 + 5 + 1 = 8); a 1-phase Simple plan collapses it. **The pip fill is *derived*, not stored** — `harness flow rail` computes it from live node status + zones (`◆`/`◐`/`◇` follow each node's `done`/`in_progress`/`known` state); there is no `milestones_*` counter. The coach's job is the *presentation* layer on top (the same-line legend, phase-grouping, the `now`/`next` block) — not the count.
 - **Status line** after the diamonds: `· now: <current> · next: <next>`. **Dynamic expansion** — inline when there's a single short next; when `next` has **≥2 options** (or would wrap), break `now`/`next` onto their **own lines** with options stacked (labelled + aligned, recommended first):
   ```
-  [the-flow] ◆─◆─◇─◇─◇─◇  research · plan · [tasks] · build · review · merge
+  [the-flow] ◆─◆─◇─◇─◇─◇  research · plan · [tasks] · build · review · ship
    now  · plan written (both halves) — CS-4, Full, READY
    next · ▸ {{render-edge: awaiting-1b → tasks}}         Phase 1 tasks               (recommended)
           ▸ {{render-edge: awaiting-1b → workshop}}      workshop a topic, then re-plan
@@ -68,12 +68,12 @@ Where we are: …
 | `awaiting-7` | 5/6 | `[the-flow] ◆─◆─◆─◆─◆─◇` |
 | `awaiting-8` / `complete` | 6/6 | `[the-flow] ◆─◆─◆─◆─◆─◆` |
 
-(Simple mode collapses the per-phase group to one node — recompute from `milestones_total` set during the `plan` pass. Rails in this table omit the same-line legend for brevity — every rendered rail carries it.)
+(Simple mode collapses the per-phase group to one node — the fill is derived live from node status via `harness flow rail`, not a stored count. Rails in this table omit the same-line legend for brevity — every rendered rail carries it.)
 
 **Harness companion rail (unified block)**: when the harness loop is live this session — the `/eng-harness-flow` router fired this turn or earlier — never show two disconnected rails. Anchor the harness loop **beneath the active milestone**, each flow with its own voice, harness lines prefixed `⚙` (text glyph, never the `⚙️` emoji — double-width wrecks alignment):
 
 ```
-[the-flow]  ◆─◐─◇─◇─◇─◇  research · [plan] · tasks · build · review · merge
+[the-flow]  ◆─◐─◇─◇─◇─◇  research · [plan] · tasks · build · review · ship
               └─ ⚙ ◆─◐─◇─◇─◇ ↺  boot · [backpressure] · observe · retro · improve  (pre-coding)
 
  the-flow
@@ -195,7 +195,7 @@ All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decis
 ### `start` — fresh entry (no active state, no artifacts)
 > [the-flow] ◇─◇─◇─◇─◇─◇
 >
-> Welcome — I'm your guide through the SDD flow. Tell me in a sentence what you want to build or change, and I'll turn it into the right first step, explain why each stage matters, point out the one thing worth noticing in what each stage produces, and tell you exactly what to type next. You stay in control — nothing merges without your say-so.
+> Welcome — I'm your guide through the SDD flow. Tell me in a sentence what you want to build or change, and I'll turn it into the right first step, explain why each stage matters, point out the one thing worth noticing in what each stage produces, and tell you exactly what to type next. You stay in control — nothing ships, pushes, or merges without your say-so.
 >
 > **What do you want to work on?** *(Just describe it. If it touches code you don't fully understand yet, I'll start us with research (the **explore** verb); if the ask is clear, we'll go straight to planning (the **plan** verb — it writes the business spec and the implementation plan into one document). Unsure → just describe it and I'll choose.)*
 
@@ -260,14 +260,14 @@ All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decis
 > Worth knowing: the review stage is the **inferential / eyeball** tier; the backpressure check earlier was the **computational** tier. Together they cover what each can't.
 > Did you notice `<one finding>`? `<It routes back to implement | it's clean>`.
 > *Findings*: fix, then re-run {{render-edge: awaiting-7 → review}}. Type: `fix`.
-> *Clean*: next is the merge analysis — {{render-edge: awaiting-7 → merge}}. Type: `merge`.
+> *Clean*: next is **ship** — push, open the PR, watch checks — {{render-edge: awaiting-7 → ship}}. Type: `ship`.
 
-### `awaiting-8` → at merge
-> **Where we are**: stage 80 produced the merge analysis. After the merge executes, the flow offers the **post-flight retro seam** (`/eng-harness-flow --hook post-flight`) — the router owns the long-horizon reflection.
-> Read the merge plan, then type **`PROCEED`** to execute or **`ABORT`** to hold. I'll mark the flow complete once it merges.
+### `awaiting-8` → at ship
+> **Where we are**: ship pushes the branch and opens the PR (**each behind its own confirm** — a "yes" to push isn't a "yes" to open a PR), then watches CI checks and reports. After ship reports, the flow offers the **post-flight retro seam** (`/eng-harness-flow --hook post-flight`) — the router owns the long-horizon reflection.
+> Checks green → the flow's done. A **red check** routes back to a fix, then re-ship (never blocks). A meaningfully **diverged base** hands off to the **reconcile** excursion — its merge (and any immediate merge) is typed-**`PROCEED`**-gated, never a generic "yes". I'll mark the flow complete once the PR is up and checks are reported.
 
 ### `complete`
-> 🎉 That's the full loop: spec → plan → tasks → code → review → merge. If a harness was installed, it captured friction along the way and reflected at the post-flight seam — `/eng-harness-flow` any time for a check-in. Re-run `/the-flow` any time to start a new one.
+> 🎉 That's the full loop: spec → plan → tasks → code → review → ship. If a harness was installed, it captured friction along the way and reflected at the post-flight seam — `/eng-harness-flow` any time for a check-in. Re-run `/the-flow` any time to start a new one.
 
 ### Optional branch mentions (one-liners, surfaced at their seam — never new stages)
 
@@ -289,8 +289,8 @@ USER types:  /compact       ← CLI built-in; wipes conversation context. the-fl
         ▼
 USER types:  /the-flow      ← no args; conversation memory is gone.
         ▼
-the-flow:  glob docs/plans/*/.the-flow-state.json (status:active)
-           → finds the flow @ current_stage
+the-flow:  glob docs/plans/*/the-flow.json → harness flow nav show (bag.status:active)
+           → finds the flow @ nav.now
            → discover the stage artifact (exists, unchanged since checkpoint)
            → NOT a new artifact ⇒ idempotent: re-print the pending guidance, do not advance
         ▼
@@ -307,9 +307,9 @@ When invoked with **no active state** but the resolved plan folder **already hol
 
 **Folder resolution**: `<slug>` arg → that folder. Else exactly one artifact-bearing `docs/plans/*/` with no active state → adopt it. Else (>1) → list + ask (mirror the resume `>1` rule).
 
-**Artifact → stage inference** (pick the furthest-progressed). The `pending verb` column names **verbs + flags only** — when the inferred next step is written into `.the-flow-state.json` as `pending_command`, **render it at write time** via the dispatch's § Command grammar + Registry (slots and bare verbs are never stored in state; state always holds a runnable command):
+**Artifact → stage inference** (pick the furthest-progressed). The `pending verb` column names **verbs + flags only** — the pending command is **derived at read time** from `nav.next` + the dispatch's § Command grammar + Registry (slots and bare verbs are never stored; nothing is written to a state file):
 
-| Artifacts present | Inferred stage | pending verb (render at write time) | `milestones_done` |
+| Artifacts present | Inferred stage | pending verb (derived at read time) | done milestones (rail fill) |
 |---|---|---|---|
 | `research-dossier.md` only | `awaiting-1a` | `plan` | Research |
 | `*-plan.md` with `## Business Specification` + `## Implementation Plan` (unified) | read `**Mode**` + phase count → recompute rail; `awaiting-1b` | `implement --phase "Phase 1…"` (Simple) / `tasks` (Full) | Research, Plan |
@@ -317,11 +317,11 @@ When invoked with **no active state** but the resolved plan folder **already hol
 | legacy `*-spec.md` only (no plan) | `awaiting-1b` | `plan` — reads the legacy spec as the business source | Research |
 | legacy `*-spec.md` + `*-plan.md` (plan has no `## Business Specification`) | `awaiting-1b` | `implement` / `tasks` — completed split plan; **do not migrate** | Research, Plan |
 | `tasks/phase-N/` present, **no** `reviews/review.phase-N*` | `awaiting-6` (mid-build) | `review` (review phase N) | + per-phase to N-1 |
-| `reviews/review.phase-N*` present | phase N reviewed | `implement --phase "Phase N+1…"` (or `merge` if last) | + per-phase to N |
+| `reviews/review.phase-N*` present | phase N reviewed | `implement --phase "Phase N+1…"` (or `ship` if last) | + per-phase to N |
 
-**Mode / rail**: read `**Mode**` from the plan's top-metadata block. No plan yet → `mode: "unknown"`, `milestones_total` stays the 6-milestone estimate until the `plan` pass recomputes it.
+**Mode / rail**: read `**Mode**` from the plan's top-metadata block → `nav meta set mode <…>` (no plan yet → `mode: "unknown"`). The rail shows the 6-milestone estimate (derived from the seeded nodes) until the `plan` pass reveals the real phase count.
 
-**Back-fill the flight plan via the CLI** (never hand-write `the-flow.json`): `harness flow create flight-plan --slug <slug> --path docs/plans/<ord>-<slug>/the-flow.json --schema "<skill base>/references/flight-plan.schema.json" --bare --agent the-flow`, then `add-node` each inferred node and `status`/`set-node` it to its back-filled state — completed → `status --to done` (the CLI stamps `ran_at`; for adoption that's the back-fill time, best-effort), `user_input` omitted or `set-node --note "reconstructed"`; remaining nodes → `known`/`assumed` per the taxonomy. Then `harness flow render --path … --output the-flow.md`. (`<skill base>` = this skill's base dir.)
+**Back-fill the flight plan via the CLI** (never hand-write `the-flow.json`): `harness flow create flight-plan --slug <slug> --path docs/plans/<ord>-<slug>/the-flow.json --schema "<skill base>/references/flight-plan.schema.json" --bare --agent the-flow`, then `add-node` each inferred node and `status`/`set-node` it to its back-filled state — completed → `status --to done` (the CLI stamps `ran_at`; for adoption that's the back-fill time, best-effort), `user_input` omitted or `set-node --note "reconstructed"`; remaining nodes → `known`/`assumed` per the taxonomy. Then set position + session bag: `nav set --now <furthest-progressed node>` (+ `--intent` from `original-ask.md` if present), `nav meta set status active`, and `nav meta set mode <from the plan's **Mode**>`. Then `harness flow render --path … --output the-flow.md`. (`<skill base>` = this skill's base dir.)
 
 **Safety — never clobber**:
 - Never re-run a stage or touch `*-spec.md` / `*-plan.md` / `tasks/` / `reviews/`. Adoption writes **only** the-flow bookkeeping files.

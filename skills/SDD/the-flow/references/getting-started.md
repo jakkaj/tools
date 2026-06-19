@@ -30,7 +30,8 @@ The pipeline used to be a family of standalone per-stage skills; it is now **one
 | Implement | `6` | `implement` | `references/stages/60-implement.md` — `--companion` mode adds a live minih reviewer |
 | Progress | `6a` | `progress` | `references/stages/62-progress.md` |
 | Review | `7` | `review` | `references/stages/70-review.md` |
-| Merge | `8` | `merge` | `references/stages/80-merge.md` |
+| Ship | `8` | `ship` | `references/stages/80-ship.md` — push + open PR (repo-guidance-aware) + watch CI checks; push & PR-open each behind a confirm |
+| Reconcile | `8c` | `reconcile` | `references/stages/80-merge.md` — conditional upstream-reconcile excursion (divergent base); merge on typed `PROCEED`. Typed `merge` / `plan-8-v2-merge` resolve here |
 
 > **What changed (formerly)**: each stage was its own public skill — `/plan-1a`; `/plan-1b` (specify) **and** `/plan-3` (architect), now folded into the single `1b plan` step that writes the business spec and implementation plan into one document in one atomic pass; `/plan-2` (clarify — now the Re-entry section of stage 1b); `/plan-2c`, `/plan-3a`, `/plan-5`, `/plan-6` (+ its companion variant, now the implement verb's `--companion` mode), `/plan-6a`, `/plan-7`, `/plan-8`. Those skills are deleted; `/the-flow <id|verb> [flags]` is the only public surface for the main flow (typed `6c` or `companion` still resolves, via the alias table, to implement with `--companion`; typed `specify` or `architect` resolve to `1b plan`). The utility skills (`validate-v2`, `deepresearch-v2`, `didyouknow-v2`, `htmlify-v2`, `plan-0-v2-constitution`, `plan-2b-v2-prep-issue`, `plan-v2-extract-domain`, `util-0-v2-handover`, `install-hve-core-rpiv`) are unchanged and still called by their own names.
 
@@ -40,7 +41,7 @@ The pipeline used to be a family of standalone per-stage skills; it is now **one
 
 Two loops run side by side in the same context — that is all. Neither owns the other:
 
-- **SDD pipeline** (you drive it) — `/the-flow 1a explore → 1b → [2c] → 5 → 6 → 7 → 8`, one stage per call (by id or by name). A linear journey: plan (spec + impl, one document) → tasks → code → review → merge, with the optional post-spec backpressure check as a post-plan refinement off 1b.
+- **SDD pipeline** (you drive it) — `/the-flow 1a explore → 1b → [2c] → 5 → 6 → 7 → 8`, one stage per call (by id or by name). A linear journey: plan (spec + impl, one document) → tasks → code → review → **ship** (push + PR + watch checks), with the optional post-spec backpressure check as a post-plan refinement off 1b, and the upstream **reconcile** (8c) as a conditional excursion when the base has diverged.
 - **Engineering harness** (the external eng-harness family drives it) — a *cycle*: Boot → Backpressure → Observe → Retro → Improve. The flow's stages never run harness stages themselves; the guided **engine** offers each seam at the Graph edge (seams are **flow-owned** — `references/harness-seams.md`; the stage sub-skills are harness-blind) and tells the router *where the work is* via a lifecycle **hook**:
 
 | Seam (Graph edge) | Offered by | Router call (`--event` alias) |
@@ -49,7 +50,7 @@ Two loops run side by side in the same context — that is all. Neither owns the
 | post-plan refinement off 1b | the engine, as a Graph-edge beat | `/eng-harness-flow --hook pre-coding --spec <path>` (`post-spec`) |
 | before each phase | the engine, before the phase | `/eng-harness-flow --hook pre-flight --phase <id> --plan-dir <p>` (`pre-implement`) |
 | each phase end | the engine, at the phase-end edge | `/eng-harness-flow --hook post-coding --plan-dir <p>` (`phase-end`) |
-| at merge | the engine, after the merge executes | `/eng-harness-flow --hook post-flight --plan-dir <p>` (`plan-complete`) |
+| at ship | the engine, after ship reports checks / opens the PR | `/eng-harness-flow --hook post-flight --plan-dir <p>` (`plan-complete`) |
 
 The flow wires **four fire-hooks** (`pre-flight` at the two edges, `pre-coding`, `post-coding`, `post-flight`) and skips the silent `coding` capture. The router's child skills are **private** — they may move or rename, and no SDD stage (or user doc) ever names them. One name is stable: `/eng-harness-flow` + its `--hook` vocabulary (permanent `--event` alias). Full seam map: `docs/how/the-flow-harness-seams.md`.
 
@@ -73,7 +74,7 @@ flowchart TB
         P6["/the-flow 6 implement<br/>(--companion = +live review)"]:::manual
         P6A["/the-flow 6a progress"]:::auto
         P7["/the-flow 7 review"]:::optional
-        P8["/the-flow 8 merge"]:::optional
+        P8["/the-flow 8 ship"]:::optional
     end
 
     subgraph harness["ENGINEERING HARNESS · one door, lifecycle hooks"]
@@ -133,7 +134,7 @@ flowchart LR
         direction TB
         F1["/the-flow 1b plan"] --> F3["/the-flow 5 tasks"] --> F4["/the-flow 6 implement"] --> F5["/the-flow 7 review"]
         F5 -->|next phase| F3
-        F5 --> F6["/the-flow 8 merge"]
+        F5 --> F6["/the-flow 8 ship"]
     end
 
     class simple s
@@ -142,7 +143,7 @@ flowchart LR
 
 **Simple Mode** — single-phase, inline tasks. `/the-flow 1b plan` (front-loads clarifications, writes spec + plan in one document) → `/the-flow 6 implement`. No `/the-flow 5 tasks` expansion needed.
 
-**Full Mode** — multi-phase. `/the-flow 1b plan`, then a per-phase loop of `/the-flow 5 tasks → /the-flow 6 implement → /the-flow 7 review`, then `/the-flow 8 merge` to merge.
+**Full Mode** — multi-phase. `/the-flow 1b plan`, then a per-phase loop of `/the-flow 5 tasks → /the-flow 6 implement → /the-flow 7 review`, then `/the-flow 8 ship` to push, open the PR, and watch checks.
 
 > **Merged stages**: stage `1b plan` produces the **business spec and the implementation plan in one document**, in one atomic pass — front-loaded clarifications up front, the validate gates (G1–G7) run inline, and `/validate-v2` auto-runs at the end. Later mid-plan clarifications re-enter through the Re-entry section inside `references/stages/20-plan.md`. There is no separate specify, clarify, architect, or complete-the-plan stage in the flow.
 
@@ -180,10 +181,12 @@ flowchart LR
 
 5.  /the-flow 5 tasks + /the-flow 6 implement --companion for Phase 2 ...
 
-6.  /the-flow 8 merge --plan "..."
-    → Merge analysis; on PROCEED the merge executes, then the engine offers
-      /eng-harness-flow --hook post-flight for the long-horizon
-      reflection. Feature complete 🎉
+6.  /the-flow 8 ship --plan "..."
+    → Push (confirm) + open PR (separate confirm, repo-guidance-aware) + watch CI
+      checks; a red check routes back to a fix, then re-ship. The engine then offers
+      /eng-harness-flow --hook post-flight for the long-horizon reflection.
+      A diverged base hands off to /the-flow 8c reconcile (merge typed-PROCEED-gated).
+      Feature shipped 🎉
 ```
 
 You never named a harness skill — the flow told the router *where the work was* at each seam, and the router did the rest. No router installed? Same walkthrough, minus the seam lines, plus one calm warning at step 1. And every step loaded exactly one stage module — the rest of the pipeline stayed out of context.
@@ -194,7 +197,7 @@ You never named a harness skill — the flow told the router *where the work was
 
 | Command | What it does | Produces | Harness behaviour |
 |---|---|---|---|
-| `/the-flow` | **Guided mode** — drives this whole pipeline conversationally (loads coach + routing + the current stage module only) | `.the-flow-state.json` + `the-flow.{json,md}` + `original-ask.md` | probes for the router; the engine offers the seams at the Graph edges, only via `/eng-harness-flow` |
+| `/the-flow` | **Guided mode** — drives this whole pipeline conversationally (loads coach + routing + the current stage module only) | `the-flow.{json,md}` + `original-ask.md` | probes for the router; the engine offers the seams at the Graph edges, only via `/eng-harness-flow` |
 | `/the-flow 1a explore` · `explore` | Deep-dive codebase research *(optional)* | `research-dossier.md` | engine offers `--hook pre-flight` at flow entry |
 | `/the-flow 1b plan` · `plan` | Business spec + implementation plan in one document (front-loaded clarifications; inline gates G1–G7; validate-v2 auto-runs) | `<slug>-plan.md` | engine offers `--hook pre-coding` backpressure as a post-plan refinement (seams engine-owned, not plan rows) |
 | `/the-flow 2c workshop` · `workshop` | Design workshop for complex topics *(optional)* | `workshops/<topic>.md` | — |
@@ -204,7 +207,8 @@ You never named a harness skill — the flow told the router *where the work was
 | `/the-flow 6 implement` · `implement` | Implement one phase — add `--companion` for live companion review (typed `6c`/`companion` alias here) | code + `execution.log.md` (+ reviews in companion mode) | engine offers `--hook pre-flight` (before) + `--hook post-coding` (after) |
 | `/the-flow 6a progress` · `progress` | Progress tracking *(auto-run by the implement verb)* | updated task tables + execution log | none (progress only) |
 | `/the-flow 7 review` · `review` | Code review *(rare in companion flow)* | `reviews/review.md` | none (read-only review) |
-| `/the-flow 8 merge` · `merge` | Upstream merge analysis | merge plan | engine offers `--hook post-flight` after the merge |
+| `/the-flow 8 ship` · `ship` | Get work out — push + open PR (repo-guidance-aware) + watch CI checks + report; push & PR-open each behind a confirm, merge optional | pushed branch + PR + `ship/<date>/ship-report.md` | engine offers `--hook post-flight` after ship reports |
+| `/the-flow 8c reconcile` · `reconcile` | Conditional upstream-reconcile excursion (divergent base) — kept merge-analysis machinery; typed `merge` resolves here | reconcile/merge plan | merge executes only on typed `PROCEED` |
 | `/eng-harness-flow` | **The harness front door** — stateless router; detects where the loop is and routes one step | routing envelope (`--json`) | the only harness skill the flow ever calls |
 
 ---

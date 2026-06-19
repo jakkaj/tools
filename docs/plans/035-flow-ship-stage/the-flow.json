@@ -1,0 +1,267 @@
+{
+  "schema_version": 1,
+  "kind": "flight-plan",
+  "slug": "flow-ship-stage",
+  "created_at": "2026-06-19T01:05:31.501Z",
+  "provenance": {
+    "record_kind": "flow",
+    "harness_version": "0.4.0",
+    "branch": "main",
+    "repo": "git@github.com:jakkaj/tools.git",
+    "created_at": "2026-06-19T01:05:31.501Z",
+    "agent": "the-flow",
+    "plan_id": null
+  },
+  "events": [
+    {
+      "id": "CRT-001",
+      "kind": "created",
+      "origin": "engine",
+      "fired_at": "2026-06-19T01:05:31.513Z",
+      "details": {
+        "kind": "flight-plan",
+        "slug": "flow-ship-stage"
+      }
+    },
+    {
+      "id": "NOD-001",
+      "kind": "node-created",
+      "origin": "engine",
+      "fired_at": "2026-06-19T01:05:31.573Z",
+      "details": {
+        "node": "merge",
+        "type": "merge"
+      }
+    },
+    {
+      "id": "NOD-002",
+      "kind": "node-created",
+      "origin": "engine",
+      "fired_at": "2026-06-19T01:05:31.636Z",
+      "details": {
+        "node": "plan",
+        "type": "plan"
+      }
+    },
+    {
+      "id": "NOD-003",
+      "kind": "node-created",
+      "origin": "engine",
+      "fired_at": "2026-06-19T01:05:31.700Z",
+      "details": {
+        "node": "research",
+        "type": "research"
+      }
+    },
+    {
+      "id": "CUR-001",
+      "kind": "cursor-moved",
+      "origin": "engine",
+      "fired_at": "2026-06-19T01:05:31.764Z",
+      "details": {
+        "from": "",
+        "to": "research"
+      }
+    },
+    {
+      "id": "NOD-004",
+      "kind": "node-created",
+      "origin": "engine",
+      "fired_at": "2026-06-19T01:54:15.786Z",
+      "details": {
+        "node": "impl",
+        "type": "phase"
+      }
+    },
+    {
+      "id": "UPD-001",
+      "kind": "node-updated",
+      "origin": "engine",
+      "fired_at": "2026-06-19T01:54:15.786Z",
+      "details": {
+        "node": "plan",
+        "fields": [
+          "next"
+        ],
+        "edge_op": "splice-after"
+      }
+    },
+    {
+      "id": "NOD-005",
+      "kind": "node-created",
+      "origin": "engine",
+      "fired_at": "2026-06-19T01:54:15.840Z",
+      "details": {
+        "node": "review",
+        "type": "review"
+      }
+    },
+    {
+      "id": "UPD-002",
+      "kind": "node-updated",
+      "origin": "engine",
+      "fired_at": "2026-06-19T01:54:15.840Z",
+      "details": {
+        "node": "impl",
+        "fields": [
+          "next"
+        ],
+        "edge_op": "splice-after"
+      }
+    },
+    {
+      "id": "STA-001",
+      "kind": "status-changed",
+      "origin": "engine",
+      "fired_at": "2026-06-19T01:54:15.896Z",
+      "details": {
+        "node": "research",
+        "from": "in_progress",
+        "to": "done"
+      }
+    },
+    {
+      "id": "STA-002",
+      "kind": "status-changed",
+      "origin": "engine",
+      "fired_at": "2026-06-19T01:54:15.952Z",
+      "details": {
+        "node": "plan",
+        "from": "assumed",
+        "to": "done"
+      }
+    },
+    {
+      "id": "CUR-002",
+      "kind": "cursor-moved",
+      "origin": "engine",
+      "fired_at": "2026-06-19T01:54:16.013Z",
+      "details": {
+        "from": "research",
+        "to": "plan"
+      }
+    },
+    {
+      "id": "CUR-003",
+      "kind": "cursor-moved",
+      "origin": "engine",
+      "fired_at": "2026-06-19T02:56:38.342Z",
+      "details": {
+        "from": "plan",
+        "to": "impl"
+      }
+    },
+    {
+      "id": "STA-003",
+      "kind": "status-changed",
+      "origin": "engine",
+      "fired_at": "2026-06-19T02:56:55.432Z",
+      "details": {
+        "node": "impl",
+        "from": "known",
+        "to": "done"
+      }
+    },
+    {
+      "id": "UPD-003",
+      "kind": "node-updated",
+      "origin": "engine",
+      "fired_at": "2026-06-19T02:56:55.506Z",
+      "details": {
+        "node": "impl",
+        "fields": [
+          "note"
+        ]
+      }
+    },
+    {
+      "id": "STA-004",
+      "kind": "status-changed",
+      "origin": "engine",
+      "fired_at": "2026-06-19T02:56:55.579Z",
+      "details": {
+        "node": "review",
+        "from": "assumed",
+        "to": "known"
+      }
+    },
+    {
+      "id": "CUR-004",
+      "kind": "cursor-moved",
+      "origin": "engine",
+      "fired_at": "2026-06-19T02:56:55.651Z",
+      "details": {
+        "from": "impl",
+        "to": "impl"
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "merge",
+      "type": "merge",
+      "label": "Merge",
+      "status": "assumed",
+      "next": [],
+      "created_at": "2026-06-19T01:05:31.573Z",
+      "modified_at": "2026-06-19T01:05:31.573Z"
+    },
+    {
+      "id": "plan",
+      "type": "plan",
+      "label": "Plan",
+      "status": "done",
+      "next": [
+        "impl"
+      ],
+      "created_at": "2026-06-19T01:05:31.636Z",
+      "modified_at": "2026-06-19T01:54:15.952Z",
+      "ran_at": "2026-06-19T01:54:15.952Z"
+    },
+    {
+      "id": "research",
+      "type": "research",
+      "label": "Research",
+      "status": "done",
+      "next": [
+        "plan"
+      ],
+      "created_at": "2026-06-19T01:05:31.700Z",
+      "modified_at": "2026-06-19T01:54:15.896Z",
+      "ran_at": "2026-06-19T01:54:15.896Z"
+    },
+    {
+      "id": "impl",
+      "type": "phase",
+      "label": "Implement · ship stage",
+      "status": "done",
+      "next": [
+        "review"
+      ],
+      "created_at": "2026-06-19T01:54:15.785Z",
+      "modified_at": "2026-06-19T02:56:55.505Z",
+      "ran_at": "2026-06-19T02:56:55.432Z",
+      "note": "10/10 tasks: ship verb authored; merge demoted to 8c reconcile; all flow surfaces re-threaded; check-flow L1-L6 clean; redeployed; smoke rail ends at Ship; AC-11 ok"
+    },
+    {
+      "id": "review",
+      "type": "review",
+      "label": "Review",
+      "status": "known",
+      "next": [
+        "merge"
+      ],
+      "created_at": "2026-06-19T01:54:15.840Z",
+      "modified_at": "2026-06-19T02:56:55.579Z"
+    }
+  ],
+  "nav": {
+    "now": "impl",
+    "next": "review",
+    "intent": "Ship-stage redesign: replace stage 8 merge with a ship verb (push + open PR + watch CI checks); demote local merge to a conditional 8c reconcile excursion; merge optional; best-effort.",
+    "bag": {
+      "mode": "Simple",
+      "status": "active"
+    }
+  }
+}

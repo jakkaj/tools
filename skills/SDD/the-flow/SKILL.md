@@ -1,7 +1,7 @@
 ---
 name: the-flow
 description: |
-  The single front door to the SDD pipeline (docs/plans/): research → plan → workshop → ADR → phase tasks → implement → progress → review → merge. Use when the user wants to plan, research, explore, specify or architect (now one atomic 'plan' step → one document: business spec + implementation plan), clarify, workshop, write an ADR, break a phase into tasks, implement or build a phase (optionally with a live review companion), update progress, code-review, or merge a plan — or types /the-flow (or a legacy /plan-N command), or asks to start, resume, or adopt a plan flow. Guided mode (no args) coaches from durable on-disk state; direct jump runs one stage: /the-flow <id> <verb> [flags] — 1a explore, 1b plan (spec + plan in one doc; incl. clarify), 2c workshop, 3a adr, 5 tasks, 6 implement (--companion for live review), 6a progress, 7 review, 8 merge. Ids and verbs resolve alone; printed commands carry both.
+  The single front door to the SDD pipeline (docs/plans/): research → plan → workshop → ADR → phase tasks → implement → progress → review → ship. Use when the user wants to plan, research, explore, specify or architect (now one atomic 'plan' step → one document: business spec + implementation plan), clarify, workshop, write an ADR, break a phase into tasks, implement or build a phase (optionally with a live review companion), update progress, code-review, or ship a plan (push + PR + watch checks) — or types /the-flow (or a legacy /plan-N command), or asks to start, resume, or adopt a plan flow. Guided mode (no args) coaches from durable on-disk state; direct jump runs one stage: /the-flow <id> <verb> [flags] — 1a explore, 1b plan (spec + plan in one doc; incl. clarify), 2c workshop, 3a adr, 5 tasks, 6 implement (--companion for live review), 6a progress, 7 review, 8 ship, 8c reconcile. Ids and verbs resolve alone; printed commands carry both.
 ---
 
 # /the-flow — SDD pipeline dispatch
@@ -16,7 +16,7 @@ One public skill for the whole SDD pipeline, built to the flow-architecture patt
 
 1. Read `references/00-routing.md` (entry paths, state contract, the Graph) **and** `references/coach.md` (rail, narration, print-then-offer).
 2. Resolve fresh / resume / adopt per 00-routing.md; load **only** the current stage's sub-skill when a step is accepted, and coach the seam.
-3. Guided mode owns all the-flow state writes: it writes `.the-flow-state.json` directly, and drives the flight plan (`the-flow.json` → `the-flow.md`) **only** through `harness flow` calls (plan 024 — the CLI is the generator; run the capability precheck first, § Prerequisite). **Before the first flight-plan mutation of a session, also load [`references/flight-plan-ops.md`](./references/flight-plan-ops.md)** — the nav model, the spine-vs-excursion rule, and the verb flags + gotchas (loaded on demand, not up front; sub-skills never load it).
+3. Guided mode owns all the-flow state, and drives **all** of it — position *and* session bag — through `harness flow nav` calls: the flight plan (`the-flow.json` → `the-flow.md`) is the single state substrate (plan 024 — the CLI is the generator; **nothing is hand-written**; run the capability precheck first, § Prerequisite). **Before the first flight-plan mutation of a session, also load [`references/flight-plan-ops.md`](./references/flight-plan-ops.md)** — the nav model, the spine-vs-excursion rule, and the verb flags + gotchas (loaded on demand, not up front; sub-skills never load it).
 
 **Direct jump** — `/the-flow <id> <verb> [flags]`:
 
@@ -40,9 +40,12 @@ A sub-skill may lazily pull `references/00-routing.md` § Shared conventions whe
 | 6 | implement | `references/stages/60-implement.md` | plan, tasks? → code + `execution.log.md` (exactly one phase) | `--plan "<path>"` `[--phase "<Phase N: Title>"]` `[--subtask "<ORD-slug>"]` `[--companion]` `[--companion-slug "<slug>"]` |
 | 6a | progress | `references/stages/62-progress.md` | task outcome → updated task table + execution log (read by the implement verb after each task; owns the companion debrief) | `--plan --phase --task --status` `[--companion-run-id]` `[--companion-slug]` |
 | 7 | review | `references/stages/70-review.md` | plan, code → `reviews/*.md` | `--plan "<path>"` `[--phase "<Phase N: Title>"]` |
-| 8 | merge | `references/stages/80-merge.md` | plan, review → merge plan; **executes only on typed `PROCEED`** | `--plan "<path>"` |
+| 8 | ship | `references/stages/80-ship.md` | plan, review → pushed branch + PR (repo-guidance-aware) + watched CI checks; push & PR-open **each behind a confirm**, merge optional | `--plan "<path>"` `[--base "<branch>"]` `[--no-watch]` `[--draft]` |
+| 8c | reconcile | `references/stages/80-merge.md` | (conditional excursion — divergent base) → reconcile/merge plan; **merge executes only on typed `PROCEED`** | `--plan "<path>"` `[--target "<branch>"]` |
 
 Module missing at its path → say so and stop. Never improvise a stage from memory.
+
+> **`8 ship` is the terminal spine stage; `8c reconcile` is a conditional excursion** (fired only when the base has meaningfully diverged), never on the spine. Typed `merge` and the legacy `plan-8-v2-merge` resolve to `8c reconcile` (alias table below).
 
 ## Command grammar
 
@@ -51,7 +54,7 @@ Id or verb each resolve alone; printed form always carries both, never a bare nu
 
 ## Old-slug translation & aliases (read-time)
 
-State files and docs written before the consolidation may carry commands naming retired skill slugs (e.g. a `pending_command` in `.the-flow-state.json`). Translate at read time — never execute a retired slug; rewrite via § Command grammar on the next state write. Flags carry over unchanged. **Targets are stored in id+flag form** (never as full command strings) and rendered through the Command grammar + Registry when printed or written into state.
+Docs and **legacy** state files written before the consolidation may carry commands naming retired skill slugs (e.g. a `pending_command` in a leftover `.the-flow-state.json`, read only during the one-shot resume backfill — § State). Translate at read time — never execute a retired slug; the live source of a pending command is now `nav.next` + the Command grammar, rendered at read time (never stored). Flags carry over unchanged. **Targets are stored in id+flag form** (never as full command strings) and rendered through the Command grammar + Registry when printed or written into state.
 
 | retired slug / typed alias | → target (id + flags) |
 |---|---|
@@ -70,7 +73,8 @@ State files and docs written before the consolidation may carry commands naming 
 | `plan-6-v2-implement-phase-companion` | `6 implement --companion` |
 | `plan-6a-v2-update-progress` | `6a progress` |
 | `plan-7-v2-code-review` | `7 review` |
-| `plan-8-v2-merge` | `8 merge` |
+| `plan-8-v2-merge` | `8c reconcile` |
+| typed `merge` | `8c reconcile` |
 | typed `6c` or `companion` | `6 implement --companion` |
 
 **Unmapped slug → print the bare stage alias and ask — never guess.** (An unrecognised `/plan-*` command: show the Registry's ids/verbs and ask which stage was meant.)
@@ -78,11 +82,11 @@ State files and docs written before the consolidation may carry commands naming 
 ## Hard invariants (every stage, both load paths)
 
 1. **Print first, then offer to run.** Print the exact command in a copyable block — rendered via § Command grammar (id **and** verb, never a bare number), so the reader sees what it will do without knowing the ids — then offer to run it; one accepted step per turn (guided).
-2. **Nothing irreversible without explicit confirmation.** The merge (stage 8) executes **only** after the user types `PROCEED` — never on a generic "yes".
+2. **Nothing irreversible without explicit confirmation.** Outward-facing actions each gate: the **ship** verb's push and PR-open are **separate** confirms (a "yes" to push is not a "yes" to open a PR); the **reconcile** merge (8c) and any immediate merge execute **only** after the user types `PROCEED` — never on a generic "yes".
 3. **Never run `/compact`** — it is a user-typed CLI built-in. Recommend: "type `/compact` yourself, then re-run `/the-flow`".
 4. **Never gate, score, or block.** Workshops, backpressure, compaction, companions — all skippable; best-effort, no thresholds, no compliance floors.
 5. **Never fabricate an insight.** Ground every narrated detail in a real artifact; if you can't read it, say so and fall back to file existence / git status.
-6. **Never hand-edit the flight plan.** `the-flow.md` is always regenerated from `the-flow.json` by `harness flow render`; `the-flow.json` itself is mutated **only** through `harness flow` calls (plan 024 — the CLI is the generator). Guided mode requires a capable CLI (§ Prerequisite).
+6. **Never hand-edit the flight plan, and never hand-author a state file.** `the-flow.md` is always regenerated from `the-flow.json` by `harness flow render`; `the-flow.json` itself is mutated **only** through `harness flow` calls (plan 024 — the CLI is the generator). There is **no `.the-flow-state.json`** — all the-flow state (position + session `bag`) lives in `the-flow.json`, and the CLI is its only writer. Guided mode requires a capable CLI (§ Prerequisite).
 7. **You don't run `minih`.** The implement verb's companion mode (`--companion`) owns the companion protocol; you narrate the affordance. Agent bookkeeping into the flight plan awaits the v2 `harness flow agent` verb — until it lands, `agents[]` stays unpopulated and is never hand-edited (per invariant #6).
 8. **No time estimates anywhere** — Complexity Score (CS 1–5) only (`references/00-routing.md` § Shared conventions).
 9. **Harness = one door.** Every harness touchpoint is `/eng-harness-flow --hook …` (permanent `--event` alias) — never name or invoke its child skills. Harness-seam orchestration is **flow-owned** (`references/harness-seams.md`); sub-skills are harness-blind.
@@ -90,7 +94,7 @@ State files and docs written before the consolidation may carry commands naming 
 
 ## State
 
-Durable state lives at `docs/plans/<ord>-<slug>/.the-flow-state.json`, plus the flight plan (`the-flow.json` → rendered `the-flow.md`). Contract, write ownership, and the Graph: `references/00-routing.md`; harness-seam orchestration (detection, seam map, node emission, upstream contract): `references/harness-seams.md`. Sub-skills own their *stage* artifacts (spec / plan / tasks / execution log / reviews), never write the-flow state, and carry no harness knowledge.
+Durable state **is** the flight plan — `nav` (position + the free-form `bag`) + node statuses in `docs/plans/<ord>-<slug>/the-flow.json` (rendered to `the-flow.md`). **No separate state file** — the CLI is the only state writer. Contract, write ownership, and the Graph: `references/00-routing.md`; harness-seam orchestration (detection, seam map, node emission, upstream contract): `references/harness-seams.md`. Sub-skills own their *stage* artifacts (spec / plan / tasks / execution log / reviews), never write the-flow state, and carry no harness knowledge.
 
 ## Prerequisite — a capable `harness flow` CLI (capability + version floor)
 

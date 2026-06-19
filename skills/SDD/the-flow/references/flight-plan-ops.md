@@ -46,9 +46,9 @@ harness flow rail        --path <f>            # the one-line spine rail
 
 The rail walks the MAIN SPINE only and excludes any node with `branch_of`.
 
-- **SPINE** = the SDD journey: research → plan → phase(s) → review → merge.
+- **SPINE** = the SDD journey: research → plan → phase(s) → review → ship.
   - wire with `--next`; reveal phases at the plan pass via `insert-node --after <prev>`.
-- **EXCURSIONS** = workshops, ADRs, backpressure, fix-loops, harness seams.
+- **EXCURSIONS** = workshops, ADRs, backpressure, fix-loops, harness seams, **reconcile** (the upstream-reconcile excursion off `ship`/a phase, only when the base has diverged).
   - attach with `insert-node --branch-of <node> [--rejoin <node>]` — the branch point's `next` is UNCHANGED.
   - excursions are EXCLUDED from the rail and render as dotted side-branches.
 
@@ -60,13 +60,15 @@ The rail walks the MAIN SPINE only and excludes any node with `branch_of`.
 |------|--------------------|
 | preflight | research, plan, workshop, adr (the shared renderer also maps `tasks`→preflight, but `tasks` isn't in the-flow's vocabulary) |
 | flight | phase (and any unknown type) |
-| postflight | review, merge, retro |
+| postflight | review, ship, merge, retro |
 
 Pass explicit `--zone` only to override a default. For the flight-plan vocabulary the defaults are already correct, so you do **not** need to add `--zone` to the calls above.
 
+> **`ship` banding caveat (cross-repo).** `ship` belongs in **postflight** (the terminal stage). That default takes effect once the external `harness flow` renderer adds `ship` to its postflight zone-set. Until then a renderer that doesn't know `ship` falls back to the **flight** band (the "any unknown type" rule above), so `ship` renders *inside* the flight `[ … ]` band rather than after it. Harmless — the rail still ends at **Ship**; best-effort, no hand-fix (never hand-edit `the-flow.md`). If you need the postflight band now, pass `--zone postflight` when adding the `ship` node.
+
 ## §6 — Gotchas
 
-- **Build order**: the validator rejects forward `--next` refs. Add the spine last-to-first (merge first), or add nodes then wire.
+- **Build order**: the validator rejects forward `--next` refs. Add the spine last-to-first (ship first), or add nodes then wire.
 - **`set-node` can't re-parent**: it cannot set `--next` / `--branch-of`. You cannot turn an existing spine node into an excursion via the CLI — if a spine node should have been an excursion, re-create it with `insert-node --branch-of` (or rebuild the flow).
 
 ## §7 — Pointer
