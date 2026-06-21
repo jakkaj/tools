@@ -70,25 +70,30 @@ Where we are: …
 
 (Simple mode collapses the per-phase group to one node — the fill is derived live from node status via `harness flow rail`, not a stored count. Rails in this table omit the same-line legend for brevity — every rendered rail carries it.)
 
-**Harness companion rail (unified block)**: when the harness loop is live this session — the `/eng-harness-flow` router fired this turn or earlier — never show two disconnected rails. Anchor the harness loop **beneath the active milestone**, each flow with its own voice, harness lines prefixed `⚙` (text glyph, never the `⚙️` emoji — double-width wrecks alignment):
+**Harness companion rail (unified block)**: when the harness loop is live this session — the `/eng-harness-flow` router has fired this turn or earlier — **never show two disconnected rails**. Under plan 032 the loop's four fire hooks ride **as chores on this flow's own rail** (*"so the main flow tracks them for us too and we don't miss things"*) — there is **no separate `└─ ⚙ … ↺` anchored line** during coexistence; the chore square pips *are* the harness's visible presence. Render the-flow's rail straight from the CLI **with chores shown**:
 
 ```
-[the-flow]  ◆─◐─◇─◇─◇─◇  research · [plan] · tasks · build · review · ship
-              └─ ⚙ ◆─◐─◇─◇─◇ ↺  boot · [backpressure] · observe · retro · improve  (pre-coding)
+harness flow rail --path docs/plans/<ord>-<slug>/the-flow.json --chores show
+```
+
+— which prints the chore pips (`□` todo · `■` done · `▨` skipped) inline beside the spine diamonds. Show that line verbatim (real spaces only — never `&nbsp;` or any HTML entity), then let **each flow speak with its own voice**:
+
+```
+[the-flow]  ◆─◆─[ ◐ ]─◇─◇  research · plan · [ ■ pre-coding · build ] · □ post-coding · review · □ post-flight
 
  the-flow
-  now  · plan written (both halves) — Simple, READY; running an optional post-plan refinement
-  next · ▸ {{render-edge: awaiting-backpressure → plan}} — re-run plan informed by backpressure-coverage.md (advisory)
+  now  · plan READY + validated (Simple) — mid-build
+  next · ▸ {{render-edge: awaiting-6 → review}} — review the phase's code
 
- ⚙ engineering harness
-  now  · pre-coding seam — running the backpressure survey
-  next · writes backpressure-coverage.md (advisory) → you re-plan informed by it
+ ⚙ engineering harness  (chores on the-flow's rail)
+  now  · pre-coding done (■); mid-build — the post-coding retro chore is still todo (□)
+  next · at phase end run `/eng-harness-flow --hook post-coding` — flips □→■ on the next render, so the retro drain isn't missed
 ```
 
-- Harness loop pips = Boot · Backpressure · Observe · Retro · Improve (**per-pass**; `↺` = it cycles, never "completes"). The anchored line's shape is **fixed**: `└─ ⚙ <all five pips> ↺  <legend with [current]>  (<seam>)` — **never compress the pips** and never swap the legend for prose; narrative belongs in the ` ⚙ engineering harness` `now`/`next` group. Source the harness line from the router's envelope (its `rail`/`now`/`next` fields) — **never invent its position**; if the router hasn't reported this session, omit the harness line entirely (no empty scaffolding). Which seam rides which edge — and the literal `/eng-harness-flow --hook …` command to print-then-offer — is owned by [`harness-seams.md`](./harness-seams.md) (the flow loads it lazily at a harness edge; sub-skills are harness-blind).
-- Anchor placement: `└─` sits in the `◐` milestone's column (prefix `[the-flow]  ` = 12 chars + 2 per node ⇒ column 12 + 2 × index; settled rails anchor under the last `◆`). Column uncertain → a fixed 4-space indent is fine (**four real spaces inside the rail's one code fence — never `&nbsp;` or any HTML entity, which print literally**) — never let alignment delay the turn.
-- The two `now`/`next` voices stay separate, **each under its own header** — don't merge them into one shared block.
-- During harness **setup** (gate not yet passed), the anchored line carries the 🧰 segment instead: `└─ 🧰 ◆─◆─◐─◇─◇ → ⚙ ◇─◇─◇─◇─◇ ↺  install · scout · [governance] · inject · boot  (setup)`.
+- **The rail is the-flow's, not a second bar.** Coexistence = the four fire hooks (`pre-flight`/`pre-coding`/`post-coding`/`post-flight`, each `run /eng-harness-flow --hook <hook>`) injected as **chores** into `the-flow.json`. `eng-harness-flow` owns the chore flag and reconciles with the seam nodes this flow emits (R-1 — see [`harness-seams.md`](./harness-seams.md)); the chore pips ARE the harness loop's presence, so **do not** also draw the `└─ ⚙ … ↺` anchored line.
+- **Render from the CLI, never hand-drawn.** The unified rail comes from `harness flow rail … --chores show` — the glyphs above are only an illustration. The chore pips are always readable from `the-flow.json` via the CLI, so the harness presence shows **whether or not the router reported this turn**; never invent the states. Rail unreadable → fall back to the solo the-flow rail (no harness line).
+- **Derive the ⚙ voice from the chore states** — which fire hook is `todo`/`done`, and that running it flips the pip on the next render — enriched by the router's envelope `now`/`next` when it fired this turn. Keep the two `now`/`next` voices **separate, each under its own header**, never merged.
+- **No chores yet?** Before the first seam fires (or while the harness is unprovisioned), the-flow's rail simply renders with no chore pips — correct, not missing scaffolding; the pips appear the moment the first hook runs. During **adoption** (gate not yet passed), show the-flow's rail plus a one-line ` ⚙ engineering harness` note that setup is underway — `└─ 🧰 ◆─◆─◐─◇─◇ → ⚙ ◇─◇─◇─◇─◇ ↺  install · scout · [governance] · inject · boot  (adopting)` (four real spaces before `└─`, never `&nbsp;`) — and route the missing rung.
 
 ---
 

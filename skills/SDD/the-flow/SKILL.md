@@ -34,7 +34,7 @@ A sub-skill may lazily pull `references/00-routing.md` § Shared conventions whe
 |---|---|---|---|---|
 | 1a | explore | `references/stages/10-explore.md` | intent → `research-dossier.md` | `"<intent>"` |
 | 1b | plan | `references/stages/20-plan.md` | intent, dossier?, workshops?, coverage? → `<slug>-plan.md` (one doc: business spec + impl plan, **always both** in one atomic pass; gates G1–G7; auto-runs `/validate-v2`; § Re-entry for mid-plan clarifications) | `"<intent>"` `[--simple]` `[--skip-clarify]` |
-| 2c | workshop | `references/stages/25-workshop.md` | plan/spec?, topic → `workshops/*.md` (authoritative decisions) | `"<topic>"` |
+| 2c | workshop | `references/stages/25-workshop.md` | plan/spec?, topic → `workshops/*.md` (authoritative decisions) | `<plan> "<topic>"` `[--from-spec]` `[--list]` |
 | 3a | adr | `references/stages/35-adr.md` | plan/spec context → `docs/adr/*.md` | `"<decision>"` |
 | 5 | tasks | `references/stages/50-phase-tasks.md` | plan → `tasks/<phase>/tasks.md` + context brief | `--phase "<Phase N: Title>" --plan "<path>"` |
 | 6 | implement | `references/stages/60-implement.md` | plan, tasks? → code + `execution.log.md` (exactly one phase) | `--plan "<path>"` `[--phase "<Phase N: Title>"]` `[--subtask "<ORD-slug>"]` `[--companion]` `[--companion-slug "<slug>"]` |

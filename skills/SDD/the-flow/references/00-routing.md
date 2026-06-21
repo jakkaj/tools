@@ -27,9 +27,30 @@ Ask the intent (coach.md `start` narration). After the user answers:
 2. **Derive the slug** = kebab-case of the intent's first ~3–5 significant words (drop filler).
 3. `mkdir -p docs/plans/<ord>-<slug>/`.
 4. **Write the verbatim ask** to `original-ask.md` (shape below) and mirror it into `nav.intent` (set in step 6).
-5. Initialise the flight plan **via the CLI** (never hand-write it): `harness flow create flight-plan --slug <slug> --path docs/plans/<ord>-<slug>/the-flow.json --schema "<skill base>/references/flight-plan.schema.json" --bare --agent the-flow` (the `--agent the-flow` is what titles the rail `[the-flow]`; without it the rail shows the slug), then seed the spine with `harness flow add-node` — a `research` node (status `in_progress`) plus `assumed` `plan`/`ship` nodes for the initial shape (add the `ship` node with `--zone postflight` so it bands after the flight zone — `flight-plan-ops.md` § Zone bands) — and set the initial position with `harness flow nav set --path docs/plans/<ord>-<slug>/the-flow.json --now research`.
-6. Seed the **session state into the flight plan** (there is no separate state file): `harness flow nav set --path docs/plans/<ord>-<slug>/the-flow.json --intent "<the verbatim ask>"`, then `harness flow nav meta set --path docs/plans/<ord>-<slug>/the-flow.json mode <Simple|Full|unknown>` and `harness flow nav meta set --path docs/plans/<ord>-<slug>/the-flow.json status active` (the free-form `bag`). Then render: `harness flow render --path docs/plans/<ord>-<slug>/the-flow.json --output docs/plans/<ord>-<slug>/the-flow.md`. (`<skill base>` = this skill's base dir, e.g. `~/.claude/skills/the-flow`; the flight-plan schema ships in `references/` and is supplied via `--schema`, per § Flight plan.)
-7. Print-and-offer the **explore** edge (research-worthy intent) or the **plan** edge (clear ask) — the command is rendered from the dispatch's Command grammar + Registry, with the intent as the verb's argument.
+5. **Create + seed the flight plan via the CLI** (never hand-write it) — run the **ordered block below**.
+6. Print-and-offer the **explore** edge (research-worthy intent) or the **plan** edge (clear ask) — the command is rendered from the dispatch's Command grammar + Registry, with the intent as the verb's argument.
+
+**Create + seed block** — define the path **once** (real runs use `docs/plans/<ord>-<slug>/`; a scratch/eval run redirects only `PLAN_DIR`/`FLOW_PATH`), and build the spine **last-to-first** because the validator rejects forward `--next` refs (`flight-plan-ops.md` §6):
+
+```bash
+PLAN_DIR="docs/plans/<ord>-<slug>"; FLOW_PATH="$PLAN_DIR/the-flow.json"
+SCHEMA="<skill base>/references/flight-plan.schema.json"   # <skill base> = this skill's dir, e.g. ~/.claude/skills/the-flow
+
+# root — ALWAYS --agent the-flow (→ rail title [the-flow]; without it the rail shows the slug)
+harness flow create flight-plan --slug <slug> --path "$FLOW_PATH" --schema "$SCHEMA" --bare --agent the-flow
+
+# spine, last-to-first (ship has no --next; each --next target must already exist)
+harness flow add-node --path "$FLOW_PATH" --id ship     --type ship     --label "Ship"     --status assumed     --zone postflight
+harness flow add-node --path "$FLOW_PATH" --id plan     --type plan     --label "Plan"     --status assumed     --next ship
+harness flow add-node --path "$FLOW_PATH" --id research --type research --label "Research" --status in_progress --next plan
+
+# position + session bag (there is NO separate state file)
+harness flow nav set      --path "$FLOW_PATH" --now research --intent "<the verbatim ask>"
+harness flow nav meta set --path "$FLOW_PATH" mode <Simple|Full|unknown>
+harness flow nav meta set --path "$FLOW_PATH" status active
+
+harness flow render --path "$FLOW_PATH" --output "$PLAN_DIR/the-flow.md"
+```
 
 Stages 10/20 both **reuse** an existing `docs/plans/*-<slug>/` folder by slug — creating it first is safe.
 

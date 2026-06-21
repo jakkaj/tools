@@ -79,6 +79,16 @@ The `post-coding` (phase-end) seam is a **first-class beat per phase**, not a bu
 - **"Drain owed" is re-derived, not stored** — no new state file. A phase whose node is `done` while its `harness-retro` sibling is still `assumed`/absent ⇒ that phase's drain is owed. The flight-plan node **is** the durable record (existing `status` + `branch_of` fields suffice — KISS, no rollup).
 - **Drain before harvest.** At phase/session end the router drains the non-empty buffer first; harvest (the `post-flight` beat at ship) reads `.retro.md`. The router owns that ordering — the flow just offers the beat at the edge.
 
+### Chore-flag ownership — `eng-harness-flow` owns it (R-1; harness plan 032)
+
+When the harness **loop** runs alongside this flow, `eng-harness-flow` makes its four fire hooks (`pre-flight`/`pre-coding`/`post-coding`/`post-flight`) visible on **this flow's rail** by marking them as **chores** in `the-flow.json` — so the main flow tracks them and they stop getting missed. To avoid double-placement with the seam nodes this file emits, **`eng-harness-flow` is the single owner of the chore flag**:
+
+- It dedups on the **`--hook <X>` token** inside a node's `command` (one chore per hook).
+- If a seam node this flow already emitted (`harness-boot` / `backpressure` / `harness-retro`) carries that hook's `/eng-harness-flow --hook <X>` command, the router **flags that existing node** as a chore (`harness flow set-node --chore-kind command --importance …`) — it does **not** add a duplicate. The node keeps its type + violet render and simply gains a chore square pip.
+- Only when no such node exists does it add a fresh chore node.
+
+So **this flow's seam emission is unchanged**; `eng-harness-flow` layers the chore flag on top. The two never double-fire. (The full chore shape lives in the harness skill's `flight-plan-ops.md`.)
+
 ---
 
 ## Honored, not forced
