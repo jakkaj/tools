@@ -81,7 +81,7 @@ Docs and **legacy** state files written before the consolidation may carry comma
 
 ## Hard invariants (every stage, both load paths)
 
-1. **Print first, then offer to run.** Print the exact command in a copyable block — rendered via § Command grammar (id **and** verb, never a bare number), so the reader sees what it will do without knowing the ids — then offer to run it; one accepted step per turn (guided).
+1. **Print first, then offer to run.** Print the exact command in a copyable block — rendered via § Command grammar (id **and** verb, never a bare number), so the reader sees what it will do without knowing the ids — then offer to run it; one accepted step per turn (guided). **One exception, by design:** the harness *router call* (`/eng-harness-flow --hook … --json`) **auto-fires** at each seam — it's read-only/advisory and positional, so it can't be forgotten as context grows or compacts; only the *action it routes to* follows print-then-offer (call-only depth — `references/harness-seams.md` § How the engine presents a seam).
 2. **Nothing irreversible without explicit confirmation.** Outward-facing actions each gate: the **ship** verb's push and PR-open are **separate** confirms (a "yes" to push is not a "yes" to open a PR); the **reconcile** merge (8c) and any immediate merge execute **only** after the user types `PROCEED` — never on a generic "yes".
 3. **Never run `/compact`** — it is a user-typed CLI built-in. Recommend: "type `/compact` yourself, then re-run `/the-flow`".
 4. **Never gate, score, or block.** Workshops, backpressure, compaction, companions — all skippable; best-effort, no thresholds, no compliance floors.
@@ -89,7 +89,7 @@ Docs and **legacy** state files written before the consolidation may carry comma
 6. **Never hand-edit the flight plan, and never hand-author a state file.** `the-flow.md` is always regenerated from `the-flow.json` by `harness flow render`; `the-flow.json` itself is mutated **only** through `harness flow` calls (plan 024 — the CLI is the generator). There is **no `.the-flow-state.json`** — all the-flow state (position + session `bag`) lives in `the-flow.json`, and the CLI is its only writer. Guided mode requires a capable CLI (§ Prerequisite).
 7. **You don't run `minih`.** The implement verb's companion mode (`--companion`) owns the companion protocol; you narrate the affordance. Agent bookkeeping into the flight plan awaits the v2 `harness flow agent` verb — until it lands, `agents[]` stays unpopulated and is never hand-edited (per invariant #6).
 8. **No time estimates anywhere** — Complexity Score (CS 1–5) only (`references/00-routing.md` § Shared conventions).
-9. **Harness = one door.** Every harness touchpoint is `/eng-harness-flow --hook …` (permanent `--event` alias) — never name or invoke its child skills. Harness-seam orchestration is **flow-owned** (`references/harness-seams.md`); sub-skills are harness-blind.
+9. **Harness = one door, auto-fired at each seam.** Every harness touchpoint is `/eng-harness-flow --hook …` (permanent `--event` alias) — never name or invoke its child skills. The router *call* **auto-fires** mechanically from the durable `nav.now` position at each seam (so it survives long/compacted context); the routed *action* stays print-then-offer (call-only). Harness-seam orchestration is **flow-owned** (`references/harness-seams.md`); sub-skills are harness-blind.
 10. **Every stage is a deep-think task** — reason as thoroughly as the stage warrants.
 
 ## State

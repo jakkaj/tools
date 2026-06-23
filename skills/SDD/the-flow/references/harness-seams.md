@@ -8,15 +8,27 @@ The **single owner** of *where & when* the engineering harness is touched across
 
 ---
 
-## How the engine presents a seam — a literal print-then-offer
+## How the engine presents a seam — auto-fire the call, then offer the action
 
-A harness command is **not** a `/the-flow` command: it has no Registry row, so it is **never** rendered through the dispatch's § Command grammar or a `{{render-edge}}` slot. The engine prints it as a **literal** line — the same convention `coach.md` already uses for `/eng-harness-flow` — and then offers to run it, exactly under dispatch invariants **#1 (print-then-offer)** and **#4 (never gate)**:
+A harness command is **not** a `/the-flow` command: it has no Registry row, so it is **never** rendered through the dispatch's § Command grammar or a `{{render-edge}}` slot. Two distinct things happen at a seam, and they gate **differently**:
 
-1. **Print** the literal `/eng-harness-flow --hook … --json` line in a copyable block.
-2. **Offer** to run it (one short line); the user accepts or waves past.
-3. **On a clear go-ahead** → run it, narrate the envelope **verbatim**, advance *through* the corresponding flight-plan node (set its status), then continue the flow.
+**1. The router call auto-fires (mandatory, mechanical, read-only).** The `/eng-harness-flow --hook … --json` probe is **fired automatically** the moment the flow lands on a seam edge — the engine does **not** wait for the user to accept it, and does **not** depend on the instruction to fire it still being in context. The call is advisory and read-only: it returns a routing *decision* in a `--json` envelope; a bare `--hook … --json` call never mutates the repo, never runs anything irreversible, and never blocks. So firing it costs nothing and gates nothing. **This is the load-bearing rule: the call is driven by where the flow *is* (the durable Graph/nav position), not by whether anyone remembered to offer it** — so a long or compacted conversation can never silently skip a seam (§ Compaction-robust firing below).
 
-This is the mechanism that makes a seam **first-class**: the engine actually *offers and runs* the beat in guided mode — it never merely paints a node and moves on.
+**2. The routed action is print-then-offer (call-only depth).** Whatever the envelope routes *to* — a boot command, a backpressure survey, a retro drain, an adoption step — is surfaced as a **literal** copyable line (the convention `coach.md` already uses for `/eng-harness-flow`) and **offered**, under dispatch invariants **#1 (print-then-offer)** and **#4 (never gate)**. The engine narrates the envelope **verbatim**, advances *through* the corresponding flight-plan node (sets its status), then continues. The user accepts or waves past the *action* — but the *call that surfaced it already happened automatically*. Nothing with side effects runs without a go-ahead.
+
+This is what makes a seam **first-class and un-forgettable**: the engine *always fires the advisory call* at the edge (the beat is never missed), and *always offers* what it routes to (nothing irreversible runs unprompted).
+
+---
+
+## Compaction-robust firing — the call is positional, not remembered
+
+The failure this prevents: as a session gets long or is `/compact`-ed, the instruction to call the harness gets diluted out of context and the flow **forgets to fire it at the proper moments**. The fix is to make firing a **mechanical consequence of where the flow is**, re-derived from durable substrate every guided turn — never a soft "remember to offer this" sitting in the conversation:
+
+- **The trigger is position, not memory.** Every guided turn the engine reads `harness flow nav show` and checks whether `nav.now` sits on a seam edge (per the § seam map). If it does and that seam hasn't fired for the current node, the engine **fires the router call now** — whether or not anything about the harness is still in context. The flight-plan node + `nav` position *are* the durable record (KISS — no new state file).
+- **`due_chores` is the backstop.** `harness flow nav show` returns `due_chores` (harness hooks anchored at `nav.now`, still `todo`). A pending seam surfaces there even after a compaction wiped the narration that would have offered it — the engine fires its call and narrates it as the "due here" beat (§ Per-phase retro lifecycle; § CLI-driven cadence step 3 in [`00-routing.md`](./00-routing.md)).
+- **Re-derive, then fire.** After a `/compact` the engine reloads `00-routing.md` + `coach.md` + (at a harness edge) **this file**, re-reads `nav`, and fires any seam due at the current position. Nothing about "call the harness" needs to have survived the compaction — the position does the remembering.
+
+So "the flow forgot to run it" cannot come from context dilution: the advisory call is recomputed from `nav.now` each turn and fired the moment the position lands on a seam. (Layer-1/Layer-2 detection still applies — a *missing* or *unprovisioned* router short-circuits to the silent paths below; firing only ever means firing the read-only `--json` call, never auto-running the action.)
 
 ---
 
@@ -39,7 +51,7 @@ This is the mechanism that makes a seam **first-class**: the engine actually *of
 
 The flow wires **four fire-hooks** and deliberately **skips one** (the silent `coding` capture — mirroring its prior decision not to wire `task-pause`). `pre-flight` appears at **two** edges (flow entry and before each phase) — same hook, different context flags, different outcome.
 
-| Graph edge / state | `--hook` (+ context flags) | `--event` alias | Emitted node | Literal command the engine print-then-offers |
+| Graph edge / state | `--hook` (+ context flags) | `--event` alias | Emitted node | Literal call the engine **auto-fires** at this edge (then offers the routed action) |
 |---|---|---|---|---|
 | **flow entry** (`start`) | `pre-flight` | `session-start` | *(usually none — detection + one calm line only)* | `/eng-harness-flow --hook pre-flight --json` |
 | **post-plan refinement** off `awaiting-1b` | `pre-coding` `--spec <plan path>` | `post-spec` | `backpressure` (`branch_of: "plan"`) | `/eng-harness-flow --hook pre-coding --spec "<plan path>" --json` |
@@ -49,7 +61,7 @@ The flow wires **four fire-hooks** and deliberately **skips one** (the silent `c
 | **mid-build** (we do **not** wire this) | `coding` | `task-pause` | *(none — silent CLI capture, the harness's own concern)* | *(unwired — see § Seam contract)* |
 
 **What each beat is *for* (narration source):**
-- **`pre-flight` @ entry** — detect the router, narrate one calm line; no node.
+- **`pre-flight` @ entry** — auto-fire the call to detect + position the router (read-only); narrate one calm line; no node. Fired automatically at flow entry so a fresh or just-compacted session always re-establishes the harness.
 - **`pre-coding` @ post-plan** — the backpressure survey: *can the planned work be proven by deterministic sensors, or only eyeballed?* Produces `backpressure-coverage.md` — **advisory output**: re-run the **plan** verb *informed by* it (the harness-blind plan verb does **not** auto-read the file; you fold what you learned into the re-plan intent). Offered as an optional post-plan refinement, never forced.
 - **`pre-flight` @ phase** — the router proves the system **boots** before a line of code; verdict narrated verbatim (`healthy → build` · `SLOW → build with a note` · `UNHEALTHY → stop and ask the human: Retry / Continue without harness / Abort` · `UNAVAILABLE → standard testing`).
 - **`post-coding` @ phase end** — drain **this phase's** friction notes → `.retro.md` (the router owns drain-vs-harvest; the user may see a `[s/t/p/e/d/a]` prompt).
@@ -93,9 +105,9 @@ So **this flow's seam emission is unchanged**; `eng-harness-flow` layers the cho
 
 ---
 
-## Honored, not forced
+## Honored, not forced — the action, not the call
 
-Every seam is a **print-then-offer beat the engine presents at the edge** (invariants #1/#4) — the user accepts or waves past. Seams are **never** auto-fired, **never** gate, **never** score, **never** block. Best-effort throughout: a router that's missing, a repo that's unprovisioned, or an `UNAVAILABLE` verdict all fall back to standard testing with at most one calm line.
+Draw the line precisely. The **router call** auto-fires (it's read-only and advisory — § How the engine presents a seam, § Compaction-robust firing); the **action it routes to** is a **print-then-offer beat** (invariants #1/#4) the user accepts or waves past. So seams **never** gate, **never** score, **never** block, and nothing with side effects runs without a go-ahead — yet the advisory call is never skipped. Best-effort throughout: a router that's missing, a repo that's unprovisioned, or an `UNAVAILABLE` verdict all fall back to standard testing with at most one calm line. The user can still opt out conversationally — "don't use the harness" stops the calls; there is **no** sentinel file.
 
 ---
 
