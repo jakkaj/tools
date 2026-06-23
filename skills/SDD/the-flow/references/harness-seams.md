@@ -89,6 +89,8 @@ When the harness **loop** runs alongside this flow, `eng-harness-flow` makes its
 
 So **this flow's seam emission is unchanged**; `eng-harness-flow` layers the chore flag on top. The two never double-fire. (The full chore shape lives in the harness skill's `flight-plan-ops.md`.)
 
+**Anchored, and surfaced as "due here" (harness plan 033).** Each injected chore is `branch_of` its spine node (the hook→anchor map in the harness skill's `flight-plan-ops.md`: `pre-flight`→first phase, `pre-coding`→`plan`, `post-coding`→last phase, `post-flight`→`ship`), so it renders as a **connected dotted excursion**, never a floating orphan. The engine surfaces the outstanding ones at the current node **every guided turn**: `harness flow nav show` returns a **`due_chores`** array — the chores whose anchor is `nav.now`, status still `todo` — which the coach narrates as the **"due here" beat** (§ CLI-driven cadence step 3 in [`00-routing.md`](./00-routing.md)). So the right hook is shown at the right node and stops getting missed, even across a `/compact`. Advisory throughout — a presented due item, never a gate. (Older CLIs without `due_chores` simply omit the beat — a graceful no-op.)
+
 ---
 
 ## Honored, not forced
