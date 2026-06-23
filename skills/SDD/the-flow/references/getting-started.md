@@ -157,7 +157,8 @@ flowchart LR
 1.  /the-flow 1a explore "how are API endpoints structured here?"
     → The engine offers /eng-harness-flow --hook pre-flight (the router checks
       the harness is alive; one calm line either way).
-    → 8 parallel subagents → docs/plans/005-api-widgets/research-dossier.md
+    → minimum-sufficient research (cheap scout; workers added only as the evidence demands)
+      → docs/plans/005-api-widgets/research-dossier.md
 
 2.  /the-flow 1b plan "POST endpoint to create widgets (name, color)"
     → Asks testing/mock/docs/mode questions up front, then writes ONE document:

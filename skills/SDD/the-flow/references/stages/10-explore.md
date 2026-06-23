@@ -5,1024 +5,200 @@
 > Composition is the bundling flow's job.
 
 **Verb**: explore
-**Purpose**: Deep-dive research into how existing functionality works in the codebase — produces a research dossier (or console-only report) that feeds specification.
-**Consumes**: a research query. No prior artifacts required — auto-detects plan context (ordinal branch / cwd / conversation) or creates a new plan folder; `--console` creates no files at all. Optional context: existing `docs/plans/<ordinal>-<slug>/`, `docs/domains/registry.md`, FlowSpace MCP when available.
+**Purpose**: Answer *how existing functionality works* and produce evidence suitable for planning — a compact, history-aware research dossier (or console-only report). **Minimum-sufficient by design**: start cheap, climb only when evidence demands it.
+**Consumes**: a research query. No prior artifacts required — auto-detects plan context (ordinal branch / cwd / conversation) or creates a new plan folder; `--console` creates nothing. Optional context: an existing `docs/plans/<ordinal>-<slug>/`, institutional memory (prior plans, tasks, execution logs, workshops, ADRs, reviews, retros), `docs/domains/registry.md`, FlowSpace MCP when available.
 **Flags**: `"research query"` · `--plan <name>` (explicit plan folder) · `--console` (console-only output)
-**Produces**: `docs/plans/<ordinal>-<slug>/research-dossier.md` (or console-only report with `--console`) + terminal success block (plan-folder status, components analyzed, critical findings, prior learnings surfaced, external research opportunities, FlowSpace mode). Read-only — STOPs and waits after output.
+**Produces**: `docs/plans/<ordinal>-<slug>/research-dossier.md` — a **decision packet** (§ Dossier contract), not a transcript — or a console-only report with `--console`. Read-only; STOPs and waits after output.
 **Side effects**: none (read-only research; STOPs and waits after output)
 
 ---
 
-## Procedure
+## Governing rule
 
-**Research and understand** how existing functionality works in the codebase. Perfect for arbitrary research questions or pre-planning exploration.
+> **Always search institutional memory cheaply. Read it deeply only when relevance, risk, contradiction, or unresolved uncertainty earns the cost.**
 
-> Elegance: the dossier is **output** — a curated decision aid, not a warehouse of everything explored. Research broadly *internally*; the canonical artifact carries only decision-relevant findings, risks, and patterns, as tables with evidence links — link to sources, don't restate them. Doctrine + the seven-function line test: `references/00-routing.md` § Shared conventions.
+Every token, worker, file read, finding, and dossier line must earn its place — change a decision, constrain an implementation, prove a behaviour, expose a risk, record evidence, preserve intent, or enable the next action — else cut it (the seven-function line test + doctrine: `references/00-routing.md` § Shared conventions). The dossier is **output**: research broadly *internally*; emit only decision-relevant findings as tables with evidence links — link, don't restate. **No finding quotas, no fixed worker roster** — fan-out follows the independent questions left after a cheap scout, never a standing count.
 
-User input:
-```
+**Authority**: live code is authoritative for *current behaviour*. Historical artifacts are authoritative for *recorded decisions* only when the repo designates them so (an applicable ADR, an authoritative workshop); other prior plans and retros explain intent, friction, rejected approaches, proven workarounds, and risks — they never silently override current code.
+
+```md
 $ARGUMENTS
-# Expected argument forms (flags are this verb's own — the flow renders the full command):
-# "research query"                       # Auto-detect context or create plan
-# --plan <name> "research query"         # Explicit plan name
-# --console "research query"             # Output to console only (no files)
-#
-# Examples:
-# "research how the search service works"
-# --plan authentication-upgrade "research the current auth system"
-# --console "quick question about error handling"
+# Argument forms (flags are this verb's own — the flow renders the full command):
+#   "research query"                 → auto-detect plan context, or create one
+#   --plan <name> "research query"   → explicit plan folder
+#   --console "research query"        → console only, no files
+# e.g.  "how does the search service work?"   ·   --console "quick error-handling question"
 ```
 
-## Purpose
-
-Perform deep codebase research to understand how existing functionality works. Automatically saves to a plan folder (creating one if needed) unless `--console` is specified.
-
-## Behavior
-
-- **Default (no flags)**: Auto-detect plan context, or create new plan folder from research query slug
-- **With --plan <name>**: Use/create specified plan folder
-- **With --console**: Output research to console only (no files created)
-
-## Execution Flow
-
-### 1) Parse Input and Detect Context
-
-Extract research query and determine output destination:
-
-```python
-# Pseudo-code for context detection
-def determine_output_mode(arguments):
-    # Check for explicit flags first
-    if "--console" in arguments:
-        return "console", None  # Output to console only
-
-    if "--plan" in arguments:
-        plan_name = extract_after_flag("--plan", arguments)
-        return "plan", plan_name  # Explicit plan name provided
-
-    # AUTO-DETECTION: No explicit flag provided
-
-    # 1. Check if current git branch has ordinal prefix (e.g., "013-ci")
-    branch_name = get_current_branch()
-    if branch_name and re.match(r'^\d{3}-', branch_name):
-        print(f"📁 Detected ordinal branch: {branch_name}")
-        return "plan", branch_name  # Use branch name as plan folder name
-
-    # 2. Check if we're currently inside a plan folder
-    cwd = get_current_working_directory()
-    plan_folder = detect_plan_folder_context(cwd)
-    if plan_folder:
-        print(f"📁 Detected plan context: {plan_folder}")
-        return "plan", plan_folder
-
-    # 3. Check conversation context for recent plan work
-    recent_plan = detect_recent_plan_in_conversation()
-    if recent_plan:
-        print(f"📁 Using recent plan from context: {recent_plan}")
-        return "plan", recent_plan
-
-    # 4. No context found - create new plan folder from query slug
-    query = extract_research_query(arguments)
-    slug = slugify(query)[:50]  # Truncate long queries
-    print(f"📁 Creating new plan folder for research: {slug}")
-    return "plan", slug
-
-def get_current_branch():
-    """Get current git branch name"""
-    # Run: git rev-parse --abbrev-ref HEAD
-    # Returns branch name like "013-ci" or "main"
-    result = run_command("git rev-parse --abbrev-ref HEAD")
-    return result.strip() if result else None
-
-def detect_plan_folder_context(cwd):
-    """Check if cwd is inside a docs/plans/NNN-slug/ folder"""
-    # Walk up from cwd looking for docs/plans/NNN-* pattern
-    path = Path(cwd)
-    while path != path.parent:
-        if path.parent.name == "plans" and path.parent.parent.name == "docs":
-            if re.match(r'^\d{3}-', path.name):
-                return str(path)
-        path = path.parent
-    return None
-
-def detect_recent_plan_in_conversation():
-    """Check conversation history for recent plan folder references"""
-    # Look for patterns like:
-    # - "docs/plans/007-feature-name/"
-    # - "Working on plan 007-feature-name"
-    # - Recent file edits in a plan folder
-    # Return the plan folder path if found, else None
-    pass
-```
-
-**Output modes:**
-- `"console"`: Output research report to console, no files created
-- `"plan"`: Save research to `docs/plans/<ordinal>-<slug>/research-dossier.md`
-
-### 1a) Plan Folder Management
-
-```python
-# Pseudo-code for plan folder handling
-def determine_plan_folder(plan_name_or_path):
-    # If it's already a full path (from context detection), use it
-    if plan_name_or_path.startswith("docs/plans/") or "/" in plan_name_or_path:
-        if exists(plan_name_or_path):
-            return plan_name_or_path
-        # Path doesn't exist but was specified - error
-        if matches_pattern(r'^\d{3}-', basename(plan_name_or_path)):
-            error(f"Plan folder {plan_name_or_path} does not exist")
-
-    # Check if plan_name is already a folder name (e.g., "001-auth")
-    if matches_pattern(r'^\d{3}-', plan_name_or_path):
-        if exists(f"docs/plans/{plan_name_or_path}"):
-            return f"docs/plans/{plan_name_or_path}"
-        else:
-            error(f"Plan folder {plan_name_or_path} does not exist")
-
-    # plan_name is just a slug (e.g., "auth" or "authentication-upgrade")
-    slug = slugify(plan_name_or_path)
-
-    # Search for existing folder with this slug
-    for folder in list_folders("docs/plans/"):
-        if folder.endswith(f"-{slug}"):
-            print(f"📁 Found existing plan folder: docs/plans/{folder}")
-            return f"docs/plans/{folder}"
-
-    # No existing folder found - create new with next ordinal
-    next_ordinal = get_next_ordinal()
-    new_folder = f"docs/plans/{next_ordinal:03d}-{slug}"
-    create_folder(new_folder)
-    print(f"📁 Created new plan folder: {new_folder}")
-    return new_folder
-
-def get_next_ordinal():
-    # PREFERRED: Use plan-ordinal tool for cross-branch safety
-    try:
-        result = run_command("plan-ordinal")  # or "jk-po"
-        return int(result.strip())  # Returns "011" -> 11
-    except:
-        # FALLBACK: Tool not available - scan local filesystem only
-        # WARNING: This may cause ordinal collisions across branches!
-        print("⚠️ plan-ordinal tool not available - using local-only scan")
-        print("   Install: Add scripts/plan-ordinal.py and run setup.sh")
-        existing = [int(d[:3]) for d in list_folders("docs/plans/")
-                    if matches_pattern(r'^\d{3}-', d)]
-        return max(existing, default=0) + 1
-```
-
-### 2) FlowSpace MCP Detection
-
-**CRITICAL**: Check for FlowSpace MCP availability to leverage enhanced exploration
-
-```python
-# Pseudo-code for detection
-try:
-    # Try calling tree() with minimal params - fast and reliable
-    flowspace.tree(pattern=".", max_depth=1)
-    FLOWSPACE_AVAILABLE = True
-    print("✅ FlowSpace MCP detected - using enhanced exploration")
-except:
-    FLOWSPACE_AVAILABLE = False
-    print("ℹ️ FlowSpace not available - using standard tools")
-    print("To install: uvx --from git+https://github.com/AI-Substrate/flow_squared fs2 install")
-    print("Then run: fs2 init && fs2 scan (requires user configuration)")
-    print("See: https://github.com/AI-Substrate/flow_squared/blob/main/README.md")
-```
-
-If FlowSpace is available, use these tools for enhanced exploration:
-- `tree(pattern, max_depth, detail)` - Navigate codebase structure hierarchically
-- `search(pattern, mode, limit, include, exclude)` - Find code by text, regex, or semantic meaning
-- `get_node(node_id, detail)` - Retrieve full source code for a specific node
-
-**Recommended workflow**:
-1. Start with `tree(pattern=".", max_depth=1)` to see top-level structure
-2. Use `search(pattern="concept", mode="semantic")` for conceptual discovery
-3. Use `get_node(node_id)` to read full source after finding relevant nodes
-
-### 2a) FlowSpace API Discovery (Runtime)
-
-**IMPORTANT**: FlowSpace is actively developed. Before relying on static documentation, probe the API at runtime to discover current capabilities.
-
-**Discovery steps**:
-1. **Probe each FlowSpace tool** with minimal then maximal parameters
-2. **Discover available features** - what fields, modes, and options exist?
-3. **Check for new tools** - are there capabilities beyond tree/search/get_node?
-4. **Note useful metadata** - AI summaries, language detection, relevance scores, etc.
-5. **Use discovered capabilities** in the exploration that follows
-
-This ensures agents always use the best available FlowSpace capabilities, even if this command was written before new features were added.
-
-### 2b) Load Domain Context
-
-Load domain context per `references/00-routing.md` § Domain context loading. Stage-specific additions:
-
-- Pass domain context to subagents so they can reference known domains in findings
-- If no domain registry exists: note "No domain registry found — subagents will discover domain-like boundaries organically" — the Domain & Boundary Scout subagent (below) will identify potential domains even without a registry
-
-### 3) Launch Parallel Research Subagents
-
-**IMPORTANT**: Use **parallel subagent execution** for comprehensive and efficient research.
-
-**Strategy**: Launch 8 specialized subagents in a single message with 8 Task tool calls (7 original + 1 domain-focused).
-
-#### Subagent Prompts (FlowSpace Mode)
-
-**Subagent 1: Implementation Archaeologist (FlowSpace)**
-"Map the complete implementation landscape of [RESEARCH_TOPIC].
-
-**If FlowSpace is available**: Use FlowSpace MCP tools:
-- `tree(pattern="ClassName")` to find specific classes/functions
-- `search(pattern="concept", mode="semantic")` for conceptual search
-- `get_node(node_id)` to retrieve full source code
-
-**Tasks**:
-- Find all entry points (APIs, commands, event handlers)
-- Trace execution flow using node relationships
-- Document core algorithms and business logic
-- Map data transformations with node IDs
-- Identify configuration and initialization
-
-**External Research Detection**:
-Flag knowledge gaps that require external research when you encounter:
-- Questions about current best practices (2024+) vs what code implements
-- Industry standards, compliance, or security patterns not documented in code
-- Performance optimization strategies beyond what's implemented
-- Architectural decisions where "why" isn't clear from code
-- Technology comparisons the codebase doesn't address
-- Recent changes to libraries/frameworks the code depends on
-
-For each gap found, note:
-- Topic: [brief title]
-- Why: [why code can't answer this]
-- Context: [relevant code findings that led to this question]
-
-**Output**: 8-10 findings numbered IA-01 through IA-10:
-```markdown
-### Finding IA-01: Main Entry Point
-**Node ID**: method:src/search/service.py:SearchService.search
-**Related Nodes**:
-  - class:SearchService
-  - function:src/search/utils.py:normalize_query
-**Description**: [What this does]
-**Code Example**: [Show actual code]
-**Flow**: [How execution proceeds from here]
-**External Research Gap** (if applicable): [Topic needing external research]
-```
-
-Return complete findings list including any external research gaps identified."
-
-**Subagent 2: Dependency Cartographer (FlowSpace)**
-"Create comprehensive dependency map for [RESEARCH_TOPIC].
-
-**If FlowSpace is available**: Use FlowSpace MCP tools:
-- `tree(pattern="ClassName")` to find specific classes/functions
-- `search(pattern="concept", mode="semantic")` for conceptual search
-- `get_node(node_id)` to retrieve full source code
-
-**Tasks**:
-- Map what [RESEARCH_TOPIC] depends on (imports, calls)
-- Map what depends on [RESEARCH_TOPIC] (consumers)
-- Document external service integrations
-- Identify database/storage interactions
-- Trace configuration dependencies
-
-**External Research Detection**: (Same criteria as Subagent 1)
-
-**Output**: 8-10 findings numbered DC-01 through DC-10 with dependency graphs, node IDs, and any external research gaps."
-
-**Subagent 3: Pattern & Convention Scout (FlowSpace)**
-"Identify design patterns and conventions in [RESEARCH_TOPIC].
-
-**If FlowSpace is available**: Use FlowSpace MCP tools:
-- `tree(pattern="ClassName")` to find specific classes/functions
-- `search(pattern="concept", mode="semantic")` for conceptual search
-- `get_node(node_id)` to retrieve full source code
-
-**Tasks**:
-- Design patterns used (Factory, Observer, Repository, etc.)
-- Error handling approaches with examples
-- Logging and monitoring strategies
-- Naming conventions and code organization
-- Architectural patterns (MVC, Clean, Hexagonal)
-
-**External Research Detection**: (Same criteria as Subagent 1)
-
-**Output**: 8-10 findings numbered PS-01 through PS-10 with pattern examples, node IDs, and any external research gaps."
-
-**Subagent 4: Quality & Testing Investigator (FlowSpace)**
-"Analyze quality and testing aspects of [RESEARCH_TOPIC].
-
-**If FlowSpace is available**: Use FlowSpace MCP tools:
-- `tree(pattern="ClassName")` to find specific classes/functions
-- `search(pattern="concept", mode="semantic")` for conceptual search
-- `get_node(node_id)` to retrieve full source code
-
-**Tasks**:
-- Current test coverage (unit, integration, e2e)
-- Test strategies and patterns used
-- Performance characteristics if documented
-- Known bugs, limitations, tech debt
-- Code quality indicators
-
-**External Research Detection**: (Same criteria as Subagent 1)
-
-**Output**: 8-10 findings numbered QT-01 through QT-10 with metrics, test references, and any external research gaps."
-
-**Subagent 5: Interface & Contract Analyst (FlowSpace)**
-"Document all interfaces and contracts for [RESEARCH_TOPIC].
-
-**If FlowSpace is available**: Use FlowSpace MCP tools:
-- `tree(pattern="ClassName")` to find specific classes/functions
-- `search(pattern="concept", mode="semantic")` for conceptual search
-- `get_node(node_id)` to retrieve full source code
-
-**Tasks**:
-- Public API signatures and endpoints
-- Data schemas and validation rules
-- Message/event contracts
-- Integration protocols and formats
-- Backward compatibility commitments
-
-**External Research Detection**: (Same criteria as Subagent 1)
-
-**Output**: 8-10 findings numbered IC-01 through IC-10 with contract details, node IDs, and any external research gaps."
-
-**Subagent 6: Documentation & Evolution Historian (FlowSpace)**
-"Gather documentation and historical context for [RESEARCH_TOPIC].
-
-**If FlowSpace is available**: Use FlowSpace MCP tools:
-- `tree(pattern="ClassName")` to find specific classes/functions
-- `search(pattern="concept", mode="semantic")` for conceptual search
-- `get_node(node_id)` to retrieve full source code
-
-**Tasks**:
-- Existing documentation (README, docs, wikis)
-- Important code comments and design notes
-- Related ADRs or design decisions
-- Configuration documentation
-- Migration and evolution history
-
-**External Research Detection**: (Same criteria as Subagent 1)
-
-**Output**: 8-10 findings numbered DE-01 through DE-10 with documentation references and any external research gaps."
-
-**Subagent 7: Prior Learnings Scout (FlowSpace or Standard)**
-"Search for prior discoveries and learnings that may be relevant to [RESEARCH_TOPIC].
-
-**CRITICAL**: This subagent mines institutional knowledge from previous implementations. These learnings are gold - they capture gotchas, unexpected behaviors, workarounds, and insights that your future self left for you.
-
-**If FlowSpace is available**: Use FlowSpace MCP to search for 'Discoveries & Learnings' sections and their contents.
-
-**If FlowSpace unavailable**: Use standard tools:
-- Grep for `## Discoveries & Learnings` in `docs/plans/`
-- Read matching files to extract discovery tables
-- Also search execution logs for patterns like `gotcha`, `unexpected`, `workaround`, `research-needed`
-
-**Search Locations**:
-1. `docs/plans/*/tasks/*/tasks.md` - Phase dossiers (Full Mode)
-2. `docs/plans/*/*.md` - Plan files (Simple Mode may have inline discoveries)
-3. `docs/plans/*/tasks/*/execution.log.md` - Execution logs with detailed context
-4. `docs/harness/agents/**/*.retro.md` - **Compounding Value System retros** (universal `.retro.md` format; YAML frontmatter validates against `docs/harness/schemas/retro.schema.json`)
-5. `docs/retros/*.md` (back-compat) - legacy minih block-format ledger (auto-parsed via the legacy minih block reader)
-
-**Tasks**:
-- Find ALL `## Discoveries & Learnings` sections across prior plans
-- For compound retros (locations 4-5): parse each `.retro.md` frontmatter; extract entries where `entry.system.compound.status` is `open`, `suggested`, or `encoded`; filter to entries relevant to the current research (by `plan_id` if a plan is detected from cwd/branch; otherwise by recency window — last 30 days)
-- Extract discoveries relevant to [RESEARCH_TOPIC]:
-  * Match by keywords, technologies, patterns, file paths
-  * Prioritize: `gotcha`, `unexpected-behavior`, `workaround`, `decision` types AND compound entries with `kind: difficulty | magic-wand | insight`
-- For each relevant discovery, capture:
-  * Original discovery text (or compound `entry.description`)
-  * Resolution (how it was handled, or `entry.system.compound.resolved_by` if encoded)
-  * Source (which plan/phase it came from, or the source `.retro.md` path)
-  * Why it might apply to current research
-- Also scan execution logs for inline learnings (search for 'learned', 'discovered', 'gotcha', 'unexpected', 'note to self')
-- **Add a compound-activity one-liner** to the research dossier's Prior Learnings header summarizing the compound side: e.g. `✓ 8 entries surfaced from compound across 3 prior sessions — 3 encoded, 5 open`
-
-**Output**: 5-15 findings numbered PL-01 through PL-15:
-```markdown
-### Finding PL-01: [Discovery Title from Original]
-**Source**: docs/plans/003-auth-upgrade/tasks/phase-2/tasks.md
-**Original Type**: gotcha | unexpected-behavior | workaround | decision | debt | insight
-**Original Task**: T007 - Implement token refresh
-**Date Discovered**: 2024-01-15
-
-**Original Discovery**:
-> [Exact text from the discovery table]
-
-**Original Resolution**:
-> [How they resolved it]
-
-**Relevance to Current Research**:
-[Why this matters for [RESEARCH_TOPIC] - e.g., same API, similar pattern, related component]
-
-**Actionable Insight**:
-[What the current research/implementation should do with this knowledge]
-```
-
-**If no relevant prior learnings found**:
-Report 'No prior learnings found related to [RESEARCH_TOPIC]' but still document:
-- How many Discoveries & Learnings sections were scanned
-- Topics covered by existing discoveries (for reference)
-- Suggestion to check execution logs manually if topic is novel"
-
-**Subagent 8: Domain & Boundary Scout (FlowSpace or Standard)**
-"Analyze how [RESEARCH_TOPIC] relates to business domains in this codebase.
-
-**If `docs/domains/registry.md` exists** (domain system active):
-- Read registry and domain-map.md
-- Identify which existing domains are relevant to [RESEARCH_TOPIC]
-- For each relevant domain, read domain.md:
-  * What contracts does it expose? Could [RESEARCH_TOPIC] consume them?
-  * What composition exists? Does [RESEARCH_TOPIC] overlap with existing components?
-  * What boundaries are defined? Does [RESEARCH_TOPIC] respect them?
-- Check domain map for:
-  * Where [RESEARCH_TOPIC] would fit in the topology
-  * Which domains it would depend on / be depended on by
-  * Any potential circular dependency risks
-
-**If no domain system exists** (brownfield without domains):
-- Identify natural domain boundaries in the codebase related to [RESEARCH_TOPIC]
-- Look for clusters of related code that could be formalized as domains
-- Note where files related to this concept currently live
-- Suggest potential domain extractions that would help organize this area
-
-**Output**: 5-8 findings numbered DB-01 through DB-08:
-```markdown
-### Finding DB-01: [Title]
-**Category**: Existing Domain | Potential Domain | Boundary Issue | Contract Opportunity
-**Domain**: [existing domain slug, or proposed slug]
-**Evidence**: [file paths or domain.md references]
-**Finding**: [What the research reveals about domain fit]
-**Recommendation**: [reuse existing domain | extract new domain | extend domain boundary | formalize contract]
-```"
-
-#### Subagent Prompts (Standard Mode - when FlowSpace unavailable)
-
-**Subagent 1: Implementation Archaeologist (Standard)**
-"Map the implementation landscape of [RESEARCH_TOPIC].
-
-**Use standard tools**:
-- Glob to find relevant files
-- Grep to search for patterns
-- Read to examine key files
-
-**Tasks**:
-- Find entry points by searching for route definitions, main functions
-- Trace execution by reading core files
-- Document algorithms by examining implementation
-- Map data flow by following function calls
-
-**External Research Detection**:
-Flag knowledge gaps that require external research when you encounter:
-- Questions about current best practices (2024+) vs what code implements
-- Industry standards, compliance, or security patterns not documented in code
-- Performance optimization strategies beyond what's implemented
-- Architectural decisions where "why" isn't clear from code
-- Technology comparisons the codebase doesn't address
-- Recent changes to libraries/frameworks the code depends on
-
-For each gap found, note:
-- Topic: [brief title]
-- Why: [why code can't answer this]
-- Context: [relevant code findings that led to this question]
-
-**Output**: 8-10 findings numbered IA-01 through IA-10 with file:line references and any external research gaps."
-
-[Similar adaptations for other 5 subagents using Glob/Grep/Read instead of FlowSpace, all including External Research Detection]
-
-**Subagent 7: Prior Learnings Scout (Standard)**
-"Search for prior discoveries and learnings that may be relevant to [RESEARCH_TOPIC].
-
-**CRITICAL**: This subagent mines institutional knowledge from previous implementations. These learnings are gold.
-
-**Use standard tools**:
-- Grep for `## Discoveries & Learnings` in `docs/plans/`
-- Glob for `docs/plans/*/tasks/*/tasks.md` and `docs/plans/*/*.md`
-- Read matching files to extract discovery tables
-- Also Grep execution logs for 'gotcha', 'unexpected', 'workaround', 'learned', 'discovered'
-
-**Search Locations**:
-1. `docs/plans/*/tasks/*/tasks.md` - Phase dossiers
-2. `docs/plans/*/*.md` - Plan files (Simple Mode)
-3. `docs/plans/*/tasks/*/execution.log.md` - Execution logs
-4. `docs/harness/agents/**/*.retro.md` - **Compounding Value System retros** (universal `.retro.md`; YAML frontmatter validates against `docs/harness/schemas/retro.schema.json`)
-5. `docs/retros/*.md` (back-compat) - legacy minih block-format ledger
-
-**Tasks**:
-- Find ALL `## Discoveries & Learnings` sections
-- For compound retros (locations 4-5): parse `.retro.md` frontmatter; extract entries where `entry.system.compound.status` is `open | suggested | encoded`; filter by `plan_id` (if plan detected) or recency window (last 30 days)
-- Extract discoveries relevant to [RESEARCH_TOPIC] by keyword/technology/pattern matching
-- Prioritize: `gotcha`, `unexpected-behavior`, `workaround`, `decision` types AND compound `kind: difficulty | magic-wand | insight`
-- Capture original discovery (or `entry.description`), resolution (or `entry.system.compound.resolved_by`), source, and relevance
-- Add a compound-activity one-liner to the Prior Learnings header (e.g. `✓ 8 entries surfaced from compound — 3 encoded, 5 open`)
-
-**Output**: 5-15 findings numbered PL-01 through PL-15 with source references and actionable insights.
-
-**If no relevant prior learnings found**: Report scan coverage and topics found (for reference)."
-
-**Subagent 8: Domain & Boundary Scout (Standard)**
-"Analyze how [RESEARCH_TOPIC] relates to business domains in this codebase.
-
-**If `docs/domains/registry.md` exists**: Read registry, domain-map.md, and relevant domain.md files. Identify which domains are relevant, what contracts exist, and where [RESEARCH_TOPIC] fits.
-
-**If no domain system exists**: Use Grep/Glob to identify natural domain boundaries — clusters of related code that could be formalized. Note where concept files currently live and suggest potential domain extractions.
-
-**Output**: 5-8 findings numbered DB-01 through DB-08 covering existing domains, potential domains, boundary issues, and contract opportunities."
-
-**Wait for All Subagents**: Block until all 8 subagents complete.
-
-### 4) Synthesize Research Findings
-
-After all subagents complete:
-
-1. **Collect All Findings**: Gather ~60-85 findings from all 8 subagents (including Prior Learnings and Domain Scout)
-2. **Deduplicate**: Merge overlapping discoveries (note sources)
-3. **Prioritize**: Order by impact (Critical → High → Medium → Low)
-4. **Validate**: Ensure all findings have code references
-5. **Surface Prior Learnings**: Highlight PL-## findings prominently - these are institutional knowledge that prevents repeating past mistakes
-6. **Synthesize**: Create coherent narrative of how system works
-7. **Identify External Research Opportunities**: Review all findings for:
-   - Knowledge gaps flagged by subagents
-   - Questions where code shows "what" but not "why this approach"
-   - References to external standards/practices not documented
-   - Technology decisions that may benefit from current best practices review
-
-   For each opportunity, generate a ready-to-use `/deepresearch` prompt including:
-   - Clear problem definition tied to codebase findings
-   - Technology stack context from discovered code
-   - Specific research questions
-   - Integration considerations for this codebase
-
-### 5) Generate Research Report
-
-Create the curated research dossier with this structure — decision-relevant findings, risks, and patterns, not a transcript of everything explored:
-
-```markdown
-# Research Report: [RESEARCH_TOPIC]
-
-**Generated**: [ISO-8601 timestamp]
-**Research Query**: "[Original user input]"
-**Mode**: [Research-Only | Pre-Plan | Plan-Associated]
-**Location**: [Output path]
-**FlowSpace**: [Available/Not Available]
-**Findings**: [Total count]
-
-## Executive Summary
-
-### What It Does
-[2-3 sentence high-level description of functionality]
-
-### Business Purpose
-[Why this exists in the system, what problem it solves]
-
-### Key Insights
-1. [Most important discovery]
-2. [Second critical finding]
-3. [Third key insight]
-
-### Quick Stats
-- **Components**: [N files, M classes]
-- **Dependencies**: [X internal, Y external]
-- **Test Coverage**: [Percentage or qualitative]
-- **Complexity**: [High/Medium/Low assessment]
-- **Prior Learnings**: [N relevant discoveries from previous implementations]
-- **Domains**: [N relevant domains identified, or "No domain system"]
-
-## How It Currently Works
-
-### Entry Points
-[Where execution begins - APIs, commands, events]
-
-| Entry Point | Type | Location | Purpose |
-|------------|------|----------|---------|
-| [Name] | API/Command/Event | [Node ID or file:line] | [What triggers this] |
-
-### Core Execution Flow
-[Step-by-step explanation with code references]
-
-1. **Step Name**: Description
-   - Node/File: `[reference]`
-   - What happens: [explanation]
-   - Code snippet:
-   ```[language]
-   // Relevant code
-   ```
-
-2. [Continue for main flow]
-
-### Data Flow
-```mermaid
-graph LR
-    A[Input] --> B[Processing]
-    B --> C[Transform]
-    C --> D[Output]
-```
-[Explain how data moves through the system]
-
-### State Management
-[How state is maintained, stored, synchronized]
-
-## Architecture & Design
-
-### Component Map
-[Visual or textual representation of components]
-
-#### Core Components
-- **[Component Name]**: [Purpose and location]
-  - Node ID: `[if FlowSpace]`
-  - File: `[path]`
-  - Responsibility: [what it does]
-
-### Design Patterns Identified
-1. **[Pattern Name]**: [Where used and why]
-   - Example: [code showing pattern]
-   - Benefits: [why this pattern here]
-
-### System Boundaries
-- **Internal Boundaries**: [Where this system ends]
-- **External Interfaces**: [How it connects to outside]
-- **Integration Points**: [Where other systems connect]
-
-## Dependencies & Integration
-
-### What This Depends On
-
-#### Internal Dependencies
-| Dependency | Type | Purpose | Risk if Changed |
-|------------|------|---------|-----------------|
-| [Module] | Required/Optional | [Why needed] | [Impact] |
-
-#### External Dependencies
-| Service/Library | Version | Purpose | Criticality |
-|-----------------|---------|---------|-------------|
-| [Name] | [Version] | [Why used] | High/Medium/Low |
-
-### What Depends on This
-
-#### Direct Consumers
-- **[Consumer Name]**: [How it uses this]
-  - Contract: [What it expects]
-  - Breaking changes: [What would break it]
-
-#### Indirect Consumers
-[Systems that transitively depend on this]
-
-### Integration Architecture
-[How this fits into larger system]
-
-## Quality & Testing
-
-### Current Test Coverage
-- **Unit Tests**: [Coverage and location]
-- **Integration Tests**: [What's tested]
-- **E2E Tests**: [End-to-end scenarios]
-- **Gaps**: [What's not tested]
-
-### Test Strategy Analysis
-[Patterns and approaches used in testing]
-
-### Known Issues & Technical Debt
-| Issue | Severity | Location | Impact |
-|-------|----------|----------|---------|
-| [Description] | High/Medium/Low | [Where] | [What it affects] |
-
-### Performance Characteristics
-- **Response Time**: [Typical performance]
-- **Resource Usage**: [Memory, CPU patterns]
-- **Bottlenecks**: [Known slow points]
-- **Scalability**: [Limits and considerations]
-
-## Modification Considerations
-
-### ✅ Safe to Modify
-Areas with low risk of breaking changes:
-1. **[Area]**: [Why it's safe]
-   - Well tested
-   - Clear boundaries
-   - Few dependencies
-
-### ⚠️ Modify with Caution
-Areas requiring careful consideration:
-1. **[Area]**: [Why it's risky]
-   - Risk: [What could break]
-   - Mitigation: [How to safely change]
-
-### 🚫 Danger Zones
-High-risk modification areas:
-1. **[Area]**: [Why it's dangerous]
-   - Dependencies: [What depends on this]
-   - Alternative: [Safer approach]
-
-### Extension Points
-Designed for modification:
-1. **[Extension Point]**: [How to extend]
-   - Pattern: [Expected approach]
-   - Example: [How others have extended]
-
-## Prior Learnings (From Previous Implementations)
-
-**IMPORTANT**: These are discoveries from previous work in this codebase. They represent institutional knowledge - gotchas, unexpected behaviors, and insights that past implementations uncovered. **Pay attention to these.**
-
-[If no relevant prior learnings found:]
-> No prior learnings found directly related to [RESEARCH_TOPIC].
-> Scanned [N] Discoveries & Learnings sections across [M] plans.
-> Existing discovery topics: [list for reference]
-
-[If prior learnings found:]
-
-### 📚 Prior Learning PL-01: [Title]
-**Source**: [docs/plans/XXX/tasks/phase-N/tasks.md]
-**Original Type**: [gotcha | unexpected-behavior | workaround | decision | debt | insight]
-**Original Task**: [T### - Task name]
-**Date**: [When discovered]
-
-**What They Found**:
-> [Original discovery text]
-
-**How They Resolved It**:
-> [Original resolution]
-
-**Why This Matters Now**:
-[Explanation of relevance to current research]
-
-**Action for Current Work**:
-[Specific recommendation based on this learning]
+## Minimum-sufficient research ladder
+
+Begin at the lowest rung; climb only when evidence requires it. Workers are *added for independent questions*, never to hit a number.
+
+| Rung | Work | Normal workers | Stop when |
+|---|---|---:|---|
+| 0 | Decide whether repo research is needed at all | 0 | The query is already answerable from supplied context |
+| 1 | Targeted symbol/path/text search + direct reads | 0 | The question has a supported answer |
+| 2 | Trace one execution path + its contracts/tests | 0–1 | Current behaviour and the change surface are clear |
+| 3 | Add institutional-memory / risk analysis | 1–2 total | Relevant prior friction and hazards are understood |
+| 4 | Add one independent boundary / history / verification investigation | 2–3 total | Cross-cutting uncertainty is resolved |
+| 5 | Broad audit | evidence-driven | Only for an explicit comprehensive/audit/deep request or substantial exposed uncertainty |
+
+No new public depth flag. Treat explicit query wording (`comprehensive`, `audit`, `deep`, `migration`, `security`, `cross-cutting architecture`) as a signal to *consider* the broad rung — even then, follow the questions, not a roster.
 
 ---
 
-[Continue for all relevant prior learnings]
+## Algorithm
 
-### Prior Learnings Summary
+### 1) Resolve input + output (a contract, not pseudo-code)
 
-| ID | Type | Source Plan | Key Insight | Action |
-|----|------|-------------|-------------|--------|
-| PL-01 | [type] | [plan] | [one-liner] | [what to do] |
-| PL-02 | [type] | [plan] | [one-liner] | [what to do] |
+- Parse the query and `--plan` / `--console`.
+- **Reuse an existing plan folder before minting one**: explicit `--plan` (path, `NNN-slug`, or bare slug → match existing `docs/plans/*-<slug>/` first) → ordinal git branch (`NNN-…`) → cwd inside `docs/plans/NNN-*/` → a plan named recently in conversation → else create one.
+- New folder: next ordinal via `plan-ordinal` (alias `jk-po`); fall back honestly to a local `docs/plans/` scan, noting the collision risk.
+- `--console`: create nothing — no folder, no file.
+- Fail clearly on: missing query; an explicit `--plan` that names a non-existent `NNN-` folder; an irreducibly ambiguous target.
+- No routine detection chatter unless it changes user action.
 
-## Domain Context
+### 2) Probe tools once
 
-### Existing Domains Relevant to This Research
+One cheap FlowSpace availability call. If present, use its core operations (`tree`, `search` text/regex/semantic, `get_node`) as appropriate; if absent or it fails mid-run, fall back to standard search/glob/read and note the degradation **only if it affects confidence**. Describe **one** research protocol — tool choice is an implementation detail inside each investigation; do **not** duplicate worker prompts per tool, probe every API with min/max arguments, enumerate hypothetical capabilities, or print install/setup marketing on a successful standard run.
 
-[If domain system exists:]
+### 3) Cheap dual-lane scout (the lead does both, before deciding on workers)
 
-| Domain | Relationship | Relevant Contracts | Key Components |
-|--------|-------------|-------------------|----------------|
-| [slug] | [directly relevant / tangential] | [contracts that touch this topic] | [components related to research] |
+**Live-code lane** — discover only enough to *frame* the question: repo shape relevant to the query; query terms / named symbols / paths / APIs / events / commands / schemas / config; likely entry points; one likely execution path; nearby tests and contracts; touched domains or boundaries (load domain context per `references/00-routing.md` § Domain context loading when relevant). Prefer deterministic search + direct reads — don't read broadly just to fill categories.
 
-### Domain Map Position
+**Institutional-memory lane** — always run a *cheap* historical lookup; these repos deliberately retain implementation memory. Candidate sources:
 
-[Where this research topic sits in the domain topology — which domains it would touch, which contracts it would consume/provide]
+- `docs/plans/*/*-plan.md` · `docs/plans/*/tasks/*/tasks.md` · `docs/plans/*/tasks/*/execution.log.md`
+- `docs/plans/**/reviews/*.md` · `docs/plans/*/workshops/*.md` · `docs/adr/*.md`
+- `docs/harness/agents/**/*.retro.md` · `docs/retros/*.md` *(read-only frozen history — never a live loop this verb drives or writes)*
 
-### Potential Domain Actions
+Build the history query from the original intent **plus** terms discovered in live code (exact symbols/paths, domain/contract names, libraries/protocols/storage/services, failure modes, the plan id when known). Rank candidates: ① exact symbol/path overlap → ② same contract/domain/API/schema/failure-mode → ③ same technology+operation → ④ strong topic similarity → ⑤ unresolved/encoded/proven learning status → ⑥ recency as a tie-breaker only (**no** hard 30-day cutoff — old evidence about the same contract beats recent unrelated evidence).
 
-[Based on Domain & Boundary Scout findings:]
-- [Extract new domain: "<concept>" — if code exists but isn't formalized]
-- [Extend existing domain: "<slug>" — if new capability fits an existing boundary]
-- [Formalize contract: between "<domain-a>" and "<domain-b>" — if hidden coupling found]
-- [No domain action needed — topic fits cleanly into existing structure]
+Read **at most the three strongest** historical artifacts initially. Expand only when: an important claim lacks support; current code conflicts with a prior decision/workaround; a high-risk issue is still unresolved; a candidate points to another source needed to understand the resolution; or the query explicitly asks for historical evolution. Classify each retained item — **Direct** (same active symbol/path/contract/failure-mode) · **Partial** (rationale still useful, implementation evolved) · **Superseded** (history, not a current requirement) · **Unclear** (needs verification). A no-match result is valid: `no_material_historical_evidence` — do **not** manufacture a history section or report scan trivia.
 
-[If no domain system exists:]
-> No domain registry found. Consider running `/plan-v2-extract-domain` to formalize
-> domain boundaries for areas discovered in this research.
->
-> **Potential domains identified** (from Domain & Boundary Scout):
-> | Proposed Domain | Evidence | Boundary | Files |
-> |----------------|----------|----------|-------|
+### 4) Classify scope
 
-## Critical Discoveries
+Name the smallest set of unanswered **material** questions (e.g. current execution path? constraining contracts/consumers? what proves the behaviour? which prior friction still applies? which boundary is crossed? is an apparent contradiction real?). Pick effort: **Quick** (lead only) · **Standard** (1–2 workers) · **Deep** (2–3 workers) · **Audit** (broad, evidence-driven). Record the chosen effort in the dossier — the label *describes* what was done; it is never a quota.
 
-### 🚨 Critical Finding 01: [Title]
-**Impact**: Critical
-**Source**: [Which subagents found this]
-**Node IDs**: [If FlowSpace available]
-**What**: [Description]
-**Why It Matters**: [Impact on any modifications]
-**Required Action**: [What must be considered]
+### 5) Add workers only for independent uncertainty
 
-[Continue for all critical findings]
+Default responsibilities (use only those a real unanswered question needs):
 
-## Supporting Documentation
+- **A · System Trace** — what currently happens and what constrains it: entry point + execution flow, key data/state transforms, dependencies + consumers, interfaces/contracts, tests + quality evidence, applicable domain boundaries.
+- **B · Institutional Memory & Risk** — what was learned before and what could break: relevant plans, execution discoveries, retros, ADRs, workshops, reviews, selective git history; prior failures, workarounds, decisions, rejected paths, unresolved debt; applicability to current code; modification hazards and contradictions.
+- **C · Independent Verification / Boundary** — add **only** when the scout exposes a genuinely separate question (a cross-domain boundary, a security-sensitive contract, migration history, a disputed interpretation).
 
-### Related Documentation
-- [README files]: [Paths and relevance]
-- [Design Docs]: [Links and summaries]
-- [ADRs]: [Relevant architectural decisions]
+Run workers in parallel **only** when their questions are independent — never just to cut wall-clock if they'd reread the same files. Give each a focused packet: the exact question; candidate symbols/paths; domain context; selected historical candidates; the questions it owns; exclusions to prevent overlap — never a transcript of everything discovered.
 
-### Key Code Comments
-[Important inline documentation found]
+**Worker return contract** — each worker returns **no more than five material findings** (a ceiling, never a target):
 
-### Historical Context
-[Significant evolution insights from git history]
-
-## Recommendations
-
-### If Modifying This System
-1. [First consideration]
-2. [Second consideration]
-3. [Third consideration]
-
-### If Extending This System
-1. [Recommended approach]
-2. [Pattern to follow]
-3. [What to avoid]
-
-### If Refactoring This System
-1. [Opportunity identified]
-2. [Suggested improvement]
-3. [Risk assessment]
-
-## External Research Opportunities
-
-During codebase exploration, the following knowledge gaps were identified that cannot be answered by reading more code. These require external research using tools like Perplexity Deep Research, ChatGPT, or similar.
-
-[If no gaps identified: "No external research gaps identified during codebase exploration."]
-
-### Research Opportunity 1: [Topic Title]
-
-**Why Needed**: [1-2 sentences explaining what gap this fills]
-**Impact on Plan**: [How this affects the upcoming work]
-**Source Findings**: [Which subagent findings led to this - e.g., IA-03, DC-07]
-
-**Ready-to-use prompt:**
-```
-/deepresearch "[Full structured prompt following deepresearch format:
-- Clear problem definition tied to codebase findings
-- Technology stack context
-- Specific research questions
-- Integration considerations]"
+```text
+claim
+kind:        current | contract | test | historical | risk | boundary
+source:      exact path:line, symbol/node, or artifact#section
+implication: why this changes understanding or planning
+confidence:  high | medium | low
+open_question: optional
 ```
 
-**Results location**: Save results to `docs/plans/<ordinal>-<slug>/external-research/[topic-slug].md`
+Rules: no intro/summary, no repeated repo context, no code excerpt unless the exact code *is* the evidence, no external-research brainstorming unless the assigned question proves the repo can't answer something material. No material finding → `no_material_findings` and stop. Worker failure → a targeted retry of that gap or an explicit unknown, **never** a raw-output dump.
 
-### Research Opportunity 2: [Topic Title]
-[Same structure...]
+### 6) Sufficiency gate (after every round)
+
+Stop when **all** hold: ① the user's actual question has a clear answer; ② every material claim has exact evidence; ③ relevant current contracts/consumers/tests are checked to the degree the question requires; ④ the cheap history lookup ran and any materially relevant history was assessed for current applicability; ⑤ contradictions, change hazards, and confidence limits are explicit; ⑥ remaining unknowns are named; ⑦ another search is unlikely to change a planning or risk decision. **Never** stop on agent count, files read, elapsed work, or a finding target.
+
+### 7) Detect external research once, during synthesis
+
+Emit an external-research opportunity only when repo evidence cannot answer a material question, the answer depends on current standards / regulations / security guidance / library behaviour / comparative technology, and resolving it could change the plan. Normally zero to three; each needs the unanswered question, why repo evidence is insufficient, the code/history that exposed it, the planning impact, and a focused ready-to-use prompt. No generic "best practices" prompts; do not repeat this detection per worker.
 
 ---
 
-**After External Research:**
-- To conduct external research: Run the `/deepresearch` commands above, then either:
-  - Paste results back to this conversation, OR
-  - Save to `external-research/` folder in the plan directory
-- To skip and proceed: continue to specification (unresolved opportunities will be noted as a soft warning)
+## Dossier contract
 
-## Appendix: File Inventory
+A decision packet — not a transcript or a repo inventory. **Required**: header, Answer, Evidence, Planning Handoff. Every other section is **conditional — omit it entirely when empty** (no "none found" filler, no empty headings).
 
-### Core Files
-| File | Purpose | Lines | Last Modified |
-|------|---------|-------|---------------|
-| [Path] | [What it does] | [LOC] | [Date] |
+```markdown
+# Research Dossier: <topic>
 
-### Test Files
-[List of test files related to this functionality]
+**Generated**: <ISO timestamp>
+**Query**: "<verbatim query>"
+**Effort**: Quick | Standard | Deep | Audit
+**Tools**: FlowSpace | Standard | Mixed
+**Evidence**: <N current sources> · <N historical sources>
 
-### Configuration Files
-[Config files that affect this system]
+## Answer
 
-## Artifact Handoff
+<The fewest statements that explain current behaviour and what it implies for the ask — usually 3–7. Only what's needed.>
 
-[Based on mode and external research opportunities]
+## Evidence
 
-**If External Research Opportunities identified:**
-1. Run `/deepresearch` prompts above (copy-paste ready)
-2. Save results to `external-research/` folder OR paste back to conversation — they travel with the dossier
-3. The dossier is then complete for its consumer
+| ID | Finding | Evidence | Planning implication | Confidence |
+|----|---------|----------|----------------------|------------|
+| F-01 | <claim> | `<path:line>` | <why it matters> | High |
 
-**Consumer notes by mode:**
-- Research-Only: the dossier is the deliverable — review findings and decide on action
-- Pre-Plan: the dossier is ready for whichever consumer the parent flow selects
-- Plan-Associated: the dossier feeds the plan folder it belongs to
+## Historical Evidence
+_Omit when no material history was found._
 
-Note: Unresolved research opportunities will be flagged in the specify verb's output.
+| ID | Prior friction / decision | Source | Applicability now | Implication |
+|----|---------------------------|--------|-------------------|-------------|
+| H-01 | <learning> | `<artifact#section>` | Direct / Partial / Superseded / Unclear | <action or caution> |
+
+## Risks and Unknowns
+_Omit when empty._
+
+| Item | Evidence | Why it matters | Resolution / next evidence |
+|------|----------|----------------|----------------------------|
+
+## Domain Impact
+_Omit when the query has no material domain consequence._
+
+| Domain / boundary | Relationship | Contract or constraint | Evidence |
+|-------------------|--------------|------------------------|----------|
+
+## Planning Handoff
+
+- **Preserve**: <current contracts, invariants, or proven patterns>
+- **Change carefully**: <hazardous areas and why>
+- **Likely files/symbols**: <only the implementation surface supported by evidence>
+- **Decisions still required**: <only unresolved choices>
+
+## External Research
+_Omit when none is material._
+
+| Question | Why repo evidence is insufficient | Planning impact | Prompt |
+|----------|-----------------------------------|-----------------|--------|
+```
+
+**Dossier rules**:
+
+- One evidence table — a finding appears **once** (F-NN); other sections reference its ID, never restate it.
+- Every material claim cites an exact source (`path:line`, symbol/node, or `artifact#section`). Link to detail; don't reproduce it.
+- No routine "business purpose" unless directly evidenced and needed to answer the query.
+- Don't claim test percentages unless measured; don't infer High/Medium/Low complexity without an explicit useful basis.
+- **Preserve all Critical/High risks and unresolved contradictions without compression** — the safety floor is never default-omitted.
+- A full dossier normally runs ~5–12 material evidence rows — an *observation*, never a target or cap. Correctness sets the length.
+
+### Output
+
+- **`--console`**: print the same compact contract to the console; create no folder and no file.
+- **File mode**: write `research-dossier.md` to the resolved plan folder, then print only an output-contract summary:
+
+  ```text
+  ✅ <path>/research-dossier.md — <N> findings, <H> material historical learnings, <R> high risks, <U> open questions
+  ```
+
+  Add one short degradation line only if a tool failure materially reduced confidence. Do **not** re-summarize the dossier in the terminal.
 
 ---
 
-**Research Complete**: [Timestamp]
-**Report Location**: [Full path]
-```
+## STOP — read-only
 
-### 6) Output Research
+This verb is read-only. After output: no code changes, no further files, no implementation, no next-step naming. The research is done — **STOP and wait** for the user.
 
-**With --console flag** (console-only mode):
-- Output the full research report directly to console
-- No success message needed (the research IS the output)
-- User can copy/paste or use immediately
-- No files created
+## Consumer (via the artifact — the wire protocol)
 
-**Default behavior** (auto-detect or explicit --plan):
-```
-✅ Research complete: docs/plans/[ordinal]-[slug]/research-dossier.md
-- Plan folder: [Created new | Using existing | Detected from context]
-- Components analyzed: [N] files
-- Critical findings: [Count]
-- Prior learnings surfaced: [Count] from previous implementations
-- External research opportunities: [Count] identified
-- FlowSpace mode: [Yes/No]
-
-[If external research opportunities > 0:]
-📚 External Research Suggested:
-  1. [Topic 1] - run /deepresearch prompt in report
-  2. [Topic 2] - run /deepresearch prompt in report
-  Save results to: external-research/[topic-slug].md
-
-- With research: run the /deepresearch prompts first, then continue to specification
-- Skipping research: specification comes next
-```
-
-## CRITICAL: STOP AND WAIT
-
-**THIS IS A READ-ONLY RESEARCH COMMAND.** After outputting the research report:
-
-1. **DO NOT** proceed to any other verb or command
-2. **DO NOT** make any code changes or create additional files
-3. **DO NOT** start implementing recommendations
-4. **STOP** and wait for the user to provide instructions
-
-The research is complete. The user will decide what to do next:
-- Run `/deepresearch` for external knowledge gaps
-- Continue to specification
-- Ask follow-up questions
-- Take a different action entirely
-
-**Your job is done. Wait for user input.**
-
-## Error Handling
-
-### Common Errors
-1. **No topic provided**: "Error: Please specify what to research"
-2. **Plan not found**: "Error: Plan [ID] does not exist"
-3. **Ambiguous topic**: "Warning: Topic too broad, please be specific"
-4. **No relevant code found**: "Warning: Could not find code matching [topic]"
-
-### Recovery Strategies
-- If FlowSpace fails mid-research: Fallback to standard tools
-- If subagent fails: Continue with other 5 and note gap
-- If synthesis fails: Output raw findings
-
-## Success Criteria
-
-✅ **Answers the question**: "How does [X] currently work?"
-✅ **Decision-relevant**: covers the implementation, dependencies, patterns, and quality findings that affect the plan
-✅ **Actionable**: Identifies safe vs dangerous modifications
-✅ **Well-referenced**: All findings have code locations
-✅ **Tool-adaptive**: Uses FlowSpace when available, standard tools when not
-✅ **Clear output**: Easy to understand research report
-✅ **Integration-ready**: Works with or without planning workflow
-✅ **Research gaps identified**: External research opportunities with ready-to-use /deepresearch prompts
-✅ **Stops after output**: Does NOT proceed to other commands or actions without user instruction
-
-## Integration with neighbouring verbs (via artifacts — the wire protocol)
-
-### With the specify verb
-- It checks for research-dossier.md in the plan folder
-- It checks for external-research/*.md files with /deepresearch results
-- Incorporates findings into specification
-- References critical discoveries
-- Soft warning if external research opportunities were not addressed
-
-### With the architect verb
-- If research exists, reduces redundant discovery
-- References research finding IDs
-- Focuses on implementation planning
-
-### With the specify verb's § Re-entry (clarifications)
-- Can reference research to inform questions
-- May trigger additional targeted research
-
-## Examples
-
-### Example 1: Quick Research (Console Output)
-```bash
-# arguments to this verb:
-"research how the search service works"
-```
-Outputs research directly to console. No files created.
-
-### Example 2: Research for New Plan
-```bash
-# arguments to this verb:
---plan authentication-upgrade "research the current auth system"
-```
-Creates `docs/plans/001-authentication-upgrade/research-dossier.md`
-
-### Example 3: Research for Existing Plan (by slug)
-```bash
-# arguments to this verb:
---plan search-improvement "research search indexing strategy"
-```
-If `002-search-improvement` exists, saves there. Otherwise creates new folder.
-
-### Example 4: Research for Existing Plan (by full name)
-```bash
-# arguments to this verb:
---plan 003-payment-refactor "deep dive on payment processing"
-```
-Saves to `docs/plans/003-payment-refactor/research-dossier.md`
-
-This verb provides deep, actionable research into existing codebase functionality, filling the critical gap between needing to change something and understanding how it currently works. It adapts to available tools (FlowSpace or standard) and integrates seamlessly with the planning workflow when desired.
-
-> Note: Subagent 7 (Prior Learnings Scout) mines `docs/harness/agents/**/*.retro.md` + legacy `docs/retros/*.md` as **read-only history** — frozen prior-learnings records, never a live loop this verb drives or writes to.
+The **plan** verb reads `research-dossier.md` fully when present: its Answer, Evidence, Historical Evidence, Risks, Domain Impact, and Planning Handoff inform complexity, domains, constraints, and question framing. Unresolved External Research rows travel with the dossier. The dossier is the whole interface — no other coupling.
 
 ## Exit
 
-Print the output-contract summary (✅ block: what was produced, where, key fields). Then STOP. Do not name a next stage. If invoked standalone, end with exactly: "Routing is the flow's job — run the parent flow bare to continue."
+Print the output-contract summary (the `✅` line: what was produced, where, key counts). Then STOP. Do not name a next stage. If invoked standalone, end with exactly: "Routing is the flow's job — run the parent flow bare to continue."

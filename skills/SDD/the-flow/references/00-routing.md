@@ -135,7 +135,7 @@ The deterministic core — **the single owner of "what's next"** (flow-architect
 | state | evidence (artifact) | edges (on evidence → offer) | decorations | insight (pick 1) |
 |---|---|---|---|---|
 | `start` | — (ask intent) | research-worthy → **explore** · clear → **plan** | seam: **pre-flight** @ entry — detect the router (§ Harness seams → `harness-seams.md`), usually no node; literal `/eng-harness-flow --hook pre-flight` (alias `--event session-start`) | — |
-| `awaiting-1a` | `research-dossier.md` | → **plan** | compact ✓ (dossier is large) | one Critical/High finding |
+| `awaiting-1a` | `research-dossier.md` | → **plan** | compact ✓ (clears research chatter before planning) | the top supported finding, a material historical warning, or — if the dossier surfaced none — an explicit clean result |
 | `awaiting-1b` | `<slug>-plan.md` with `## Implementation Plan` (the atomic `plan` verb writes **both** halves) | DRAFT → fix + re-run **plan** (stay) · Simple+READY → **implement** · Full+READY → **tasks** · opt-when-live → **workshop** | compact ✓ (before implement) · validate-v2 already auto-ran · seam-live (offer a post-plan refinement when ≥1 Workshop Opportunity is unworkshopped OR the harness is provisioned): the engine print-then-offers the **pre-coding** backpressure seam — literal `/eng-harness-flow --hook pre-coding --spec <path>` (alias `--event post-spec`) *(router-installed only)* → `awaiting-backpressure`. The survey is **advisory output** (what's provable by sensors vs eyeballed); re-run plan **informed by** it — the plan verb does not auto-read the coverage. No auto-advance — the refinement is an offer, never a forced second pass (`harness-seams.md`) | `**Status**` (READY/DRAFT) + Gate Matrix + CS/Simple-Full + #Workshop Opportunities |
 | `awaiting-2c` | newest `workshops/*.md` | another → **workshop** · → **plan** (re-run, folds the decision into both halves) | post-plan refinement hanging off `awaiting-1b`; the **pre-coding** backpressure seam still offered *(router-installed only)* | the headline decision (Selected option) |
 | `awaiting-backpressure` | `backpressure-coverage.md` | → **plan** (re-run, **informed by** the coverage — advisory, not auto-read) | post-plan refinement hanging off `awaiting-1b`; backpressure payoff (artifact produced via the router) | Certainty (Strong/Partial/Weak) + Phase 0? |
@@ -168,7 +168,7 @@ Where each artifact hides its **structured alarms** — lift any present, verbat
 
 | Stage | Scan for (quote any hits) |
 |---|---|
-| `awaiting-1a` | Critical/High findings the dossier marks unresolved or contradicting the ask |
+| `awaiting-1a` | Critical/High risks (when present) or material historical warnings the dossier marks unresolved or contradicting the ask |
 | `awaiting-1b` | `**Status**: DRAFT`; Gate Matrix **FAIL** rows; inline `⚠️ GAP:` markers; `## Unresolved Gaps` table; Deviation Ledger entries; remaining `[NEEDS CLARIFICATION]` markers; low CS **Confidence**; unanswered Open Questions |
 | `awaiting-backpressure` | **ABSENT** / **BUILDABLE** sensors (the eyeball-gaps); a recommended **Phase 0: Establish Backpressure** |
 | `awaiting-5` | tasks with no/weak Done-When; a phase carrying a flagged Key Finding |

@@ -214,7 +214,7 @@ All copy obeys **Orient → Flag → Insight → Suggest → Invite**: one decis
 
 ### `awaiting-1a` → after research
 > **Where we are**: research is done (`research-dossier.md`) — that's evidence, not code yet.
-> Did you notice `<one Critical/High finding>`? That matters because `<why it shapes the plan>`.
+> Did you notice `<the top finding, a material historical warning, or — if the dossier surfaced no material risk — that it came back clean>`? That matters because `<why it shapes the plan>`.
 > **Optional — go deeper?** If anything's still fuzzy, deep-research it with your **tool of choice**: an online-connected agent (`/deepresearch`, Perplexity) or your own coding harness. Skip it if the dossier already answers enough.
 > **Then a seam**: a natural spot for `/compact` — clears the research chatter, keeps the planning sharp; I'll resume right here afterwards. Then we write the plan (both halves in one pass).
 >
