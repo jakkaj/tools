@@ -167,6 +167,8 @@ Every broad-scope run includes a **Forward-Compatibility Agent** alongside the c
 - **Thesis Alignment Agent**: Verify the plan phases, deliverables, and acceptance criteria preserve the reason for the work and produce the evidence required by the Validation Thesis.
 - **Forward-Compatibility Agent** (see template below). If a 4-agent cap is required, merge Risk + Completeness, but do not drop thesis coverage.
 
+> **Phase decomposition is out of scope for every Plan Agent.** Validate *within* the plan's chosen phases, and treat `**Mode**: Simple` as a deliberate single-phase decision — never flag "should be multi-phase" or recommend splitting/adding phases as a fix. A finding like "this single phase is too thin to be implementation-ready" is reframed as *"strengthen the existing phase — add the missing acceptance criteria / Done-When / concrete files"*, **not** "split it into more phases." If decomposition genuinely looks wrong, report it as one advisory line for the human (it is never auto-applied; phase count is the human's call at planning time).
+
 **Spec Agents** (3–4 agents):
 - **Clarity Agent**: Check whether user value, scope, acceptance criteria, constraints, and non-goals are explicit enough to guide downstream planning.
 - **Completeness Agent**: Look for missing user journeys, edge cases, domain boundaries, operational constraints, and measurable outcomes.
@@ -413,6 +415,8 @@ Present findings to the user conversationally:
 - Show what changed
 - Re-verify if needed
 
+> **Never restructure a plan's phase decomposition as an auto-fix.** Phase count — splitting one phase into several, adding or removing phases, merging them, or flipping a Simple-mode (single-phase) plan to Full — is a **human-gated planning decision**, not a mechanical fix. Validation checks the plan *at the decomposition the human chose*; it never edits the plan to expand or collapse phases. If an agent genuinely believes the decomposition is wrong, surface it as a single advisory line under a **Human-gated (not applied)** heading and mark the artifact **NEEDS ATTENTION** so the human decides — leaving every phase, task table, and the `**Mode**` header exactly as written. A Simple-mode plan is single-phase *by deliberate choice*; "should be multi-phase" is never, by itself, a validation issue. When a phase looks under-specified, the in-scope fix is to strengthen the existing phase (add acceptance criteria, Done-When, concrete files/paths) — **not** to break it into more phases.
+
 Do **not** invent product intent or source truth to fix an under-specified thesis. If a CRITICAL/HIGH issue requires a product decision, missing upstream source, or user judgment, present the decision needed and mark the artifact **NEEDS ATTENTION**.
 
 For MEDIUM/LOW issues: present them but ask the user before fixing.
@@ -498,7 +502,7 @@ Skip persistence for console-only artifacts or non-markdown files.
 3. **Agents validate, parent synthesizes** — agents report raw findings, the parent decides what to fix
 4. **Source code is truth** — when a dossier says "line 131" and the file says otherwise, the file wins
 5. **Evidence over assertion** — value claims need concrete support: tests, schemas, examples, traces, source match, contracts, or comparable proof
-6. **Fix what you find** — don't just report issues, apply the fixes immediately when grounded and safe
+6. **Fix what you find — except plan structure** — apply mechanical, source-grounded fixes immediately; but **phase decomposition (count, splitting, merging, Simple↔Full) is human-gated** — surface it as advisory, never auto-apply it. Strengthen the phase the human chose; never silently expand it into more phases.
 7. **No false positives** — every issue must be real and actionable. Agent prompts emphasize: "only report genuine problems, not style preferences"
 8. **Gift to future selves** — if validation catches a recurring issue type, consider whether the upstream skill should be improved to prevent it
 
