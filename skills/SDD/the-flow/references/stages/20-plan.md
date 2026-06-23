@@ -482,7 +482,7 @@ Mode: Simple | Full
 Phases: [count]   Tasks: [count]   Domains: [count existing + count new]
 Gate Matrix: [N PASS / M FAIL / K N/A]
 
-(Deep validation via /validate-v2 auto-runs next — always, READY or DRAFT.)
+(Adaptive validation via /validate-v2 auto-runs next — always, READY or DRAFT.)
 
 [If DRAFT — UNRESOLVED GAPS]
 Unresolved gaps listed at the end of the document. Common fixes:
@@ -492,15 +492,15 @@ Unresolved gaps listed at the end of the document. Common fixes:
   - G5 Structure / G6 Testing / G7 Domain FAIL → edit inline, then re-run this verb (idempotent — regenerates both halves)
 ```
 
-### Auto-Run Deep Validation
+### Auto-Run Adaptive Validation
 
-After the document is written, **always** auto-call the thesis-aware validator on it, regardless of Status:
+After the document is written, **always** auto-call the validator on it, regardless of Status:
 
 ```
 /validate-v2 --artifact "${PLAN_PATH}"
 ```
 
-This runs whether the document emitted `Status: READY` or `Status: DRAFT — UNRESOLVED GAPS`. The inline G1–G7 gates are lightweight structural checks done during generation; `validate-v2` is the heavier multi-agent thesis/forward-compatibility review — complementary, not redundant. The validator's findings are applied or surfaced per its own flow.
+This runs whether the document emitted `Status: READY` or `Status: DRAFT — UNRESOLVED GAPS`. The inline G1–G7 gates are lightweight structural checks done during generation; `/validate-v2` is the **adaptive, evidence-backed** thesis / forward-compatibility pass that **consumes** those gate verdicts rather than re-deriving them through agents. No flag is passed, so it runs at its adaptive default — lead + deterministic proof, with an independent critic only when the work is nontrivial, not a fixed multi-agent swarm. For a `DRAFT — UNRESOLVED GAPS` plan it stays proportionate: confirm each declared gap is honest, grounded, and actionable, check the thesis and any named downstream contracts, and **retain `NEEDS ATTENTION`** — it does not broadly re-prove the failures the plan already declared. Findings are applied or surfaced per the validator's own flow.
 
 ---
 

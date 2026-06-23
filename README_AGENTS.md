@@ -141,7 +141,7 @@ The active workflow for non-trivial feature work. Use these for any change large
 | `plan-0-v2-constitution` | Establish or refresh the project constitution before planning begins. |
 | `plan-2b-v2-prep-issue` | Generate terse, industry-standard issue text for Azure DevOps / GitHub Issues. |
 | `plan-v2-extract-domain` | Collaboratively identify and formalize a codebase concept as a named domain. |
-| `validate-v2` | Launch parallel subagents to validate produced work with structured lens coverage. |
+| `validate-v2` | Adaptive, high-signal validation of whatever was just produced — proves the claims that matter, adds independent critics only when risk or uncertainty earns them. |
 | `install-hve-core-rpiv` | Install or update local skill-shaped HVE Core RPI/RPIV task skills from the current authoritative HVE Core source. |
 | `deepresearch-v2` | Craft structured research prompts for deep-research agents. |
 | `didyouknow-v2` | Surface critical insights conversationally to build shared understanding. |

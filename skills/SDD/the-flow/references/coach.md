@@ -132,7 +132,7 @@ Then the print-then-offer command block + the offer line follow exactly as befor
 
 > **Just did**
 > 1. The plan verb finished writing the planning document — it has the business spec and the implementation plan, and it's a Simple-mode plan.
-> 2. It then auto-ran validate-v2 (the thesis-aware multi-agent validator), which came back PASS with minor fixes that were folded in.
+> 2. It then auto-ran validate-v2 (adaptive, evidence-backed validation), which returned a clean verdict after a couple of small fixes were folded in.
 > 3. The complexity score is CS-2 (small), so a single phase is appropriate here.
 >
 > **Watch-outs**
@@ -145,7 +145,7 @@ Then the print-then-offer command block + the offer line follow exactly as befor
 
 > **Just did**
 > 1. Plan written — Simple, CS-2, **READY**.
-> 2. validate-v2 auto-ran → PASS, fixes folded in.
+> 2. validate-v2 auto-ran → **VALIDATED**, 2 fixes folded in.
 >
 > **Next up**
 > 1. Build the one phase → {{render-edge: awaiting-1b → implement}}
