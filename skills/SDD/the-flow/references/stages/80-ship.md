@@ -13,7 +13,7 @@
 
 **Produces**: a pushed branch; an opened (or reused) PR behind an explicit confirm; a ship report at `${PLAN_DIR}/ship/${DATE}/ship-report.md` (PR URL, base, check results, any failing checks + their details link, a whole-plan **Deferred & Noteworthy** rollup, resume note); terminal summary = PR URL + check status + (on red) the fix-loop offer + (when non-empty) the deferred-items count. An actual merge is produced **only** on a separate typed `PROCEED`.
 
-**Side effects**: outward-facing — `git push` (confirm #1), `gh pr create` (confirm #2), and an **optional** `gh pr merge` / `git merge` **only** on typed `PROCEED`. Each is public; **never** fired on a generic "yes". No source files are modified.
+**Side effects**: outward-facing — `git push` (confirm #1), `gh pr create` (confirm #2), and an **optional** `gh pr merge` / `git merge` **only** on typed `PROCEED`. Each is public; **never** fired on a generic "yes". Plus one **non-gated** action: `harness telemetry sync` flushes the counts-only telemetry buffer to its out-of-tree `refs/harness-telemetry/*` shard refs — it publishes no work (no branch, no PR), is reversible/prunable, and is fail-safe, so it runs **without a confirm** (see Safety). No source files are modified.
 
 ---
 
@@ -23,7 +23,7 @@ Get the work out: push → open PR (repo-guidance-aware) → watch checks → re
 
 > Elegance: the ship report is **output**. Record the PR URL, the base, the check verdicts, and the resume note — the facts a human needs to act — not a play-by-play. Doctrine + the seven-function line test: `references/00-routing.md` § Shared conventions.
 
-> **Safety**: push, PR-open, and merge are outward-facing. They each pause for an explicit go-ahead, the merge for a typed `PROCEED` specifically. Reading state (`git status`, `gh pr view`, `gh pr checks`) is always safe and never gated.
+> **Safety**: push, PR-open, and merge are outward-facing. They each pause for an explicit go-ahead, the merge for a typed `PROCEED` specifically. Reading state (`git status`, `gh pr view`, `gh pr checks`) is always safe and never gated. **Telemetry sync is the one deliberate ungated push**: it writes only out-of-tree, counts-only shard refs (never your branch or PR), is reversible, and is fail-safe — so it flushes without asking, like the reads.
 
 ---
 
@@ -39,6 +39,20 @@ $ARGUMENTS
 # --watch-cap "<minutes>"                               # bound the check-watch (default: 20)
 
 ## Execution Flow
+
+0) Flush telemetry (always; NO confirm). Ship is the work's exit — and a natural
+   session/plan close — so flush the ambient telemetry buffer first, before the gated steps:
+   ```
+   harness telemetry sync
+   ```
+   Best-effort + fail-safe: it pushes ONLY the out-of-tree
+   `refs/harness-telemetry/<date>/<session>` shard refs (counts-only, team/repo-grained,
+   never your branch or a PR; reversible/prunable), so unlike the branch push it needs
+   **no gate**. Run it once, swallow any error (it must never block or delay the ship),
+   and decouple it from confirm #1 — telemetry flushes whether or not you go on to push/PR.
+   Honour the switches: **skip** entirely if `HARNESS_NO_TELEMETRY=1`; if
+   `HARNESS_NO_TELEMETRY_AUTOSYNC=1` (the user opted out of unprompted pushes) skip the
+   auto-flush and just note `harness telemetry sync` can be run manually.
 
 1) Input Resolution
 
