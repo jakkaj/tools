@@ -129,7 +129,7 @@ Categories are organizational only. They do **not** affect install commands — 
 
 ## Skill catalog
 
-### `SDD/` — Spec-Driven Development (10 skills: 1 main flow + 9 utilities)
+### `SDD/` — Spec-Driven Development (11 skills: 1 main flow + 10 utilities)
 
 The active workflow for non-trivial feature work. Use these for any change large enough to benefit from explicit specification, clarification, architecture, and phase-based implementation. Each stage produces an artifact that the next stage consumes.
 
@@ -142,6 +142,7 @@ The active workflow for non-trivial feature work. Use these for any change large
 | `plan-2b-v2-prep-issue` | Generate terse, industry-standard issue text for Azure DevOps / GitHub Issues. |
 | `plan-v2-extract-domain` | Collaboratively identify and formalize a codebase concept as a named domain. |
 | `validate-v2` | Adaptive, high-signal validation of whatever was just produced — proves the claims that matter, adds independent critics only when risk or uncertainty earns them. |
+| `crew-cut` | Terse, flow-blind second pass for any artifact — `review` returns only material corrections, `prime` distills prior work into the few instructions the next agent must obey. Read-only; works inline or in a subagent. |
 | `install-hve-core-rpiv` | Install or update local skill-shaped HVE Core RPI/RPIV task skills from the current authoritative HVE Core source. |
 | `deepresearch-v2` | Craft structured research prompts for deep-research agents. |
 | `didyouknow-v2` | Surface critical insights conversationally to build shared understanding. |
