@@ -38,7 +38,7 @@ So "the flow forgot to run it" cannot come from context dilution: the advisory c
 
 > ⚠️ No engineering harness detected — the eng-harness skills aren't installed. Continuing without one: standard testing applies, nothing else changes. (To add the harness loop: `npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y`.)
 
-…then **omit every harness node and beat for the rest of the flow** (record the outcome once in state; never re-warn). A repo without a harness is fully supported — never nag.
+…then **omit every harness node and beat for the rest of this session** (record the outcome once; never re-warn **within the session**). Re-derive detection on a fresh session or after a `/compact` — a harness installed mid-flow should be picked up next session, not suppressed forever by one early miss. A repo without a harness is fully supported — never nag.
 
 **Layer 2 — route the seam.** Router installed → call the seam with `--json` and act on the envelope (`decision: route | redirect | noop | ambiguous`):
 - `route` → print-then-offer the returned command.
@@ -62,7 +62,7 @@ The flow wires **four fire-hooks** and deliberately **skips one** (the silent `c
 
 **What each beat is *for* (narration source):**
 - **`pre-flight` @ entry** — auto-fire the call to detect + position the router (read-only); narrate one calm line; no node. Fired automatically at flow entry so a fresh or just-compacted session always re-establishes the harness.
-- **`pre-coding` @ post-plan** — the backpressure survey: *can the planned work be proven by deterministic sensors, or only eyeballed?* Produces `backpressure-coverage.md` — **advisory output**: re-run the **plan** verb *informed by* it (the harness-blind plan verb does **not** auto-read the file; you fold what you learned into the re-plan intent). Offered as an optional post-plan refinement, never forced.
+- **`pre-coding` @ post-plan** — the backpressure survey: *can the planned work be proven by deterministic sensors, or only eyeballed?* Produces `backpressure-coverage.md` — **advisory output**: re-run the **plan** verb *informed by* it (the harness-blind plan verb does **not** auto-read the file; you fold what you learned into the re-plan intent). The *re-plan it informs* is an optional refinement; the `pre-coding` router *call* itself auto-fires at this edge (mandatory, read-only) — only the survey output and any re-plan are declinable.
 - **`pre-flight` @ phase** — the router proves the system **boots** before a line of code; verdict narrated verbatim (`healthy → build` · `SLOW → build with a note` · `UNHEALTHY → stop and ask the human: Retry / Continue without harness / Abort` · `UNAVAILABLE → standard testing`).
 - **`post-coding` @ phase end** — drain **this phase's** friction notes → `.retro.md` (the router owns drain-vs-harvest; the user may see a `[s/t/p/e/d/a]` prompt).
 - **`post-flight` @ ship** — the long-horizon reflection: harvest + present improvements + encode (offered after ship reports checks / opens the PR).
