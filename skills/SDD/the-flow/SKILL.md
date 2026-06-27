@@ -42,15 +42,18 @@ A sub-skill may lazily pull `references/00-routing.md` § Shared conventions whe
 | 7 | review | `references/stages/70-review.md` | plan, code → `reviews/*.md` | `--plan "<path>"` `[--phase "<Phase N: Title>"]` |
 | 8 | ship | `references/stages/80-ship.md` | plan, review → pushed branch + PR (repo-guidance-aware) + watched CI checks; push & PR-open **each behind a confirm**, merge optional; **flushes telemetry (no confirm)** | `--plan "<path>"` `[--base "<branch>"]` `[--no-watch]` `[--draft]` |
 | 8c | reconcile | `references/stages/80-merge.md` | (conditional excursion — divergent base) → reconcile/merge plan; **merge executes only on typed `PROCEED`** | `--plan "<path>"` `[--target "<branch>"]` |
+| sync | sync | `references/00-routing.md` | flight plan + plan artifacts → **reconciled** flight plan: backfills every past/present/future phase + workshop + harness seam-node that current knowledge implies; **idempotent** (a complete spine writes nothing), advisory, CLI-only, never advances `nav` | (none) — auto-fired every guided entry; also invokable on demand |
 
 Module missing at its path → say so and stop. Never improvise a stage from memory.
 
 > **`8 ship` is the terminal spine stage; `8c reconcile` is a conditional excursion** (fired only when the base has meaningfully diverged), never on the spine. Typed `merge` and the legacy `plan-8-v2-merge` resolve to `8c reconcile` (alias table below).
+> **`sync` is a maintenance verb, not a journey stage** — it has no ordinal id, produces no stage artifact, and never moves the cursor or runs a stage. It is the engine's **every-entry spine-reconcile pass** (the routine lives in `references/00-routing.md` § Reconcile the spine), exposed as a verb so anyone can run it on demand (and so a direct-jump-built or hand-adopted plan can be repaired in one call). Distinct from `8c reconcile` (which merges a divergent git base — unrelated). See invariant #11.
 
 ## Command grammar
 
 Printed commands are always `/the-flow <id> <verb> [flags]`, e.g. `/the-flow 6 implement --plan "<path>"`.
 Id or verb each resolve alone; printed form always carries both, never a bare number; mismatched pair → show the Registry and ask. This section is the grammar's **single definition** — every command surface anywhere else (narration, state files, views) is rendered from it plus a Registry row, never hand-written.
+The maintenance verb `sync` resolves alone (its id and verb are the same token): `/the-flow sync` runs the spine-reconcile pass on demand. It takes no stage flags; it never advances the journey.
 
 ## Old-slug translation & aliases (read-time)
 
@@ -91,6 +94,7 @@ Docs and **legacy** state files written before the consolidation may carry comma
 8. **No time estimates anywhere** — Complexity Score (CS 1–5) only (`references/00-routing.md` § Shared conventions).
 9. **Harness = one door, auto-fired at each seam.** Every harness touchpoint is `/eng-harness-flow --hook …` (permanent `--event` alias) — never name or invoke its child skills. The router *call* **auto-fires** mechanically from the durable `nav.now` position at each seam (so it survives long/compacted context); the routed *action* stays print-then-offer (call-only). Harness-seam orchestration is **flow-owned** (`references/harness-seams.md`); sub-skills are harness-blind.
 10. **Every stage is a deep-think task** — reason as thoroughly as the stage warrants.
+11. **Keep the spine complete — reconcile every guided entry.** On **every** guided entry (resume *and* adopt), before narrating, the engine runs the **spine-reconcile pass** (`references/00-routing.md` § Reconcile the spine, exposed as the `sync` verb): it diffs the plan's full phase/workshop roster + the harness seam-node set against `the-flow.json` and **backfills whatever current knowledge implies but the flight plan is missing** — all past/present/future phases, every workshop, and (router installed + repo provisioned) the per-phase harness seam nodes. It is **idempotent** (a complete spine writes nothing), **advisory**, **CLI-only** (invariant #6), and **never gates, never advances `nav`, never runs a stage**. The user must never have to ask "make sure all phases/chores are represented" — that omission is the bug this invariant exists to kill. Direct-jump does **not** auto-reconcile (harness-less by design); the `sync` verb runs the pass on demand.
 
 ## State
 

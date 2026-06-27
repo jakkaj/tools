@@ -1,0 +1,308 @@
+{
+  "schema_version": 1,
+  "kind": "flight-plan",
+  "slug": "flow-spine-reconcile",
+  "created_at": "2026-06-27T05:47:06.290Z",
+  "provenance": {
+    "record_kind": "flow",
+    "harness_version": "0.6.0",
+    "branch": "main",
+    "repo": "git@github.com:jakkaj/tools.git",
+    "created_at": "2026-06-27T05:47:06.290Z",
+    "agent": "the-flow",
+    "plan_id": null
+  },
+  "events": [
+    {
+      "id": "CRT-001",
+      "kind": "created",
+      "origin": "engine",
+      "fired_at": "2026-06-27T05:47:06.301Z",
+      "details": {
+        "kind": "flight-plan",
+        "slug": "flow-spine-reconcile"
+      }
+    },
+    {
+      "id": "NOD-001",
+      "kind": "node-created",
+      "origin": "engine",
+      "fired_at": "2026-06-27T05:47:06.779Z",
+      "details": {
+        "node": "ship",
+        "type": "ship"
+      }
+    },
+    {
+      "id": "NOD-002",
+      "kind": "node-created",
+      "origin": "engine",
+      "fired_at": "2026-06-27T05:47:07.222Z",
+      "details": {
+        "node": "plan",
+        "type": "plan"
+      }
+    },
+    {
+      "id": "NOD-003",
+      "kind": "node-created",
+      "origin": "engine",
+      "fired_at": "2026-06-27T05:47:07.620Z",
+      "details": {
+        "node": "research",
+        "type": "research"
+      }
+    },
+    {
+      "id": "CUR-001",
+      "kind": "cursor-moved",
+      "origin": "engine",
+      "fired_at": "2026-06-27T05:47:08.076Z",
+      "details": {
+        "from": "",
+        "to": "research"
+      }
+    },
+    {
+      "id": "STA-001",
+      "kind": "status-changed",
+      "origin": "engine",
+      "fired_at": "2026-06-27T05:48:22.073Z",
+      "details": {
+        "node": "research",
+        "from": "in_progress",
+        "to": "done"
+      }
+    },
+    {
+      "id": "UPD-001",
+      "kind": "node-updated",
+      "origin": "engine",
+      "fired_at": "2026-06-27T05:48:22.482Z",
+      "details": {
+        "node": "research",
+        "fields": [
+          "note"
+        ]
+      }
+    },
+    {
+      "id": "CUR-002",
+      "kind": "cursor-moved",
+      "origin": "engine",
+      "fired_at": "2026-06-27T05:48:22.907Z",
+      "details": {
+        "from": "research",
+        "to": "plan"
+      }
+    },
+    {
+      "id": "STA-002",
+      "kind": "status-changed",
+      "origin": "engine",
+      "fired_at": "2026-06-27T05:50:19.878Z",
+      "details": {
+        "node": "plan",
+        "from": "assumed",
+        "to": "done"
+      }
+    },
+    {
+      "id": "UPD-002",
+      "kind": "node-updated",
+      "origin": "engine",
+      "fired_at": "2026-06-27T05:50:20.334Z",
+      "details": {
+        "node": "plan",
+        "fields": [
+          "note"
+        ]
+      }
+    },
+    {
+      "id": "UPD-003",
+      "kind": "node-updated",
+      "origin": "engine",
+      "fired_at": "2026-06-27T05:50:20.778Z",
+      "details": {
+        "node": "plan",
+        "fields": [
+          "comments"
+        ]
+      }
+    },
+    {
+      "id": "NOD-004",
+      "kind": "node-created",
+      "origin": "engine",
+      "fired_at": "2026-06-27T05:50:21.198Z",
+      "details": {
+        "node": "phase-1",
+        "type": "phase"
+      }
+    },
+    {
+      "id": "UPD-004",
+      "kind": "node-updated",
+      "origin": "engine",
+      "fired_at": "2026-06-27T05:50:21.198Z",
+      "details": {
+        "node": "plan",
+        "fields": [
+          "next"
+        ],
+        "edge_op": "splice-after"
+      }
+    },
+    {
+      "id": "CUR-003",
+      "kind": "cursor-moved",
+      "origin": "engine",
+      "fired_at": "2026-06-27T05:50:21.643Z",
+      "details": {
+        "from": "plan",
+        "to": "plan"
+      }
+    },
+    {
+      "id": "UPD-005",
+      "kind": "node-updated",
+      "origin": "engine",
+      "fired_at": "2026-06-27T05:57:18.441Z",
+      "details": {
+        "node": "phase-1",
+        "fields": [
+          "comments"
+        ]
+      }
+    },
+    {
+      "id": "STA-003",
+      "kind": "status-changed",
+      "origin": "engine",
+      "fired_at": "2026-06-27T06:04:06.245Z",
+      "details": {
+        "node": "phase-1",
+        "from": "known",
+        "to": "in_progress"
+      }
+    },
+    {
+      "id": "CUR-004",
+      "kind": "cursor-moved",
+      "origin": "engine",
+      "fired_at": "2026-06-27T06:04:06.705Z",
+      "details": {
+        "from": "plan",
+        "to": "phase-1"
+      }
+    },
+    {
+      "id": "STA-004",
+      "kind": "status-changed",
+      "origin": "engine",
+      "fired_at": "2026-06-27T06:07:47.886Z",
+      "details": {
+        "node": "phase-1",
+        "from": "in_progress",
+        "to": "done"
+      }
+    },
+    {
+      "id": "UPD-006",
+      "kind": "node-updated",
+      "origin": "engine",
+      "fired_at": "2026-06-27T06:07:48.371Z",
+      "details": {
+        "node": "phase-1",
+        "fields": [
+          "note"
+        ]
+      }
+    },
+    {
+      "id": "CUR-005",
+      "kind": "cursor-moved",
+      "origin": "engine",
+      "fired_at": "2026-06-27T06:07:48.824Z",
+      "details": {
+        "from": "phase-1",
+        "to": "phase-1"
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "ship",
+      "type": "ship",
+      "label": "Ship",
+      "status": "assumed",
+      "next": [],
+      "created_at": "2026-06-27T05:47:06.779Z",
+      "modified_at": "2026-06-27T05:47:06.779Z",
+      "zone": "postflight"
+    },
+    {
+      "id": "plan",
+      "type": "plan",
+      "label": "Plan",
+      "status": "done",
+      "next": [
+        "phase-1"
+      ],
+      "created_at": "2026-06-27T05:47:07.222Z",
+      "modified_at": "2026-06-27T05:50:21.198Z",
+      "ran_at": "2026-06-27T05:50:19.878Z",
+      "note": "Simple, CS-2, READY (7/7 gates PASS/NA). validate-v2 → VALIDATED (no fixes; verb-name 'sync' vs 'reconcile' held as the one open decision). 1 phase / 5 tasks.",
+      "comments": [
+        {
+          "at": "2026-06-27T05:50:20.778Z",
+          "text": "Name collision: 'reconcile' is taken (8c). Default to 'sync' for the maintenance verb pending user confirmation.",
+          "kind": "decision"
+        }
+      ]
+    },
+    {
+      "id": "research",
+      "type": "research",
+      "label": "Research",
+      "status": "done",
+      "next": [
+        "plan"
+      ],
+      "created_at": "2026-06-27T05:47:07.620Z",
+      "modified_at": "2026-06-27T05:48:22.482Z",
+      "ran_at": "2026-06-27T05:48:22.073Z",
+      "note": "Dossier: spine built reactively (phase reveal one-shot at plan pass), not reconciled; CLI has all primitives; 'reconcile' name collides with 8c; osk flight plan proves drift. 8 findings."
+    },
+    {
+      "id": "phase-1",
+      "type": "phase",
+      "label": "Implement: sync verb + engine reconcile routine",
+      "status": "done",
+      "next": [
+        "ship"
+      ],
+      "created_at": "2026-06-27T05:50:21.198Z",
+      "modified_at": "2026-06-27T06:07:48.371Z",
+      "comments": [
+        {
+          "at": "2026-06-27T05:57:18.441Z",
+          "text": "Verb name confirmed: 'sync' (user, 2026-06-27). 'reconcile' rejected — collides with 8c reconcile.",
+          "kind": "decision"
+        }
+      ],
+      "ran_at": "2026-06-27T06:07:47.886Z",
+      "note": "5/5 tasks done. sync verb added (SKILL.md Registry+grammar+invariant #11); Reconcile-the-spine routine + every-entry triggers (00-routing.md); seam-node/ownership cross-ref (harness-seams.md); getting-started view updated. check-flow clean (0 warn, 11 Registry rows). AC-01..06 met."
+    }
+  ],
+  "nav": {
+    "now": "phase-1",
+    "next": "ship",
+    "intent": "Add a first-class sync/reconcile maintenance verb to the-flow that auto-reconciles the flight plan (all past/present/future phases + workshops + harness chores) on every entry and is invokable directly.",
+    "bag": {
+      "mode": "Simple",
+      "status": "active"
+    }
+  }
+}

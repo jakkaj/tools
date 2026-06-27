@@ -65,7 +65,7 @@ Stages 10/20 both **reuse** an existing `docs/plans/*-<slug>/` folder by slug �
 
 ### Resume (exactly one active state)
 
-Read position via `harness flow nav show` (+ node statuses) — **not** a state file. Discover the artifact for the current node (Graph below). Apply the **idempotency rule**, narrate (coach.md), then drive `the-flow.json`/`.md` via `harness flow` calls (§ Flight plan — the CLI is the generator; never hand-edit). On the **first** resume of a flow that still carries a legacy `.the-flow-state.json`, run the one-shot backfill below first.
+Read position via `harness flow nav show` (+ node statuses) — **not** a state file. Discover the artifact for the current node (Graph below). Apply the **idempotency rule**, **reconcile the spine** (§ Reconcile the spine — runs on every resume *and* adopt, idempotent: a complete spine writes nothing), narrate (coach.md), then drive `the-flow.json`/`.md` via `harness flow` calls (§ Flight plan — the CLI is the generator; never hand-edit). On the **first** resume of a flow that still carries a legacy `.the-flow-state.json`, run the one-shot backfill below first.
 
 **Idempotency rule (every resume)**: discover the artifact for the current node (`nav.now`) by existence at its expected path (newest if several, by mtime — the CLI stamps `ran_at`/`modified_at` on nodes).
 - **Found** → narrate the stage's insight, advance `nav` (`harness flow nav set --now`/`--next`), print-and-offer the next command (derived from `nav.next` + Registry).
@@ -204,7 +204,7 @@ Every run maintains a **flight plan**: `docs/plans/<ord>-<slug>/the-flow.json` (
    - a narrative / decision note → `comment --kind <note|decision|warning|validation>`;
    - advance → `nav set --now <id>` (move; fires cursor-moved) / `--next <id>` (advisory) / `--clear-next`. (§ 2)
 2. **Reveal/refine the future** — `insert-node` owns every edge splice, no hand edge-recomputation ([`flight-plan-ops.md`](./flight-plan-ops.md) § 4 spine-vs-excursion, § 6 build-order):
-   - at the `plan` pass, reveal each phase → `insert-node --type phase --after <prev>` (inherits the predecessor's out-edges); the rail then re-derives its total from the new phase nodes (no stored counter);
+   - at the `plan` pass, reveal each phase → `insert-node --type phase --after <prev>` (inherits the predecessor's out-edges); the rail then re-derives its total from the new phase nodes (no stored counter). (The every-entry **§ Reconcile the spine** pass is the *idempotent superset* of this one-shot reveal — it re-asserts the full phase/workshop/seam roster on **each** entry, catching adopted / post-pass-edited / direct-jump-built / harness-installed-mid-flow plans the single reveal misses.)
    - a conditional fix-loop / workshop / backpressure / reconcile excursion → `insert-node --branch-of <node> [--rejoin <node>]` (the branch point's `next` is unchanged) — **workshops ALWAYS `--branch-of`, never on the spine**; the **reconcile** excursion branches off `ship` (or a phase) only when the base has diverged;
    - a plain new node needing no splice → `add-node`.
 3. **Render, fire any due seam, surface what's due here** → `harness flow render --path FLOW --output docs/plans/<ord>-<slug>/the-flow.md`, then print the rail (coach.md owns the rail; the CLI owns the `.md`). Then read `harness flow nav show` and:
@@ -219,6 +219,23 @@ Every run maintains a **flight plan**: `docs/plans/<ord>-<slug>/the-flow.json` (
 > **Invariant**: never hand-edit `the-flow.md` — it is **always** regenerated from `the-flow.json` by `harness flow render`. And never hand-edit `the-flow.json` either — mutate it only through `harness flow` calls (§ CLI-driven cadence above).
 
 **Legacy note (clean break).** Pre-migration flows — hand-cranked `the-flow.json` with no `provenance` block — are **not** migrated: the CLI returns `E308` (legacy-format) on read. That is an honest stop, not a bug; re-create with `harness flow create … --agent the-flow` (see SKILL.md § capability precheck).
+
+---
+
+## Reconcile the spine — the every-entry completeness pass
+
+**The flight plan must represent the whole journey as currently known — every past, present, and future phase + workshop, plus every harness seam-node — on every entry, without the user asking.** Today the spine is built *incrementally* as the engine walks the happy path (phases revealed once at the `plan` pass, § Flight plan step 2); that leaves it partial whenever the pass never ran for the current roster — an **adopted** plan (§ Adoption back-fills only the inferred node), a plan **edited after** the pass, a **direct-jump-built** plan (no engine, no nodes), or a harness **installed mid-flow**. This pass closes that gap by **reconciling declaratively from the artifacts** rather than trusting incremental build. It is the engine routine behind the `sync` verb (`../SKILL.md` Registry + invariant #11).
+
+**When it runs.** On **every** guided entry — after resolve (resume/adopt), before narrating — and on demand via the `sync` verb. Fresh start has nothing to reconcile (skip). **Idempotent**: a complete spine produces **no** CLI writes and renders nothing.
+
+**What it reconciles** (diff current knowledge → flight-plan nodes; backfill only what's missing; all writes via `harness flow`, build-order safe per § Flight plan / flight-plan-ops.md §6):
+
+1. **Phases — all of them.** Read the plan's `#### Phase Index` (Full) or its single `### Implementation` block (Simple → one phase). For each phase with no matching spine node → `insert-node --type phase --after <prev>`. Status from disk: a phase already completed → `done`; the current one → `in_progress`; the rest → `known`. **Never downgrade** a node that is further along than the artifact implies — `nav`/status already-advanced always wins.
+2. **Workshops — past and present.** For each `workshops/*.md` with no matching node → `insert-node --type workshop --branch-of plan` (workshops are ALWAYS excursions — flight-plan-ops.md §4), status `done` (the file exists).
+3. **Harness seam-nodes** *(router installed **and** repo provisioned only)*. Pre-anchor, across **all known phases**, the per-phase seam nodes the seam map defines — `harness-boot` before each phase, `harness-retro` after each phase, `backpressure` off `plan`, `harness-retro` off `ship` — emitting **nodes only**. **the-flow emits the seam nodes; `eng-harness-flow` owns the chore *flag*** (dedup on the `--hook` token): reconcile never mints chore twins and never sets a chore flag (`harness-seams.md` § Chore-flag ownership, § Reconcile pre-anchors seam nodes). Router not installed, or repo unprovisioned → emit **no** harness nodes (unbroken spine / no per-phase nagging — `harness-seams.md` § Node emission).
+4. **Render** once iff anything changed (`harness flow render`).
+
+**What it never does.** Never advances `nav` (it reconciles *structure*, not position). Never runs a stage, gates, blocks, or scores. Never edits stage artifacts. Never re-parents an existing node (`set-node` can't — flight-plan-ops.md §6); a structurally wrong existing node is left as-is and noted, not rewritten. CLI-only (invariant #6); **no new state file** — the plan artifact is the source of "what should be here," recomputed at read time (KISS).
 
 ---
 

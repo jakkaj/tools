@@ -32,6 +32,7 @@ The pipeline used to be a family of standalone per-stage skills; it is now **one
 | Review | `7` | `review` | `references/stages/70-review.md` |
 | Ship | `8` | `ship` | `references/stages/80-ship.md` — push + open PR (repo-guidance-aware) + watch CI checks; push & PR-open each behind a confirm |
 | Reconcile | `8c` | `reconcile` | `references/stages/80-merge.md` — conditional upstream-reconcile excursion (divergent base); merge on typed `PROCEED`. Typed `merge` / `plan-8-v2-merge` resolve here |
+| Reconcile spine *(maintenance)* | `sync` | `sync` | `references/00-routing.md` § Reconcile the spine — engine pass, **auto-fired every guided entry** (idempotent); keeps every past/present/future phase + workshop + harness seam-node present in the flight plan. Not a journey stage; also invokable on demand. Distinct from `8c reconcile` (git-base merge) |
 
 > **What changed (formerly)**: each stage was its own public skill — `/plan-1a`; `/plan-1b` (specify) **and** `/plan-3` (architect), now folded into the single `1b plan` step that writes the business spec and implementation plan into one document in one atomic pass; `/plan-2` (clarify — now the Re-entry section of stage 1b); `/plan-2c`, `/plan-3a`, `/plan-5`, `/plan-6` (+ its companion variant, now the implement verb's `--companion` mode), `/plan-6a`, `/plan-7`, `/plan-8`. Those skills are deleted; `/the-flow <id|verb> [flags]` is the only public surface for the main flow (typed `6c` or `companion` still resolves, via the alias table, to implement with `--companion`; typed `specify` or `architect` resolve to `1b plan`). The utility skills (`validate-v2`, `deepresearch-v2`, `didyouknow-v2`, `htmlify-v2`, `plan-0-v2-constitution`, `plan-2b-v2-prep-issue`, `plan-v2-extract-domain`, `util-0-v2-handover`, `install-hve-core-rpiv`) are unchanged and still called by their own names.
 
@@ -210,6 +211,7 @@ You never named a harness skill — the flow told the router *where the work was
 | `/the-flow 7 review` · `review` | Code review *(rare in companion flow)* | `reviews/review.md` | none (read-only review) |
 | `/the-flow 8 ship` · `ship` | Get work out — push + open PR (repo-guidance-aware) + watch CI checks + report; push & PR-open each behind a confirm, merge optional | pushed branch + PR + `ship/<date>/ship-report.md` | engine offers `--hook post-flight` after ship reports |
 | `/the-flow 8c reconcile` · `reconcile` | Conditional upstream-reconcile excursion (divergent base) — kept merge-analysis machinery; typed `merge` resolves here | reconcile/merge plan | merge executes only on typed `PROCEED` |
+| `sync` *(maintenance — auto every entry; on-demand)* | **Reconcile the spine** — backfills every known phase + workshop + harness seam-node the flight plan is missing; idempotent, advisory, never advances the journey | updated `the-flow.{json,md}` | re-anchors per-phase harness seam-nodes across all phases (nodes only; `eng-harness-flow` owns the chore flag) |
 | `/eng-harness-flow` | **The harness front door** — stateless router; detects where the loop is and routes one step | routing envelope (`--json`) | the only harness skill the flow ever calls |
 
 ---

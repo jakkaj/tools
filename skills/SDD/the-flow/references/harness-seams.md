@@ -105,6 +105,16 @@ So **this flow's seam emission is unchanged**; `eng-harness-flow` layers the cho
 
 ---
 
+## Reconcile pre-anchors seam nodes (the every-entry pass)
+
+the-flow's **§ Reconcile the spine** pass ([`00-routing.md`](./00-routing.md), the `sync` verb) keeps the harness loop *visible up front* instead of appearing only at the edge you reach. On every guided entry, when the router is **installed and the repo provisioned**, reconcile ensures the per-phase seam nodes exist across **all known phases** — `harness-boot` before each phase, `harness-retro` after each phase, `backpressure` off `plan`, `harness-retro` off `ship` (the § seam map's nodes, for the whole roster, not just the current edge).
+
+**Ownership is unchanged — nodes here, flag there.** Reconcile emits **seam nodes only**. It never sets a chore flag and never adds a `chore`-type twin: `eng-harness-flow` remains the **single owner of the chore flag** (§ Chore-flag ownership, R-1), dedups on the `--hook` token, and flags the seam node reconcile already emitted. The two never double-place — reconcile guarantees the *node* exists; the router layers the *flag* when the loop runs. This is the contract a hand-run "make the spine complete" drifts from (standalone `chore` twins; missing `harness-boot`/`harness-retro` at the first/last phase; a missing `backpressure` or ship `harness-retro`) — encoding it in reconcile makes every flight plan converge on the one canonical shape.
+
+**Installed-but-unprovisioned / not-installed → no harness nodes at all** (§ Node emission, § Two-layer detection): reconcile emits nothing harness-side, the spine renders unbroken, and no per-phase nagging appears.
+
+---
+
 ## Honored, not forced — the action, not the call
 
 Draw the line precisely. The **router call** auto-fires (it's read-only and advisory — § How the engine presents a seam, § Compaction-robust firing); the **action it routes to** is a **print-then-offer beat** (invariants #1/#4) the user accepts or waves past. So seams **never** gate, **never** score, **never** block, and nothing with side effects runs without a go-ahead — yet the advisory call is never skipped. Best-effort throughout: a router that's missing, a repo that's unprovisioned, or an `UNAVAILABLE` verdict all fall back to standard testing with at most one calm line. The user can still opt out conversationally — "don't use the harness" stops the calls; there is **no** sentinel file.
