@@ -160,13 +160,14 @@ npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y
 
 The universal `.retro.md` contract lives in [`docs/harness/schemas/`](./docs/harness/schemas/) (this repo's copy of the cross-system minih **shape** contract — minih keeps its own copy, so the path is local). See [`docs/plans/023-difficulty-ledger-skill/`](./docs/plans/023-difficulty-ledger-skill/) for the design history, [`docs/plans/024-harness-nucleus/`](./docs/plans/024-harness-nucleus/) for the loop-stage consolidation, and [`docs/plans/029-eng-harness-switchover/`](./docs/plans/029-eng-harness-switchover/) for the switchover to the external family.
 
-### `general/` — Domain-generic (1 skill)
+### `general/` — Domain-generic (2 skills)
 
 Skills that work in any project, coding or not.
 
 | Slug | One-line purpose |
 |---|---|
 | `grill-me` | Relentlessly interview the user about any plan, design, or decision until there is shared understanding. |
+| `frugal` | Silent pre-task token discipline — read narrowly, skip "while I'm here" work, output only what materially advances the goal, never economizing away correctness or safety. |
 
 ### `personal/` — Lifestyle / non-coding (1 skill)
 
