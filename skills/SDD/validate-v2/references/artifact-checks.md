@@ -37,6 +37,7 @@ Older folders may carry a separate `*-spec.md` and `*-plan.md`. Recognise this a
 - Read the **full diff** plus relevant unchanged dependencies — not just changed lines.
 - Run, when available and read the fresh output yourself: targeted tests, typecheck, lint, build, schema validation, repro commands. A linter passing is **not** a test pass.
 - Inspect named consumers and any changed **public contract** (exported types, signatures, shared schemas).
+- **Surface counts are solution-wide, never `src/`-only.** When a deterministic proof counts a rename / signature / ctor-change surface ("rename surface = N sites"), grep the **whole solution** — test projects and any sibling project referencing the changed assembly (via project references / `InternalsVisibleTo`), not just the source dir. A signature change *always* propagates to tests. Either count solution-wide, or state explicitly that the count excluded tests — a `src/`-scoped count reported as "surface complete" is a false clean bill.
 - Domain placement + dependency direction preserved (business → infrastructure ok; infrastructure → business never; business → business via contracts only).
 - Deployment/ops ripple: new env vars, config, migrations, CI changes.
 
