@@ -2,7 +2,7 @@
   "_comment": "BARE-SPINE FLIGHT-PLAN SEED (plan 039 / AC-13, AC-09 part 1). This is the REAL, pre-authored, HARNESS-AGNOSTIC create-seed that the-flow passes to `harness flow create flight-plan --template <this>` (see references/00-routing.md create routine). The CLI consumes `cursor` (-> nav.now) + `nodes` VERBATIM and stamps root identity (provenance / created_at / events / nav / per-node created_at). A Simple 1-phase flow is COMPLETE AT CREATE: research -> plan -> phase-1 -> ship, with ZERO harness nodes baked in. The harness chores (per-phase boot+observe+drain + the two globals backpressure/ship-harvest) are NOT here — they are laid AFTER create by the create-time CONDITIONAL chore apply, gated on router-installed-AND-provisioned (T020 / references/harness-seams.md), and additional phases 2..N are spliced by the plan-complete additive expander (T015). A no-harness repo therefore renders exactly this 4-node spine. NOTE (039 layout): the former worked-example template moved to flight-plan.example.json (+ .example.md) — that is the 'copy this shape' reference; THIS file is the create-seed. Round-trip-verified: `harness flow create flight-plan --template <this> --schema flight-plan.schema.json` + `harness flow render`.",
   "cursor": "research",
   "nodes": [
-    { "id": "research", "type": "research", "label": "Research", "status": "assumed",
+    { "id": "research", "type": "research", "label": "Research", "status": "in_progress",
       "command": "/the-flow 1a explore", "next": ["plan"] },
 
     { "id": "plan", "type": "plan", "label": "Plan", "status": "assumed",

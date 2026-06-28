@@ -27,9 +27,11 @@ The flight plan (`the-flow.json` → rendered `the-flow.md`) is mutated **only**
 ## §3 — Verb cheat-sheet
 
 ```bash
-# create — ALWAYS pass --agent the-flow (→ rail title [the-flow]; without it the rail shows the slug)
+# create — Route A (plan 039): instantiate the BARE-SPINE template in ONE call (--template). ALWAYS --agent the-flow.
 harness flow create flight-plan --slug <slug> --path <flow.json> \
-  --schema "<skill base>/references/flight-plan.schema.json" --bare --agent the-flow [--title "<t>"] [--plan-id <id>]
+  --schema "<skill base>/references/flight-plan.schema.json" \
+  --template "<skill base>/references/flight-plan.template.json" --agent the-flow [--title "<t>"] [--plan-id <id>]
+#   (--bare instead of --template → a root-only flow you then build with add-node; the template seed is preferred.)
 
 harness flow add-node    --path <f> --id <id> --type <t> --label "<l>" --status <s> [--next <a,b>] [--zone <band>]
 harness flow insert-node --path <f> --id <id> --type <t> --label "<l>" --status <s> (--after <n> | --before <n> | --branch-of <n> [--rejoin <n>]) [--zone <band>]
@@ -38,9 +40,35 @@ harness flow set-node    --path <f> --node <id> [--label|--note|--user-input|--a
 harness flow nav set     --path <f> [--now <id>] [--next <id>|--clear-next] [--intent "<t>"]
 harness flow render      --path <f> --output <flow.md>
 harness flow rail        --path <f>            # the one-line spine rail
+
+# Transactional batch + the new mutation primitives (plan 039) — prefer `apply` for ANY multi-node change:
+harness flow apply       --path <f> --ops <file | ->   # JSON array of ops; two-phase, one DAG-check, one atomic write or none
+harness flow remove-node --path <f> --id <id> [--force]                                                  # delete + rewire preds→succs
+harness flow mv-node     --path <f> --id <id> (--after <n>|--before <n>|--branch-of <n>) [--rejoin <n>] [--force]   # re-parent + rewire
 ```
 
 (`<skill base>` = this skill's base dir, e.g. `~/.claude/skills/the-flow`. Full verb + flag reference: `docs/how/harness-flow.md` — see §7.)
+
+### §3b — The canonical harness chore `apply` batch (the create-time conditional apply / plan-complete expander)
+
+The **shipped, worked** ops batch — do **not** re-synthesize it each run. Emitted **only** when the gate holds (router installed AND repo provisioned). Lays phase-1's per-phase trio (boot+observe+drain) + the two globals (backpressure off `plan`, ship harvest off `ship`) in ONE additive, **byte-stable** apply (every op is `upsert`, so re-running is a no-op — the every-entry invocation, AC-10):
+
+```bash
+harness flow apply --path "$FLOW_PATH" --ops - <<'OPS'
+[
+ {"op":"upsert","id":"backpressure","type":"backpressure","label":"Backpressure survey","status":"assumed","branch_of":"plan","next":["plan"],"command":"run /eng-harness-flow --hook pre-coding --json","chore":{"kind":"command","importance":"optional"}},
+ {"op":"upsert","id":"boot-1","type":"harness-boot","label":"Boot check","status":"assumed","branch_of":"phase-1","next":["phase-1"],"command":"run /eng-harness-flow --hook pre-flight --json","chore":{"kind":"command","importance":"recommended"}},
+ {"op":"upsert","id":"observe-1","type":"observe","label":"Observe: P1","status":"assumed","branch_of":"phase-1","next":["phase-1"],"command":"harness observe \"<what>\" --kind <kind>","chore":{"kind":"command","importance":"recommended"}},
+ {"op":"upsert","id":"retro-1","type":"harness-retro","label":"Retro: P1 (drain)","status":"assumed","branch_of":"phase-1","next":["phase-1"],"command":"run /eng-harness-flow --hook post-coding --json","chore":{"kind":"command","importance":"recommended"}},
+ {"op":"upsert","id":"retro-ship","type":"harness-retro","label":"Retro: ship (harvest)","status":"assumed","branch_of":"ship","next":["ship"],"command":"run /eng-harness-flow --hook post-flight --json","chore":{"kind":"command","importance":"recommended"}}
+]
+OPS
+```
+
+- **Multiphase**: the plan-complete expander emits the SAME shape per phase — `boot-N`/`observe-N`/`retro-N`, each `branch_of "phase-N"` (deterministic ids → the upsert is idempotent on re-run).
+- **Gate OFF** (router missing or repo unprovisioned): emit **none** of these — the spine stays the 4-node harness-agnostic seed.
+- **Op kinds**: `add | upsert | set | insert | mv | remove`. `upsert` dedups on `id` (byte-stable no-op if identical).
+- **D5**: no op flips a `done`/`skipped` node to `todo`; `remove`/`mv` of a terminal needs `--force`; a `remove`-then-re-`add` of the same terminal id in one batch cannot launder it.
 
 ## §4 — Spine vs excursion (the rule that keeps the rail clean)
 
@@ -68,8 +96,8 @@ Pass explicit `--zone` only to override a default. For the flight-plan vocabular
 
 ## §6 — Gotchas
 
-- **Build order**: the validator rejects forward `--next` refs. Add the spine last-to-first (ship first), or add nodes then wire.
-- **`set-node` can't re-parent**: it cannot set `--next` / `--branch-of`. You cannot turn an existing spine node into an excursion via the CLI — if a spine node should have been an excursion, re-create it with `insert-node --branch-of` (or rebuild the flow).
+- **Build order (single-op verbs only)**: `add-node`/`insert-node` reject forward `--next` refs — add the spine last-to-first (ship first), or add nodes then wire. **`apply` removes this wart** (plan 039): a batch resolves forward refs at the end (two-phase — materialize all nodes → wire edges → validate the final DAG once), so op order *within* a batch never matters.
+- **`set-node` can't re-parent**: it cannot set `--next` / `--branch-of`. To turn an existing spine node into an excursion, use **`mv-node`** (plan 039 — re-parents + rewires, DAG-re-checked, cycle-refused), or `insert-node --branch-of` for a fresh node. To delete + rewire, use **`remove-node`**.
 
 ## §7 — Pointer
 
