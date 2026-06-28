@@ -8,6 +8,30 @@ The **single owner** of *where & when* the engineering harness is touched across
 
 ---
 
+## Flight-plan harness seams — creation, lifecycle & execution discipline
+
+<!-- doctrine-parity:039 v1 — this block is mirrored byte-identically in the-flow `references/harness-seams.md`; edit BOTH copies and keep them identical (the parity guard diffs them). -->
+
+This is the **canonical** statement of how harness seams are laid onto an SDD flight plan, how they live, and how an agent satisfies them; the-flow's `harness-seams.md` mirrors this block verbatim. *(Supersedes the v1 reconcile-on-read mechanism and the the-flow `f9a86f1` prose-cadence step — no spawn-on-read, no `provenance.reconcile_hook`, no remembered prose trigger.)*
+
+**Creation is three parts** — not "a template that bakes in chores, plus an expander":
+
+1. **A pre-authored, static, harness-agnostic skeleton.** A fixed JSON template seed shipped with the SDD skill (`references/flight-plan.template.json`, BYO via `harness flow create --template`), authored and versioned by hand, never generated. The CLI instantiates it **verbatim** and stamps root identity (provenance / created_at / events / nav). A **Simple 1-phase flow is complete at `create`**: `research → plan → phase-1 → ship`, with **zero harness nodes baked in**.
+2. **A create-time CONDITIONAL chore apply.** Lays the harness chores **only when the two-layer gate holds — the router is INSTALLED *and* the repo is PROVISIONED**. A no-harness repo gets **no** harness chores; the skeleton stays harness-agnostic.
+3. **A plan-complete ADDITIVE expander.** When the plan locks N>1 phases, **one additive `apply` batch** splices `phase-2..N` after `phase-1`, **each new phase carrying its own boot+observe+drain chores**. Expansion is **purely additive — nothing relocates, no `mv`**. The **same gate** applies at expansion: gate off → the expander splices **bare phase nodes only**, so the spine is never half-harnessed (phase-1 agnostic but phases 2..N harnessed). The expander is **byte-stable idempotent**, so it is re-fired at every structural entry (plan-complete + adopt + resume-mismatch + manual sync) and **no-ops on a complete spine**. Expansion is triggered **structurally by the `plan` node completing** — no remembered prose trigger, and **no `expand` nodeType** (the schema is not extended for it).
+
+**The per-phase additive chore model.** **Every phase** carries its own three chores — **boot** (`harness-boot`, `pre-flight`), **observe** (`observe`, `kind: command`, `importance: recommended`, command `harness observe "<what>" --kind <kind>`), and **drain** (`harness-retro` `(drain)`, `post-coding`) — plus **two global** chores: **backpressure** (`pre-coding`, anchored off `plan`) and the **ship harvest** (`harness-retro` `(harvest)`, `post-flight`, anchored off `ship`). `observe` **gets a chore** — the inversion of the old "the `coding` seam gets no chore" rule: the continuous mid-phase capture seam now has a structural anchor, surfacing in `due_chores` the whole time `nav.now` sits on its phase, with its lifecycle terminal at that phase's **drain**. Only **`improve`** gets no chore. **`(drain)` vs `(harvest)` is one `harness-retro` type**, disambiguated by hook — `post-coding` drains that phase's observe buffer; `post-flight` is the terminal long-horizon harvest — plus the label. **No new retro nodeType.**
+
+**D5 — never resurrect a terminal node.** No mutation (`upsert`/`set`/`mv`/`remove`, single or batched) silently flips a `done`/`skipped` node back to `todo`; the guard is **batch-wide** — a `remove`-then-re-`add`/`upsert` of the same terminal id within one batch cannot launder it.
+
+**Chore/seam execution discipline (the anti-fake rule).** A runnable harness chore/seam is satisfied **only by actually invoking the `/eng-harness-flow` skill** through the host's skill mechanism — **the Skill tool in Claude Code**, the equivalent slash-command invocation elsewhere — with the node's **exact `--hook`**. **Never** narrate a plausible router envelope, reimplement the check inline, or flip the node to `done` without a real invocation; the envelope is narrated **verbatim from that real call** (never fabricate an insight). For `observe`, the equivalent is **actually running `harness observe "<what>" …`** — a real capture, never a narrated one. **Declining is always allowed** and means a **real `harness flow status <chore> --to skipped` CLI call** (honest, recorded) — never a narrated skip, and never a fake `done`. This is a **discipline, not a gate**: there is **no compliance floor**, consistent with the standing best-effort posture (chores never gate, never score, never block).
+
+<!-- /doctrine-parity:039 v1 -->
+
+> The sections below are the-flow's detailed seam *mechanics* (how the engine fires the call, the seam map, node emission, lifecycle) — they implement the canonical block above; where they once said "`coding`/observe is unwired," 039 wires `observe` as the per-phase chore named above.
+
+---
+
 ## How the engine presents a seam — auto-fire the call, then offer the action
 
 A harness command is **not** a `/the-flow` command: it has no Registry row, so it is **never** rendered through the dispatch's § Command grammar or a `{{render-edge}}` slot. Two distinct things happen at a seam, and they gate **differently**:
@@ -49,7 +73,7 @@ So "the flow forgot to run it" cannot come from context dilution: the advisory c
 
 ## The seam map — every edge, its hook, its node, its literal command
 
-The flow wires **four fire-hooks** and deliberately **skips one** (the silent `coding` capture — mirroring its prior decision not to wire `task-pause`). `pre-flight` appears at **two** edges (flow entry and before each phase) — same hook, different context flags, different outcome.
+The flow wires **four fire-hooks** as edge-anchored seams **plus** the `coding`/`observe` hook as a **per-phase chore** (039 — the prior "skip `coding`" decision is reversed; observe now has a structural anchor, see the canonical block above). `pre-flight` appears at **two** edges (flow entry and before each phase) — same hook, different context flags, different outcome.
 
 | Graph edge / state | `--hook` (+ context flags) | `--event` alias | Emitted node | Literal call the engine **auto-fires** at this edge (then offers the routed action) |
 |---|---|---|---|---|
@@ -58,7 +82,7 @@ The flow wires **four fire-hooks** and deliberately **skips one** (the silent `c
 | **before each phase** (into a `phase`) | `pre-flight` `--phase "<Phase N>" --plan-dir <p>` | `pre-implement` | `harness-boot` (`branch_of: "<phase-id>"`) | `/eng-harness-flow --hook pre-flight --phase "<Phase N: Title>" --plan-dir "<plan dir>" --json` |
 | **each phase end** (out of a `phase`) | `post-coding` `--plan-dir <p>` | `phase-end` | `harness-retro` (`branch_of: "<phase-id>"`) | `/eng-harness-flow --hook post-coding --plan-dir "<plan dir>" --json` |
 | **at ship** (after checks reported / PR opened) | `post-flight` `--plan-dir <p>` | `plan-complete` | `harness-retro` (`branch_of: "ship"`) | `/eng-harness-flow --hook post-flight --plan-dir "<plan dir>" --json` |
-| **mid-build** (we do **not** wire this) | `coding` | `task-pause` | *(none — silent CLI capture, the harness's own concern)* | *(unwired — see § Seam contract)* |
+| **in-phase** (per-phase chore, the whole time `nav.now` sits on a phase) | `coding` | `task-pause` | `observe` (`branch_of: "<phase-id>"`, chore `kind: command` `importance: recommended`) | `harness observe "<what>" --kind <kind>` (the **real capture**, not a router call; surfaces in `due_chores` until its phase's `post-coding` **drain** terminates it) |
 
 **What each beat is *for* (narration source):**
 - **`pre-flight` @ entry** — auto-fire the call to detect + position the router (read-only); narrate one calm line; no node. Fired automatically at flow entry so a fresh or just-compacted session always re-establishes the harness.
@@ -66,6 +90,7 @@ The flow wires **four fire-hooks** and deliberately **skips one** (the silent `c
 - **`pre-flight` @ phase** — the router proves the system **boots** before a line of code; verdict narrated verbatim (`healthy → build` · `SLOW → build with a note` · `UNHEALTHY → stop and ask the human: Retry / Continue without harness / Abort` · `UNAVAILABLE → standard testing`).
 - **`post-coding` @ phase end** — drain **this phase's** friction notes → `.retro.md` (the router owns drain-vs-harvest; the user may see a `[s/t/p/e/d/a]` prompt).
 - **`post-flight` @ ship** — the long-horizon reflection: harvest + present improvements + encode (offered after ship reports checks / opens the PR).
+- **`coding`/`observe` @ in-phase (039)** — the per-phase capture chore: while `nav.now` sits on a phase, the agent **actually runs** `harness observe "<what>" --kind <kind>` to record decisions/surprises/dead-ends as they happen (a real capture, never narrated). It surfaces in `due_chores` for the whole phase and its lifecycle terminal is that phase's `post-coding` **drain** — the producer/consumer pair that stops observations evaporating as remembered prose.
 
 ---
 
@@ -143,11 +168,11 @@ Draw the line precisely. The **router call** auto-fires (it's read-only and advi
 |---|---|
 | `harness_seam_contract` | `v1` — the 021 five-hook contract; **bump** when any mirrored fact below changes meaning (a hook renamed, an alias remapped, a verdict added). *No bump for the 2026-06-19 ship remap:* moving the `post-flight` retro from the `merge` edge to the `ship` edge (`branch_of: "ship"`) changed only **which the-flow Graph edge** the hook rides — an internal-flow fact, not a mirrored upstream fact (the hook, its `plan-complete` alias, its verdict set, and its `harness-retro` node type are all unchanged). v1 stands. |
 | Hooks we **wire** (emit `--hook`) | `pre-flight` (flow entry **and** before each phase) · `pre-coding` (post-plan) · `post-coding` (each phase end) · `post-flight` (at **ship** — the terminal stage; remapped from `merge` 2026-06-19) |
-| Hook upstream has, we **don't** wire | `coding` — the silent `harness observe "<what>" --kind <kind>` capture (one buffer entry per call); mirrors the deliberate prior `task-pause` skip. The harness owns in-flight capture once alive in-context; the flow never drives it |
+| Hook we wire as a **per-phase chore** (039) | `coding` — the `harness observe "<what>" --kind <kind>` capture (one buffer entry per call), ridden as a per-phase `observe` chore `branch_of` the phase, terminal at that phase's `post-coding` drain. *(Reverses the prior `task-pause`/`coding` skip — observe now has a structural anchor in `due_chores` so it stops getting forgotten; per the canonical block above.)* |
 | `--event` alias (permanent) | `session-start`→`pre-flight` · `pre-implement`→`pre-flight` · `post-spec`→`pre-coding` · `phase-end`→`post-coding` · `plan-complete`→`post-flight` · `task-pause`→`coding`. The flow **emits `--hook`**; `--event` is retained only for **back-compat understanding** — mapping/reading an older router's envelope, never a command the flow emits or down-emits (an older router is a runtime-dependency gap → reinstall, not an automatic fallback) |
 | Envelope `decision` | `route` · `redirect` · `noop` · `ambiguous` (+ an additive `hook` field on every routing envelope) |
 | Boot verdicts | `healthy` · `SLOW` · `UNHEALTHY` · `UNAVAILABLE` |
-| Node types this maps to | `backpressure` · `harness-boot` · `harness-retro` (defined in `flight-plan.schema.json`) |
+| Node types this maps to | `backpressure` · `harness-boot` · `harness-retro` · `observe` (039 — the per-phase capture chore) (defined in `flight-plan.schema.json`) |
 | Slug rule | friendly name → installed slug; **never append a guessed version suffix** |
 
 **Upstream source-of-truth (authority, in priority order):**

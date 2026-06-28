@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "kind": "flight-plan",
+  "slug": "project-setup",
+  "plan_dir": "docs/plans/001-project-setup",
+  "created_at": "2026-01-17T09:00:00.000Z",
+  "provenance": {
+    "record_kind": "flow",
+    "harness_version": "0.4.0",
+    "branch": "001-project-setup",
+    "repo": "https://github.com/AI-Substrate/harness-engineering",
+    "created_at": "2026-01-17T09:00:00.000Z",
+    "agent": "the-flow",
+    "plan_id": "001-project-setup"
+  },
+  "mode": "Full",
+  "nav": { "now": "p3", "next": "p4" },
+  "_comment": "WORKED-EXAMPLE TEMPLATE — copy this shape for a new flight plan, then replace nodes/agents. Validates against flight-plan.schema.json. Snapshot: a 6-phase Full plan at Phase 3 in progress. Shows every status (done/in_progress/known/assumed), each workshop as its OWN node, verbatim user_input bubbles, a companion that WRAPS the build phases, a worker side-node, AND the harness seams as first-class, ENGINE-OWNED nodes (the flow offers them at the Graph edge — see references/harness-seams.md — NOT fired by stage sub-skills) whose commands are ALWAYS router invocations (/eng-harness-flow --hook …, never child-skill names): backpressure (--hook pre-coding, alias --event post-spec) as an optional post-plan refinement off the single atomic `1b plan` node (which writes the business spec + implementation plan in one document); harness-boot (--hook pre-flight) before a phase; harness-retro (--hook post-coding each phase end / --hook post-flight at ship). Harness nodes here are an ABBREVIATED example (one representative boot for p1, one representative retro for p2); a real flight plan emits one harness-boot + one harness-retro PER phase per references/harness-seams.md, and per-phase harness nodes appear only when the router is installed AND the repo is provisioned. They're shown because this example machine has the router installed + provisioned; omit them all when the Layer-1 probe misses (no ~/.agents/skills/eng-harness-flow/SKILL.md and no ~/.claude/skills fallback). the-flow.md is generated FROM this file.",
+  "agents": [
+    { "id": "crc", "kind": "companion", "slug": "code-review-companion", "runtime": "minih",
+      "run_id": "2026-01-19T08-22-01Z-a91f", "status": "live", "covers": ["p1", "p2", "p3", "p4", "p5", "p6"],
+      "render": "wrap",
+      "driver": "/the-flow 6 implement --companion",
+      "note": "wraps the build phases; reviews each commit live (fire-and-forget pings); supersedes the post-hoc review stage." },
+    { "id": "docw", "kind": "worker", "slug": "docs-writer", "runtime": "minih",
+      "status": "queued", "covers": ["p6"], "render": "side",
+      "note": "drafts package READMEs in parallel during the Docs phase." }
+  ],
+  "nodes": [
+    { "id": "research", "type": "research", "label": "Research", "status": "done",
+      "command": "/the-flow 1a explore", "ran_at": "2026-01-17T09:02Z",
+      "user_input": "set up the monorepo: web app, cli, and mcp server, clean architecture, TDD-first",
+      "note": "8-subagent dossier; landed on pnpm+turborepo, commander, fake-adapter TDD.",
+      "artifacts": ["research-dossier.md"], "next": ["plan"] },
+
+    { "id": "dr", "type": "deep-research", "label": "Deep research x3", "status": "done",
+      "branch_of": "research", "tool": "perplexity",
+      "user_input": "double-check the cli name and parser choice online",
+      "note": "CLI name 'cg' is free; commander over yargs; turborepo caching.",
+      "artifacts": ["external-research/cli-naming.md", "external-research/parser.md"], "next": ["plan"] },
+
+    { "id": "ws1", "type": "workshop", "label": "Workshop 1 · clean-arch boundaries", "status": "done",
+      "branch_of": "plan", "ran_at": "2026-01-17T16:00Z",
+      "user_input": "where exactly do the layer boundaries sit?",
+      "note": "ports/adapters boundaries pinned per package.",
+      "artifacts": ["workshops/001-clean-arch.md"], "next": ["ws2"] },
+
+    { "id": "ws2", "type": "workshop", "label": "Workshop 2 · fake/adapter strategy", "status": "done",
+      "branch_of": "plan", "ran_at": "2026-01-17T17:10Z",
+      "user_input": "one fake per adapter, or shared fakes?",
+      "note": "one fake per port; shared test factory.",
+      "artifacts": ["workshops/002-fakes.md"], "next": ["bp"] },
+
+    { "id": "bp", "type": "backpressure", "label": "Backpressure Check (post-plan refinement)", "status": "done",
+      "branch_of": "plan",
+      "command": "/eng-harness-flow --hook pre-coding --spec project-setup-plan.md --json", "ran_at": "2026-01-18T07:30Z",
+      "user_input": "check what we can prove deterministically before building",
+      "note": "Pre-coding backpressure seam (routed via /eng-harness-flow; --hook pre-coding, alias --event post-spec) — an engine-owned, optional post-plan refinement: the flow offers it at the edge; the coverage is ADVISORY output — re-plan informed by it (the harness-blind plan verb does not auto-read it). Rendered as a dotted :::harness excursion off plan (render rule 3), not a spine node. Certainty: Partial; the survey flags a smoke route + dependency-cruiser rule as buildable sensors. Advisory, never blocks.",
+      "artifacts": ["backpressure-coverage.md"], "next": ["plan"] },
+
+    { "id": "plan", "type": "plan", "label": "Plan (spec + impl)", "status": "done",
+      "command": "/the-flow 1b plan", "ran_at": "2026-01-18T08:00Z",
+      "user_input": "make it clean-arch with fakes for every adapter; full TDD",
+      "note": "One atomic plan pass -> one project-setup-plan.md: ## Business Specification (CS-4 -> Full) on top, ## Implementation Plan below. Status READY, 6 phases locked -> future phase nodes flip assumed->known. Folded in the backpressure Phase 0; validate-v2 auto-ran.",
+      "artifacts": ["project-setup-plan.md"], "next": ["hb"] },
+
+    { "id": "hb", "type": "harness-boot", "label": "Harness pre-flight (pre-flight seam)", "status": "done",
+      "command": "/eng-harness-flow --hook pre-flight --phase \"Phase 1\" --plan-dir docs/plans/001-project-setup --json", "branch_of": "p1",
+      "note": "Pre-flight boot seam — the flow offers it at the phase edge (engine-owned; NOT fired by the implement verb). The router proves the system runs before phase code; verdict narrated verbatim from its envelope (healthy / SLOW / UNHEALTHY / UNAVAILABLE). UNAVAILABLE is not an error.",
+      "next": ["p1"] },
+
+    { "id": "p1", "type": "phase", "phase": 1, "label": "Monorepo Foundation", "status": "done",
+      "note": "12/12 tasks; pnpm workspace + turborepo wired.",
+      "artifacts": ["tasks/phase-1-monorepo-foundation/tasks.md",
+                    "tasks/phase-1-monorepo-foundation/execution.log.md",
+                    "reviews/review.phase-1-monorepo-foundation.md"], "next": ["p2"] },
+
+    { "id": "p2", "type": "phase", "phase": 2, "label": "Shared Package", "status": "done",
+      "note": "12/12 tasks, 18 tests passing.",
+      "artifacts": ["tasks/phase-2-shared-package/tasks.md",
+                    "reviews/review.phase-2-shared-package.md"], "next": ["p3"] },
+
+    { "id": "p3", "type": "phase", "phase": 3, "label": "Next.js + Clean Arch", "status": "in_progress",
+      "command": "/the-flow 6 implement --phase \"Phase 3: Next.js App with Clean Architecture\"",
+      "note": "building; tasks.md present, review not yet run.",
+      "artifacts": ["tasks/phase-3-nextjs-app/tasks.md",
+                    "tasks/phase-3-nextjs-app/execution.log.md"], "next": ["fx3", "p4"] },
+
+    { "id": "fx3", "type": "fix-loop", "label": "fix loop?", "status": "assumed",
+      "branch_of": "p3", "note": "only if Phase 3 review returns REQUEST_CHANGES.", "next": ["p4"] },
+
+    { "id": "hr2", "type": "harness-retro", "label": "Harness phase-end (post-coding seam)", "status": "done",
+      "command": "/eng-harness-flow --hook post-coding --plan-dir docs/plans/001-project-setup --json", "branch_of": "p2",
+      "note": "Post-coding retro seam (one per phase, branch_of its phase) — the flow offers it at the phase-end edge; the router owns drain-vs-harvest (the user may see a [s/t/p/e/d/a] prompt).", "next": [] },
+
+    { "id": "p4", "type": "phase", "phase": 4, "label": "CLI Package", "status": "known", "next": ["p5"] },
+    { "id": "p5", "type": "phase", "phase": 5, "label": "MCP Server", "status": "known", "next": ["p6"] },
+    { "id": "p6", "type": "phase", "phase": 6, "label": "Docs & Polish", "status": "known", "next": ["ship"] },
+    { "id": "ship", "type": "ship", "label": "Ship", "status": "known", "command": "/the-flow 8 ship", "next": ["hh"] },
+
+    { "id": "hh", "type": "harness-retro", "label": "Harness plan-complete (post-flight seam)", "status": "known",
+      "command": "/eng-harness-flow --hook post-flight --plan-dir docs/plans/001-project-setup --json", "branch_of": "ship",
+      "note": "Post-flight retro seam — the flow offers it after ship reports checks / opens the PR (engine-owned, not fired by the ship verb); the router owns the long-horizon reflection (harvest + present + encode).", "next": [] }
+  ]
+}
