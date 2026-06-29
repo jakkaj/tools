@@ -27,7 +27,7 @@ The flight plan (`the-flow.json` → rendered `the-flow.md`) is mutated **only**
 ## §3 — Verb cheat-sheet
 
 ```bash
-# create — Route A (plan 039): instantiate the BARE-SPINE template in ONE call (--template). ALWAYS --agent the-flow.
+# create — Route A (plan 040 / D1): instantiate the FULL 9-node seed (spine + 5 chores + per-node instructions[]) in ONE call (--template). ALWAYS --agent the-flow.
 harness flow create flight-plan --slug <slug> --path <flow.json> \
   --schema "<skill base>/references/flight-plan.schema.json" \
   --template "<skill base>/references/flight-plan.template.json" --agent the-flow [--title "<t>"] [--plan-id <id>]
@@ -49,26 +49,17 @@ harness flow mv-node     --path <f> --id <id> (--after <n>|--before <n>|--branch
 
 (`<skill base>` = this skill's base dir, e.g. `~/.claude/skills/the-flow`. Full verb + flag reference: `docs/how/harness-flow.md` — see §7.)
 
-### §3b — The canonical harness chore `apply` batch (the create-time conditional apply / plan-complete expander)
+### §3b — `apply` batch mechanics (the hardcoded chore batch moved out — plan 040 / D1)
 
-The **shipped, worked** ops batch — do **not** re-synthesize it each run. Emitted **only** when the gate holds (router installed AND repo provisioned). Lays phase-1's per-phase trio (boot+observe+drain) + the two globals (backpressure off `plan`, ship harvest off `ship`) in ONE additive, **byte-stable** apply (every op is `upsert`, so re-running is a no-op — the every-entry invocation, AC-10):
+The shipped, worked canonical harness-chore `apply` batch that used to live here is **deleted** (plan 040 / D1). The chore *shape* is **no longer carried in this skill at all** — there is no skill-side copy to re-synthesize or drift. It is owned by the **single shared shape doctrine**, the `doctrine-parity:039` block in [`harness-seams.md`](./harness-seams.md), and **materialised two ways** (workshop 001 WS-2, C1):
 
-```bash
-harness flow apply --path "$FLOW_PATH" --ops - <<'OPS'
-[
- {"op":"upsert","id":"backpressure","type":"backpressure","label":"Backpressure survey","status":"assumed","branch_of":"plan","next":["plan"],"command":"run /eng-harness-flow --hook pre-coding --json","chore":{"kind":"command","importance":"optional"}},
- {"op":"upsert","id":"boot-1","type":"harness-boot","label":"Boot check","status":"assumed","branch_of":"phase-1","next":["phase-1"],"command":"run /eng-harness-flow --hook pre-flight --json","chore":{"kind":"command","importance":"recommended"}},
- {"op":"upsert","id":"observe-1","type":"observe","label":"Observe: P1","status":"assumed","branch_of":"phase-1","next":["phase-1"],"command":"harness observe \"<what>\" --kind <kind>","chore":{"kind":"command","importance":"recommended"}},
- {"op":"upsert","id":"retro-1","type":"harness-retro","label":"Retro: P1 (drain)","status":"assumed","branch_of":"phase-1","next":["phase-1"],"command":"run /eng-harness-flow --hook post-coding --json","chore":{"kind":"command","importance":"recommended"}},
- {"op":"upsert","id":"retro-ship","type":"harness-retro","label":"Retro: ship (harvest)","status":"assumed","branch_of":"ship","next":["ship"],"command":"run /eng-harness-flow --hook post-flight --json","chore":{"kind":"command","importance":"recommended"}}
-]
-OPS
-```
+- **the-flow present** → the shape is **baked into [`flight-plan.template.json`](./flight-plan.template.json)** at `create` (the full 9-node seed — spine + 5 chores + per-node `instructions[]`, **no create-time apply, no gate**); the plan-complete additive expander reads that *same* doctrine to splice phases 2..N's trios.
+- **eng-harness-flow standalone** → the same shape is instantiated into its own `.harness/loop.flow.json` (it never reads any the-flow file).
 
-- **Multiphase**: the plan-complete expander emits the SAME shape per phase — `boot-N`/`observe-N`/`retro-N`, each `branch_of "phase-N"` (deterministic ids → the upsert is idempotent on re-run).
-- **Gate OFF** (router missing or repo unprovisioned): emit **none** of these — the spine stays the 4-node harness-agnostic seed.
-- **Op kinds**: `add | upsert | set | insert | mv | remove`. `upsert` dedups on `id` (byte-stable no-op if identical).
-- **D5**: no op flips a `done`/`skipped` node to `todo`; `remove`/`mv` of a terminal needs `--force`; a `remove`-then-re-`add` of the same terminal id in one batch cannot launder it.
+General `apply` mechanics survive here (they describe the verb, not the chore shape):
+
+- **Op kinds**: `add | upsert | set | insert | mv | remove`. `upsert` dedups on `id` (a byte-stable no-op when the node is identical) — which is what makes the plan-complete expander idempotent on re-run.
+- **D5 terminal guard**: no op flips a `done`/`skipped` node back to `todo`; `remove`/`mv` of a terminal needs `--force`; a `remove`-then-re-`add`/`upsert` of the same terminal id in one batch cannot launder it (the guard is batch-wide).
 
 ## §4 — Spine vs excursion (the rule that keeps the rail clean)
 

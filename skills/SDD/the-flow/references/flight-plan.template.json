@@ -1,17 +1,87 @@
 {
-  "_comment": "BARE-SPINE FLIGHT-PLAN SEED (plan 039 / AC-13, AC-09 part 1). This is the REAL, pre-authored, HARNESS-AGNOSTIC create-seed that the-flow passes to `harness flow create flight-plan --template <this>` (see references/00-routing.md create routine). The CLI consumes `cursor` (-> nav.now) + `nodes` VERBATIM and stamps root identity (provenance / created_at / events / nav / per-node created_at). A Simple 1-phase flow is COMPLETE AT CREATE: research -> plan -> phase-1 -> ship, with ZERO harness nodes baked in. The harness chores (per-phase boot+observe+drain + the two globals backpressure/ship-harvest) are NOT here — they are laid AFTER create by the create-time CONDITIONAL chore apply, gated on router-installed-AND-provisioned (T020 / references/harness-seams.md), and additional phases 2..N are spliced by the plan-complete additive expander (T015). A no-harness repo therefore renders exactly this 4-node spine. NOTE (039 layout): the former worked-example template moved to flight-plan.example.json (+ .example.md) — that is the 'copy this shape' reference; THIS file is the create-seed. Round-trip-verified: `harness flow create flight-plan --template <this> --schema flight-plan.schema.json` + `harness flow render`.",
+  "_comment": "FULL FLIGHT-PLAN SEED (plan 040 / D1, AC-06, AC-13). The REAL, pre-authored, deterministic create-seed the-flow passes to `harness flow create flight-plan --template <this>` (see references/00-routing.md create routine). It is the FULL 9-node starter — the 4-node SDD spine (research → plan → phase-1 → ship) PLUS the 5 harness chores baked in (backpressure off `plan` [optional]; boot-1/observe-1/retro-1 off `phase-1` + retro-ship off `ship` [recommended]) — so an empty flow is fully ready at create with ZERO inference: even a weak model on a cheap tier gets the whole spine, the chores, AND pre-authored per-node `instructions[]` (the static 'bone' a model reads via `harness flow orient`). D1 REVERSES the plan-039 split: there is NO create-time conditional chore apply and NO router/provisioned gate — the template carries the chores directly. They are optional/recommended + skippable, so an un-harnessed repo simply never runs them (harmless — it reads as 'here's how to adopt'). The CLI consumes `cursor` (→ nav.now) + `nodes` VERBATIM and stamps root identity (provenance / created_at / events / nav / per-node created_at). The shared chore/seam SHAPE is owned by the doctrine-parity:039 block (references/harness-seams.md — the single source of truth); this template is one CONSUMER that bakes that shape in, eng-harness-flow standalone is the other (workshop 001 WS-2). The plan-complete additive expander splices phases 2..N + their per-phase trio from that SAME shared shape. Instruction TEXT is read by `orient`, never rendered in the diagram (only a 📝N badge). The 'copy this shape' worked example lives at flight-plan.example.json (+ .example.md). Round-trip-verified: `harness flow create flight-plan --template <this> --schema flight-plan.schema.json` + `harness flow orient` + `harness flow render`.",
   "cursor": "research",
   "nodes": [
     { "id": "research", "type": "research", "label": "Research", "status": "in_progress",
-      "command": "/the-flow 1a explore", "next": ["plan"] },
+      "command": "/the-flow 1a explore", "next": ["plan"],
+      "instructions": [
+        "Explore how the relevant code works before you plan — start cheap, climb only when the evidence demands it; never jump straight to a plan.",
+        "Run /the-flow 1a explore \"<intent>\" — it produces research-dossier.md, a decision packet (not a transcript) with evidence links.",
+        "Done when the dossier names the core decision the plan must resolve and the findings that bound it."
+      ] },
 
     { "id": "plan", "type": "plan", "label": "Plan", "status": "assumed",
-      "command": "/the-flow 1b plan", "next": ["phase-1"] },
+      "command": "/the-flow 1b plan", "next": ["phase-1"],
+      "instructions": [
+        "Write ONE planning document in a single atomic pass — `## Business Specification` (WHAT/WHY) on top, `## Implementation Plan` (HOW: phases, task tables, acceptance criteria, gates G1–G7) below.",
+        "Run /the-flow 1b plan \"<intent>\" (add --simple for a one-phase flow); it front-loads the clarifying questions, then auto-runs /validate-v2.",
+        "Done when <slug>-plan.md carries both halves and reads **Status**: READY — DRAFT means a gate FAILed, so resolve the gaps and re-run."
+      ] },
 
     { "id": "phase-1", "type": "phase", "phase": 1, "label": "P1: Implementation", "status": "known",
-      "command": "/the-flow 6 implement", "next": ["ship"] },
+      "command": "/the-flow 6 implement", "next": ["ship"],
+      "instructions": [
+        "Implement exactly ONE phase using the plan's testing approach and domain placement rules — keep the task table and execution.log.md live as you go.",
+        "Run /the-flow 6 implement --plan \"<plan path>\" (add --companion for a live review companion); log discoveries, tagging any Deferred/Noteworthy a human must see before ship.",
+        "Done when the phase's acceptance criteria are met, the tests pass, and the execution log records what changed plus the proof."
+      ] },
 
     { "id": "ship", "type": "ship", "label": "Ship", "status": "assumed",
-      "command": "/the-flow 8 ship", "next": [] }
+      "command": "/the-flow 8 ship", "next": [],
+      "instructions": [
+        "Get the work out — push the branch, open a PR (using the repo's PR guidance), watch its CI checks, and report problems; the merge itself is optional.",
+        "Run /the-flow 8 ship --plan \"<plan path>\"; push and PR-open each pause for a separate confirm, and any merge waits for a typed PROCEED.",
+        "Done when the PR is open and its checks are green (or the failures are reported with a fix-loop offer); a diverged base hands off to 8c reconcile."
+      ] },
+
+    { "id": "backpressure", "type": "backpressure", "label": "Backpressure survey", "status": "assumed",
+      "branch_of": "plan", "next": ["plan"],
+      "command": "run /eng-harness-flow --hook pre-coding --json",
+      "chore": { "kind": "command", "importance": "optional" },
+      "instructions": [
+        "Optional pre-coding seam: survey what the harness can PROVE about the plan's coverage versus what was only eyeballed, then re-plan informed by it.",
+        "Run /eng-harness-flow --hook pre-coding --json — advisory output only; the plan verb does not auto-read it, so fold the findings in yourself.",
+        "Optional and skippable — never gates. Decline with a real `harness flow status backpressure --to skipped`, never a narrated skip."
+      ] },
+
+    { "id": "boot-1", "type": "harness-boot", "label": "Boot check", "status": "assumed",
+      "branch_of": "phase-1", "next": ["phase-1"],
+      "command": "run /eng-harness-flow --hook pre-flight --json",
+      "chore": { "kind": "command", "importance": "recommended" },
+      "instructions": [
+        "Recommended pre-flight seam: confirm the harness is healthy before you start coding this phase.",
+        "Run /eng-harness-flow --hook pre-flight --json — read-only/advisory; narrate its envelope verbatim, never fabricate one.",
+        "Skippable — advisory, never gates. Decline with a real `harness flow status boot-1 --to skipped`."
+      ] },
+
+    { "id": "observe-1", "type": "observe", "label": "Observe: P1", "status": "assumed",
+      "branch_of": "phase-1", "next": ["phase-1"],
+      "command": "harness observe \"<what>\" --kind <kind>",
+      "chore": { "kind": "command", "importance": "recommended" },
+      "instructions": [
+        "Recommended mid-phase capture: record observations (decisions, gotchas, surprises) AS you code, so they don't evaporate as remembered prose.",
+        "Run harness observe \"<what>\" --kind <kind> — a real capture, repeated through the phase; it stays due the whole time the cursor sits on this phase.",
+        "Drained at phase end by the retro (drain) chore. Skippable — advisory, never gates."
+      ] },
+
+    { "id": "retro-1", "type": "harness-retro", "label": "Retro: P1 (drain)", "status": "assumed",
+      "branch_of": "phase-1", "next": ["phase-1"],
+      "command": "run /eng-harness-flow --hook post-coding --json",
+      "chore": { "kind": "command", "importance": "recommended" },
+      "instructions": [
+        "Recommended post-coding seam: drain this phase's observe buffer into durable retro notes before moving on.",
+        "Run /eng-harness-flow --hook post-coding --json — read-only/advisory; narrate its envelope verbatim.",
+        "Skippable — advisory, never gates. Decline with a real `harness flow status retro-1 --to skipped`."
+      ] },
+
+    { "id": "retro-ship", "type": "harness-retro", "label": "Retro: ship (harvest)", "status": "assumed",
+      "branch_of": "ship", "next": ["ship"],
+      "command": "run /eng-harness-flow --hook post-flight --json",
+      "chore": { "kind": "command", "importance": "recommended" },
+      "instructions": [
+        "Recommended post-flight seam: the terminal long-horizon harvest — fold this flight's learnings into durable memory at ship.",
+        "Run /eng-harness-flow --hook post-flight --json — read-only/advisory; narrate its envelope verbatim.",
+        "Skippable — advisory, never gates. Decline with a real `harness flow status retro-ship --to skipped`."
+      ] }
   ]
 }
