@@ -1,5 +1,5 @@
 {
-  "_comment": "FULL FLIGHT-PLAN SEED (plan 040 / D1, AC-06, AC-13). The REAL, pre-authored, deterministic create-seed the-flow passes to `harness flow create flight-plan --template <this>` (see references/00-routing.md create routine). It is the FULL 9-node starter — the 4-node SDD spine (research → plan → phase-1 → ship) PLUS the 5 harness chores baked in (backpressure off `plan` [optional]; boot-1/observe-1/retro-1 off `phase-1` + retro-ship off `ship` [recommended]) — so an empty flow is fully ready at create with ZERO inference: even a weak model on a cheap tier gets the whole spine, the chores, AND pre-authored per-node `instructions[]` (the static 'bone' a model reads via `harness flow orient`). D1 REVERSES the plan-039 split: there is NO create-time conditional chore apply and NO router/provisioned gate — the template carries the chores directly. They are optional/recommended + skippable, so an un-harnessed repo simply never runs them (harmless — it reads as 'here's how to adopt'). The CLI consumes `cursor` (→ nav.now) + `nodes` VERBATIM and stamps root identity (provenance / created_at / events / nav / per-node created_at). The shared chore/seam SHAPE is owned by the doctrine-parity:039 block (references/harness-seams.md — the single source of truth); this template is one CONSUMER that bakes that shape in, eng-harness-flow standalone is the other (workshop 001 WS-2). The plan-complete additive expander splices phases 2..N + their per-phase trio from that SAME shared shape. Instruction TEXT is read by `orient`, never rendered in the diagram (only a 📝N badge). The 'copy this shape' worked example lives at flight-plan.example.json (+ .example.md). Round-trip-verified: `harness flow create flight-plan --template <this> --schema flight-plan.schema.json` + `harness flow orient` + `harness flow render`.",
+  "_comment": "FULL FLIGHT-PLAN SEED (plan 040 / D1, AC-06, AC-13). The REAL, pre-authored, deterministic create-seed the-flow passes to `harness flow create flight-plan --template <this>` (see references/00-routing.md create routine). It is the FULL 10-node starter — the 5-node SDD spine (research → plan → phase-1 → review-1 → ship) PLUS the 5 harness chores baked in (backpressure off `plan` [optional]; boot-1/observe-1/retro-1 off `phase-1` + retro-ship off `ship` [recommended]) — so an empty flow is fully ready at create with ZERO inference: even a weak model on a cheap tier gets the whole spine, the chores, AND pre-authored per-node `instructions[]` (the static 'bone' a model reads via `harness flow orient`). D1 REVERSES the plan-039 split: there is NO create-time conditional chore apply and NO router/provisioned gate — the template carries the chores directly. They are optional/recommended + skippable, so an un-harnessed repo simply never runs them (harmless — it reads as 'here's how to adopt'). The CLI consumes `cursor` (→ nav.now) + `nodes` VERBATIM and stamps root identity (provenance / created_at / events / nav / per-node created_at). The shared chore/seam SHAPE is owned by the doctrine-parity:039 block (references/harness-seams.md — the single source of truth); this template is one CONSUMER that bakes that shape in, eng-harness-flow standalone is the other (workshop 001 WS-2). The plan-complete additive expander splices phases 2..N + their per-phase trio from that SAME shared shape. Instruction TEXT is read by `orient`, never rendered in the diagram (only a 📝N badge). The 'copy this shape' worked example lives at flight-plan.example.json (+ .example.md). Round-trip-verified: `harness flow create flight-plan --template <this> --schema flight-plan.schema.json` + `harness flow orient` + `harness flow render`.",
   "cursor": "research",
   "nodes": [
     { "id": "research", "type": "research", "label": "Research", "status": "in_progress",
@@ -19,11 +19,19 @@
       ] },
 
     { "id": "phase-1", "type": "phase", "phase": 1, "label": "P1: Implementation", "status": "known",
-      "command": "/the-flow 6 implement", "next": ["ship"],
+      "command": "/the-flow 6 implement", "next": ["review-1"],
       "instructions": [
         "Implement exactly ONE phase using the plan's testing approach and domain placement rules — keep the task table and execution.log.md live as you go.",
         "Run /the-flow 6 implement --plan \"<plan path>\" (add --companion for a live review companion); log discoveries, tagging any Deferred/Noteworthy a human must see before ship.",
         "Done when the phase's acceptance criteria are met, the tests pass, and the execution log records what changed plus the proof."
+      ] },
+
+    { "id": "review-1", "type": "review", "label": "Review: P1", "status": "assumed",
+      "command": "/the-flow 7 review", "next": ["ship"], "zone": "flight",
+      "instructions": [
+        "Review exactly ONE phase's diff against its acceptance criteria — confirm the tests prove behaviour and nothing risky slipped in; skippable when a companion already reviewed every commit.",
+        "Run /the-flow 7 review — it inspects the newest reviews/*.md and surfaces a verdict; REQUEST_CHANGES loops back to fix, clean continues to the next phase or ship.",
+        "Done when the verdict is recorded (one finding line) and either accepted or routed to a fix-loop."
       ] },
 
     { "id": "ship", "type": "ship", "label": "Ship", "status": "assumed",

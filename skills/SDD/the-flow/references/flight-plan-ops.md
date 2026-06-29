@@ -27,7 +27,7 @@ The flight plan (`the-flow.json` → rendered `the-flow.md`) is mutated **only**
 ## §3 — Verb cheat-sheet
 
 ```bash
-# create — Route A (plan 040 / D1): instantiate the FULL 9-node seed (spine + 5 chores + per-node instructions[]) in ONE call (--template). ALWAYS --agent the-flow.
+# create — Route A (plan 040 / D1): instantiate the FULL 10-node seed (spine + 5 chores + per-node instructions[]) in ONE call (--template). ALWAYS --agent the-flow.
 harness flow create flight-plan --slug <slug> --path <flow.json> \
   --schema "<skill base>/references/flight-plan.schema.json" \
   --template "<skill base>/references/flight-plan.template.json" --agent the-flow [--title "<t>"] [--plan-id <id>]
@@ -53,7 +53,7 @@ harness flow mv-node     --path <f> --id <id> (--after <n>|--before <n>|--branch
 
 The shipped, worked canonical harness-chore `apply` batch that used to live here is **deleted** (plan 040 / D1). The chore *shape* is **no longer carried in this skill at all** — there is no skill-side copy to re-synthesize or drift. It is owned by the **single shared shape doctrine**, the `doctrine-parity:039` block in [`harness-seams.md`](./harness-seams.md), and **materialised two ways** (workshop 001 WS-2, C1):
 
-- **the-flow present** → the shape is **baked into [`flight-plan.template.json`](./flight-plan.template.json)** at `create` (the full 9-node seed — spine + 5 chores + per-node `instructions[]`, **no create-time apply, no gate**); the plan-complete additive expander reads that *same* doctrine to splice phases 2..N's trios.
+- **the-flow present** → the shape is **baked into [`flight-plan.template.json`](./flight-plan.template.json)** at `create` (the full 10-node seed — spine + 5 chores + per-node `instructions[]`, **no create-time apply, no gate**); the plan-complete additive expander reads that *same* doctrine to splice phases 2..N's `review-N` + trios.
 - **eng-harness-flow standalone** → the same shape is instantiated into its own `.harness/loop.flow.json` (it never reads any the-flow file).
 
 General `apply` mechanics survive here (they describe the verb, not the chore shape):
@@ -65,7 +65,7 @@ General `apply` mechanics survive here (they describe the verb, not the chore sh
 
 The rail walks the MAIN SPINE only and excludes any node with `branch_of`.
 
-- **SPINE** = the SDD journey: research → plan → phase(s) → review → ship.
+- **SPINE** = the SDD journey: research → plan → (phase-N → review-N)* → ship.
   - wire with `--next`; reveal phases at the plan pass via `insert-node --after <prev>`.
 - **EXCURSIONS** = workshops, ADRs, backpressure, fix-loops, harness seams, **reconcile** (the upstream-reconcile excursion off `ship`/a phase, only when the base has diverged).
   - attach with `insert-node --branch-of <node> [--rejoin <node>]` — the branch point's `next` is UNCHANGED.
@@ -81,7 +81,9 @@ The rail walks the MAIN SPINE only and excludes any node with `branch_of`.
 | flight | phase (and any unknown type) |
 | postflight | review, ship, merge, retro |
 
-Pass explicit `--zone` only to override a default. For the flight-plan vocabulary the defaults are already correct, so you do **not** need to add `--zone` to the calls above.
+Pass explicit `--zone` only to override a default. For the flight-plan vocabulary the defaults are already correct, so you do **not** need to add `--zone` to the calls above — with **one exception**: each per-phase `review` overrides its postflight default to **`--zone flight`** so the reviews interleave on the spine (see the caveat below).
+
+> **Per-phase `review` is flight-zoned (override the default).** The default for `review` is **postflight**, which suits a single end-of-spine gate. The flight-plan spine instead carries **one `review-N` per phase** (template `review-1`; expander `review-2..N`), so each is created with **`--zone flight`** — that lands them mid-spine, interleaved `[ P1·review-1·P2·review-2 ]·ship`, instead of bunched in the postflight band (the renderer bands strictly by zone). This is the one `review` override the seed needs.
 
 > **`ship` banding caveat (cross-repo).** `ship` belongs in **postflight** (the terminal stage). That default takes effect once the external `harness flow` renderer adds `ship` to its postflight zone-set. Until then a renderer that doesn't know `ship` falls back to the **flight** band (the "any unknown type" rule above), so `ship` renders *inside* the flight `[ … ]` band rather than after it. Harmless — the rail still ends at **Ship**; best-effort, no hand-fix (never hand-edit `the-flow.md`). If you need the postflight band now, pass `--zone postflight` when adding the `ship` node.
 
