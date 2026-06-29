@@ -10,15 +10,14 @@ The **single owner** of *where & when* the engineering harness is touched across
 
 ## Flight-plan harness seams — creation, lifecycle & execution discipline
 
-<!-- doctrine-parity:039 v1 — this block is mirrored byte-identically in the-flow `references/harness-seams.md`; edit BOTH copies and keep them identical (the parity guard diffs them). -->
+<!-- doctrine-parity:039 v2 — this block is mirrored byte-identically in the-flow `references/harness-seams.md`; edit BOTH copies and keep them identical (the parity guard diffs them). -->
 
 This is the **canonical** statement of how harness seams are laid onto an SDD flight plan, how they live, and how an agent satisfies them; the-flow's `harness-seams.md` mirrors this block verbatim. *(Supersedes the v1 reconcile-on-read mechanism and the the-flow `f9a86f1` prose-cadence step — no spawn-on-read, no `provenance.reconcile_hook`, no remembered prose trigger.)*
 
-**Creation is three parts** — not "a template that bakes in chores, plus an expander":
+**Creation is two parts — no gate** *(D1 reversed the old three-part "skeleton + conditional chore apply + expander" model: the full seed is now baked **unconditionally**, with **no create-time gate and no expansion gate**)*:
 
-1. **A pre-authored, static, harness-agnostic skeleton.** A fixed JSON template seed shipped with the SDD skill (`references/flight-plan.template.json`, BYO via `harness flow create --template`), authored and versioned by hand, never generated. The CLI instantiates it **verbatim** and stamps root identity (provenance / created_at / events / nav). A **Simple 1-phase flow is complete at `create`**: `research → plan → phase-1 → ship`, with **zero harness nodes baked in**.
-2. **A create-time CONDITIONAL chore apply.** Lays the harness chores **only when the two-layer gate holds — the router is INSTALLED *and* the repo is PROVISIONED**. A no-harness repo gets **no** harness chores; the skeleton stays harness-agnostic.
-3. **A plan-complete ADDITIVE expander.** When the plan locks N>1 phases, **one additive `apply` batch** splices `phase-2..N` after `phase-1`, **each new phase carrying its own boot+observe+drain chores**. Expansion is **purely additive — nothing relocates, no `mv`**. The **same gate** applies at expansion: gate off → the expander splices **bare phase nodes only**, so the spine is never half-harnessed (phase-1 agnostic but phases 2..N harnessed). The expander is **byte-stable idempotent**, so it is re-fired at every structural entry (plan-complete + adopt + resume-mismatch + manual sync) and **no-ops on a complete spine**. Expansion is triggered **structurally by the `plan` node completing** — no remembered prose trigger, and **no `expand` nodeType** (the schema is not extended for it).
+1. **The full pre-authored template seed.** A fixed, hand-authored JSON template (`references/flight-plan.template.json`, BYO via `harness flow create --template`) ships the **complete 9-node starter** — the `research → plan → phase-1 → ship` spine **plus the 5 harness chores** (phase-1's own **boot + observe + drain**, plus the two globals **backpressure** anchored off `plan` and the **ship harvest** anchored off `ship`) **plus pre-authored per-node `instructions[]`**. The CLI instantiates it **verbatim** in **one `harness flow create --template` call** and stamps root identity (provenance / created_at / events / nav). This is **unconditional — there is no router-installed / repo-provisioned gate**: the chores are **optional / recommended and skippable**, so an un-harnessed repo carries them **un-run, not absent** — provisioning gates only whether a chore is ever *run*, **never** whether its node *exists*. A **Simple 1-phase flow is therefore complete at `create`** — the spine **and** its five baked chores, no follow-up apply.
+2. **A plan-complete additive expander.** When the plan locks N>1 phases, **one additive `apply` batch** splices `phase-2..N` after `phase-1`, **each new phase carrying its own boot+observe+drain trio** spliced from **this same doctrine**. Expansion is **purely additive — nothing relocates, no `mv`** — **byte-stable idempotent**, and **likewise un-gated** (a no-harness repo still gets the full per-phase chores, un-run). It is re-fired at every structural entry (plan-complete + adopt + resume-mismatch + manual sync) and **no-ops on a complete spine**. Expansion is triggered **structurally by the `plan` node completing** — no remembered prose trigger, and **no `expand` nodeType** (the schema is not extended for it).
 
 **The per-phase additive chore model.** **Every phase** carries its own three chores — **boot** (`harness-boot`, `pre-flight`), **observe** (`observe`, `kind: command`, `importance: recommended`, command `harness observe "<what>" --kind <kind>`), and **drain** (`harness-retro` `(drain)`, `post-coding`) — plus **two global** chores: **backpressure** (`pre-coding`, anchored off `plan`) and the **ship harvest** (`harness-retro` `(harvest)`, `post-flight`, anchored off `ship`). `observe` **gets a chore** — the inversion of the old "the `coding` seam gets no chore" rule: the continuous mid-phase capture seam now has a structural anchor, surfacing in `due_chores` the whole time `nav.now` sits on its phase, with its lifecycle terminal at that phase's **drain**. Only **`improve`** gets no chore. **`(drain)` vs `(harvest)` is one `harness-retro` type**, disambiguated by hook — `post-coding` drains that phase's observe buffer; `post-flight` is the terminal long-horizon harvest — plus the label. **No new retro nodeType.**
 
@@ -26,7 +25,7 @@ This is the **canonical** statement of how harness seams are laid onto an SDD fl
 
 **Chore/seam execution discipline (the anti-fake rule).** A runnable harness chore/seam is satisfied **only by actually invoking the `/eng-harness-flow` skill** through the host's skill mechanism — **the Skill tool in Claude Code**, the equivalent slash-command invocation elsewhere — with the node's **exact `--hook`**. **Never** narrate a plausible router envelope, reimplement the check inline, or flip the node to `done` without a real invocation; the envelope is narrated **verbatim from that real call** (never fabricate an insight). For `observe`, the equivalent is **actually running `harness observe "<what>" …`** — a real capture, never a narrated one. **Declining is always allowed** and means a **real `harness flow status <chore> --to skipped` CLI call** (honest, recorded) — never a narrated skip, and never a fake `done`. This is a **discipline, not a gate**: there is **no compliance floor**, consistent with the standing best-effort posture (chores never gate, never score, never block).
 
-<!-- /doctrine-parity:039 v1 -->
+<!-- /doctrine-parity:039 v2 -->
 
 > The sections below are the-flow's detailed seam *mechanics* (how the engine fires the call, the seam map, node emission, lifecycle) — they implement the canonical block above; where they once said "`coding`/observe is unwired," 039 wires `observe` as the per-phase chore named above.
 
@@ -62,7 +61,7 @@ So "the flow forgot to run it" cannot come from context dilution: the advisory c
 
 > ⚠️ No engineering harness detected — the eng-harness skills aren't installed. Continuing without one: standard testing applies, nothing else changes. (To add the harness loop: `npx skills@latest add AI-Substrate/harness-engineering -a claude-code -g -y`.)
 
-…then **omit every harness node and beat for the rest of this session** (record the outcome once; never re-warn **within the session**). Re-derive detection on a fresh session or after a `/compact` — a harness installed mid-flow should be picked up next session, not suppressed forever by one early miss. A repo without a harness is fully supported — never nag.
+…then **fire no harness beat for the rest of this session** — no router call ever runs, so the per-phase nodes (already baked into the seed at `create`) simply sit **un-run**: skippable advisory pips, never stripped, never a nag (record the outcome once; never re-warn **within the session**). Re-derive detection on a fresh session or after a `/compact` — a harness installed mid-flow should be picked up next session, not suppressed forever by one early miss. A repo without a harness is fully supported — never nag.
 
 **Layer 2 — route the seam.** Router installed → call the seam with `--json` and act on the envelope (`decision: route | redirect | noop | ambiguous`):
 - `route` → print-then-offer the returned command.
@@ -94,17 +93,17 @@ The flow wires **four fire-hooks** as edge-anchored seams **plus** the `coding`/
 
 ---
 
-## Node emission — provisioning is the gate for per-phase nodes
+## Node emission — per-phase nodes are always baked; provisioning gates only the *run*
 
-**Per-phase harness nodes (`harness-boot`, `harness-retro`, and the `backpressure` excursion) are emitted only when the router is *installed* AND the repo is *provisioned*.** "Emit when installed" governs *session-level detection* (the `pre-flight` @ entry beat, which carries no node anyway); it does **not** stamp per-phase nodes on an unprovisioned repo. One rule, so the three surfaces agree:
+**Per-phase harness nodes (`harness-boot`, `harness-retro`, and the `backpressure` excursion) are *always emitted* — baked into the seed at `create` (phase-1) and laid by the un-gated additive expander (phases 2..N), unconditionally (D1, no gate).** Installation and provisioning affect only whether the agent **runs** a chore — plus the session-level `pre-flight` **detection** beat — **never** whether the node *exists*. The chores are optional/recommended and **skippable**, so an un-harnessed or unprovisioned repo carries them **un-run, not absent** (the doctrine block above). One rule, so the three surfaces agree:
 
-- Router **not installed** (Layer-1 miss) → **no** harness nodes at all; the spine renders unbroken (the unified `plan` node connects straight to the first `phase`).
-- Router **installed, repo provisioned** → per-phase harness nodes run their normal lifecycle (`assumed → done`), styled `:::harness` (violet).
-- Router **installed, repo unprovisioned** → **no per-phase harness nodes** — just the one calm session line (Layer 2 `noop`). Do **not** stamp an "adopt-to-activate" node on every phase; per-phase nagging is the failure mode this rule prevents.
+- Router **not installed** (Layer-1 miss) → the baked per-phase nodes **still exist** in the seed, but **no router call ever fires** and nothing runs them; they sit `todo`/skippable as advisory chore pips (never a gate, never a nag). One verbatim warning at entry, then silence (§ Two-layer detection).
+- Router **installed, repo provisioned** → the baked per-phase chores run their normal lifecycle (`assumed → done`), styled `:::harness` (violet); the agent actually invokes the router at each seam.
+- Router **installed, repo unprovisioned** → the **same baked nodes** stay, but un-run — one calm session line (Layer 2 `noop`), then `--prompt-optional=false` so no per-phase nagging. Provisioning gates the *run*, not the node.
 
 This makes the **three emission surfaces** agree:
-1. **Flight-plan node** (`the-flow.json`) — a per-phase harness node appears only when installed **and** provisioned (above).
-2. **Rail companion line** (`coach.md`) — shown only when the router actually **reported this session** (its envelope carried a `rail`/`now`/`next`); omit it until then (no empty scaffolding).
+1. **Flight-plan node** (`the-flow.json`) — the per-phase chore nodes are **always present** (baked at `create` / laid by the expander); installation and provisioning gate only whether they *run*, never whether they appear.
+2. **Rail companion line** (`coach.md`) — the **live router-reported `⚙` companion line** (distinct from the baked chore *pips*, which render from `create`) is shown only when the router actually **reported this session** (its envelope carried a `rail`/`now`/`next`); omit it until then (no empty scaffolding).
 3. **Narration beat** — the print-then-offer at the edge, governed by Layer 2.
 
 ---
@@ -118,7 +117,7 @@ The `post-coding` (phase-end) seam is a **first-class beat per phase**, not a bu
 
 ### Chore-flag ownership — the-flow lays it (Route A); R-1 governs only coexistence
 
-**Route A (plan 039): the-flow is the *sole CLI writer* of the flight plan, so it owns the chore node + flag + status.** The create-time conditional apply and the plan-complete expander lay the per-phase chores (node **and** flag) directly when the gate holds (router installed AND repo provisioned). `eng-harness-flow` is **stateless** — it owns the *routing decision* and is the *invoked action* at a seam, but it **writes nothing** to `the-flow.json`. (This is *more* correct than the original R-1 framing: a stateless router never physically owned a flag; the sole CLI writer does.)
+**Route A (plan 039 · D1): the-flow is the *sole CLI writer* of the flight plan, so it owns the chore node + flag + status.** The-flow **bakes phase-1's chores into the seed at `create`** and lays **phases 2..N via the un-gated additive expander** — **unconditionally, no gate** (the chores are skippable, so an un-harnessed/unprovisioned repo carries them un-run, not absent; provisioning gates only the *run*). `eng-harness-flow` is **stateless** — it owns the *routing decision* and is the *invoked action* at a seam, but it **writes nothing** to `the-flow.json`. (This is *more* correct than the original R-1 framing: a stateless router never physically owned a flag; the sole CLI writer does.)
 
 The **pre-039 R-1 path** — where `eng-harness-flow` flags an existing seam node — governs **only the narrow back-compat coexistence case**: the loop running alongside a `the-flow.json` that a **pre-039** the-flow built as **bare seam nodes** (no chore flag). In that case, to avoid double-placement:
 
@@ -134,11 +133,11 @@ So in that back-compat case the two paths **converge via D5 + byte-stability wit
 
 ## Reconcile pre-anchors seam nodes (the every-entry pass)
 
-the-flow's **§ Reconcile the spine** pass ([`00-routing.md`](./00-routing.md), the `sync` verb) keeps the harness loop *visible up front* instead of appearing only at the edge you reach. On every guided entry, when the router is **installed and the repo provisioned**, reconcile ensures the per-phase seam nodes exist across **all known phases** — `harness-boot` before each phase, `harness-retro` after each phase, `backpressure` off `plan`, `harness-retro` off `ship` (the § seam map's nodes, for the whole roster, not just the current edge).
+the-flow's **§ Reconcile the spine** pass ([`00-routing.md`](./00-routing.md), the `sync` verb) keeps the harness loop *visible up front* instead of appearing only at the edge you reach. On every guided entry — **unconditionally (D1, no install/provision gate)** — reconcile ensures the per-phase seam nodes exist across **all known phases** — `harness-boot` before each phase, `harness-retro` after each phase, `backpressure` off `plan`, `harness-retro` off `ship` (the § seam map's nodes, for the whole roster, not just the current edge). The nodes are already baked at `create`; reconcile re-asserts them so a flight plan that predates a phase split still converges on the full roster.
 
-**Ownership (Route A): the-flow lays node + flag together; the byte-stable expander re-asserts both.** Under Route A reconcile re-asserts the per-phase chores via the **byte-stable idempotent expander** (the create-time/plan-complete `apply` batch) — node **and** flag **and** status, gated identically (installed AND provisioned), no-op on a complete spine (§ Chore-flag ownership above; [`00-routing.md`](./00-routing.md) § Reconcile the spine item 3). It never adds a `chore`-type twin. The **pre-039 R-1 path** — reconcile emitting a bare seam node and `eng-harness-flow` later flagging it — governs **only the narrow back-compat coexistence case** (a `the-flow.json` built by a pre-039 the-flow); D5 + byte-stability converge the two with no double-placement. Either way reconcile makes every flight plan converge on the one canonical shape (no standalone `chore` twins; no missing `harness-boot`/`observe`/`harness-retro` at any phase; no missing `backpressure` or ship `harness-retro`).
+**Ownership (Route A): the-flow lays node + flag together; the byte-stable expander re-asserts both.** Under Route A reconcile re-asserts the per-phase chores via the **byte-stable idempotent expander** (the create-time/plan-complete `apply` batch) — node **and** flag **and** status, **un-gated (D1 — the seed is baked unconditionally; the expander is purely additive)**, no-op on a complete spine (§ Chore-flag ownership above; [`00-routing.md`](./00-routing.md) § Reconcile the spine item 3). It never adds a `chore`-type twin. The **pre-039 R-1 path** — reconcile emitting a bare seam node and `eng-harness-flow` later flagging it — governs **only the narrow back-compat coexistence case** (a `the-flow.json` built by a pre-039 the-flow); D5 + byte-stability converge the two with no double-placement. Either way reconcile makes every flight plan converge on the one canonical shape (no standalone `chore` twins; no missing `harness-boot`/`observe`/`harness-retro` at any phase; no missing `backpressure` or ship `harness-retro`).
 
-**Installed-but-unprovisioned / not-installed → no harness nodes at all** (§ Node emission, § Two-layer detection): reconcile emits nothing harness-side, the spine renders unbroken, and no per-phase nagging appears.
+**Installed-but-unprovisioned / not-installed → the baked nodes stay, simply un-run** (§ Node emission, § Two-layer detection): the per-phase chores are already in the seed (baked unconditionally at `create`), so reconcile finds the spine complete and **no-ops** — it never strips them; they sit `todo`/skippable with no router call and **no per-phase nagging** (advisory chores never nag).
 
 ---
 
@@ -152,8 +151,8 @@ Draw the line precisely. The **router call** auto-fires (it's read-only and advi
 
 | Situation | What the flow does |
 |---|---|
-| Router **not installed** | one verbatim warning at flow entry, then **omit every harness node + beat**, silence after |
-| Router installed, repo **unprovisioned** | one calm session line, `--prompt-optional=false` thereafter, **no per-phase nodes/nagging** |
+| Router **not installed** | one verbatim warning at flow entry, then **fire no harness beat** — the baked per-phase nodes **remain (un-run, never stripped)**, silence after |
+| Router installed, repo **unprovisioned** | one calm session line, `--prompt-optional=false` thereafter; the per-phase nodes **remain (baked), simply un-run — no nagging** |
 | Verdict `UNAVAILABLE` at a seam | note it, proceed with standard testing (not an error) |
 | Verdict `UNHEALTHY` at the boot seam | stop and ask the human: Retry / Continue without harness / Abort |
 | User says "don't use the harness" | conversational opt-out — stop calling the router (there is **no** sentinel file) |
