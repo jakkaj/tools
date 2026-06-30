@@ -8,6 +8,21 @@ The **single owner** of *where & when* the engineering harness is touched across
 
 ---
 
+## Why the harness seams exist
+
+the-flow drives the product change. eng-harness-flow improves the environment used to make that change.
+
+Agents tend to race toward "done". The harness seams deliberately interrupt that blinkered path at useful moments:
+
+- before work, prove the environment and available deterministic backpressure;
+- during work, capture friction and missing proof;
+- after work, review the process that produced the code;
+- at closeout, offer to encode the best lesson so the next run does not pay the same inference cost.
+
+Code review asks whether the code is acceptable. Harness review asks whether the process could be made easier, safer, or more provable next time. The seams are **advisory** — the user may decline any of them — but they are **not** optional admin the agent may silently skip; surfacing them is part of getting to done.
+
+---
+
 ## Flight-plan harness seams — creation, lifecycle & execution discipline
 
 <!-- doctrine-parity:039 v2 — this block is mirrored byte-identically in the-flow `references/harness-seams.md`; edit BOTH copies and keep them identical (the parity guard diffs them). -->
