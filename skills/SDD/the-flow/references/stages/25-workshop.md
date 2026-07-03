@@ -49,6 +49,7 @@ A workshop should improve value delivery by reducing the time, ambiguity, risk, 
 - Storage format decisions affect future extensibility
 - Schema changes have migration implications
 - You need stakeholder alignment on design details
+- Feasibility is unproven and only *running code* can settle it (Spike/POC)
 
 ## Workshop Types & Suggested Formats
 
@@ -60,6 +61,7 @@ A workshop should improve value delivery by reducing the time, ambiguity, risk, 
 | **State Machine** | Mermaid state diagrams, transition tables | States, events, guards, actions |
 | **Integration Pattern** | Sequence diagrams, interface definitions | Protocols, contracts, failure modes |
 | **Storage Design** | File trees, YAML/JSON examples, migration paths | Directory structure, file formats, versioning |
+| **Spike/POC** | Runnable throwaway code + captured real output | The question, what was run, actual output, go/no-go verdict, promoted learnings |
 
 **Format is flexible** - use whatever representation best clarifies the concept. Mix formats freely.
 
@@ -223,7 +225,7 @@ Select topic number (or 'all' to create all): _
 ```markdown
 # Workshop: [Topic Name]
 
-**Type**: [CLI Flow | Data Model | API Contract | State Machine | Integration Pattern | Storage Design | Other]
+**Type**: [CLI Flow | Data Model | API Contract | State Machine | Integration Pattern | Storage Design | Spike/POC | Other]
 **Plan**: [ordinal-slug]
 **Spec**: [link to spec]
 **Created**: [ISO-8601]
@@ -524,6 +526,49 @@ stateDiagram-v2
 |-------|---------|--------------|
 | upstream_complete | {node_id} | Upstream node |
 | start | {} | User command |
+```
+
+#### Spike/POC Workshop Pattern
+
+The one workshop type that **writes and runs code** — the smallest throwaway program that answers a feasibility question with observed behaviour instead of belief. Target proof level is **Validated** by construction. Ground rules:
+
+- **Throwaway location, always**: the repo's gitignored scratch dir if it has one, else the session scratchpad / system temp — **never** the shipping source tree; nothing may import it.
+- **Smallest code that answers the question** — no error handling, no structure, no tests. If it grows past a screen or two, the question was too big: split it.
+- **Real output is the evidence.** Paste actual command output/measurements into the workshop doc; a spike with no captured run proves nothing.
+- **Promote learnings, never code.** The verdict + discovered constraints flow back into the plan (re-run the plan verb to fold them in); the spike code is dead the moment the question is answered.
+
+```markdown
+## Question
+
+[The single feasibility question, e.g. "Can library X stream partial results, or does it buffer the full response?"]
+
+**Why a spike**: [why no design note can answer this — only running code]
+
+## What We Ran
+
+Location: `scratch/poc/<topic>/` (throwaway — gitignored, never imported)
+
+​```bash
+$ python poc_stream.py
+[actual captured output]
+​```
+
+## Verdict
+
+**PROVEN | DISPROVEN | PARTIAL**
+
+| Claim tested | Observed | Evidence |
+|--------------|----------|----------|
+| [claim] | [what actually happened] | [output line / measurement] |
+
+## Learnings to Promote
+
+- [Constraint discovered → where it lands in the plan]
+- [Assumption corrected → which phase/task it changes]
+
+## Discarded
+
+Spike code at [location] is throwaway. Nothing to merge.
 ```
 
 ### 6) Output
