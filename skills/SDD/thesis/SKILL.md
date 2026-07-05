@@ -4,8 +4,8 @@ description: >
   Brief pre-work alignment for any stage. Use before planning, coding, editing,
   reviewing, or delegating when the user asks you to understand the thesis,
   vibe, intent, current position, or direction of a request or existing thing.
-  Returns 2–4 numbered one-sentence observations and one short synthesis, then
-  stops.
+  Returns 2–4 bold-labelled one-sentence observations and one short synthesis,
+  then stops.
 ---
 
 # Thesis
@@ -35,20 +35,30 @@ from workflow position alone.
 
 ## Output
 
-Use 2–4 non-empty lines, renumbered sequentially, with exactly one sentence per
-number:
+Emit only the axes that apply (2–4 of them), each as its own paragraph separated
+by a blank line, one sentence each, the label in **bold** followed by an em dash:
 
 ```text
-1. Thesis: <governing idea and promise>
-2. Now: <current position or starting truth>
-3. Toward: <destination or consumer need>
-4. Keep: <character, invariant, tension, or anti-goal>
+**Thesis** — <governing idea and promise>
+
+**Now** — <current position or starting truth>
+
+**Toward** — <destination or consumer need>
+
+**Keep** — <character, invariant, tension, or anti-goal>
 ```
 
-Then one paragraph of at most three sentences beginning `My read:` that
-synthesises the list and shows what "right" should feel like.
+Then a blank line and a blockquote synthesis — one paragraph of at most three
+sentences that ties the axes together and shows what "right" should feel like:
+
+```text
+> **My read:** <synthesis>
+```
+
+Formatting adds air, not words. The blank lines, bold labels, and blockquote
+exist to make the *same short read* scannable — never to invite more content.
+Hold to 2–4 axis lines and a ≤3-sentence synthesis.
 
 No heading, praise, recap, plan, checklist, critique, or work. Do not repeat the
-list in prose. If ambiguity would materially change the read, ask one question
-instead of inventing. The output must stand alone when returned from a
-subagent.
+axes in prose. If ambiguity would materially change the read, ask one question
+instead of inventing. The output must stand alone when returned from a subagent.
