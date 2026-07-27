@@ -1,0 +1,6 @@
+# Build artifacts — regenerate with `python3 build.py`
+build/
+EdgeProfileSwitch
+makeicon
+edgeswitch
+*.dSYM/
