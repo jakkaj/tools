@@ -515,16 +515,6 @@ func run() {
                     try e.start(outputDevice: dev)
                     engine = e
                     printLevel(deviceName(dev), e.gain)
-                    // Capture-health meter: proves whether system audio is flowing through the tap.
-                    let timer = Timer(timeInterval: 3, repeats: true) { _ in
-                        guard let e = engine else { return }
-                        let peak = e.capturePeak
-                        e.capturePeak = 0
-                        print(peak > 0.0001
-                              ? String(format: "tap capturing ✓ (peak %.2f)", peak)
-                              : "tap capturing ✗ — NO audio reaching the tap (permission? nothing playing?)")
-                    }
-                    RunLoop.current.add(timer, forMode: .common)
                 } catch {
                     print("⛔ Could not start software volume engine: \(error.localizedDescription)")
                     print("   (System audio recording permission may be needed — check System Settings → Privacy & Security → Screen & System Audio Recording)")
