@@ -1,0 +1,21 @@
+scripts/rip-chatgpt-share.sh
+  s_c163eb64f7dc2e::t_895c9feb8e847b 1-107
+src/jk_tools/scripts/rip-chatgpt-share.sh
+  s_c163eb64f7dc2e::t_cf78e8c324513d 1-107
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "5946b43ba32af06219403c487fdfc164b0ce0333",
+  "prompts": {},
+  "sessions": {
+    "s_c163eb64f7dc2e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1e835230-8fc1-4bf5-a3f1-1898ae840085",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Jordan Knight <jakkaj@gmail.com>"
+    }
+  }
+}
