@@ -119,7 +119,9 @@ case "${1:-run}" in
     ;;
   run)
     ensure_built
-    shift
+    # `shift` returns non-zero when invoked bare (`jk-uv` with no args), which
+    # under `set -e` would exit silently before we ever start. Guard it.
+    (($# > 0)) && shift
     exec "$BIN" run "$@"
     ;;
   *)
