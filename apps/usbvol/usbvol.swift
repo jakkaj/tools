@@ -213,7 +213,11 @@ final class SoftwareVolumeEngine {
 
         let aggDesc: [String: Any] = [
             kAudioAggregateDeviceNameKey: "usbvol",
-            kAudioAggregateDeviceUIDKey: "com.jk.usbvol.agg",
+            // Unique per run: a private aggregate left behind by a previous
+            // crashed/killed instance lingers inside coreaudiod, and reusing a
+            // fixed UID then fails with 'nope' ("there is already a device with
+            // this UID") until coreaudiod is restarted.
+            kAudioAggregateDeviceUIDKey: "com.jk.usbvol.agg.\(ProcessInfo.processInfo.processIdentifier)",
             kAudioAggregateDeviceIsPrivateKey: true,
             kAudioAggregateDeviceIsStackedKey: false,
             kAudioAggregateDeviceTapAutoStartKey: true,
