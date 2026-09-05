@@ -1,0 +1,19 @@
+apps/usbvol/usbvol.swift
+  s_15c6cf7bf6608e::t_eadb008370575d 216-220
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "6ad8b34c954cfff6b191d4d85ac53dd79cae52a7",
+  "prompts": {},
+  "sessions": {
+    "s_15c6cf7bf6608e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fae1904a-859a-44a3-a1b5-e81f5133e7ff",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jordan Knight <jakkaj@gmail.com>"
+    }
+  }
+}
