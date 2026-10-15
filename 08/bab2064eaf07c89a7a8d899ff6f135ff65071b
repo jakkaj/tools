@@ -1,0 +1,19 @@
+apps/usbvol/usbvol.swift
+  s_62642c3463954c::t_f5da2879a9b081 16,387-398,457-458,462-464,467,480,483,503-511,513-518,522-531,563,566
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "08bab2064eaf07c89a7a8d899ff6f135ff65071b",
+  "prompts": {},
+  "sessions": {
+    "s_62642c3463954c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e88895bb-247d-454d-89c0-203a5d78f084",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Jordan Knight <jakkaj@gmail.com>"
+    }
+  }
+}
