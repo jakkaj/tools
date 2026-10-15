@@ -13,6 +13,7 @@
 import Foundation
 import AppKit
 import CoreAudio
+import os
 
 // MARK: - CoreAudio helpers
 
@@ -383,6 +384,18 @@ var targetSubstring: String? = nil
 let volumeStep: Float32 = 1.0 / 16.0
 var engine: SoftwareVolumeEngine? = nil
 
+// Whether the current default output is one we control. Cached so the event-tap
+// callback never makes a CoreAudio (coreaudiod IPC) call: an ACTIVE tap holds every
+// later key and mouse event until its callback returns, so any stall there freezes
+// system input. Refreshed at startup and from the default-device listener.
+let ownsDefaultOutput = OSAllocatedUnfairLock(initialState: false)
+var eventTap: CFMachPort? = nil
+
+func refreshOwnership() {
+    let owned = defaultOutputDevice().map(shouldHandle) ?? false
+    ownsDefaultOutput.withLock { $0 = owned }
+}
+
 func shouldHandle(_ device: AudioObjectID) -> Bool {
     if let sub = targetSubstring {
         return deviceName(device).localizedCaseInsensitiveContains(sub)
@@ -441,16 +454,17 @@ func handleVolumeKey(_ keyType: Int32) -> Bool {
     return true
 }
 
+// Runs on the dedicated tap thread. Must return in microseconds: no CoreAudio,
+// AppKit, logging or locks beyond the cached ownership flag. Work goes to main.
 func tapCallback(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent,
                  refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? {
     if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
-        if let tap = refcon?.assumingMemoryBound(to: CFMachPort?.self).pointee {
-            CGEvent.tapEnable(tap: tap, enable: true)
-            print("(event tap re-enabled)")
-        }
+        if let eventTap { CGEvent.tapEnable(tap: eventTap, enable: true) }
+        let why = type == .tapDisabledByTimeout ? "timeout" : "user input"
+        DispatchQueue.main.async { print("(event tap disabled by \(why) — re-enabled)") }
         return Unmanaged.passUnretained(event)
     }
-    // NX_SYSDEFINED = 14
+    // NX_SYSDEFINED = 14; subtype 8 = aux control buttons (subtype 7 is mouse buttons)
     guard type.rawValue == 14, let nsEvent = NSEvent(cgEvent: event), nsEvent.subtype.rawValue == 8 else {
         return Unmanaged.passUnretained(event)
     }
@@ -463,10 +477,10 @@ func tapCallback(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent,
     }
     // Swallow both key-down and key-up when we own the device (act on key-down only,
     // but letting the key-up through would confuse macOS's own handler).
-    guard let dev = defaultOutputDevice(), shouldHandle(dev) else {
+    guard ownsDefaultOutput.withLock({ $0 }) else {
         return Unmanaged.passUnretained(event)
     }
-    if keyDown { _ = handleVolumeKey(keyType) }
+    if keyDown { DispatchQueue.main.async { _ = handleVolumeKey(keyType) } }
     return nil
 }
 
@@ -486,24 +500,35 @@ func run() {
         exit(1)
     }
 
-    var tapStorage: CFMachPort? = nil
+    // Keep the process out of App Nap / timer coalescing: it sits in the input path.
+    let activity = ProcessInfo.processInfo.beginActivity(
+        options: [.userInitiated, .latencyCritical], reason: "usbvol volume-key event tap")
+    _ = activity
+
+    refreshOwnership()
+
+    // The tap lives on its own high-priority thread + run loop, so nothing on main
+    // (CoreAudio calls, HUD, stdout) can ever hold up the system event stream.
     let mask = CGEventMask(1 << 14) // NX_SYSDEFINED
-    guard let tap = withUnsafeMutablePointer(to: &tapStorage, { ptr in
-        CGEvent.tapCreate(tap: .cgSessionEventTap,
-                          place: .headInsertEventTap,
-                          options: .defaultTap,
-                          eventsOfInterest: mask,
-                          callback: tapCallback,
-                          userInfo: UnsafeMutableRawPointer(ptr))
-    }) else {
+    guard let tap = CGEvent.tapCreate(tap: .cgSessionEventTap,
+                                      place: .headInsertEventTap,
+                                      options: .defaultTap,
+                                      eventsOfInterest: mask,
+                                      callback: tapCallback,
+                                      userInfo: nil) else {
         print("⛔ Failed to create event tap (permission issue?)")
         exit(1)
     }
-    tapStorage = tap
-
-    let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
-    CFRunLoopAddSource(CFRunLoopGetCurrent(), source, .commonModes)
-    CGEvent.tapEnable(tap: tap, enable: true)
+    eventTap = tap
+    let tapThread = Thread {
+        let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
+        CFRunLoopAddSource(CFRunLoopGetCurrent(), source, .commonModes)
+        CGEvent.tapEnable(tap: tap, enable: true)
+        CFRunLoopRun()
+    }
+    tapThread.name = "usbvol.eventtap"
+    tapThread.qualityOfService = .userInteractive
+    tapThread.start()
 
     if let dev = defaultOutputDevice() {
         let owned = shouldHandle(dev)
@@ -535,9 +560,10 @@ func run() {
         exit(0)
     })
 
-    // Log default-device changes
+    // Track (and log) default-device changes
     var defAddr = addr(kAudioHardwarePropertyDefaultOutputDevice)
     AudioObjectAddPropertyListenerBlock(AudioObjectID(kAudioObjectSystemObject), &defAddr, DispatchQueue.main) { _, _ in
+        refreshOwnership()
         if let dev = defaultOutputDevice() {
             let owned = shouldHandle(dev) ? " → controlling this device" : " (passing through)"
             print("Default output changed: \(deviceName(dev))\(owned)")
